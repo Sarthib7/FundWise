@@ -80,7 +80,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you have questions or need help, open an issue in this repository or contact the maintainer at your.email@example.com[web:38][web:50].
+If you have questions or need help, open an issue in this repository or contact the maintainer at x.com/fundflow_xyz.
 
 ## Maintainers
 - Hrishikesh (@Hrishikesh332)
