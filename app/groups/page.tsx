@@ -1,0 +1,149 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { getPublicGroups } from "@/lib/group-storage"
+import type { GroupData } from "@/lib/solana"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { Users, Target, TrendingUp, Globe } from "lucide-react"
+import Link from "next/link"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { UsdcIcon } from "@/components/icons/usdc-icon"
+
+export default function GroupsPage() {
+  const [groups, setGroups] = useState<GroupData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadGroups = () => {
+      const publicGroups = getPublicGroups()
+      setGroups(publicGroups)
+      setIsLoading(false)
+    }
+
+    loadGroups()
+  }, [])
+
+  const getRiskColor = (risk: string) => {
+    switch (risk) {
+      case "low":
+        return "text-green-500"
+      case "medium":
+        return "text-yellow-500"
+      case "high":
+        return "text-red-500"
+      default:
+        return "text-muted-foreground"
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading public groups...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 py-12 md:py-20">
+        <div className="container">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent mb-4">
+                <Globe className="h-4 w-4" />
+                <span className="text-sm font-medium">Public Groups</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-balance">Discover Fundraising Groups</h1>
+              <p className="text-lg text-muted-foreground text-balance">
+                Join public groups and start contributing to collective goals
+              </p>
+            </div>
+
+            {groups.length === 0 ? (
+              <Card className="p-12 text-center border-border/50">
+                <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No Public Groups Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Be the first to create a public group and invite others to join
+                </p>
+                <Button asChild>
+                  <Link href="/">Create Group</Link>
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid gap-6">
+                {groups.map((group) => {
+                  const progress = (group.totalCollected / group.fundingGoal) * 100
+
+                  return (
+                    <Card
+                      key={group.id}
+                      className="p-6 border-border/50 hover:border-accent/50 transition-all hover:shadow-lg"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="flex-1 space-y-4">
+                          <div>
+                            <h3 className="text-2xl font-semibold mb-2">{group.name}</h3>
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Users className="h-4 w-4" />
+                                <span>{group.members.length} members</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Target className="h-4 w-4" />
+                                <UsdcIcon className="h-4 w-4" />
+                                <span>{group.fundingGoal.toLocaleString()} USDC goal</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <TrendingUp className={`h-4 w-4 ${getRiskColor(group.riskLevel)}`} />
+                                <span className="capitalize">{group.riskLevel} risk</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Progress</span>
+                              <span className="font-medium inline-flex items-center gap-1.5">
+                                <UsdcIcon className="h-3.5 w-3.5" />
+                                {group.totalCollected.toLocaleString()} / {group.fundingGoal.toLocaleString()} USDC
+                              </span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                            <p className="text-xs text-muted-foreground">
+                              {progress.toFixed(1)}% funded • {group.recurringPeriod} contributions
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 md:w-40">
+                          <Button asChild className="w-full">
+                            <Link href={`/group/${group.id}`}>View Group</Link>
+                          </Button>
+                          <p className="text-xs text-center text-muted-foreground">$10 joining tip</p>
+                        </div>
+                      </div>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  )
+}
