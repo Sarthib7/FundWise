@@ -7,7 +7,17 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <Image src="/fundflow-logo.png" alt="FundFlow" width={24} height={24} className="h-6 w-6" />
+              <Image 
+                src="/fundflow-logo.png" 
+                alt="FundFlow" 
+                width={24} 
+                height={24} 
+                className="h-6 w-6"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/placeholder-logo.svg';
+                }}
+              />
               <span className="font-semibold">FundFlow</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
