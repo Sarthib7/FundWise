@@ -58,6 +58,7 @@ export function HeroSection() {
               <span>Invite unlimited members</span>
             </div>
           </div>
+
         </div>
       </section>
 
