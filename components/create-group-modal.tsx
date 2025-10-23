@@ -90,7 +90,18 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
           <DialogDescription>Set up your fundraising group with recurring contributions</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+        {isCreating ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-accent" />
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">Creating Your Group</h3>
+              <p className="text-sm text-muted-foreground">
+                Setting up your fundraising group on Solana...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
             <Label htmlFor="name">Group Name</Label>
             <Input
@@ -286,6 +297,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
             <p className="text-sm text-muted-foreground text-center">Please connect your wallet to create a group</p>
           )}
         </form>
+        )}
       </DialogContent>
     </Dialog>
   )

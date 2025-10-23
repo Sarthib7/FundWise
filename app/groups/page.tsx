@@ -11,6 +11,7 @@ import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { UsdcIcon } from "@/components/icons/usdc-icon"
+import { GroupAvatar } from "@/components/avatar"
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState<GroupData[]>([])
@@ -110,8 +111,18 @@ export default function GroupsPage() {
                     >
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex-1 space-y-4">
+                          <div className="flex items-center gap-3">
+                            <GroupAvatar 
+                              name={group.name} 
+                              id={group.id}
+                              size={48}
+                              className="h-12 w-12"
+                            />
+                            <div>
+                              <h3 className="text-2xl font-semibold mb-2">{group.name}</h3>
+                            </div>
+                          </div>
                           <div>
-                            <h3 className="text-2xl font-semibold mb-2">{group.name}</h3>
                             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1.5">
                                 <Users className="h-4 w-4" />

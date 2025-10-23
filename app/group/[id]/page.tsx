@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { GroupAvatar, UserAvatar } from "@/components/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -232,9 +232,12 @@ export default function GroupDashboard() {
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-accent" />
-                </div>
+                <GroupAvatar 
+                  name={group.name} 
+                  id={group.id}
+                  size={48}
+                  className="h-12 w-12"
+                />
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold">{group.name}</h1>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -357,11 +360,12 @@ export default function GroupDashboard() {
                         className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-accent/10 text-accent font-semibold">
-                              {index + 1}
-                            </AvatarFallback>
-                          </Avatar>
+                          <UserAvatar 
+                            name={memberAddress} 
+                            id={memberAddress}
+                            size={40}
+                            className="h-10 w-10"
+                          />
                           <div>
                             <p className="font-mono text-sm font-medium">
                               {memberAddress.slice(0, 6)}...{memberAddress.slice(-4)}
@@ -501,31 +505,6 @@ export default function GroupDashboard() {
               </div>
             </Card>
 
-            {isCreator && (
-              <Card className="p-6 border-accent/20 bg-card">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    Admin
-                  </Badge>
-                  Group Settings
-                </h3>
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start bg-transparent" size="sm">
-                    Edit Details
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start bg-transparent" size="sm">
-                    View Analytics
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-destructive hover:text-destructive bg-transparent"
-                    size="sm"
-                  >
-                    Close Group
-                  </Button>
-                </div>
-              </Card>
-            )}
           </div>
         </div>
       </main>

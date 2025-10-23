@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { Wallet, LogOut } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { UserAvatar } from "@/components/avatar"
 
 export function WalletButton() {
   const { ready, authenticated, login, logout } = usePrivy()
@@ -35,7 +36,12 @@ export function WalletButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Wallet className="h-4 w-4 mr-2" />
+            <UserAvatar 
+              name={address} 
+              id={address}
+              size={16}
+              className="h-4 w-4 mr-2"
+            />
             {shortAddress}
           </Button>
         </DropdownMenuTrigger>
