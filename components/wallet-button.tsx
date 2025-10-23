@@ -6,7 +6,7 @@ import { Wallet, LogOut } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function WalletButton() {
-  const { ready, authenticated, login, logout, connectWallet } = usePrivy()
+  const { ready, authenticated, login, logout } = usePrivy()
   const { wallets } = useWallets()
 
   console.log("[FundFlow] WalletButton render - ready:", ready, "authenticated:", authenticated)
@@ -18,7 +18,10 @@ export function WalletButton() {
     console.log("[FundFlow] Privy not ready yet")
     return (
       <Button size="sm" variant="outline" disabled>
-        Loading...
+        <div className="flex items-center gap-2">
+          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+          Loading...
+        </div>
       </Button>
     )
   }
@@ -46,25 +49,6 @@ export function WalletButton() {
     )
   }
 
-  if (authenticated && !connectedWallet) {
-    console.log("[FundFlow] User authenticated but no wallet - showing connect wallet")
-    const handleConnectWallet = async () => {
-      console.log("[FundFlow] Connect Wallet button clicked (authenticated user)")
-      try {
-        await connectWallet()
-        console.log("[FundFlow] connectWallet function called successfully")
-      } catch (error) {
-        console.error("[FundFlow] Error calling connectWallet:", error)
-      }
-    }
-
-    return (
-      <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleConnectWallet}>
-        <Wallet className="h-4 w-4 mr-2" />
-        Connect Wallet
-      </Button>
-    )
-  }
 
   const handleLogin = async () => {
     console.log("[FundFlow] Login button clicked")

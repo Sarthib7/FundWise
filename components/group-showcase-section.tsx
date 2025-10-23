@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, Target, TrendingUp } from "lucide-react"
+import { Users, TrendingUp, DollarSign } from "lucide-react"
 
 const groupData = [
   {
@@ -84,7 +84,7 @@ export function GroupShowcaseSection() {
                     <span className="text-sm text-muted-foreground">collected</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-muted-foreground" />
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Goal: {group.goal}</span>
                   </div>
                 </div>

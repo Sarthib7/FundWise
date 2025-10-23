@@ -25,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>To get your Privy App ID:</p>
             <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>
+              <li key="step1">
                 Go to{" "}
                 <a
                   href="https://dashboard.privy.io"
@@ -36,9 +36,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
                   dashboard.privy.io
                 </a>
               </li>
-              <li>Create a new app or select an existing one</li>
-              <li>Copy your App ID from the settings</li>
-              <li>Add it to your environment variables in the Vars section</li>
+              <li key="step2">Create a new app or select an existing one</li>
+              <li key="step3">Copy your App ID from the settings</li>
+              <li key="step4">Add it to your environment variables in the Vars section</li>
             </ol>
           </div>
         </div>
@@ -57,8 +57,55 @@ export function Providers({ children }: { children: React.ReactNode }) {
           theme: "dark",
           accentColor: "#10b981",
         },
-        embeddedWallets: {
-          createOnLogin: "users-without-wallets",
+        supportedChains: [
+          {
+            id: 101, // Solana mainnet
+            name: "Solana",
+            network: "solana",
+            nativeCurrency: {
+              name: "Solana",
+              symbol: "SOL",
+              decimals: 9,
+            },
+            rpcUrls: {
+              default: {
+                http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
+              },
+              public: {
+                http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
+              },
+            },
+            blockExplorers: {
+              default: {
+                name: "Solscan",
+                url: "https://solscan.io",
+              },
+            },
+          },
+        ],
+        defaultChain: {
+          id: 101, // Solana mainnet
+          name: "Solana",
+          network: "solana",
+          nativeCurrency: {
+            name: "Solana",
+            symbol: "SOL",
+            decimals: 9,
+          },
+          rpcUrls: {
+            default: {
+              http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
+            },
+            public: {
+              http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
+            },
+          },
+          blockExplorers: {
+            default: {
+              name: "Solscan",
+              url: "https://solscan.io",
+            },
+          },
         },
       }}
     >

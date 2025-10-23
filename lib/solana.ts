@@ -1,5 +1,11 @@
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { saveGroup, getGroup, addMemberToGroup } from "./group-storage"
+import { 
+  saveGroupToFirebase, 
+  getGroupFromFirebase, 
+  addMemberToGroupInFirebase,
+  addContributionToGroupInFirebase 
+} from "./firebase-group-storage"
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
 
@@ -57,7 +63,19 @@ export async function createGroup(
       totalCollected: 0,
     }
 
+    // Save to localStorage first (always works)
     saveGroup(completeGroupData)
+    console.log("[FundFlow] Group saved to localStorage successfully")
+    
+            // Try to save to Firebase Realtime Database
+            try {
+              await saveGroupToFirebase(completeGroupData)
+              console.log("[FundFlow] Group also saved to Firebase Realtime Database successfully")
+            } catch (firebaseError) {
+              console.warn("[FundFlow] Failed to save to Firebase, but group is saved locally:", firebaseError)
+              // Don't throw error - group is still saved locally
+            }
+    
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     console.log("[FundFlow] Group created successfully with ID:", groupId)
@@ -88,7 +106,16 @@ export async function joinGroup(
       throw new Error("Group not found")
     }
 
+    // Add member to both localStorage (fallback) and Firebase
     addMemberToGroup(groupId, memberPublicKey)
+    
+            try {
+              await addMemberToGroupInFirebase(groupId, memberPublicKey)
+              console.log("[FundFlow] Member added to Firebase Realtime Database successfully")
+            } catch (firebaseError) {
+              console.warn("[FundFlow] Failed to add member to Firebase, using localStorage only:", firebaseError)
+            }
+    
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     console.log("[FundFlow] Successfully joined group:", groupId)
@@ -167,6 +194,14 @@ export async function contributeToGroup(
     const signature = await connection.sendRawTransaction(signedTransaction.serialize())
     await connection.confirmTransaction(signature, "confirmed")
 
+            // Add contribution to Firebase Realtime Database
+            try {
+              await addContributionToGroupInFirebase(groupTreasuryAddress.toString(), amount)
+              console.log("[FundFlow] Contribution added to Firebase Realtime Database successfully")
+            } catch (firebaseError) {
+              console.warn("[FundFlow] Failed to add contribution to Firebase:", firebaseError)
+            }
+
     console.log("[FundFlow] Contribution successful:", signature)
 
     return { signature }
@@ -190,10 +225,22 @@ export async function fetchGroupData(groupId: string): Promise<GroupData | null>
   try {
     console.log("[FundFlow] Fetching group data for:", groupId)
 
+            // Try Firebase Realtime Database first, fallback to localStorage
+            try {
+              const firebaseGroup = await getGroupFromFirebase(groupId)
+              if (firebaseGroup) {
+                console.log("[FundFlow] Group found in Firebase Realtime Database:", firebaseGroup)
+                return firebaseGroup
+              }
+            } catch (firebaseError) {
+              console.warn("[FundFlow] Failed to fetch from Firebase, trying localStorage:", firebaseError)
+            }
+
+    // Fallback to localStorage
     const group = getGroup(groupId)
 
     if (group) {
-      console.log("[FundFlow] Group found:", group)
+      console.log("[FundFlow] Group found in localStorage:", group)
       return group
     }
 

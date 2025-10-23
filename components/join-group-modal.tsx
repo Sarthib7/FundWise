@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { joinGroup } from "@/lib/solana"
-import { Loader2, QrCode } from "lucide-react"
+import { Loader2, QrCode, CheckCircle2, ArrowRight } from "lucide-react"
 import { QrScannerDialog } from "./qr-scanner-dialog"
 import { UsdcIcon } from "@/components/icons/usdc-icon"
 
@@ -28,6 +28,7 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
   const [isJoining, setIsJoining] = useState(false)
   const [groupCode, setGroupCode] = useState("")
   const [showQrScanner, setShowQrScanner] = useState(false)
+  const [showTransactionSimulation, setShowTransactionSimulation] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,18 +44,31 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
     }
 
     setIsJoining(true)
+    setShowTransactionSimulation(true)
 
     try {
+      // Simulate transaction processing
+      console.log("[FundFlow] Simulating $10 USDC transaction...")
+      console.log("[FundFlow] From:", connectedWallet.address)
+      console.log("[FundFlow] To: Group Treasury")
+      console.log("[FundFlow] Amount: $10 USDC")
+      
+      // Simulate transaction delay
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
       const { signature } = await joinGroup(connectedWallet.address, groupCode, 10)
 
+      console.log("[FundFlow] Transaction simulation completed!")
       console.log("[FundFlow] Successfully joined group with $10 tip!")
       console.log("[FundFlow] Transaction signature:", signature)
 
+      setShowTransactionSimulation(false)
       router.push(`/group/${groupCode}`)
       onOpenChange(false)
       setGroupCode("")
     } catch (error) {
       console.error("[FundFlow] Error joining group:", error)
+      setShowTransactionSimulation(false)
       alert("Failed to join group. Please check the code and try again.")
     } finally {
       setIsJoining(false)
@@ -143,7 +157,7 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
                     Joining...
                   </>
                 ) : (
-                  "Join & Pay $10"
+                  "Join & Pay $10 USDC"
                 )}
               </Button>
             </div>
@@ -156,6 +170,55 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
       </Dialog>
 
       <QrScannerDialog open={showQrScanner} onOpenChange={setShowQrScanner} onScan={handleQrScan} />
+      
+      {/* Transaction Simulation Dialog */}
+      <Dialog open={showTransactionSimulation} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Processing Transaction</DialogTitle>
+            <DialogDescription>Simulating $10 USDC payment to join the group</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Transaction Details */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="text-sm text-muted-foreground">From</span>
+                <span className="text-sm font-mono">
+                  {connectedWallet?.address?.slice(0, 6)}...{connectedWallet?.address?.slice(-4)}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-center">
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <span className="text-sm text-muted-foreground">To</span>
+                <span className="text-sm font-mono">Group Treasury</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <span className="text-sm text-muted-foreground">Amount</span>
+                <span className="text-sm font-semibold inline-flex items-center gap-1">
+                  <UsdcIcon className="h-4 w-4" />
+                  $10.00 USDC
+                </span>
+              </div>
+            </div>
+            
+            {/* Processing Animation */}
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="h-5 w-5 animate-spin text-accent" />
+              <span className="text-sm text-muted-foreground">Confirming transaction...</span>
+            </div>
+            
+            <div className="text-xs text-center text-muted-foreground">
+              This is a simulation. In production, this would be a real blockchain transaction.
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

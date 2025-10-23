@@ -6,7 +6,7 @@ import type { GroupData } from "@/lib/solana"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Users, Target, TrendingUp, Globe } from "lucide-react"
+import { Users, TrendingUp, Globe } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -17,11 +17,27 @@ export default function GroupsPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const loadGroups = () => {
-      const publicGroups = getPublicGroups()
-      setGroups(publicGroups)
-      setIsLoading(false)
-    }
+            const loadGroups = async () => {
+              try {
+                // Try Firebase Realtime Database first
+                const { getPublicGroupsFromFirebase } = await import("@/lib/firebase-group-storage")
+                const firebaseGroups = await getPublicGroupsFromFirebase()
+                if (firebaseGroups.length > 0) {
+                  console.log("[FundFlow] Loaded groups from Firebase Realtime Database:", firebaseGroups.length)
+                  setGroups(firebaseGroups)
+                } else {
+                  // Fallback to localStorage
+                  const publicGroups = getPublicGroups()
+                  console.log("[FundFlow] No Firebase groups, using localStorage:", publicGroups.length)
+                  setGroups(publicGroups)
+                }
+              } catch (error) {
+                console.warn("[FundFlow] Firebase Realtime Database failed, using localStorage:", error)
+                const publicGroups = getPublicGroups()
+                setGroups(publicGroups)
+              }
+              setIsLoading(false)
+            }
 
     loadGroups()
   }, [])
@@ -101,11 +117,10 @@ export default function GroupsPage() {
                                 <Users className="h-4 w-4" />
                                 <span>{group.members.length} members</span>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <Target className="h-4 w-4" />
-                                <UsdcIcon className="h-4 w-4" />
-                                <span>{group.fundingGoal.toLocaleString()} USDC goal</span>
-                              </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <UsdcIcon className="h-4 w-4" />
+                                        <span>{group.fundingGoal.toLocaleString()} USDC goal</span>
+                                      </div>
                               <div className="flex items-center gap-1.5">
                                 <TrendingUp className={`h-4 w-4 ${getRiskColor(group.riskLevel)}`} />
                                 <span className="capitalize">{group.riskLevel} risk</span>
@@ -122,18 +137,24 @@ export default function GroupsPage() {
                               </span>
                             </div>
                             <Progress value={progress} className="h-2" />
-                            <p className="text-xs text-muted-foreground">
-                              {progress.toFixed(1)}% funded • {group.recurringPeriod} contributions
-                            </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {progress.toFixed(1)}% funded
+                                    </p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-3 md:w-40">
-                          <Button asChild className="w-full">
-                            <Link href={`/group/${group.id}`}>View Group</Link>
-                          </Button>
-                          <p className="text-xs text-center text-muted-foreground">$10 joining tip</p>
-                        </div>
+                                <div className="flex flex-col gap-3 md:w-40">
+                                  <Button asChild className="w-full">
+                                    <Link href={`/group/${group.id}`}>View Group</Link>
+                                  </Button>
+                                  <div className="text-center">
+                                    <p className="text-xs text-muted-foreground">Join with</p>
+                                    <p className="text-sm font-semibold inline-flex items-center gap-1">
+                                      <UsdcIcon className="h-3.5 w-3.5" />
+                                      $10 USDC tip
+                                    </p>
+                                  </div>
+                                </div>
                       </div>
                     </Card>
                   )

@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { joinGroup, fetchGroupData, type GroupData } from "@/lib/solana"
 import { generateGroupQRCode } from "@/lib/qr-code"
+import { formatDuration } from "@/lib/utils"
 import {
   Users,
   Calendar,
@@ -25,7 +26,6 @@ import {
   CheckCircle2,
   Shield,
   Loader2,
-  Target,
   UserPlus,
   DollarSign,
   Clock,
@@ -233,7 +233,7 @@ export default function GroupDashboard() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Target className="h-6 w-6 text-accent" />
+                  <DollarSign className="h-6 w-6 text-accent" />
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold">{group.name}</h1>
@@ -249,8 +249,8 @@ export default function GroupDashboard() {
               <Badge variant="outline" className="capitalize border-accent/30 text-accent">
                 {group.riskLevel} Risk
               </Badge>
-              <Badge variant="outline" className="capitalize">
-                {group.totalDuration}
+              <Badge variant="outline">
+                {formatDuration(group.totalDuration)}
               </Badge>
             </div>
           </div>

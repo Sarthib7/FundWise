@@ -40,7 +40,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
     e.preventDefault()
 
     if (!authenticated || !connectedWallet) {
-      alert("Please connect your wallet first")
+      alert("Please connect your wallet first. Click the 'Connect Wallet' button in the top right corner.")
       return
     }
 
@@ -252,10 +252,10 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3months">3 Months</SelectItem>
-                <SelectItem value="6months">6 Months</SelectItem>
-                <SelectItem value="1year">1 Year</SelectItem>
-                <SelectItem value="3years">3 Years</SelectItem>
+                <SelectItem value="3 Months">3 Months</SelectItem>
+                <SelectItem value="6 Months">6 Months</SelectItem>
+                <SelectItem value="1 Year">1 Year</SelectItem>
+                <SelectItem value="3 Years">3 Years</SelectItem>
               </SelectContent>
             </Select>
           </div>
