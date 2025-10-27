@@ -1,0 +1,268 @@
+{
+  "version": "0.1.0",
+  "name": "challenge_market",
+  "instructions": [
+    {
+      "name": "createChallenge",
+      "docs": [
+        "Create a challenge (requires multi-sig approval)"
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "challenge",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "prizePool",
+          "type": "u64"
+        },
+        {
+          "name": "outcomes",
+          "type": {
+            "vec": "string"
+          }
+        },
+        {
+          "name": "consensusThreshold",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "placeBet",
+      "docs": [
+        "Place a bet on a challenge outcome"
+      ],
+      "accounts": [
+        {
+          "name": "bettor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "challenge",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "outcomeIndex",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "voteWinner",
+      "docs": [
+        "Vote for the winning outcome (consensus voting)"
+      ],
+      "accounts": [
+        {
+          "name": "voter",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "challenge",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "outcomeIndex",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "distributePrizes",
+      "docs": [
+        "Distribute prizes to winners (auto-executes at consensus threshold)"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "challenge",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleBettingMarkets",
+      "docs": [
+        "Settle betting markets and pay out winners"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "challenge",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Challenge",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group",
+            "type": "publicKey"
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "prizePool",
+            "type": "u64"
+          },
+          {
+            "name": "outcomes",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "winnerVotes",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "consensusThreshold",
+            "type": "u8"
+          },
+          {
+            "name": "bettingEnabled",
+            "type": "bool"
+          },
+          {
+            "name": "totalBets",
+            "type": "u64"
+          },
+          {
+            "name": "isSettled",
+            "type": "bool"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "challenge",
+            "type": "publicKey"
+          },
+          {
+            "name": "bettor",
+            "type": "publicKey"
+          },
+          {
+            "name": "outcomeIndex",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "payoutClaimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidOutcome",
+      "msg": "Invalid outcome index"
+    },
+    {
+      "code": 6001,
+      "name": "AlreadySettled",
+      "msg": "Challenge already settled"
+    },
+    {
+      "code": 6002,
+      "name": "ConsensusNotReached",
+      "msg": "Consensus not reached"
+    },
+    {
+      "code": 6003,
+      "name": "BettingClosed",
+      "msg": "Betting is closed"
+    }
+  ],
+  "metadata": {
+    "address": "7SVdQ7RDfFtbVmYEFUDX4NjCuQCXgreci5ZKBGaL9ru3"
+  }
+}

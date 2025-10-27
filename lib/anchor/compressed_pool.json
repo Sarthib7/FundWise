@@ -1,0 +1,343 @@
+{
+  "version": "0.1.0",
+  "name": "compressed_pool",
+  "instructions": [
+    {
+      "name": "initializeCompressedMint",
+      "docs": [
+        "Initialize a compressed token mint for the pool",
+        "Uses Light Protocol for 5000x cost savings"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "compressedPoolState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Light Protocol merkle tree account"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "lightProtocolProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Light Protocol program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "decimals",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "mintCompressedTip",
+      "docs": [
+        "Mint compressed tokens as tips for invite codes",
+        "Cost: ~$0.00006 per mint vs $0.3 traditional"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "compressedPoolState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Recipient of the compressed tip"
+          ]
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Light Protocol merkle tree"
+          ]
+        },
+        {
+          "name": "lightProtocolProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Light Protocol program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "compressContribution",
+      "docs": [
+        "Compress a contribution into the pool",
+        "Converts regular SOL to compressed token representation"
+      ],
+      "accounts": [
+        {
+          "name": "contributor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "compressedPoolState",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "decompressForWithdrawal",
+      "docs": [
+        "Decompress tokens for withdrawal",
+        "Converts compressed tokens back to regular SOL"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "compressedPoolState",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "batchCompressedTransfers",
+      "docs": [
+        "Batch transfer compressed tokens (saves ~6000 CU per transfer)"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "compressedPoolState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Light Protocol merkle tree"
+          ]
+        },
+        {
+          "name": "lightProtocolProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Light Protocol program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "amounts",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "recipients",
+          "type": {
+            "vec": "publicKey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateCompressedAllocations",
+      "docs": [
+        "Update member allocations in compressed state"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "compressedPoolState",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "memberWallets",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
+          "name": "allocationBps",
+          "type": {
+            "vec": "u16"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CompressedPoolState",
+      "docs": [
+        "Tracks compressed token state for the pool",
+        "Uses Light Protocol's compressed account model"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "poolAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "compressedMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalCompressed",
+            "type": "u64"
+          },
+          {
+            "name": "compressionRatio",
+            "type": "u16"
+          },
+          {
+            "name": "merkleTree",
+            "type": "publicKey"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CompressedTokenAccount",
+      "docs": [
+        "Represents a compressed token account (off-chain state)",
+        "This is a reference structure for indexing"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "merkleTreeIndex",
+            "type": "u32"
+          },
+          {
+            "name": "leafIndex",
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidCompressionAmount",
+      "msg": "Invalid compression amount"
+    },
+    {
+      "code": 6001,
+      "name": "InsufficientCompressedBalance",
+      "msg": "Insufficient compressed balance"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidMerkleProof",
+      "msg": "Invalid merkle proof"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidCompressionRatio",
+      "msg": "Compression ratio out of bounds"
+    },
+    {
+      "code": 6004,
+      "name": "BatchSizeMismatch",
+      "msg": "Batch size mismatch"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidValidityProof",
+      "msg": "Invalid validity proof"
+    },
+    {
+      "code": 6006,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "metadata": {
+    "address": "BKH9XLsu4MYqwmiiyWMXBuPrXsEts33AerWC3ymiuhQt"
+  }
+}

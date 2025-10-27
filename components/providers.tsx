@@ -2,12 +2,23 @@
 
 import type React from "react"
 import { PrivyProvider } from "@privy-io/react-auth"
+import { useEffect, useState } from "react"
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
-  console.log("[FundFlow] Providers component loaded")
-  console.log("[FundFlow] Privy App ID:", appId ? "Set" : "Not set")
+  // Fix hydration mismatch by only rendering on client after mount
+  useEffect(() => {
+    setMounted(true)
+    console.log("[FundFlow] Providers component mounted")
+    console.log("[FundFlow] Privy App ID:", appId ? "Set" : "Not set")
+  }, [appId])
+
+  // Return minimal loading state during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return <div className="min-h-screen bg-background">{children}</div>
+  }
 
   if (!appId) {
     console.log("[FundFlow] No Privy App ID found, showing configuration screen")

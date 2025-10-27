@@ -1,0 +1,244 @@
+{
+  "version": "0.1.0",
+  "name": "liquidity_interface",
+  "instructions": [
+    {
+      "name": "deployToMeteora",
+      "docs": [
+        "Deploy funds to Meteora DLMM pool",
+        "Strategy options: spot price, curve, bid-ask spread",
+        "Base fee: 0.25%, dynamic up to 0.50% during volatility"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "liquidityPosition",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "strategy",
+          "type": {
+            "defined": "LiquidityStrategy"
+          }
+        }
+      ]
+    },
+    {
+      "name": "collectMeteoraFees",
+      "docs": [
+        "Collect fees from Meteora pool and compress back to group pool"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "liquidityPosition",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdrawFromMeteora",
+      "docs": [
+        "Withdraw funds from Meteora pool"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "liquidityPosition",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "deployToRaydium",
+      "docs": [
+        "Deploy funds to Raydium AMM pool (alternative to Meteora)"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "liquidityPosition",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "rebalanceLiquidity",
+      "docs": [
+        "Rebalance liquidity positions based on pool performance"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "liquidityPosition",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "newStrategy",
+          "type": {
+            "defined": "LiquidityStrategy"
+          }
+        }
+      ]
+    },
+    {
+      "name": "distributeYield",
+      "docs": [
+        "Calculate and distribute yield to members based on allocations"
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "liquidityPosition",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "LiquidityPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "groupPool",
+            "type": "publicKey"
+          },
+          {
+            "name": "poolAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "strategy",
+            "type": {
+              "defined": "LiquidityStrategy"
+            }
+          },
+          {
+            "name": "amountDeployed",
+            "type": "u64"
+          },
+          {
+            "name": "feesCollected",
+            "type": "u64"
+          },
+          {
+            "name": "lastRebalance",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "LiquidityStrategy",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "SpotPrice"
+          },
+          {
+            "name": "Curve"
+          },
+          {
+            "name": "BidAskSpread"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAmount",
+      "msg": "Invalid liquidity amount"
+    },
+    {
+      "code": 6001,
+      "name": "InsufficientLiquidity",
+      "msg": "Insufficient liquidity"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidStrategy",
+      "msg": "Invalid strategy"
+    },
+    {
+      "code": 6003,
+      "name": "PoolNotFound",
+      "msg": "Pool not found"
+    }
+  ],
+  "metadata": {
+    "address": "8Qe3KhuEVF4CCHiwi2WiVoc1kTTQTTdwiZmE59yUibQk"
+  }
+}

@@ -14,6 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { joinGroup, fetchGroupData, type GroupData } from "@/lib/solana"
+import { makePaymentOnChain, withdrawFromGroupOnChain, lamportsToSol, solToLamports } from "@/lib/solana-program"
+import { PublicKey } from "@solana/web3.js"
+import { toast } from "sonner"
 import { generateGroupQRCode } from "@/lib/qr-code"
 import { formatDuration } from "@/lib/utils"
 import {
@@ -50,6 +53,9 @@ export default function GroupDashboard() {
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCodeImage, setQrCodeImage] = useState<string>("")
   const [isGeneratingQR, setIsGeneratingQR] = useState(false)
+  const [isPaying, setIsPaying] = useState(false)
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const [withdrawAmount, setWithdrawAmount] = useState<string>("")
 
   useEffect(() => {
     const loadGroupData = async () => {
@@ -180,27 +186,71 @@ export default function GroupDashboard() {
 
   const handleJoinGroup = async () => {
     if (!authenticated || !connectedWallet) {
-      alert("Please connect your wallet first")
+      toast.error("Please connect your wallet first")
+      return
+    }
+
+    if (!group?.onChainAddress) {
+      toast.error("Group not yet deployed on-chain")
       return
     }
 
     setIsJoining(true)
 
     try {
-      const { signature } = await joinGroup(connectedWallet.address, group.id, 10)
+      // Step 1: Join the group (this will be the on-chain join_with_invite call in future)
+      const { signature: joinSignature } = await joinGroup(connectedWallet.address, group.id, 10)
 
       console.log("[FundFlow] Join successful!")
-      console.log("[FundFlow] Transaction signature:", signature)
+      console.log("[FundFlow] Join transaction:", joinSignature)
 
-      alert(`Successfully joined with $10 tip!\nTransaction: ${signature}`)
+      toast.success("Successfully joined the group!", {
+        description: `TX: ${joinSignature.slice(0, 8)}...${joinSignature.slice(-8)}`
+      })
 
+      // Step 2: Automatically make first payment
+      console.log("[FundFlow] Making automatic first payment...")
+
+      try {
+        // Create a simple wallet adapter for the Anchor client
+        const walletAdapter = {
+          publicKey: new PublicKey(connectedWallet.address),
+          signTransaction: async (tx: any) => {
+            const signedTx = await connectedWallet.signTransaction(tx)
+            return signedTx
+          },
+          signAllTransactions: async (txs: any[]) => {
+            const signedTxs = await connectedWallet.signAllTransactions(txs)
+            return signedTxs
+          },
+        }
+
+        const groupPoolPDA = new PublicKey(group.onChainAddress)
+        const { signature: paymentSignature, amount } = await makePaymentOnChain(walletAdapter, groupPoolPDA)
+
+        console.log("[FundFlow] First payment successful!")
+        console.log("[FundFlow] Payment transaction:", paymentSignature)
+
+        toast.success(`First payment of ${lamportsToSol(amount).toFixed(4)} SOL made automatically!`, {
+          description: `TX: ${paymentSignature.slice(0, 8)}...${paymentSignature.slice(-8)}`
+        })
+      } catch (paymentError) {
+        console.error("[FundFlow] Auto-payment failed:", paymentError)
+        toast.warning("Joined successfully, but auto-payment failed", {
+          description: "You can make a manual payment from the dashboard"
+        })
+      }
+
+      // Reload group data
       const updatedGroup = await fetchGroupData(group.id)
       if (updatedGroup) {
         setGroup(updatedGroup)
       }
     } catch (error) {
       console.error("[FundFlow] Join failed:", error)
-      alert("Failed to join group. Please try again.")
+      toast.error("Failed to join group", {
+        description: error instanceof Error ? error.message : "Please try again"
+      })
     } finally {
       setIsJoining(false)
     }
@@ -221,6 +271,115 @@ export default function GroupDashboard() {
         return new Date(now.setMonth(now.getMonth() + 1))
       default:
         return new Date(now.setDate(now.getDate() + 7))
+    }
+  }
+
+  const handleMakePayment = async () => {
+    if (!authenticated || !connectedWallet || !group?.onChainAddress) {
+      toast.error("Please connect your wallet first")
+      return
+    }
+
+    setIsPaying(true)
+
+    try {
+      console.log("[FundFlow] Making payment to group:", group.onChainAddress)
+
+      // Create a simple wallet adapter for the Anchor client
+      const walletAdapter = {
+        publicKey: new PublicKey(connectedWallet.address),
+        signTransaction: async (tx: any) => {
+          const signedTx = await connectedWallet.signTransaction(tx)
+          return signedTx
+        },
+        signAllTransactions: async (txs: any[]) => {
+          const signedTxs = await connectedWallet.signAllTransactions(txs)
+          return signedTxs
+        },
+      }
+
+      const groupPoolPDA = new PublicKey(group.onChainAddress)
+      const { signature, amount } = await makePaymentOnChain(walletAdapter, groupPoolPDA)
+
+      console.log("[FundFlow] Payment successful!")
+      console.log("[FundFlow] Transaction signature:", signature)
+      console.log("[FundFlow] Amount paid:", lamportsToSol(amount), "SOL")
+
+      toast.success(`Payment of ${lamportsToSol(amount).toFixed(4)} SOL successful!`, {
+        description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`
+      })
+
+      // Reload group data
+      const updatedGroup = await fetchGroupData(group.id)
+      if (updatedGroup) {
+        setGroup(updatedGroup)
+      }
+    } catch (error) {
+      console.error("[FundFlow] Payment failed:", error)
+      toast.error("Payment failed", {
+        description: error instanceof Error ? error.message : "Please try again"
+      })
+    } finally {
+      setIsPaying(false)
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!authenticated || !connectedWallet || !group?.onChainAddress || !withdrawAmount) {
+      toast.error("Please enter a valid withdrawal amount")
+      return
+    }
+
+    const amountSol = parseFloat(withdrawAmount)
+    if (isNaN(amountSol) || amountSol <= 0) {
+      toast.error("Please enter a valid positive amount")
+      return
+    }
+
+    setIsWithdrawing(true)
+
+    try {
+      console.log("[FundFlow] Withdrawing from group:", group.onChainAddress)
+      console.log("[FundFlow] Amount:", amountSol, "SOL")
+
+      // Create a simple wallet adapter for the Anchor client
+      const walletAdapter = {
+        publicKey: new PublicKey(connectedWallet.address),
+        signTransaction: async (tx: any) => {
+          const signedTx = await connectedWallet.signTransaction(tx)
+          return signedTx
+        },
+        signAllTransactions: async (txs: any[]) => {
+          const signedTxs = await connectedWallet.signAllTransactions(txs)
+          return signedTxs
+        },
+      }
+
+      const groupPoolPDA = new PublicKey(group.onChainAddress)
+      const amountLamports = solToLamports(amountSol)
+      const { signature } = await withdrawFromGroupOnChain(walletAdapter, groupPoolPDA, amountLamports)
+
+      console.log("[FundFlow] Withdrawal successful!")
+      console.log("[FundFlow] Transaction signature:", signature)
+
+      toast.success(`Withdrawal of ${amountSol} SOL successful!`, {
+        description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`
+      })
+
+      setWithdrawAmount("")
+
+      // Reload group data
+      const updatedGroup = await fetchGroupData(group.id)
+      if (updatedGroup) {
+        setGroup(updatedGroup)
+      }
+    } catch (error) {
+      console.error("[FundFlow] Withdrawal failed:", error)
+      toast.error("Withdrawal failed", {
+        description: error instanceof Error ? error.message : "Please try again"
+      })
+    } finally {
+      setIsWithdrawing(false)
     }
   }
 
@@ -265,11 +424,7 @@ export default function GroupDashboard() {
               <div className="mb-2">
                 <p className="text-sm text-muted-foreground mb-1">Total Collected</p>
                 <h2 className="text-5xl font-bold tracking-tight">
-                  ${group.totalCollected.toLocaleString()}
-                  <span className="inline-flex items-center gap-2 text-2xl text-muted-foreground ml-3">
-                    <UsdcIcon className="h-6 w-6" />
-                    USDC
-                  </span>
+                  {group.totalCollected.toLocaleString()} SOL
                 </h2>
               </div>
 
@@ -278,15 +433,15 @@ export default function GroupDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Funding Goal</span>
-                  <span className="font-mono font-medium inline-flex items-center gap-1.5">
-                    <UsdcIcon className="h-4 w-4" />${group.fundingGoal.toLocaleString()} USDC
+                  <span className="font-mono font-medium">
+                    {group.fundingGoal.toLocaleString()} SOL
                   </span>
                 </div>
                 <Progress value={progress} className="h-2" />
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-accent font-medium">{progress.toFixed(1)}% Complete</span>
                   <span className="text-muted-foreground">
-                    ${(group.fundingGoal - group.totalCollected).toLocaleString()} remaining
+                    {(group.fundingGoal - group.totalCollected).toLocaleString()} SOL remaining
                   </span>
                 </div>
               </div>
@@ -374,10 +529,9 @@ export default function GroupDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-lg">$10</p>
-                          <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                            <UsdcIcon className="h-3 w-3" />
-                            USDC
+                          <p className="font-semibold text-lg">0.01 SOL</p>
+                          <p className="text-xs text-muted-foreground">
+                            Contribution
                           </p>
                         </div>
                       </div>
@@ -424,21 +578,20 @@ export default function GroupDashboard() {
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2">Join This Group</h3>
                   <p className="text-sm text-muted-foreground">
-                    Pay a one-time $10 tip to join and start contributing to the fund.
+                    Make your first contribution of 0.01 SOL to join the group and start participating.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-lg bg-background/50 border border-border/50 mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Joining Tip</span>
-                    <span className="text-lg font-bold inline-flex items-center gap-1.5">
-                      <UsdcIcon className="h-5 w-5" />
-                      $10 USDC
+                    <span className="text-sm text-muted-foreground">Joining Contribution</span>
+                    <span className="text-lg font-bold">
+                      0.01 SOL
                     </span>
                   </div>
                   <div className="flex items-start gap-2 text-xs text-muted-foreground">
                     <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span>This one-time tip goes directly to the group fund</span>
+                    <span>This first contribution goes directly to the group pool</span>
                   </div>
                 </div>
 
@@ -479,13 +632,56 @@ export default function GroupDashboard() {
 
                   <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
                     <p className="text-sm text-muted-foreground mb-1">Amount Due</p>
-                    <p className="text-2xl font-bold inline-flex items-center gap-2">
-                      <UsdcIcon className="h-6 w-6" />${group.amountPerRecurrence} USDC
+                    <p className="text-2xl font-bold">
+                      {group.amountPerRecurrence} SOL
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border/50">
-                    <p className="text-sm text-muted-foreground text-center">Recurring contributions coming soon</p>
+                  <Button
+                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                    size="lg"
+                    onClick={handleMakePayment}
+                    disabled={isPaying || !authenticated || !group.onChainAddress}
+                  >
+                    {isPaying ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : (
+                      <>
+                        <DollarSign className="mr-2 h-4 w-4" />
+                        Make Payment ({group.amountPerRecurrence} SOL)
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">Withdraw Amount (SOL)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        placeholder="0.1"
+                        step="0.01"
+                        min="0"
+                        className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm"
+                        disabled={isWithdrawing || !authenticated}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={handleWithdraw}
+                        disabled={isWithdrawing || !authenticated || !withdrawAmount || !group.onChainAddress}
+                      >
+                        {isWithdrawing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Withdraw"
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Withdraw your contributed funds from the pool</p>
                   </div>
                 </div>
               </Card>

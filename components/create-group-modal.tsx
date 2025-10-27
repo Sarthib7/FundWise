@@ -47,19 +47,24 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
     setIsCreating(true)
 
     try {
-      const { groupId, signature } = await createGroup(connectedWallet.address, {
-        name: formData.name,
-        creator: connectedWallet.address,
-        recurringPeriod: formData.recurringPeriod,
-        amountPerRecurrence: Number.parseFloat(formData.amountPerRecurrence),
-        riskLevel: formData.riskLevel,
-        totalDuration: formData.totalDuration,
-        fundingGoal: Number.parseFloat(formData.fundingGoal),
-        isPublic: formData.isPublic, // Pass isPublic to createGroup
-      })
+      const { groupId, signature, onChainAddress } = await createGroup(
+        connectedWallet.address,
+        {
+          name: formData.name,
+          creator: connectedWallet.address,
+          recurringPeriod: formData.recurringPeriod,
+          amountPerRecurrence: Number.parseFloat(formData.amountPerRecurrence),
+          riskLevel: formData.riskLevel,
+          totalDuration: formData.totalDuration,
+          fundingGoal: Number.parseFloat(formData.fundingGoal),
+          isPublic: formData.isPublic,
+        },
+        connectedWallet // Pass the wallet for signing transactions
+      )
 
       console.log("[FundFlow] Group created successfully!")
       console.log("[FundFlow] Group ID:", groupId)
+      console.log("[FundFlow] On-chain address:", onChainAddress)
       console.log("[FundFlow] Transaction signature:", signature)
 
       router.push(`/group/${groupId}`)
@@ -144,7 +149,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="funding-goal">Funding Goal</Label>
+            <Label htmlFor="funding-goal">Funding Goal (SOL)</Label>
             <Select
               value={formData.fundingGoal}
               onValueChange={(value) => setFormData({ ...formData, fundingGoal: value })}
@@ -154,29 +159,17 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
                 <SelectValue placeholder="Select target amount" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1000">
-                  <div className="flex items-center gap-2">
-                    <UsdcIcon className="h-4 w-4" />
-                    <span>1,000 USDC</span>
-                  </div>
+                <SelectItem value="10">
+                  <span>10 SOL</span>
                 </SelectItem>
-                <SelectItem value="3000">
-                  <div className="flex items-center gap-2">
-                    <UsdcIcon className="h-4 w-4" />
-                    <span>3,000 USDC</span>
-                  </div>
+                <SelectItem value="50">
+                  <span>50 SOL</span>
                 </SelectItem>
-                <SelectItem value="5000">
-                  <div className="flex items-center gap-2">
-                    <UsdcIcon className="h-4 w-4" />
-                    <span>5,000 USDC</span>
-                  </div>
+                <SelectItem value="100">
+                  <span>100 SOL</span>
                 </SelectItem>
-                <SelectItem value="10000">
-                  <div className="flex items-center gap-2">
-                    <UsdcIcon className="h-4 w-4" />
-                    <span>10,000 USDC</span>
-                  </div>
+                <SelectItem value="500">
+                  <span>500 SOL</span>
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -203,18 +196,14 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
 
           <div className="space-y-2">
             <Label htmlFor="amount" className="flex items-center gap-2">
-              Amount Per Recurrence
-              <span className="inline-flex items-center gap-1 text-muted-foreground">
-                <UsdcIcon className="h-3.5 w-3.5" />
-                USDC
-              </span>
+              Amount Per Recurrence (SOL)
             </Label>
             <Input
               id="amount"
               type="number"
               step="0.01"
               min="0.01"
-              placeholder="0.00"
+              placeholder="0.1"
               value={formData.amountPerRecurrence}
               onChange={(e) => setFormData({ ...formData, amountPerRecurrence: e.target.value })}
               required

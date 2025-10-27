@@ -1,11 +1,12 @@
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import { saveGroup, getGroup, addMemberToGroup } from "./group-storage"
-import { 
-  saveGroupToFirebase, 
-  getGroupFromFirebase, 
+import {
+  saveGroupToFirebase,
+  getGroupFromFirebase,
   addMemberToGroupInFirebase,
-  addContributionToGroupInFirebase 
+  addContributionToGroupInFirebase
 } from "./firebase-group-storage"
+import { createGroupOnChain, solToLamports as convertSolToLamports, lamportsToSol as convertLamportsToSol } from "./solana-program"
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
 
@@ -24,6 +25,7 @@ export interface GroupData {
   createdAt: string
   members: string[]
   totalCollected: number
+  onChainAddress?: string // On-chain group pool PDA address
 }
 
 export function solToLamports(sol: number): number {
@@ -45,48 +47,84 @@ export function generateGroupCode(): string {
 
 export async function createGroup(
   creatorPublicKey: string,
-  groupData: Omit<GroupData, "id" | "createdAt" | "members" | "totalCollected">,
-): Promise<{ groupId: string; signature: string }> {
+  groupData: Omit<GroupData, "id" | "createdAt" | "members" | "totalCollected" | "onChainAddress">,
+  wallet: any // Privy wallet for signing transactions
+): Promise<{ groupId: string; signature: string; onChainAddress: string }> {
   try {
     console.log("[FundFlow] Creating group on Solana...")
     console.log("[FundFlow] Creator:", creatorPublicKey)
     console.log("[FundFlow] Group data:", groupData)
-    console.log("[FundFlow] Funding goal:", groupData.fundingGoal, "USDC")
-    console.log("[FundFlow] Visibility:", groupData.isPublic ? "Public" : "Private") // Log visibility
+    console.log("[FundFlow] Funding goal:", groupData.fundingGoal, "SOL")
+    console.log("[FundFlow] Visibility:", groupData.isPublic ? "Public" : "Private")
 
     const groupId = generateGroupCode()
+
+    // Create wallet adapter for Anchor
+    const walletAdapter = {
+      publicKey: new PublicKey(creatorPublicKey),
+      signTransaction: async (tx: any) => {
+        const signedTx = await wallet.signTransaction(tx)
+        return signedTx
+      },
+      signAllTransactions: async (txs: any[]) => {
+        const signedTxs = await wallet.signAllTransactions(txs)
+        return signedTxs
+      },
+    }
+
+    // Map payment schedule
+    const paymentScheduleMap: Record<string, "weekly" | "monthly" | "quarterly" | "oneTime"> = {
+      "weekly": "weekly",
+      "biweekly": "weekly", // Map biweekly to weekly for now
+      "monthly": "monthly",
+      "quarterly": "quarterly",
+      "daily": "weekly", // Map daily to weekly for now
+    }
+
+    // Create group on-chain
+    const { groupPoolPDA, signature } = await createGroupOnChain(walletAdapter, {
+      name: groupData.name,
+      fundraisingTarget: convertSolToLamports(groupData.fundingGoal), // Convert SOL to lamports
+      paymentSchedule: paymentScheduleMap[groupData.recurringPeriod] || "weekly",
+      contributionAmount: convertSolToLamports(groupData.amountPerRecurrence), // Convert SOL to lamports
+      allocationStrategy: "fullyCompressed" // Default to fully compressed
+    })
+
+    console.log("[FundFlow] On-chain group created!")
+    console.log("[FundFlow] Group Pool PDA:", groupPoolPDA.toString())
+    console.log("[FundFlow] Transaction:", signature)
+
     const completeGroupData: GroupData = {
       ...groupData,
       id: groupId,
       createdAt: new Date().toISOString(),
-      members: [creatorPublicKey], // Creator is the first member
+      members: [creatorPublicKey],
       totalCollected: 0,
+      onChainAddress: groupPoolPDA.toString(), // Store on-chain address
     }
 
-    // Save to localStorage first (always works)
+    // Save to localStorage
     saveGroup(completeGroupData)
     console.log("[FundFlow] Group saved to localStorage successfully")
-    
-            // Try to save to Firebase Realtime Database
-            try {
-              await saveGroupToFirebase(completeGroupData)
-              console.log("[FundFlow] Group also saved to Firebase Realtime Database successfully")
-            } catch (firebaseError) {
-              console.warn("[FundFlow] Failed to save to Firebase, but group is saved locally:", firebaseError)
-              // Don't throw error - group is still saved locally
-            }
-    
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    // Try to save to Firebase
+    try {
+      await saveGroupToFirebase(completeGroupData)
+      console.log("[FundFlow] Group also saved to Firebase successfully")
+    } catch (firebaseError) {
+      console.warn("[FundFlow] Failed to save to Firebase, using localStorage only:", firebaseError)
+    }
 
     console.log("[FundFlow] Group created successfully with ID:", groupId)
 
     return {
       groupId,
-      signature: "mock_signature_" + Date.now(),
+      signature,
+      onChainAddress: groupPoolPDA.toString(),
     }
   } catch (error) {
     console.error("[FundFlow] Error creating group:", error)
-    throw new Error("Failed to create group on Solana")
+    throw new Error("Failed to create group on Solana: " + (error instanceof Error ? error.message : String(error)))
   }
 }
 

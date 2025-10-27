@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
 
 const firebaseConfig = {
@@ -11,7 +11,18 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 }
 
-// Firebase configuration loaded
+// Validate Firebase configuration
+if (!firebaseConfig.projectId || !firebaseConfig.databaseURL) {
+  console.error('Firebase configuration error:', {
+    projectId: firebaseConfig.projectId,
+    databaseURL: firebaseConfig.databaseURL,
+    apiKey: firebaseConfig.apiKey ? '***' : 'missing'
+  })
+  throw new Error('Firebase configuration is incomplete. Check your .env.local file.')
+}
 
-const app = initializeApp(firebaseConfig)
-export const db = getDatabase(app)
+// Initialize Firebase (avoid duplicate initialization)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+
+// Initialize Realtime Database with explicit URL
+export const db = getDatabase(app, firebaseConfig.databaseURL)
