@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { joinGroup, fetchGroupData, type GroupData } from "@/lib/solana"
 import { makePaymentOnChain, withdrawFromGroupOnChain, lamportsToSol, solToLamports } from "@/lib/solana-program"
+import { payToSquadsVault, withdrawFromSquadsVault, lamportsToSol as squadsLamportsToSol, solToLamports as squadsSolToLamports, getVaultBalance } from "@/lib/squads-multisig"
 import { PublicKey } from "@solana/web3.js"
 import { toast } from "sonner"
 import { generateGroupQRCode } from "@/lib/qr-code"
@@ -66,6 +67,20 @@ export default function GroupDashboard() {
 
         if (groupData) {
           console.log("[FundFlow] Group data loaded:", groupData)
+          console.log("[FundFlow] 🔍 Vault Address Check:")
+          console.log("[FundFlow]    squadsVaultAddress:", groupData.squadsVaultAddress || "❌ NOT SET")
+          console.log("[FundFlow]    squadsMultisigAddress:", groupData.squadsMultisigAddress || "❌ NOT SET")
+          console.log("[FundFlow]    onChainAddress:", groupData.onChainAddress || "❌ NOT SET")
+
+          if (!groupData.squadsVaultAddress) {
+            console.warn("[FundFlow] ⚠️ WARNING: This group doesn't have a Squads vault address!")
+            console.warn("[FundFlow] ⚠️ The Pay button will be DISABLED")
+            console.warn("[FundFlow] ⚠️ This is likely an OLD group created before Squads integration")
+            console.warn("[FundFlow] ✅ SOLUTION: Create a NEW group to test the Pay button")
+          } else {
+            console.log("[FundFlow] ✅ Squads vault configured - Pay button will be enabled!")
+          }
+
           setGroup(groupData)
         } else {
           console.log("[FundFlow] Group not found")
@@ -275,39 +290,61 @@ export default function GroupDashboard() {
   }
 
   const handleMakePayment = async () => {
-    if (!authenticated || !connectedWallet || !group?.onChainAddress) {
+    if (!authenticated || !connectedWallet) {
       toast.error("Please connect your wallet first")
+      return
+    }
+
+    if (!group?.squadsVaultAddress) {
+      toast.error("Group vault not configured. Please create a new group.")
       return
     }
 
     setIsPaying(true)
 
     try {
-      console.log("[FundFlow] Making payment to group:", group.onChainAddress)
+      console.log("═══════════════════════════════════════")
+      console.log("🚀 STARTING PAYMENT TRANSACTION")
+      console.log("═══════════════════════════════════════")
+      console.log("[Pay] Group:", group.name)
+      console.log("[Pay] From Wallet:", connectedWallet.address)
+      console.log("[Pay] To Squads Vault:", group.squadsVaultAddress)
+      console.log("[Pay] Amount:", group.amountPerRecurrence, "SOL")
 
-      // Create a simple wallet adapter for the Anchor client
-      const walletAdapter = {
-        publicKey: new PublicKey(connectedWallet.address),
-        signTransaction: async (tx: any) => {
-          const signedTx = await connectedWallet.signTransaction(tx)
-          return signedTx
-        },
-        signAllTransactions: async (txs: any[]) => {
-          const signedTxs = await connectedWallet.signAllTransactions(txs)
-          return signedTxs
-        },
-      }
+      // Convert SOL to lamports
+      const amountLamports = squadsSolToLamports(group.amountPerRecurrence)
+      console.log("[Pay] Amount in lamports:", amountLamports)
 
-      const groupPoolPDA = new PublicKey(group.onChainAddress)
-      const { signature, amount } = await makePaymentOnChain(walletAdapter, groupPoolPDA)
+      // Call Squads vault payment function
+      console.log("[Pay] Calling payToSquadsVault...")
+      const { signature } = await payToSquadsVault(
+        connectedWallet,
+        new PublicKey(group.squadsVaultAddress),
+        amountLamports
+      )
 
-      console.log("[FundFlow] Payment successful!")
-      console.log("[FundFlow] Transaction signature:", signature)
-      console.log("[FundFlow] Amount paid:", lamportsToSol(amount), "SOL")
+      console.log("═══════════════════════════════════════")
+      console.log("✅ PAYMENT SUCCESSFUL!")
+      console.log("═══════════════════════════════════════")
+      console.log("[Pay] Transaction Signature:", signature)
+      console.log("[Pay] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
+      console.log("[Pay] Amount:", group.amountPerRecurrence, "SOL")
 
-      toast.success(`Payment of ${lamportsToSol(amount).toFixed(4)} SOL successful!`, {
-        description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`
+      toast.success(`Payment of ${group.amountPerRecurrence} SOL successful!`, {
+        description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`,
+        action: {
+          label: "View on Explorer",
+          onClick: () => window.open(`https://explorer.solana.com/tx/${signature}?cluster=devnet`, '_blank')
+        }
       })
+
+      // Get updated vault balance
+      try {
+        const vaultBalance = await getVaultBalance(new PublicKey(group.squadsVaultAddress))
+        console.log("[Pay] New vault balance:", squadsLamportsToSol(vaultBalance), "SOL")
+      } catch (balanceError) {
+        console.warn("[Pay] Could not fetch vault balance:", balanceError)
+      }
 
       // Reload group data
       const updatedGroup = await fetchGroupData(group.id)
@@ -315,7 +352,11 @@ export default function GroupDashboard() {
         setGroup(updatedGroup)
       }
     } catch (error) {
-      console.error("[FundFlow] Payment failed:", error)
+      console.error("═══════════════════════════════════════")
+      console.error("❌ PAYMENT FAILED")
+      console.error("═══════════════════════════════════════")
+      console.error("[Pay] Error:", error)
+
       toast.error("Payment failed", {
         description: error instanceof Error ? error.message : "Please try again"
       })
@@ -325,8 +366,13 @@ export default function GroupDashboard() {
   }
 
   const handleWithdraw = async () => {
-    if (!authenticated || !connectedWallet || !group?.onChainAddress || !withdrawAmount) {
+    if (!authenticated || !connectedWallet || !withdrawAmount) {
       toast.error("Please enter a valid withdrawal amount")
+      return
+    }
+
+    if (!group?.squadsVaultAddress) {
+      toast.error("Group vault not configured. Please create a new group.")
       return
     }
 
@@ -339,34 +385,50 @@ export default function GroupDashboard() {
     setIsWithdrawing(true)
 
     try {
-      console.log("[FundFlow] Withdrawing from group:", group.onChainAddress)
-      console.log("[FundFlow] Amount:", amountSol, "SOL")
+      console.log("═══════════════════════════════════════")
+      console.log("🏦 STARTING WITHDRAWAL TRANSACTION")
+      console.log("═══════════════════════════════════════")
+      console.log("[Withdraw] Group:", group.name)
+      console.log("[Withdraw] From Squads Vault:", group.squadsVaultAddress)
+      console.log("[Withdraw] To Wallet:", connectedWallet.address)
+      console.log("[Withdraw] Amount:", amountSol, "SOL")
 
-      // Create a simple wallet adapter for the Anchor client
-      const walletAdapter = {
-        publicKey: new PublicKey(connectedWallet.address),
-        signTransaction: async (tx: any) => {
-          const signedTx = await connectedWallet.signTransaction(tx)
-          return signedTx
-        },
-        signAllTransactions: async (txs: any[]) => {
-          const signedTxs = await connectedWallet.signAllTransactions(txs)
-          return signedTxs
-        },
-      }
+      const amountLamports = squadsSolToLamports(amountSol)
+      console.log("[Withdraw] Amount in lamports:", amountLamports)
 
-      const groupPoolPDA = new PublicKey(group.onChainAddress)
-      const amountLamports = solToLamports(amountSol)
-      const { signature } = await withdrawFromGroupOnChain(walletAdapter, groupPoolPDA, amountLamports)
+      // Call Squads vault withdrawal function
+      console.log("[Withdraw] Calling withdrawFromSquadsVault...")
+      console.log("[Withdraw] Note: This requires multisig approval in production")
 
-      console.log("[FundFlow] Withdrawal successful!")
-      console.log("[FundFlow] Transaction signature:", signature)
+      const { signature } = await withdrawFromSquadsVault(
+        connectedWallet,
+        new PublicKey(group.squadsVaultAddress),
+        amountLamports
+      )
 
-      toast.success(`Withdrawal of ${amountSol} SOL successful!`, {
-        description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`
+      console.log("═══════════════════════════════════════")
+      console.log("✅ WITHDRAWAL INITIATED!")
+      console.log("═══════════════════════════════════════")
+      console.log("[Withdraw] Transaction Signature:", signature)
+      console.log("[Withdraw] Amount:", amountSol, "SOL")
+
+      toast.success(`Withdrawal of ${amountSol} SOL initiated!`, {
+        description: "Pending multisig approval",
+        action: {
+          label: "View Details",
+          onClick: () => console.log("Withdrawal details:", signature)
+        }
       })
 
       setWithdrawAmount("")
+
+      // Get updated vault balance
+      try {
+        const vaultBalance = await getVaultBalance(new PublicKey(group.squadsVaultAddress))
+        console.log("[Withdraw] Current vault balance:", squadsLamportsToSol(vaultBalance), "SOL")
+      } catch (balanceError) {
+        console.warn("[Withdraw] Could not fetch vault balance:", balanceError)
+      }
 
       // Reload group data
       const updatedGroup = await fetchGroupData(group.id)
@@ -374,7 +436,11 @@ export default function GroupDashboard() {
         setGroup(updatedGroup)
       }
     } catch (error) {
-      console.error("[FundFlow] Withdrawal failed:", error)
+      console.error("═══════════════════════════════════════")
+      console.error("❌ WITHDRAWAL FAILED")
+      console.error("═══════════════════════════════════════")
+      console.error("[Withdraw] Error:", error)
+
       toast.error("Withdrawal failed", {
         description: error instanceof Error ? error.message : "Please try again"
       })
@@ -641,7 +707,7 @@ export default function GroupDashboard() {
                     className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
                     size="lg"
                     onClick={handleMakePayment}
-                    disabled={isPaying || !authenticated || !group.onChainAddress}
+                    disabled={isPaying || !authenticated || !group.squadsVaultAddress}
                   >
                     {isPaying ? (
                       <>
@@ -655,6 +721,37 @@ export default function GroupDashboard() {
                       </>
                     )}
                   </Button>
+
+                  {/* Show helpful message if button is disabled */}
+                  {!authenticated && (
+                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                        ⚠️ Please connect your wallet to make payments
+                      </p>
+                    </div>
+                  )}
+
+                  {authenticated && !group.squadsVaultAddress && (
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <p className="text-sm text-red-600 dark:text-red-500 font-medium mb-1">
+                        ❌ Pay button disabled: No vault configured
+                      </p>
+                      <p className="text-xs text-red-600/80 dark:text-red-500/80">
+                        This group was created before Squads integration. Please create a new group to test the Pay functionality.
+                      </p>
+                    </div>
+                  )}
+
+                  {authenticated && group.squadsVaultAddress && (
+                    <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <p className="text-sm text-green-600 dark:text-green-500">
+                        ✅ Ready to pay! Click the button above to send {group.amountPerRecurrence} SOL to the group vault.
+                      </p>
+                      <p className="text-xs text-green-600/80 dark:text-green-500/80 mt-1">
+                        Vault: {group.squadsVaultAddress.slice(0, 8)}...{group.squadsVaultAddress.slice(-8)}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Withdraw Amount (SOL)</label>
@@ -672,7 +769,7 @@ export default function GroupDashboard() {
                       <Button
                         variant="outline"
                         onClick={handleWithdraw}
-                        disabled={isWithdrawing || !authenticated || !withdrawAmount || !group.onChainAddress}
+                        disabled={isWithdrawing || !authenticated || !withdrawAmount || !group.squadsVaultAddress}
                       >
                         {isWithdrawing ? (
                           <Loader2 className="h-4 w-4 animate-spin" />

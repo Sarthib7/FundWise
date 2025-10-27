@@ -47,11 +47,60 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
     setIsCreating(true)
 
     try {
-      const { groupId, signature, onChainAddress } = await createGroup(
-        connectedWallet.address,
+      console.log("[CreateGroup] Connected wallet object:", connectedWallet)
+      console.log("[CreateGroup] Wallet address:", connectedWallet.address)
+      console.log("[CreateGroup] Wallet type:", connectedWallet.walletClientType)
+      console.log("[CreateGroup] All wallet properties:", Object.keys(connectedWallet))
+
+      // Extract Solana address from Privy wallet
+      let walletAddress: string | null = null
+
+      // Try multiple possible locations for Solana address
+      if (connectedWallet.solana && connectedWallet.solana.address) {
+        console.log("[CreateGroup] ✅ Found wallet.solana.address:", connectedWallet.solana.address)
+        walletAddress = connectedWallet.solana.address
+      } else if (connectedWallet.address) {
+        console.log("[CreateGroup] 🔍 Found wallet.address:", connectedWallet.address)
+
+        // Check if it's an Ethereum address (starts with 0x)
+        if (connectedWallet.address.startsWith("0x")) {
+          console.error("[CreateGroup] ❌ ERROR: This is an Ethereum address, not a Solana address!")
+          console.error("[CreateGroup] ❌ You need to connect a Solana wallet (Phantom, Solflare, etc.)")
+          alert(
+            "Wrong wallet type!\n\n" +
+            "You connected an Ethereum wallet, but this app needs a Solana wallet.\n\n" +
+            "Please:\n" +
+            "1. Disconnect your current wallet\n" +
+            "2. Connect a Solana wallet (Phantom or Solflare)\n" +
+            "3. Try again"
+          )
+          setIsCreating(false)
+          return
+        }
+
+        walletAddress = connectedWallet.address
+      }
+
+      // Validate we got a Solana address
+      if (!walletAddress) {
+        console.error("[CreateGroup] ❌ ERROR: No wallet address found in Privy wallet object")
+        console.error("[CreateGroup] Wallet object structure:", connectedWallet)
+        alert(
+          "Wallet address not found!\n\n" +
+          "Please disconnect and reconnect your wallet, then try again.\n\n" +
+          "If the issue persists, check the console (F12) for details."
+        )
+        setIsCreating(false)
+        return
+      }
+
+      console.log("[CreateGroup] Using wallet address:", walletAddress)
+
+      const { groupId, signature, onChainAddress, squadsVaultAddress } = await createGroup(
+        walletAddress,
         {
           name: formData.name,
-          creator: connectedWallet.address,
+          creator: walletAddress,
           recurringPeriod: formData.recurringPeriod,
           amountPerRecurrence: Number.parseFloat(formData.amountPerRecurrence),
           riskLevel: formData.riskLevel,
@@ -62,9 +111,10 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
         connectedWallet // Pass the wallet for signing transactions
       )
 
-      console.log("[FundFlow] Group created successfully!")
+      console.log("[FundFlow] ✅ Group created successfully!")
       console.log("[FundFlow] Group ID:", groupId)
       console.log("[FundFlow] On-chain address:", onChainAddress)
+      console.log("[FundFlow] Squads vault address:", squadsVaultAddress)
       console.log("[FundFlow] Transaction signature:", signature)
 
       router.push(`/group/${groupId}`)
@@ -80,8 +130,16 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
         isPublic: true,
       })
     } catch (error) {
-      console.error("[FundFlow] Error creating group:", error)
-      alert("Failed to create group. Please try again.")
+      console.error("[FundFlow] ❌ Error creating group:", error)
+      console.error("[FundFlow] Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        fullError: error
+      })
+
+      // Show detailed error to user
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`Failed to create group:\n\n${errorMessage}\n\nCheck console (F12) for more details.`)
     } finally {
       setIsCreating(false)
     }

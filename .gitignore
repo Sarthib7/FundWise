@@ -154,3 +154,7 @@ logs
 # Temporary files
 tmp/
 temp/
+
+# Claude AI generated files
+*CLAUDE*.md
+*claude*.md

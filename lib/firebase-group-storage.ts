@@ -32,6 +32,10 @@ export async function saveGroupToFirebase(group: GroupData): Promise<string> {
       totalCollected: group.totalCollected,
       createdAt: group.createdAt,
       updatedAt: new Date().toISOString(),
+      // CRITICAL: Save Squads addresses!
+      onChainAddress: group.onChainAddress,
+      squadsVaultAddress: group.squadsVaultAddress,
+      squadsMultisigAddress: group.squadsMultisigAddress,
     }
     
     console.log('[FundFlow] Group data prepared for Firebase:', groupData)
@@ -77,6 +81,10 @@ export async function getGroupFromFirebase(groupId: string): Promise<GroupData |
         members: data.members || [],
         totalCollected: data.totalCollected || 0,
         createdAt: data.createdAt || new Date().toISOString(),
+        // Include Squads addresses
+        onChainAddress: data.onChainAddress,
+        squadsVaultAddress: data.squadsVaultAddress,
+        squadsMultisigAddress: data.squadsMultisigAddress,
       } as GroupData
     } else {
       console.log('[FundFlow] Group not found in Firebase')
@@ -114,6 +122,9 @@ export async function getAllGroupsFromFirebase(): Promise<GroupData[]> {
           members: groupData.members || [],
           totalCollected: groupData.totalCollected || 0,
           createdAt: groupData.createdAt || new Date().toISOString(),
+          onChainAddress: groupData.onChainAddress,
+          squadsVaultAddress: groupData.squadsVaultAddress,
+          squadsMultisigAddress: groupData.squadsMultisigAddress,
         } as GroupData)
       })
     }
@@ -153,6 +164,9 @@ export async function getPublicGroupsFromFirebase(): Promise<GroupData[]> {
             members: groupData.members || [],
             totalCollected: groupData.totalCollected || 0,
             createdAt: groupData.createdAt || new Date().toISOString(),
+            onChainAddress: groupData.onChainAddress,
+            squadsVaultAddress: groupData.squadsVaultAddress,
+            squadsMultisigAddress: groupData.squadsMultisigAddress,
           } as GroupData)
         }
       })
