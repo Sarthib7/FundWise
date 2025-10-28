@@ -8,18 +8,23 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { GroupAvatar, UserAvatar } from "@/components/avatar"
+import { GroupAvatar } from "@/components/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { usePrivy, useWallets } from "@privy-io/react-auth"
+// PHASE 1: Using Solana Wallet Adapter (Active)
+import { useWallet } from "@solana/wallet-adapter-react"
+// PHASE 2: Privy (Commented out)
+// import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { joinGroup, fetchGroupData, type GroupData } from "@/lib/solana"
-import { makePaymentOnChain, withdrawFromGroupOnChain, lamportsToSol, solToLamports } from "@/lib/solana-program"
-import { payToSquadsVault, withdrawFromSquadsVault, lamportsToSol as squadsLamportsToSol, solToLamports as squadsSolToLamports, getVaultBalance } from "@/lib/squads-multisig"
+// Phase 1: Simple payment functions
+import { payToGroupWallet, getWalletBalance } from "@/lib/simple-payment"
+// Phase 2: Multisig and compression (commented out for now)
+// import { payToSquadsVault, withdrawFromSquadsVault, getVaultBalance, lamportsToSol as squadsLamportsToSol, solToLamports as squadsSolToLamports } from "@/lib/squads-multisig"
+// import { compressFunds, decompressFunds, calculateCompressionSavings } from "@/lib/zk-compression"
 import { PublicKey } from "@solana/web3.js"
 import { toast } from "sonner"
 import { generateGroupQRCode } from "@/lib/qr-code"
-import { formatDuration } from "@/lib/utils"
 import {
   Users,
   Calendar,
@@ -36,59 +41,81 @@ import {
   Info,
   Download,
   AlertCircle,
+  Wallet,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Coins,
 } from "lucide-react"
-import { UsdcIcon } from "@/components/icons/usdc-icon"
 
 export default function GroupDashboard() {
   const params = useParams()
   const router = useRouter()
-  const { authenticated } = usePrivy()
-  const { wallets } = useWallets()
-  const connectedWallet = wallets[0]
+  // PHASE 1: Solana Wallet Adapter
+  const { publicKey, connected } = useWallet()
+  // PHASE 2: Privy (commented out)
+  // const { authenticated } = usePrivy()
+  // const { wallets } = useWallets()
+  // const connectedWallet = wallets[0]
 
-  const [copied, setCopied] = useState(false)
+  // State
   const [group, setGroup] = useState<GroupData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isContributing, setIsContributing] = useState(false)
+  const [walletBalance, setWalletBalance] = useState<number>(0) // Phase 1: Simple wallet balance
+  const [copied, setCopied] = useState(false)
+
+  // Action states
   const [isJoining, setIsJoining] = useState(false)
+  const [isPaying, setIsPaying] = useState(false)
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const [isPoolingUp, setIsPoolingUp] = useState(false)
+
+  // Form states
+  const [withdrawAmount, setWithdrawAmount] = useState<string>("")
+  const [poolUpAmount, setPoolUpAmount] = useState<string>("")
+
+  // QR Modal
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCodeImage, setQrCodeImage] = useState<string>("")
   const [isGeneratingQR, setIsGeneratingQR] = useState(false)
-  const [isPaying, setIsPaying] = useState(false)
-  const [isWithdrawing, setIsWithdrawing] = useState(false)
-  const [withdrawAmount, setWithdrawAmount] = useState<string>("")
 
+  // Check if user is a member
+  const walletAddress = publicKey?.toString() || ""
+  const isMember = group?.members.includes(walletAddress) || false
+  const isCreator = group?.creator === walletAddress
+
+  // Calculate progress
+  const progress = group ? (group.totalCollected / group.fundingGoal) * 100 : 0
+
+  // Load group data
   useEffect(() => {
     const loadGroupData = async () => {
       setIsLoading(true)
       try {
-        console.log("[FundFlow] Loading group data for ID:", params.id)
+        console.log("[GroupPage] Loading group:", params.id)
         const groupData = await fetchGroupData(params.id as string)
 
         if (groupData) {
-          console.log("[FundFlow] Group data loaded:", groupData)
-          console.log("[FundFlow] 🔍 Vault Address Check:")
-          console.log("[FundFlow]    squadsVaultAddress:", groupData.squadsVaultAddress || "❌ NOT SET")
-          console.log("[FundFlow]    squadsMultisigAddress:", groupData.squadsMultisigAddress || "❌ NOT SET")
-          console.log("[FundFlow]    onChainAddress:", groupData.onChainAddress || "❌ NOT SET")
-
-          if (!groupData.squadsVaultAddress) {
-            console.warn("[FundFlow] ⚠️ WARNING: This group doesn't have a Squads vault address!")
-            console.warn("[FundFlow] ⚠️ The Pay button will be DISABLED")
-            console.warn("[FundFlow] ⚠️ This is likely an OLD group created before Squads integration")
-            console.warn("[FundFlow] ✅ SOLUTION: Create a NEW group to test the Pay button")
-          } else {
-            console.log("[FundFlow] ✅ Squads vault configured - Pay button will be enabled!")
-          }
-
+          console.log("[GroupPage] Group loaded successfully")
+          console.log("[GroupPage] Group wallet address:", groupData.groupWalletAddress || "NOT SET")
           setGroup(groupData)
+
+          // Load wallet balance (Phase 1: Simple wallet)
+          if (groupData.groupWalletAddress) {
+            try {
+              const balance = await getWalletBalance(groupData.groupWalletAddress)
+              setWalletBalance(balance)
+              console.log("[GroupPage] Wallet balance:", balance, "SOL")
+            } catch (error) {
+              console.warn("[GroupPage] Could not fetch wallet balance:", error)
+            }
+          }
         } else {
-          console.log("[FundFlow] Group not found")
-          setGroup(null)
+          console.error("[GroupPage] Group not found")
+          toast.error("Group not found")
         }
       } catch (error) {
-        console.error("[FundFlow] Failed to fetch group data:", error)
-        setGroup(null)
+        console.error("[GroupPage] Failed to load group:", error)
+        toast.error("Failed to load group data")
       } finally {
         setIsLoading(false)
       }
@@ -99,170 +126,76 @@ export default function GroupDashboard() {
     }
   }, [params.id])
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 container py-8 md:py-12 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-accent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading group data...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
-  if (!group) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 container py-8 md:py-12 flex items-center justify-center">
-          <Card className="p-12 max-w-md text-center">
-            <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Group Not Found</h2>
-            <p className="text-muted-foreground mb-6">
-              The group you're looking for doesn't exist or has been removed.
-            </p>
-            <Button onClick={() => router.push("/")} className="bg-accent hover:bg-accent/90">
-              Go Home
-            </Button>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
-  const progress = (group.totalCollected / group.fundingGoal) * 100
-  const isCreator = connectedWallet?.address === group.creator
-  const isMember = group.members.includes(connectedWallet?.address || "")
-
+  // Handlers
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(group.id)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/group/${group.id}`
-    const shareData = {
-      title: `Join ${group.name} on FundFlow`,
-      text: `Join our group fund! Use code ${group.id} or visit the link.`,
-      url: shareUrl,
-    }
-
-    if (navigator.share && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData)
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          navigator.clipboard.writeText(shareUrl)
-          setCopied(true)
-          setTimeout(() => setCopied(false), 2000)
-        }
-      }
-    } else {
-      navigator.clipboard.writeText(shareUrl)
+    if (group) {
+      navigator.clipboard.writeText(group.id)
       setCopied(true)
+      toast.success("Group code copied to clipboard!")
       setTimeout(() => setCopied(false), 2000)
     }
   }
 
-  const handleShowQR = async () => {
-    setShowQRModal(true)
-    if (!qrCodeImage) {
-      setIsGeneratingQR(true)
+  const handleShare = async () => {
+    if (group) {
+      const shareUrl = `${window.location.origin}/group/${group.id}`
       try {
-        const shareUrl = `${window.location.origin}/group/${group.id}`
-        const qrCode = await generateGroupQRCode(shareUrl, group.name)
-        setQrCodeImage(qrCode)
+        await navigator.share({
+          title: group.name,
+          text: `Join my fundraising group: ${group.name}`,
+          url: shareUrl,
+        })
       } catch (error) {
-        console.error("[FundFlow] Failed to generate QR code:", error)
-        alert("Failed to generate QR code. Please try again.")
-        setShowQRModal(false)
-      } finally {
-        setIsGeneratingQR(false)
+        navigator.clipboard.writeText(shareUrl)
+        toast.success("Share link copied to clipboard!")
       }
     }
   }
 
-  const handleDownloadQR = () => {
-    if (!qrCodeImage) return
+  const handleShowQR = async () => {
+    if (!group) return
 
-    const link = document.createElement("a")
-    link.href = qrCodeImage
-    link.download = `fundflow-${group.id}-qr.png`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    setIsGeneratingQR(true)
+    setShowQRModal(true)
+
+    try {
+      const qrCode = await generateGroupQRCode(group.id, group.name)
+      setQrCodeImage(qrCode)
+    } catch (error) {
+      console.error("[GroupPage] Failed to generate QR code:", error)
+      toast.error("Failed to generate QR code")
+    } finally {
+      setIsGeneratingQR(false)
+    }
   }
 
   const handleJoinGroup = async () => {
-    if (!authenticated || !connectedWallet) {
-      toast.error("Please connect your wallet first")
-      return
-    }
-
-    if (!group?.onChainAddress) {
-      toast.error("Group not yet deployed on-chain")
+    if (!connected || !publicKey || !group) {
+      toast.error("Please connect your Solana wallet first")
       return
     }
 
     setIsJoining(true)
 
     try {
-      // Step 1: Join the group (this will be the on-chain join_with_invite call in future)
-      const { signature: joinSignature } = await joinGroup(connectedWallet.address, group.id, 10)
+      console.log("[Join] Joining group:", group.id)
 
-      console.log("[FundFlow] Join successful!")
-      console.log("[FundFlow] Join transaction:", joinSignature)
+      await joinGroup(publicKey.toString(), group.id, 0.01)
 
-      toast.success("Successfully joined the group!", {
-        description: `TX: ${joinSignature.slice(0, 8)}...${joinSignature.slice(-8)}`
-      })
-
-      // Step 2: Automatically make first payment
-      console.log("[FundFlow] Making automatic first payment...")
-
-      try {
-        // Create a simple wallet adapter for the Anchor client
-        const walletAdapter = {
-          publicKey: new PublicKey(connectedWallet.address),
-          signTransaction: async (tx: any) => {
-            const signedTx = await connectedWallet.signTransaction(tx)
-            return signedTx
-          },
-          signAllTransactions: async (txs: any[]) => {
-            const signedTxs = await connectedWallet.signAllTransactions(txs)
-            return signedTxs
-          },
-        }
-
-        const groupPoolPDA = new PublicKey(group.onChainAddress)
-        const { signature: paymentSignature, amount } = await makePaymentOnChain(walletAdapter, groupPoolPDA)
-
-        console.log("[FundFlow] First payment successful!")
-        console.log("[FundFlow] Payment transaction:", paymentSignature)
-
-        toast.success(`First payment of ${lamportsToSol(amount).toFixed(4)} SOL made automatically!`, {
-          description: `TX: ${paymentSignature.slice(0, 8)}...${paymentSignature.slice(-8)}`
-        })
-      } catch (paymentError) {
-        console.error("[FundFlow] Auto-payment failed:", paymentError)
-        toast.warning("Joined successfully, but auto-payment failed", {
-          description: "You can make a manual payment from the dashboard"
-        })
-      }
+      toast.success("Successfully joined group!")
 
       // Reload group data
       const updatedGroup = await fetchGroupData(group.id)
       if (updatedGroup) {
         setGroup(updatedGroup)
       }
+
+      // Optionally trigger first payment
+      toast.info("Make your first contribution!", {
+        description: "Click the Pay button below",
+      })
     } catch (error) {
-      console.error("[FundFlow] Join failed:", error)
+      console.error("[Join] Error:", error)
       toast.error("Failed to join group", {
         description: error instanceof Error ? error.message : "Please try again"
       })
@@ -271,86 +204,61 @@ export default function GroupDashboard() {
     }
   }
 
-  const getNextContributionDate = () => {
-    const now = new Date()
-    const created = new Date(group.createdAt)
-
-    switch (group.recurringPeriod) {
-      case "daily":
-        return new Date(now.setDate(now.getDate() + 1))
-      case "weekly":
-        return new Date(now.setDate(now.getDate() + 7))
-      case "biweekly":
-        return new Date(now.setDate(now.getDate() + 14))
-      case "monthly":
-        return new Date(now.setMonth(now.getMonth() + 1))
-      default:
-        return new Date(now.setDate(now.getDate() + 7))
-    }
-  }
-
-  const handleMakePayment = async () => {
-    if (!authenticated || !connectedWallet) {
-      toast.error("Please connect your wallet first")
+  const handlePay = async () => {
+    if (!connected || !publicKey || !group) {
+      toast.error("Please connect your Solana wallet first")
       return
     }
 
-    if (!group?.squadsVaultAddress) {
-      toast.error("Group vault not configured. Please create a new group.")
+    if (!group.groupWalletAddress) {
+      toast.error("Group wallet not configured", {
+        description: "Please create a new group or contact the administrator"
+      })
       return
     }
 
     setIsPaying(true)
 
     try {
+      const walletAddress = publicKey.toString()
       console.log("═══════════════════════════════════════")
-      console.log("🚀 STARTING PAYMENT TRANSACTION")
+      console.log("💰 STARTING PAYMENT (Phase 1: Simple Transfer)")
       console.log("═══════════════════════════════════════")
       console.log("[Pay] Group:", group.name)
-      console.log("[Pay] From Wallet:", connectedWallet.address)
-      console.log("[Pay] To Squads Vault:", group.squadsVaultAddress)
       console.log("[Pay] Amount:", group.amountPerRecurrence, "SOL")
+      console.log("[Pay] To:", group.groupWalletAddress)
+      console.log("[Pay] From:", walletAddress)
 
-      // Convert SOL to lamports
-      const amountLamports = squadsSolToLamports(group.amountPerRecurrence)
-      console.log("[Pay] Amount in lamports:", amountLamports)
-
-      // Call Squads vault payment function
-      console.log("[Pay] Calling payToSquadsVault...")
-      const { signature } = await payToSquadsVault(
-        connectedWallet,
-        new PublicKey(group.squadsVaultAddress),
-        amountLamports
+      // Phase 1: Simple wallet-to-wallet transfer
+      // NOTE: For Phase 1, we pass null for wallet object since we use simple wallet generation
+      const { signature } = await payToGroupWallet(
+        null, // Phase 1 doesn't need wallet object
+        walletAddress,
+        group.groupWalletAddress,
+        group.amountPerRecurrence
       )
 
-      console.log("═══════════════════════════════════════")
-      console.log("✅ PAYMENT SUCCESSFUL!")
-      console.log("═══════════════════════════════════════")
-      console.log("[Pay] Transaction Signature:", signature)
-      console.log("[Pay] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
-      console.log("[Pay] Amount:", group.amountPerRecurrence, "SOL")
+      console.log("[Pay] ✅ Payment successful!")
+      console.log("[Pay] Signature:", signature)
 
       toast.success(`Payment of ${group.amountPerRecurrence} SOL successful!`, {
         description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`,
         action: {
           label: "View on Explorer",
-          onClick: () => window.open(`https://explorer.solana.com/tx/${signature}?cluster=devnet`, '_blank')
+          onClick: () => window.open(`https://solscan.io/tx/${signature}?cluster=devnet`, '_blank')
         }
       })
 
-      // Get updated vault balance
-      try {
-        const vaultBalance = await getVaultBalance(new PublicKey(group.squadsVaultAddress))
-        console.log("[Pay] New vault balance:", squadsLamportsToSol(vaultBalance), "SOL")
-      } catch (balanceError) {
-        console.warn("[Pay] Could not fetch vault balance:", balanceError)
-      }
+      // Reload wallet balance
+      const updatedBalance = await getWalletBalance(group.groupWalletAddress)
+      setWalletBalance(updatedBalance)
+      console.log("[Pay] Updated wallet balance:", updatedBalance, "SOL")
 
-      // Reload group data
       const updatedGroup = await fetchGroupData(group.id)
       if (updatedGroup) {
         setGroup(updatedGroup)
       }
+
     } catch (error) {
       console.error("═══════════════════════════════════════")
       console.error("❌ PAYMENT FAILED")
@@ -366,19 +274,18 @@ export default function GroupDashboard() {
   }
 
   const handleWithdraw = async () => {
-    if (!authenticated || !connectedWallet || !withdrawAmount) {
-      toast.error("Please enter a valid withdrawal amount")
+    if (!connected || !publicKey || !group) {
+      toast.error("Please connect your Solana wallet first")
       return
     }
 
-    if (!group?.squadsVaultAddress) {
-      toast.error("Group vault not configured. Please create a new group.")
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+      toast.error("Please enter a valid amount")
       return
     }
 
-    const amountSol = parseFloat(withdrawAmount)
-    if (isNaN(amountSol) || amountSol <= 0) {
-      toast.error("Please enter a valid positive amount")
+    if (!group.squadsVaultAddress || !group.squadsMultisigAddress) {
+      toast.error("Group vault not configured")
       return
     }
 
@@ -386,55 +293,62 @@ export default function GroupDashboard() {
 
     try {
       console.log("═══════════════════════════════════════")
-      console.log("🏦 STARTING WITHDRAWAL TRANSACTION")
+      console.log("🏦 STARTING WITHDRAWAL")
       console.log("═══════════════════════════════════════")
-      console.log("[Withdraw] Group:", group.name)
-      console.log("[Withdraw] From Squads Vault:", group.squadsVaultAddress)
-      console.log("[Withdraw] To Wallet:", connectedWallet.address)
-      console.log("[Withdraw] Amount:", amountSol, "SOL")
 
+      const amountSol = parseFloat(withdrawAmount)
       const amountLamports = squadsSolToLamports(amountSol)
-      console.log("[Withdraw] Amount in lamports:", amountLamports)
 
-      // Call Squads vault withdrawal function
-      console.log("[Withdraw] Calling withdrawFromSquadsVault...")
-      console.log("[Withdraw] Note: This requires multisig approval in production")
+      console.log("[Withdraw] Amount:", amountSol, "SOL")
+      console.log("[Withdraw] Vault:", group.squadsVaultAddress)
 
-      const { signature } = await withdrawFromSquadsVault(
+      // Extract wallet address
+      const recipientAddress = publicKey.toString()
+
+      // Step 1: Optionally decompress funds first (currently simulated)
+      try {
+        console.log("[Withdraw] Decompressing funds...")
+        await decompressFunds(
+          new PublicKey(group.squadsVaultAddress),
+          new PublicKey(recipientAddress),
+          amountLamports,
+          connectedWallet
+        )
+      } catch (decompressionError) {
+        console.warn("[Withdraw] Decompression failed (optional):", decompressionError)
+      }
+
+      // Step 2: Create withdrawal proposal
+      const { signature, proposalAddress } = await withdrawFromSquadsVault(
         connectedWallet,
+        new PublicKey(group.squadsMultisigAddress),
         new PublicKey(group.squadsVaultAddress),
+        new PublicKey(recipientAddress),
         amountLamports
       )
 
-      console.log("═══════════════════════════════════════")
-      console.log("✅ WITHDRAWAL INITIATED!")
-      console.log("═══════════════════════════════════════")
-      console.log("[Withdraw] Transaction Signature:", signature)
-      console.log("[Withdraw] Amount:", amountSol, "SOL")
+      console.log("[Withdraw] ✅ Withdrawal proposal created!")
+      console.log("[Withdraw] Signature:", signature)
 
       toast.success(`Withdrawal of ${amountSol} SOL initiated!`, {
-        description: "Pending multisig approval",
+        description: proposalAddress ? "Pending approval" : "Executed",
         action: {
-          label: "View Details",
-          onClick: () => console.log("Withdrawal details:", signature)
+          label: "View on Explorer",
+          onClick: () => window.open(`https://explorer.solana.com/tx/${signature}?cluster=devnet`, '_blank')
         }
       })
 
       setWithdrawAmount("")
 
-      // Get updated vault balance
-      try {
-        const vaultBalance = await getVaultBalance(new PublicKey(group.squadsVaultAddress))
-        console.log("[Withdraw] Current vault balance:", squadsLamportsToSol(vaultBalance), "SOL")
-      } catch (balanceError) {
-        console.warn("[Withdraw] Could not fetch vault balance:", balanceError)
-      }
+      // Reload data
+      const updatedBalance = await getVaultBalance(new PublicKey(group.squadsVaultAddress))
+      setVaultBalance(updatedBalance)
 
-      // Reload group data
       const updatedGroup = await fetchGroupData(group.id)
       if (updatedGroup) {
         setGroup(updatedGroup)
       }
+
     } catch (error) {
       console.error("═══════════════════════════════════════")
       console.error("❌ WITHDRAWAL FAILED")
@@ -449,223 +363,174 @@ export default function GroupDashboard() {
     }
   }
 
+  const handlePoolUp = async () => {
+    if (!connected || !publicKey || !group) {
+      toast.error("Please connect your Solana wallet first")
+      return
+    }
+
+    if (!poolUpAmount || parseFloat(poolUpAmount) <= 0) {
+      toast.error("Please enter a valid amount")
+      return
+    }
+
+    setIsPoolingUp(true)
+
+    try {
+      console.log("═══════════════════════════════════════")
+      console.log("📈 POOLING UP TO YIELD")
+      console.log("═══════════════════════════════════════")
+
+      const amountSol = parseFloat(poolUpAmount)
+      console.log("[PoolUp] Amount:", amountSol, "SOL")
+
+      // TODO: Implement Meteora DLMM integration
+      // For now, show a placeholder toast
+      toast.info("Pool Up feature coming soon!", {
+        description: "Meteora DLMM integration in progress"
+      })
+
+      setPoolUpAmount("")
+
+    } catch (error) {
+      console.error("❌ POOL UP FAILED:", error)
+      toast.error("Pool up failed", {
+        description: error instanceof Error ? error.message : "Please try again"
+      })
+    } finally {
+      setIsPoolingUp(false)
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  // Group not found
+  if (!group) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Card className="p-8 max-w-md text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Group Not Found</h2>
+            <p className="text-muted-foreground mb-4">
+              The group you're looking for doesn't exist or has been removed.
+            </p>
+            <Button onClick={() => router.push("/")} className="bg-accent hover:bg-accent/90">
+              Return Home
+            </Button>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 container py-8 md:py-12">
+
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
+        {/* Group Header */}
         <div className="mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
+          <div className="flex items-start gap-6 mb-6">
+            <GroupAvatar groupName={group.name} size="lg" />
+
+            <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <GroupAvatar 
-                  name={group.name} 
-                  id={group.id}
-                  size={48}
-                  className="h-12 w-12"
-                />
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold">{group.name}</h1>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                    <span className="font-mono">{group.id}</span>
-                    <span>•</span>
-                    <span>{group.members.length} members</span>
-                  </div>
-                </div>
+                <h1 className="text-3xl font-bold">{group.name}</h1>
+                {group.isPublic ? (
+                  <Badge variant="secondary">Public</Badge>
+                ) : (
+                  <Badge variant="outline">
+                    <Shield className="h-3 w-3 mr-1" />
+                    Private
+                  </Badge>
+                )}
+              </div>
+
+              <p className="text-muted-foreground mb-4">
+                {group.recurringPeriod} contributions • {group.riskLevel} risk • {group.totalDuration}
+              </p>
+
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCopyCode}>
+                  {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                  {copied ? "Copied!" : `Code: ${group.id}`}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleShowQR}>
+                  <QrCode className="h-4 w-4 mr-2" />
+                  QR Code
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="capitalize border-accent/30 text-accent">
-                {group.riskLevel} Risk
-              </Badge>
-              <Badge variant="outline">
-                {formatDuration(group.totalDuration)}
-              </Badge>
-            </div>
           </div>
+
+          {/* Progress */}
+          <Card className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Raised</p>
+                <p className="text-3xl font-bold">{walletBalance.toFixed(4)} SOL</p>
+                <p className="text-sm text-muted-foreground">of {group.fundingGoal} SOL goal</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-accent">{progress.toFixed(1)}%</p>
+                <p className="text-sm text-muted-foreground">Complete</p>
+              </div>
+            </div>
+            <Progress value={progress} className="h-3" />
+
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="text-center">
+                <Users className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-2xl font-bold">{group.members.length}</p>
+                <p className="text-xs text-muted-foreground">Members</p>
+              </div>
+              <div className="text-center">
+                <DollarSign className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-2xl font-bold">{group.amountPerRecurrence} SOL</p>
+                <p className="text-xs text-muted-foreground">Per {group.recurringPeriod}</p>
+              </div>
+              <div className="text-center">
+                <Calendar className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-2xl font-bold">{group.totalDuration}</p>
+                <p className="text-xs text-muted-foreground">Duration</p>
+              </div>
+            </div>
+          </Card>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
-          <div className="space-y-6">
-            <Card className="p-8 bg-card border-border/50">
-              <div className="mb-2">
-                <p className="text-sm text-muted-foreground mb-1">Total Collected</p>
-                <h2 className="text-5xl font-bold tracking-tight">
-                  {group.totalCollected.toLocaleString()} SOL
-                </h2>
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Funding Goal</span>
-                  <span className="font-mono font-medium">
-                    {group.fundingGoal.toLocaleString()} SOL
-                  </span>
-                </div>
-                <Progress value={progress} className="h-2" />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-accent font-medium">{progress.toFixed(1)}% Complete</span>
-                  <span className="text-muted-foreground">
-                    {(group.fundingGoal - group.totalCollected).toLocaleString()} SOL remaining
-                  </span>
-                </div>
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="grid grid-cols-3 gap-6">
-                <div>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
-                    <Users className="h-4 w-4" />
-                    <span>Members</span>
-                  </div>
-                  <p className="text-3xl font-bold">{group.members.length}</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Frequency</span>
-                  </div>
-                  <p className="text-3xl font-bold capitalize">{group.recurringPeriod.slice(0, 3)}</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
-                    <DollarSign className="h-4 w-4" />
-                    <span>Per Period</span>
-                  </div>
-                  <p className="text-3xl font-bold">${group.amountPerRecurrence}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-card border-border/50 overflow-hidden">
-              <Tabs defaultValue="members" className="w-full">
-                <div className="border-b border-border/30">
-                  <TabsList className="bg-transparent h-auto p-0 w-full justify-start px-6">
-                    <TabsTrigger
-                      value="members"
-                      className="relative bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground rounded-none px-4 py-4 font-medium transition-all hover:text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-accent after:transition-colors"
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      Members
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="activity"
-                      className="relative bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground rounded-none px-4 py-4 font-medium transition-all hover:text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-accent after:transition-colors"
-                    >
-                      <TrendingUp className="h-4 w-4 mr-2" />
-                      Activity
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="share"
-                      className="relative bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground rounded-none px-4 py-4 font-medium transition-all hover:text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-accent after:transition-colors"
-                    >
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <TabsContent value="members" className="p-6 space-y-3 mt-0">
-                  {group.members.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No members yet</p>
-                      <p className="text-sm mt-2">Be the first to join this group!</p>
-                    </div>
-                  ) : (
-                    group.members.map((memberAddress, index) => (
-                      <div
-                        key={memberAddress}
-                        className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <UserAvatar 
-                            name={memberAddress} 
-                            id={memberAddress}
-                            size={40}
-                            className="h-10 w-10"
-                          />
-                          <div>
-                            <p className="font-mono text-sm font-medium">
-                              {memberAddress.slice(0, 6)}...{memberAddress.slice(-4)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{index === 0 ? "Creator" : "Member"}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-lg">0.01 SOL</p>
-                          <p className="text-xs text-muted-foreground">
-                            Contribution
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </TabsContent>
-
-                <TabsContent value="activity" className="p-6 mt-0">
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Activity history coming soon</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="share" className="p-6 mt-0">
-                  <div className="space-y-4">
-                    <div className="p-6 rounded-lg bg-muted/30 border border-border/50">
-                      <p className="text-sm text-muted-foreground mb-2">Group Code</p>
-                      <code className="text-2xl font-mono font-bold tracking-wider">{group.id}</code>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <Button variant="outline" onClick={handleCopyCode} className="w-full bg-transparent">
-                        {copied ? <CheckCircle2 className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                        Copy
-                      </Button>
-                      <Button variant="outline" onClick={handleShare} className="w-full bg-transparent">
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share
-                      </Button>
-                      <Button variant="outline" onClick={handleShowQR} className="w-full bg-transparent">
-                        <QrCode className="h-4 w-4 mr-2" />
-                        QR
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Actions */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Join Button (if not a member) */}
             {!isMember && (
-              <Card className="p-6 bg-accent/5 border-accent/30">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold mb-2">Join This Group</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Make your first contribution of 0.01 SOL to join the group and start participating.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-background/50 border border-border/50 mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Joining Contribution</span>
-                    <span className="text-lg font-bold">
-                      0.01 SOL
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                    <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span>This first contribution goes directly to the group pool</span>
-                  </div>
-                </div>
-
+              <Card className="p-6 bg-accent/5 border-accent/20">
+                <h3 className="text-xl font-semibold mb-4">Join This Group</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start contributing {group.amountPerRecurrence} SOL {group.recurringPeriod} towards the {group.fundingGoal} SOL goal
+                </p>
                 <Button
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                  className="w-full bg-accent hover:bg-accent/90"
                   size="lg"
                   onClick={handleJoinGroup}
-                  disabled={isJoining || !authenticated}
+                  disabled={isJoining || !connected}
                 >
                   {isJoining ? (
                     <>
@@ -679,166 +544,311 @@ export default function GroupDashboard() {
                     </>
                   )}
                 </Button>
-
-                {!authenticated && (
-                  <p className="text-xs text-muted-foreground text-center mt-3">Connect your wallet to join</p>
-                )}
               </Card>
             )}
 
+            {/* Member Actions */}
             {isMember && (
-              <Card className="p-6 bg-card border-border/50">
-                <h3 className="text-lg font-semibold mb-4">Your Contribution</h3>
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold mb-6">Your Actions</h3>
 
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-muted/30">
-                    <p className="text-sm text-muted-foreground mb-1">Next Due Date</p>
-                    <p className="text-xl font-semibold">{getNextContributionDate().toLocaleDateString()}</p>
-                  </div>
+                <Tabs defaultValue="pay" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="pay">Pay</TabsTrigger>
+                    <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+                    <TabsTrigger value="pool">Pool Up</TabsTrigger>
+                  </TabsList>
 
-                  <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
-                    <p className="text-sm text-muted-foreground mb-1">Amount Due</p>
-                    <p className="text-2xl font-bold">
-                      {group.amountPerRecurrence} SOL
-                    </p>
-                  </div>
+                  {/* Pay Tab */}
+                  <TabsContent value="pay" className="space-y-4 mt-6">
+                    <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                      <p className="text-sm text-muted-foreground mb-1">Amount Due</p>
+                      <p className="text-3xl font-bold">{group.amountPerRecurrence} SOL</p>
+                    </div>
 
-                  <Button
-                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                    size="lg"
-                    onClick={handleMakePayment}
-                    disabled={isPaying || !authenticated || !group.squadsVaultAddress}
-                  >
-                    {isPaying ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing Payment...
-                      </>
-                    ) : (
-                      <>
-                        <DollarSign className="mr-2 h-4 w-4" />
-                        Make Payment ({group.amountPerRecurrence} SOL)
-                      </>
+                    <Button
+                      className="w-full bg-accent hover:bg-accent/90"
+                      size="lg"
+                      onClick={handlePay}
+                      disabled={isPaying || !connected || !group.groupWalletAddress}
+                    >
+                      {isPaying ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Processing Payment...
+                        </>
+                      ) : (
+                        <>
+                          <Wallet className="mr-2 h-5 w-5" />
+                          Pay {group.amountPerRecurrence} SOL
+                        </>
+                      )}
+                    </Button>
+
+                    {!connected && (
+                      <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                          ⚠️ Please connect your Solana wallet to make payments
+                        </p>
+                      </div>
                     )}
-                  </Button>
 
-                  {/* Show helpful message if button is disabled */}
-                  {!authenticated && (
-                    <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                      <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                        ⚠️ Please connect your wallet to make payments
-                      </p>
+                    {connected && !group.groupWalletAddress && (
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <p className="text-sm text-red-600 dark:text-red-500 font-medium">
+                          ❌ Group wallet not configured. Please create a new group.
+                        </p>
+                      </div>
+                    )}
+
+                    {connected && group.groupWalletAddress && (
+                      <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <p className="text-sm text-green-600 dark:text-green-500">
+                          ✅ Ready to pay to group wallet
+                        </p>
+                        <p className="text-xs text-green-600/80 dark:text-green-500/80 mt-1 font-mono">
+                          {group.groupWalletAddress.slice(0, 8)}...{group.groupWalletAddress.slice(-8)}
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
+                      💡 Phase 1: Simple wallet-to-wallet transfers (Multisig & compression coming in Phase 2)
+                    </p>
+                  </TabsContent>
+
+                  {/* Withdraw Tab - Phase 2 (Commented out for now) */}
+                  <TabsContent value="withdraw" className="space-y-4 mt-6">
+                    <div className="p-4 rounded-lg bg-muted/30">
+                      <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+                      <p className="text-2xl font-bold">{walletBalance.toFixed(4)} SOL</p>
                     </div>
-                  )}
 
-                  {authenticated && !group.squadsVaultAddress && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                      <p className="text-sm text-red-600 dark:text-red-500 font-medium mb-1">
-                        ❌ Pay button disabled: No vault configured
-                      </p>
-                      <p className="text-xs text-red-600/80 dark:text-red-500/80">
-                        This group was created before Squads integration. Please create a new group to test the Pay functionality.
-                      </p>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Withdraw Amount (SOL)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={withdrawAmount}
+                          onChange={(e) => setWithdrawAmount(e.target.value)}
+                          placeholder="0.1"
+                          step="0.01"
+                          min="0"
+                          max={walletBalance}
+                          className="flex-1 px-3 py-2 bg-background border border-border rounded-md"
+                          disabled={isWithdrawing || !connected}
+                        />
+                      </div>
                     </div>
-                  )}
 
-                  {authenticated && group.squadsVaultAddress && (
-                    <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                      <p className="text-sm text-green-600 dark:text-green-500">
-                        ✅ Ready to pay! Click the button above to send {group.amountPerRecurrence} SOL to the group vault.
-                      </p>
-                      <p className="text-xs text-green-600/80 dark:text-green-500/80 mt-1">
-                        Vault: {group.squadsVaultAddress.slice(0, 8)}...{group.squadsVaultAddress.slice(-8)}
-                      </p>
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      size="lg"
+                      onClick={handleWithdraw}
+                      disabled={isWithdrawing || !connected || !withdrawAmount || !group.groupWalletAddress}
+                    >
+                      {isWithdrawing ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Processing Withdrawal...
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDownToLine className="mr-2 h-5 w-5" />
+                          Withdraw Funds
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="text-xs text-muted-foreground">
+                      ⚠️ Withdrawal functionality coming in Phase 2 (Multisig integration)
+                    </p>
+                  </TabsContent>
+
+                  {/* Pool Up Tab - Phase 2 (Commented out for now) */}
+                  <TabsContent value="pool" className="space-y-4 mt-6">
+                    <div className="p-4 rounded-lg bg-muted/30">
+                      <p className="text-sm text-muted-foreground mb-1">Wallet Balance</p>
+                      <p className="text-2xl font-bold">{walletBalance.toFixed(4)} SOL</p>
                     </div>
-                  )}
 
-                  <div className="space-y-2">
-                    <label className="text-sm text-muted-foreground">Withdraw Amount (SOL)</label>
-                    <div className="flex gap-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Amount to Deploy (SOL)</label>
                       <input
                         type="number"
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(e.target.value)}
-                        placeholder="0.1"
-                        step="0.01"
+                        value={poolUpAmount}
+                        onChange={(e) => setPoolUpAmount(e.target.value)}
+                        placeholder="0.5"
+                        step="0.1"
                         min="0"
-                        className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm"
-                        disabled={isWithdrawing || !authenticated}
+                        max={walletBalance}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-md"
+                        disabled={isPoolingUp || !connected}
                       />
-                      <Button
-                        variant="outline"
-                        onClick={handleWithdraw}
-                        disabled={isWithdrawing || !authenticated || !withdrawAmount || !group.squadsVaultAddress}
-                      >
-                        {isWithdrawing ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          "Withdraw"
-                        )}
-                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">Withdraw your contributed funds from the pool</p>
+
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      size="lg"
+                      onClick={handlePoolUp}
+                      disabled={isPoolingUp || !connected || !poolUpAmount}
+                    >
+                      {isPoolingUp ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Deploying to Yield Pool...
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpFromLine className="mr-2 h-5 w-5" />
+                          Deploy to Yield Pool
+                        </>
+                      )}
+                    </Button>
+
+                    <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <p className="text-sm text-blue-600 dark:text-blue-500 font-medium mb-1">
+                        📈 Earn Passive Yield
+                      </p>
+                      <p className="text-xs text-blue-600/80 dark:text-blue-500/80">
+                        Deploy funds to Meteora DLMM pools and earn 0.25-0.50% fees automatically
+                      </p>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      💡 Yield farming integration coming soon!
+                    </p>
+                  </TabsContent>
+                </Tabs>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Info */}
+          <div className="space-y-6">
+            {/* Wallet Info - Phase 1 */}
+            {group.groupWalletAddress && (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-accent" />
+                  Group Wallet
+                </h3>
+
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground mb-1">Balance</p>
+                    <p className="font-mono font-bold text-lg">{walletBalance.toFixed(4)} SOL</p>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <p className="text-muted-foreground mb-1">Address</p>
+                    <p className="font-mono text-xs break-all">{group.groupWalletAddress}</p>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-xs text-blue-600 dark:text-blue-500">
+                      💡 Phase 1: Simple wallet. Multisig coming in Phase 2!
+                    </p>
                   </div>
                 </div>
               </Card>
             )}
 
-            <Card className="p-6 bg-muted/20 border-border/50">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="h-5 w-5 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">Privacy Protected</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    All transactions use ZK compression on Solana for maximum privacy and security.
+            {/* Members */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Users className="h-5 w-5 text-accent" />
+                Members ({group.members.length})
+              </h3>
+
+              <div className="space-y-2">
+                {group.members.slice(0, 5).map((member, index) => (
+                  <div key={member} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50">
+                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono text-xs truncate">{member}</p>
+                      {member === group.creator && (
+                        <Badge variant="secondary" className="text-xs mt-1">Creator</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {group.members.length > 5 && (
+                  <p className="text-xs text-muted-foreground text-center pt-2">
+                    +{group.members.length - 5} more members
                   </p>
-                </div>
+                )}
               </div>
             </Card>
 
+            {/* Group Details */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Group Details</h3>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Created</span>
+                  <span className="font-medium">{new Date(group.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Risk Level</span>
+                  <Badge variant={group.riskLevel === 'low' ? 'secondary' : group.riskLevel === 'medium' ? 'default' : 'destructive'}>
+                    {group.riskLevel}
+                  </Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Visibility</span>
+                  <span className="font-medium">{group.isPublic ? 'Public' : 'Private'}</span>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </main>
-      <Footer />
 
+      {/* QR Code Modal */}
       <Dialog open={showQRModal} onOpenChange={setShowQRModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share Group QR Code</DialogTitle>
-            <DialogDescription>Scan this QR code to join {group.name}</DialogDescription>
+            <DialogTitle>Group QR Code</DialogTitle>
+            <DialogDescription>
+              Scan this code to join {group.name}
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-4">
+
+          <div className="flex flex-col items-center gap-4 py-6">
             {isGeneratingQR ? (
-              <div className="flex flex-col items-center justify-center h-[300px] w-[300px] bg-muted/30 rounded-lg">
-                <Loader2 className="h-8 w-8 animate-spin text-accent mb-2" />
-                <p className="text-sm text-muted-foreground">Generating QR code...</p>
-              </div>
-            ) : (
+              <Loader2 className="h-12 w-12 animate-spin text-accent" />
+            ) : qrCodeImage ? (
               <>
-                <div className="p-4 bg-white rounded-lg">
-                  <img src={qrCodeImage || "/placeholder.svg"} alt="Group QR Code" className="w-[300px] h-[300px]" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-1">Group Code</p>
-                  <code className="text-lg font-mono font-bold">{group.id}</code>
-                </div>
-                <div className="flex gap-2 w-full">
-                  <Button variant="outline" onClick={handleDownloadQR} className="flex-1 bg-transparent">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                  <Button onClick={handleShare} className="flex-1 bg-accent hover:bg-accent/90">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
-                </div>
+                <img src={qrCodeImage} alt="Group QR Code" className="w-64 h-64" />
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const link = document.createElement('a')
+                    link.href = qrCodeImage
+                    link.download = `${group.name}-qr.png`
+                    link.click()
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download QR Code
+                </Button>
               </>
+            ) : (
+              <p className="text-muted-foreground">Failed to generate QR code</p>
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      <Footer />
     </div>
   )
 }

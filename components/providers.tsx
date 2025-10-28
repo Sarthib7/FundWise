@@ -1,6 +1,29 @@
 "use client"
 
 import type React from "react"
+import { SolanaWalletProvider } from "./solana-wallet-provider"
+
+// =============================================================================
+// PHASE 1: Using Solana Wallet Adapter (Active)
+// =============================================================================
+// Pure Solana wallet adapter - NO ETHEREUM, ONLY SOLANA
+// Supports: Phantom, Solflare, Backpack
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  console.log("[FundFlow] Using Solana Wallet Adapter (Phase 1)")
+
+  return (
+    <SolanaWalletProvider>
+      {children}
+    </SolanaWalletProvider>
+  )
+}
+
+// =============================================================================
+// PRIVY PROVIDER (Commented out - was causing Ethereum wallet issues)
+// =============================================================================
+// To restore Privy, uncomment below and comment out SolanaWalletProvider above
+/*
 import { PrivyProvider } from "@privy-io/react-auth"
 import { useEffect, useState } from "react"
 
@@ -59,20 +82,41 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   console.log("[FundFlow] Initializing PrivyProvider with App ID")
 
+  // Diagnostic logging for chain configuration
+  const solanaRpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
+  const solanaNetwork = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet"
+
+  console.log("[FundFlow] Solana RPC URL:", solanaRpcUrl)
+  console.log("[FundFlow] Solana Network:", solanaNetwork)
+
   return (
     <PrivyProvider
       appId={appId}
       config={{
+        // CRITICAL: ONLY allow Solana wallets, NO ETHEREUM
         loginMethods: ["wallet"],
         appearance: {
           theme: "dark",
           accentColor: "#10b981",
+          walletList: ["phantom", "solflare", "backpack"], // SOLANA WALLETS ONLY
         },
+        // Disable embedded wallets completely
+        embeddedWallets: {
+          createOnLogin: "off",
+          noPromptOnSignature: true,
+        },
+        // CRITICAL: Only allow external Solana wallets
+        externalWallets: {
+          solana: {
+            connectors: ["phantom", "solflare", "backpack"],
+          },
+        },
+        // Solana devnet ONLY - NO ETHEREUM CHAINS
         supportedChains: [
           {
-            id: 101, // Solana mainnet
-            name: "Solana",
-            network: "solana",
+            id: 103, // Solana devnet chain ID
+            name: "Solana Devnet",
+            network: "solana-devnet",
             nativeCurrency: {
               name: "Solana",
               symbol: "SOL",
@@ -80,10 +124,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             },
             rpcUrls: {
               default: {
-                http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
-              },
-              public: {
-                http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
+                http: [solanaRpcUrl],
               },
             },
             blockExplorers: {
@@ -95,9 +136,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         ],
         defaultChain: {
-          id: 101, // Solana mainnet
-          name: "Solana",
-          network: "solana",
+          id: 103,
+          name: "Solana Devnet",
+          network: "solana-devnet",
           nativeCurrency: {
             name: "Solana",
             symbol: "SOL",
@@ -105,10 +146,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
           rpcUrls: {
             default: {
-              http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
-            },
-            public: {
-              http: [process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"],
+              http: [solanaRpcUrl],
             },
           },
           blockExplorers: {
@@ -118,9 +156,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
             },
           },
         },
+        // CRITICAL: Explicitly set to Solana
+        walletConnectProjectId: undefined, // Disable WalletConnect (Ethereum)
       }}
     >
       {children}
     </PrivyProvider>
   )
 }
+*/

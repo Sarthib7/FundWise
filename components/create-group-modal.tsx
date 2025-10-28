@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { usePrivy, useWallets } from "@privy-io/react-auth"
+// PHASE 1: Using Solana Wallet Adapter (Active)
+import { useWallet } from "@solana/wallet-adapter-react"
+// PHASE 2: Privy (Commented out)
+// import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { createGroup } from "@/lib/solana"
 import { Loader2, Lock, Globe } from "lucide-react"
 import { UsdcIcon } from "@/components/icons/usdc-icon"
@@ -21,9 +24,12 @@ interface CreateGroupModalProps {
 
 export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) {
   const router = useRouter()
-  const { authenticated } = usePrivy()
-  const { wallets } = useWallets()
-  const connectedWallet = wallets[0]
+  // PHASE 1: Solana Wallet Adapter
+  const { publicKey, connected } = useWallet()
+  // PHASE 2: Privy (commented out)
+  // const { authenticated } = usePrivy()
+  // const { wallets } = useWallets()
+  // const connectedWallet = wallets[0]
 
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState({
@@ -39,62 +45,18 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!authenticated || !connectedWallet) {
-      alert("Please connect your wallet first. Click the 'Connect Wallet' button in the top right corner.")
+    // PHASE 1: Check Solana wallet connection
+    if (!connected || !publicKey) {
+      alert("Please connect your Solana wallet first. Click the 'Connect Wallet' button in the top right corner.")
       return
     }
 
     setIsCreating(true)
 
     try {
-      console.log("[CreateGroup] Connected wallet object:", connectedWallet)
-      console.log("[CreateGroup] Wallet address:", connectedWallet.address)
-      console.log("[CreateGroup] Wallet type:", connectedWallet.walletClientType)
-      console.log("[CreateGroup] All wallet properties:", Object.keys(connectedWallet))
-
-      // Extract Solana address from Privy wallet
-      let walletAddress: string | null = null
-
-      // Try multiple possible locations for Solana address
-      if (connectedWallet.solana && connectedWallet.solana.address) {
-        console.log("[CreateGroup] ✅ Found wallet.solana.address:", connectedWallet.solana.address)
-        walletAddress = connectedWallet.solana.address
-      } else if (connectedWallet.address) {
-        console.log("[CreateGroup] 🔍 Found wallet.address:", connectedWallet.address)
-
-        // Check if it's an Ethereum address (starts with 0x)
-        if (connectedWallet.address.startsWith("0x")) {
-          console.error("[CreateGroup] ❌ ERROR: This is an Ethereum address, not a Solana address!")
-          console.error("[CreateGroup] ❌ You need to connect a Solana wallet (Phantom, Solflare, etc.)")
-          alert(
-            "Wrong wallet type!\n\n" +
-            "You connected an Ethereum wallet, but this app needs a Solana wallet.\n\n" +
-            "Please:\n" +
-            "1. Disconnect your current wallet\n" +
-            "2. Connect a Solana wallet (Phantom or Solflare)\n" +
-            "3. Try again"
-          )
-          setIsCreating(false)
-          return
-        }
-
-        walletAddress = connectedWallet.address
-      }
-
-      // Validate we got a Solana address
-      if (!walletAddress) {
-        console.error("[CreateGroup] ❌ ERROR: No wallet address found in Privy wallet object")
-        console.error("[CreateGroup] Wallet object structure:", connectedWallet)
-        alert(
-          "Wallet address not found!\n\n" +
-          "Please disconnect and reconnect your wallet, then try again.\n\n" +
-          "If the issue persists, check the console (F12) for details."
-        )
-        setIsCreating(false)
-        return
-      }
-
-      console.log("[CreateGroup] Using wallet address:", walletAddress)
+      const walletAddress = publicKey.toString()
+      console.log("[CreateGroup] ✅ Solana wallet connected:", walletAddress)
+      console.log("[CreateGroup] Using Solana Wallet Adapter (Phase 1)")
 
       const { groupId, signature, onChainAddress, squadsVaultAddress } = await createGroup(
         walletAddress,
@@ -108,7 +70,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
           fundingGoal: Number.parseFloat(formData.fundingGoal),
           isPublic: formData.isPublic,
         },
-        connectedWallet // Pass the wallet for signing transactions
+        null // No wallet object needed for Phase 1 (simple wallet generation)
       )
 
       console.log("[FundFlow] ✅ Group created successfully!")
@@ -328,7 +290,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1" disabled={isCreating || !authenticated}>
+            <Button type="submit" className="flex-1" disabled={isCreating || !connected}>
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -340,8 +302,8 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
             </Button>
           </div>
 
-          {!authenticated && (
-            <p className="text-sm text-muted-foreground text-center">Please connect your wallet to create a group</p>
+          {!connected && (
+            <p className="text-sm text-muted-foreground text-center">Please connect your Solana wallet to create a group</p>
           )}
         </form>
         )}

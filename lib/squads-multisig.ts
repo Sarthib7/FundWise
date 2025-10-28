@@ -17,11 +17,15 @@ export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
 /**
  * Create a new Squads multisig for a group
  * This is the group's treasury where all funds are collected
+ *
+ * For MVP: Creates a 1/1 multisig (single-signer) for testing
+ * In production: Can be configured for M/N multi-signature schemes
  */
 export async function createSquadsMultisig(
   creator: PublicKey,
   groupName: string,
-  members: PublicKey[] = []
+  members: PublicKey[] = [],
+  wallet?: any // Optional wallet for on-chain initialization
 ): Promise<{ multisigPDA: PublicKey; vaultPDA: PublicKey; signature: string }> {
   try {
     console.log("[Squads] Creating multisig for group:", groupName)
@@ -46,14 +50,102 @@ export async function createSquadsMultisig(
 
     console.log("[Squads] Vault PDA:", vaultPda.toString())
 
-    // For devnet testing, we'll use a simpler approach
-    // In production, you'd create the actual multisig transaction
+    // For MVP: Create a simple 1/1 multisig (single signer - the creator)
+    // This allows testing without requiring multiple signers
+    const multisigMembers = [
+      {
+        key: creator,
+        permissions: multisig.types.Permissions.all(),
+      },
+    ]
 
-    // Store these addresses for the group
+    console.log("[Squads] Configuring 1/1 multisig (single-signer for testing)")
+    console.log("[Squads] In production, configure M/N threshold as needed")
+
+    // If wallet is provided, actually create the multisig on-chain
+    if (wallet) {
+      try {
+        console.log("[Squads] Creating multisig on-chain...")
+
+        // Create multisig initialization instruction
+        const createMultisigIx = multisig.instructions.multisigCreate({
+          createKey,
+          creator,
+          multisigPda,
+          configAuthority: null, // No separate config authority
+          threshold: 1, // 1/1 multisig
+          members: multisigMembers,
+          timeLock: 0, // No time lock for MVP
+        })
+
+        // Create the transaction
+        const tx = new Transaction().add(createMultisigIx)
+
+        // Get recent blockhash
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+        tx.recentBlockhash = blockhash
+        tx.feePayer = creator
+
+        console.log("[Squads] 🎉 WALLET POPUP WILL APPEAR - Please approve multisig creation")
+
+        // Sign and send
+        let signature: string
+
+        if (wallet.sendTransaction) {
+          signature = await wallet.sendTransaction(tx, connection)
+        } else {
+          const signedTx = await wallet.signTransaction(tx)
+          signature = await connection.sendRawTransaction(signedTx.serialize(), {
+            skipPreflight: false,
+            preflightCommitment: "confirmed",
+          })
+        }
+
+        console.log("[Squads] Waiting for confirmation...")
+
+        // Wait for confirmation
+        const confirmation = await connection.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        }, "confirmed")
+
+        if (confirmation.value.err) {
+          throw new Error("Multisig creation failed: " + JSON.stringify(confirmation.value.err))
+        }
+
+        console.log("[Squads] ✅ Multisig created on-chain!")
+        console.log("[Squads] Transaction:", signature)
+        console.log("[Squads] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
+
+        return {
+          multisigPDA: multisigPda,
+          vaultPDA: vaultPda,
+          signature,
+        }
+      } catch (onChainError) {
+        console.error("[Squads] Failed to create multisig on-chain:", onChainError)
+        console.log("[Squads] Falling back to PDA-only mode (multisig not initialized)")
+        console.log("[Squads] Note: Withdrawals will fail until multisig is initialized")
+
+        // Fall back to just returning the PDAs
+        return {
+          multisigPDA: multisigPda,
+          vaultPDA: vaultPda,
+          signature: `multisig_pda_only_${Date.now()}`,
+        }
+      }
+    }
+
+    // If no wallet provided, just return the PDAs (for offline/testing)
+    console.log("[Squads] ℹ️  No wallet provided - returning PDAs only")
+    console.log("[Squads] ⚠️  Multisig NOT initialized on-chain")
+    console.log("[Squads] Vault address can still receive payments")
+
     return {
       multisigPDA: multisigPda,
       vaultPDA: vaultPda,
-      signature: `multisig_created_${Date.now()}`, // Mock signature for now
+      signature: `multisig_pda_only_${Date.now()}`,
     }
   } catch (error) {
     console.error("[Squads] Error creating multisig:", error)
@@ -159,41 +251,199 @@ export async function payToSquadsVault(
  * Withdraw from Squads vault to user wallet
  * This is called when user clicks "Withdraw" button
  *
- * Note: This requires multisig approval in production
- * For devnet testing, we're using a simplified flow
+ * Creates a multisig withdrawal proposal that requires approval
  */
 export async function withdrawFromSquadsVault(
   wallet: any, // Privy wallet
+  multisigAddress: PublicKey,
   vaultAddress: PublicKey,
+  recipientAddress: PublicKey,
   amount: number // in lamports
-): Promise<{ signature: string }> {
+): Promise<{ signature: string; proposalAddress?: string }> {
   try {
     console.log("[Squads Withdraw] Initiating withdrawal from vault...")
+    console.log("[Squads Withdraw] Multisig:", multisigAddress.toString())
     console.log("[Squads Withdraw] From (Vault):", vaultAddress.toString())
-    console.log("[Squads Withdraw] To:", wallet.address)
+    console.log("[Squads Withdraw] To (Recipient):", recipientAddress.toString())
     console.log("[Squads Withdraw] Amount:", amount, "lamports (", amount / LAMPORTS_PER_SOL, "SOL )")
 
-    // In production, this would:
-    // 1. Create a proposal transaction
-    // 2. Get multisig member approvals
-    // 3. Execute when threshold reached
+    // Step 1: Create a vault transaction (withdrawal instruction)
+    console.log("[Squads Withdraw] Step 1: Creating vault transaction...")
 
-    // For devnet testing with direct vault control:
-    // We'll simulate the withdrawal by creating a proposal
+    // The withdrawal instruction
+    const withdrawInstruction = SystemProgram.transfer({
+      fromPubkey: vaultAddress,
+      toPubkey: recipientAddress,
+      lamports: amount,
+    })
 
-    console.log("[Squads Withdraw] Note: In production, this requires multisig approval")
-    console.log("[Squads Withdraw] For testing, simulating withdrawal...")
+    // Get the current transaction index for the multisig
+    const multisigInfo = await multisig.accounts.Multisig.fromAccountAddress(
+      connection,
+      multisigAddress
+    )
 
-    // Mock signature for now - in production you'd execute the multisig transaction
-    const signature = `withdrawal_${Date.now()}_${amount}`
+    const currentTransactionIndex = Number(multisigInfo.transactionIndex)
+    const newTransactionIndex = BigInt(currentTransactionIndex + 1)
 
-    console.log("[Squads Withdraw] ✅ Withdrawal initiated!")
-    console.log("[Squads Withdraw] Signature:", signature)
+    console.log("[Squads Withdraw] Current transaction index:", currentTransactionIndex)
+    console.log("[Squads Withdraw] New transaction index:", newTransactionIndex)
 
-    return { signature }
+    // Create vault transaction for withdrawal
+    const createVaultTransactionIx = await multisig.instructions.vaultTransactionCreate({
+      multisigPda: multisigAddress,
+      transactionIndex: newTransactionIndex,
+      creator: new PublicKey(wallet.address),
+      vaultIndex: 0, // Using default vault
+      ephemeralSigners: 0,
+      transactionMessage: {
+        accountKeys: [
+          { pubkey: vaultAddress, isSigner: true, isWritable: true }, // From vault
+          { pubkey: recipientAddress, isSigner: false, isWritable: true }, // To recipient
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }, // System program
+        ],
+        instructions: [
+          {
+            programId: SystemProgram.programId,
+            accountIndexes: [0, 1],
+            data: withdrawInstruction.data,
+          },
+        ],
+      },
+    })
+
+    console.log("[Squads Withdraw] Step 2: Creating proposal...")
+
+    // Create proposal for this transaction
+    const createProposalIx = await multisig.instructions.proposalCreate({
+      multisigPda: multisigAddress,
+      transactionIndex: newTransactionIndex,
+      creator: new PublicKey(wallet.address),
+    })
+
+    console.log("[Squads Withdraw] Step 3: Auto-approving as creator...")
+
+    // Auto-approve as the creator
+    const approveProposalIx = await multisig.instructions.proposalApprove({
+      multisigPda: multisigAddress,
+      transactionIndex: newTransactionIndex,
+      member: new PublicKey(wallet.address),
+    })
+
+    // Combine all instructions
+    const transaction = new Transaction()
+    transaction.add(createVaultTransactionIx)
+    transaction.add(createProposalIx)
+    transaction.add(approveProposalIx)
+
+    // Get recent blockhash
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+    transaction.recentBlockhash = blockhash
+    transaction.feePayer = new PublicKey(wallet.address)
+
+    console.log("[Squads Withdraw] 🎉 WALLET POPUP WILL APPEAR - Please approve the withdrawal proposal")
+
+    // Sign and send transaction
+    let signature: string
+
+    if (wallet.sendTransaction) {
+      signature = await wallet.sendTransaction(transaction, connection)
+    } else {
+      const signedTransaction = await wallet.signTransaction(transaction)
+      signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      })
+    }
+
+    console.log("[Squads Withdraw] Waiting for confirmation...")
+
+    // Wait for confirmation
+    const confirmation = await connection.confirmTransaction({
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+    }, "confirmed")
+
+    if (confirmation.value.err) {
+      throw new Error("Transaction failed: " + JSON.stringify(confirmation.value.err))
+    }
+
+    // Derive proposal address for reference
+    const [proposalPda] = multisig.getProposalPda({
+      multisigPda: multisigAddress,
+      transactionIndex: newTransactionIndex,
+    })
+
+    console.log("[Squads Withdraw] ✅ Withdrawal proposal created!")
+    console.log("[Squads Withdraw] Transaction signature:", signature)
+    console.log("[Squads Withdraw] Proposal address:", proposalPda.toString())
+    console.log("[Squads Withdraw] Transaction index:", newTransactionIndex.toString())
+    console.log("[Squads Withdraw]")
+    console.log("[Squads Withdraw] ⚠️  NEXT STEPS:")
+    console.log("[Squads Withdraw]    1. Other multisig members need to approve")
+    console.log("[Squads Withdraw]    2. Once threshold is met, execute the withdrawal")
+    console.log("[Squads Withdraw]    3. Use Squads UI: https://v4.squads.so/")
+    console.log("[Squads Withdraw]")
+    console.log("[Squads Withdraw] For single-signer multisig, executing now...")
+
+    // If this is a 1/1 multisig (single signer), try to execute immediately
+    if (multisigInfo.threshold === 1) {
+      try {
+        const executeIx = await multisig.instructions.vaultTransactionExecute({
+          multisigPda: multisigAddress,
+          transactionIndex: newTransactionIndex,
+          member: new PublicKey(wallet.address),
+        })
+
+        const executeTx = new Transaction().add(executeIx)
+        const { blockhash: execBlockhash } = await connection.getLatestBlockhash("confirmed")
+        executeTx.recentBlockhash = execBlockhash
+        executeTx.feePayer = new PublicKey(wallet.address)
+
+        const execSignature = wallet.sendTransaction
+          ? await wallet.sendTransaction(executeTx, connection)
+          : await (async () => {
+              const signed = await wallet.signTransaction(executeTx)
+              return await connection.sendRawTransaction(signed.serialize())
+            })()
+
+        await connection.confirmTransaction(execSignature, "confirmed")
+
+        console.log("[Squads Withdraw] ✅ Withdrawal EXECUTED (1/1 multisig)!")
+        console.log("[Squads Withdraw] Execution signature:", execSignature)
+        console.log("[Squads Withdraw] Explorer:", `https://explorer.solana.com/tx/${execSignature}?cluster=devnet`)
+
+        return {
+          signature,
+          proposalAddress: proposalPda.toString(),
+        }
+      } catch (execError) {
+        console.warn("[Squads Withdraw] Could not auto-execute:", execError)
+        console.log("[Squads Withdraw] Proposal created but execution failed")
+      }
+    }
+
+    console.log("[Squads Withdraw] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
+
+    return {
+      signature,
+      proposalAddress: proposalPda.toString(),
+    }
   } catch (error) {
     console.error("[Squads Withdraw] ❌ Error:", error)
-    throw new Error("Failed to withdraw from Squads vault: " + (error instanceof Error ? error.message : String(error)))
+
+    // Provide helpful error messages
+    if (error instanceof Error) {
+      if (error.message.includes('User rejected')) {
+        throw new Error("Withdrawal proposal cancelled by user")
+      }
+      if (error.message.includes('AccountNotFound') || error.message.includes('not found')) {
+        throw new Error("Multisig account not found. The group may not have been properly initialized.")
+      }
+    }
+
+    throw new Error("Failed to create withdrawal proposal: " + (error instanceof Error ? error.message : String(error)))
   }
 }
 

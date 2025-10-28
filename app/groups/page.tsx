@@ -6,7 +6,7 @@ import type { GroupData } from "@/lib/solana"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Users, TrendingUp, Globe } from "lucide-react"
+import { Users, TrendingUp, Globe, DollarSign } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -128,10 +128,10 @@ export default function GroupsPage() {
                                 <Users className="h-4 w-4" />
                                 <span>{group.members.length} members</span>
                               </div>
-                                      <div className="flex items-center gap-1.5">
-                                        <UsdcIcon className="h-4 w-4" />
-                                        <span>{group.fundingGoal.toLocaleString()} USDC goal</span>
-                                      </div>
+                              <div className="flex items-center gap-1.5">
+                                <DollarSign className="h-4 w-4" />
+                                <span>{group.fundingGoal.toLocaleString()} SOL goal</span>
+                              </div>
                               <div className="flex items-center gap-1.5">
                                 <TrendingUp className={`h-4 w-4 ${getRiskColor(group.riskLevel)}`} />
                                 <span className="capitalize">{group.riskLevel} risk</span>
@@ -142,9 +142,8 @@ export default function GroupsPage() {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Progress</span>
-                              <span className="font-medium inline-flex items-center gap-1.5">
-                                <UsdcIcon className="h-3.5 w-3.5" />
-                                {group.totalCollected.toLocaleString()} / {group.fundingGoal.toLocaleString()} USDC
+                              <span className="font-medium">
+                                {group.totalCollected.toFixed(4)} / {group.fundingGoal.toLocaleString()} SOL
                               </span>
                             </div>
                             <Progress value={progress} className="h-2" />
@@ -160,9 +159,8 @@ export default function GroupsPage() {
                                   </Button>
                                   <div className="text-center">
                                     <p className="text-xs text-muted-foreground">Join with</p>
-                                    <p className="text-sm font-semibold inline-flex items-center gap-1">
-                                      <UsdcIcon className="h-3.5 w-3.5" />
-                                      $10 USDC tip
+                                    <p className="text-sm font-semibold">
+                                      0.01 SOL tip
                                     </p>
                                   </div>
                                 </div>

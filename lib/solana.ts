@@ -8,6 +8,7 @@ import {
 } from "./firebase-group-storage"
 import { createGroupOnChain, solToLamports as convertSolToLamports, lamportsToSol as convertLamportsToSol } from "./solana-program"
 import { createSquadsMultisig } from "./squads-multisig"
+import { generateGroupWallet } from "./simple-wallet"
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
 
@@ -26,9 +27,12 @@ export interface GroupData {
   createdAt: string
   members: string[]
   totalCollected: number
-  onChainAddress?: string // On-chain group pool PDA address
-  squadsVaultAddress?: string // Squads multisig vault address (where funds are collected)
-  squadsMultisigAddress?: string // Squads multisig PDA address
+  // Phase 1: Simple wallet
+  groupWalletAddress?: string // Simple Solana wallet address for the group
+  // Phase 2: Multisig (commented out for now)
+  // onChainAddress?: string // On-chain group pool PDA address
+  // squadsVaultAddress?: string // Squads multisig vault address (where funds are collected)
+  // squadsMultisigAddress?: string // Squads multisig PDA address
 }
 
 export function solToLamports(sol: number): number {
@@ -102,7 +106,18 @@ export async function createGroup(
     const groupId = generateGroupCode()
     console.log("[FundFlow] Generated group ID:", groupId)
 
-    // Step 1: Create Squads multisig vault for the group
+    // =============================================================================
+    // PHASE 1: SIMPLE WALLET GENERATION (Active)
+    // =============================================================================
+    console.log("[FundFlow] Step 1: Generating simple group wallet...")
+    const { address: groupWalletAddress } = generateGroupWallet()
+    console.log("[FundFlow] ✅ Simple group wallet created!")
+    console.log("[FundFlow]    Wallet address:", groupWalletAddress)
+
+    // =============================================================================
+    // PHASE 2: SQUADS MULTISIG (Commented out - will implement after Phase 1 works)
+    // =============================================================================
+    /*
     console.log("[FundFlow] Step 1: Creating Squads multisig vault...")
     let multisigPDA: PublicKey
     let vaultPDA: PublicKey
@@ -123,7 +138,8 @@ export async function createGroup(
       const result = await createSquadsMultisig(
         creatorPubKey,
         groupData.name,
-        [] // Initial members - can be added later
+        [], // Initial members - can be added later
+        wallet // Pass wallet for on-chain initialization
       )
       multisigPDA = result.multisigPDA
       vaultPDA = result.vaultPDA
@@ -135,6 +151,7 @@ export async function createGroup(
       console.error("[FundFlow] ❌ Failed to create Squads vault:", squadsError)
       throw new Error("Failed to create Squads multisig vault: " + (squadsError instanceof Error ? squadsError.message : String(squadsError)))
     }
+    */
 
     // Create wallet adapter for Anchor
     const walletAdapter = {
@@ -158,20 +175,20 @@ export async function createGroup(
       "daily": "weekly", // Map daily to weekly for now
     }
 
-    // Step 2: Create group on-chain (for pool management later)
-    console.log("[FundFlow] Step 2: Creating on-chain group pool...")
+    // Step 2: No on-chain creation needed for Phase 1
+    console.log("[FundFlow] Step 2: Preparing group metadata...")
+    console.log("[FundFlow] ℹ️  Using simple wallet - no on-chain contract needed")
+    console.log("[FundFlow] ℹ️  Payments will go directly to group wallet")
 
-    // For MVP testing: Skip on-chain creation, just use mock PDA
-    // This allows testing the Pay button without needing the Anchor program deployed
-    console.log("[FundFlow] ℹ️  Skipping on-chain pool creation for MVP testing")
-    console.log("[FundFlow] ℹ️  This is OK! The Pay button only needs the Squads vault address")
-
-    const mockGroupPoolPDA = PublicKey.unique() // Generate a mock PDA
     const signature = `group_created_${Date.now()}` // Mock signature
 
     console.log("[FundFlow] ✅ Group metadata prepared!")
-    console.log("[FundFlow]    Group Pool PDA (mock):", mockGroupPoolPDA.toString())
-    console.log("[FundFlow]    Will use Squads vault for payments:", vaultPDA.toString())
+    console.log("[FundFlow]    Group wallet:", groupWalletAddress)
+
+    // Phase 2 code (commented out):
+    // const mockGroupPoolPDA = PublicKey.unique()
+    // console.log("[FundFlow]    Group Pool PDA (mock):", mockGroupPoolPDA.toString())
+    // console.log("[FundFlow]    Will use Squads vault for payments:", vaultPDA.toString())
 
     console.log("[FundFlow] Preparing group data...")
     const completeGroupData: GroupData = {
@@ -180,9 +197,11 @@ export async function createGroup(
       createdAt: new Date().toISOString(),
       members: [creatorPublicKey],
       totalCollected: 0,
-      onChainAddress: mockGroupPoolPDA.toString(), // Pool address (for later compression)
-      squadsVaultAddress: vaultPDA.toString(), // Vault address (where funds are collected)
-      squadsMultisigAddress: multisigPDA.toString(), // Multisig address
+      groupWalletAddress: groupWalletAddress, // Simple wallet address (Phase 1)
+      // Phase 2 fields (commented out for now):
+      // onChainAddress: mockGroupPoolPDA.toString(),
+      // squadsVaultAddress: vaultPDA.toString(),
+      // squadsMultisigAddress: multisigPDA.toString(),
     }
     console.log("[FundFlow] Group data prepared successfully")
 
@@ -207,13 +226,14 @@ export async function createGroup(
     }
 
     console.log("[FundFlow] ✅ Group created successfully with ID:", groupId)
-    console.log("[FundFlow] Flow: Pay → Squads Vault → Pool (compressed) → Withdraw")
+    console.log("[FundFlow] Flow (Phase 1): User Wallet → Pay → Group Wallet")
+    console.log("[FundFlow] Flow (Phase 2 - later): User Wallet → Pay → Multisig → Pool → Withdraw")
 
     return {
       groupId,
       signature,
-      onChainAddress: mockGroupPoolPDA.toString(),
-      squadsVaultAddress: vaultPDA.toString(),
+      onChainAddress: groupWalletAddress, // Using simple wallet for Phase 1
+      squadsVaultAddress: groupWalletAddress, // Same for Phase 1
     }
   } catch (error) {
     console.error("[FundFlow] ❌❌❌ Error creating group:", error)
@@ -242,39 +262,103 @@ export async function createGroup(
 export async function joinGroup(
   memberPublicKey: string,
   groupId: string,
-  joiningTipAmount = 10, // $10 USDC tip
+  joiningTipAmount = 0.01, // 0.01 SOL joining tip (approximately $2-3 on devnet)
 ): Promise<{ signature: string }> {
   try {
     console.log("[FundFlow] Joining group on Solana...")
     console.log("[FundFlow] Member:", memberPublicKey)
     console.log("[FundFlow] Group ID:", groupId)
-    console.log("[FundFlow] Joining tip:", joiningTipAmount, "USDC")
+    console.log("[FundFlow] Joining tip:", joiningTipAmount, "SOL")
 
-    const group = getGroup(groupId)
+    // Try to get group from localStorage first
+    console.log("[FundFlow] Step 1: Checking localStorage for group...")
+    let group = getGroup(groupId)
+
+    // If not in localStorage, try Firebase
     if (!group) {
-      throw new Error("Group not found")
+      console.log("[FundFlow] Group not found in localStorage, checking Firebase...")
+      try {
+        const { getGroupFromFirebase } = await import("./firebase-group-storage")
+        group = await getGroupFromFirebase(groupId)
+
+        if (group) {
+          console.log("[FundFlow] ✅ Group found in Firebase!")
+          // Save to localStorage for future use
+          const { saveGroup } = await import("./group-storage")
+          saveGroup(group)
+          console.log("[FundFlow] Group saved to localStorage cache")
+        }
+      } catch (error) {
+        console.warn("[FundFlow] Firebase lookup failed:", error)
+      }
+    } else {
+      console.log("[FundFlow] ✅ Group found in localStorage")
     }
+
+    if (!group) {
+      console.error("[FundFlow] ❌ Group not found in localStorage OR Firebase")
+      console.error("[FundFlow] Searched for group ID:", groupId)
+      throw new Error(`Group not found with code: ${groupId}. Please verify the group code is correct.`)
+    }
+
+    if (!group.groupWalletAddress) {
+      throw new Error("Group wallet not configured")
+    }
+
+    // Check if member is already in the group
+    if (group.members.includes(memberPublicKey)) {
+      console.log("[FundFlow] User is already a member of this group")
+      return {
+        signature: "already_member_" + Date.now(),
+      }
+    }
+
+    // Phase 1: Process payment to group wallet
+    console.log("[FundFlow] Processing joining tip payment...")
+    console.log("[FundFlow] From:", memberPublicKey)
+    console.log("[FundFlow] To:", group.groupWalletAddress)
+    console.log("[FundFlow] Amount:", joiningTipAmount, "SOL")
+
+    const { payToGroupWallet } = await import("./simple-payment")
+    const { signature } = await payToGroupWallet(
+      null, // Phase 1 doesn't need wallet object
+      memberPublicKey,
+      group.groupWalletAddress,
+      joiningTipAmount
+    )
+
+    console.log("[FundFlow] ✅ Payment successful! Signature:", signature)
 
     // Add member to both localStorage (fallback) and Firebase
     addMemberToGroup(groupId, memberPublicKey)
-    
-            try {
-              await addMemberToGroupInFirebase(groupId, memberPublicKey)
-              console.log("[FundFlow] Member added to Firebase Realtime Database successfully")
-            } catch (firebaseError) {
-              console.warn("[FundFlow] Failed to add member to Firebase, using localStorage only:", firebaseError)
-            }
-    
-    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    console.log("[FundFlow] Successfully joined group:", groupId)
+    try {
+      await addMemberToGroupInFirebase(groupId, memberPublicKey)
+      console.log("[FundFlow] Member added to Firebase Realtime Database successfully")
+    } catch (firebaseError) {
+      console.warn("[FundFlow] Failed to add member to Firebase, using localStorage only:", firebaseError)
+    }
+
+    // Update totalCollected with the joining tip
+    try {
+      const { addContribution } = await import("./group-storage")
+      addContribution(groupId, joiningTipAmount)
+
+      const { addContributionToGroupInFirebase } = await import("./firebase-group-storage")
+      await addContributionToGroupInFirebase(groupId, joiningTipAmount)
+      console.log("[FundFlow] Joining tip added to totalCollected")
+    } catch (error) {
+      console.warn("[FundFlow] Failed to update totalCollected:", error)
+    }
+
+    console.log("[FundFlow] ✅ Successfully joined group:", groupId)
 
     return {
-      signature: "mock_signature_join_" + Date.now(),
+      signature,
     }
   } catch (error) {
     console.error("[FundFlow] Error joining group:", error)
-    throw new Error("Failed to join group")
+    throw error instanceof Error ? error : new Error("Failed to join group")
   }
 }
 
