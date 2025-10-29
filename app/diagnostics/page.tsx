@@ -153,91 +153,161 @@ export default function DiagnosticsPage() {
         </Card>
 
         {/* Full Diagnostic Section */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Full Diagnostic Suite</h2>
-          <p className="text-muted-foreground mb-4">
-            Run all diagnostic tests to identify any issues with:
-          </p>
-          <ul className="list-disc list-inside text-muted-foreground mb-4 space-y-1">
-            <li>Firebase configuration</li>
-            <li>Firebase connection</li>
-            <li>Firebase rules and permissions</li>
-            <li>Group creation and storage</li>
-            <li>Group listing and retrieval</li>
-          </ul>
+        <Tabs defaultValue="firebase" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="firebase">Firebase Tests</TabsTrigger>
+            <TabsTrigger value="solana">Solana Tests</TabsTrigger>
+          </TabsList>
 
-          <Button onClick={handleRunDiagnostics} disabled={running}>
-            {running ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Running Diagnostics...
-              </>
-            ) : (
-              'Run Full Diagnostics'
+          <TabsContent value="firebase">
+            <Card className="p-6 mb-6">
+              <h2 className="text-2xl font-semibold mb-4">Firebase Diagnostic Suite</h2>
+              <p className="text-muted-foreground mb-4">
+                Run all diagnostic tests to identify any issues with:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground mb-4 space-y-1">
+                <li>Firebase configuration</li>
+                <li>Firebase connection</li>
+                <li>Firebase rules and permissions</li>
+                <li>Group creation and storage</li>
+                <li>Group listing and retrieval</li>
+              </ul>
+
+              <Button onClick={handleRunFirebaseDiagnostics} disabled={running}>
+                {running ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Running Diagnostics...
+                  </>
+                ) : (
+                  'Run Firebase Diagnostics'
+                )}
+              </Button>
+            </Card>
+
+            {/* Firebase Results */}
+            {firebaseResults.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold">Firebase Test Results</h2>
+
+                {/* Summary */}
+                <Card className="p-6">
+                  <h3 className="text-xl font-semibold mb-4">Summary</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 border border-green-500 rounded-lg bg-green-50 dark:bg-green-950">
+                      <div className="text-3xl font-bold text-green-600">
+                        {firebaseResults.filter(r => r.status === 'PASS').length}
+                      </div>
+                      <div className="text-sm text-green-700 dark:text-green-400">Passed</div>
+                    </div>
+                    <div className="text-center p-4 border border-red-500 rounded-lg bg-red-50 dark:bg-red-950">
+                      <div className="text-3xl font-bold text-red-600">
+                        {firebaseResults.filter(r => r.status === 'FAIL').length}
+                      </div>
+                      <div className="text-sm text-red-700 dark:text-red-400">Failed</div>
+                    </div>
+                    <div className="text-center p-4 border border-yellow-500 rounded-lg bg-yellow-50 dark:bg-yellow-950">
+                      <div className="text-3xl font-bold text-yellow-600">
+                        {firebaseResults.filter(r => r.status === 'WARN').length}
+                      </div>
+                      <div className="text-sm text-yellow-700 dark:text-yellow-400">Warnings</div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Detailed Results */}
+                {firebaseResults.map((result, index) => (
+                  <Card
+                    key={index}
+                    className={`p-6 border-2 ${getStatusColor(result.status)}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1">{getStatusIcon(result.status)}</div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold mb-2">
+                          Test {index + 1}: {result.test}
+                        </h3>
+                        <p className="mb-4">{result.message}</p>
+
+                        {result.details && (
+                          <details className="mt-4">
+                            <summary className="cursor-pointer text-sm font-semibold mb-2">
+                              View Details
+                            </summary>
+                            <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto">
+                              {JSON.stringify(result.details, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             )}
-          </Button>
-        </Card>
+          </TabsContent>
 
-        {/* Results Section */}
-        {results.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Test Results</h2>
+          <TabsContent value="solana">
+            <Card className="p-6 mb-6">
+              <h2 className="text-2xl font-semibold mb-4">Solana Diagnostic Suite</h2>
+              <p className="text-muted-foreground mb-4">
+                Test Solana blockchain connectivity and transactions
+              </p>
 
-            {/* Summary */}
-            <Card className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Summary</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 border border-green-500 rounded-lg bg-green-50 dark:bg-green-950">
-                  <div className="text-3xl font-bold text-green-600">
-                    {results.filter(r => r.status === 'PASS').length}
-                  </div>
-                  <div className="text-sm text-green-700 dark:text-green-400">Passed</div>
-                </div>
-                <div className="text-center p-4 border border-red-500 rounded-lg bg-red-50 dark:bg-red-950">
-                  <div className="text-3xl font-bold text-red-600">
-                    {results.filter(r => r.status === 'FAIL').length}
-                  </div>
-                  <div className="text-sm text-red-700 dark:text-red-400">Failed</div>
-                </div>
-                <div className="text-center p-4 border border-yellow-500 rounded-lg bg-yellow-50 dark:bg-yellow-950">
-                  <div className="text-3xl font-bold text-yellow-600">
-                    {results.filter(r => r.status === 'WARN').length}
-                  </div>
-                  <div className="text-sm text-yellow-700 dark:text-yellow-400">Warnings</div>
-                </div>
+              <div className="space-y-3">
+                <Button onClick={handleRunSolanaDiagnostics} disabled={running} className="w-full">
+                  {running ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Running Diagnostics...
+                    </>
+                  ) : (
+                    'Run Solana Diagnostics'
+                  )}
+                </Button>
+
+                <Button onClick={handleTestTransaction} disabled={running} variant="outline" className="w-full">
+                  Test Simple Transaction
+                </Button>
               </div>
             </Card>
 
-            {/* Detailed Results */}
-            {results.map((result, index) => (
-              <Card
-                key={index}
-                className={`p-6 border-2 ${getStatusColor(result.status)}`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="mt-1">{getStatusIcon(result.status)}</div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">
-                      Test {index + 1}: {result.test}
-                    </h3>
-                    <p className="mb-4">{result.message}</p>
+            {/* Solana Results */}
+            {solanaResults.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold">Solana Test Results</h2>
 
-                    {result.details && (
-                      <details className="mt-4">
-                        <summary className="cursor-pointer text-sm font-semibold mb-2">
-                          View Details
-                        </summary>
-                        <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto">
-                          {JSON.stringify(result.details, null, 2)}
-                        </pre>
-                      </details>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+                {solanaResults.map((result, index) => (
+                  <Card
+                    key={index}
+                    className={`p-6 border-2 ${getStatusColor(result.status)}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1">{getStatusIcon(result.status)}</div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold mb-2">
+                          Test {index + 1}: {result.test}
+                        </h3>
+                        <p className="mb-4">{result.message}</p>
+
+                        {result.details && (
+                          <details className="mt-4">
+                            <summary className="cursor-pointer text-sm font-semibold mb-2">
+                              View Details
+                            </summary>
+                            <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto">
+                              {JSON.stringify(result.details, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Console Instructions */}
         <Card className="p-6 mt-8 bg-blue-50 dark:bg-blue-950 border-blue-200">
