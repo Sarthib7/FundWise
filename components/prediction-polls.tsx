@@ -21,7 +21,7 @@ import {
   Trophy,
   Loader2,
   Vote,
-  Sparkles
+  Plus
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { CreateProposalModal } from "@/components/create-proposal-modal"
 
 interface PredictionPollsProps {
   circleId: string
@@ -46,6 +47,7 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
   const [selectedOption, setSelectedOption] = useState<string>("")
   const [betAmount, setBetAmount] = useState<string>("10")
   const [isPlacingBet, setIsPlacingBet] = useState(false)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   // Load proposals
   useEffect(() => {
@@ -155,13 +157,22 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
   if (proposals.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-4">
-          <Sparkles className="h-8 w-8 text-accent" />
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 transition mb-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <Plus className="h-8 w-8" />
+        </button>
         <h3 className="text-lg font-semibold mb-2">No Active Prediction</h3>
         <p className="text-muted-foreground max-w-md mx-auto">
           Create a prediction market for your circle to start betting with friends!
         </p>
+        <CreateProposalModal
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          circleId={circleId}
+        />
       </div>
     )
   }
@@ -186,9 +197,25 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                         Voted
                       </Badge>
                     )}
+                    {proposal.kalshiSynced && proposal.kalshiTicker && (
+                      <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 gap-1">
+                        <TrendingUp className="h-3 w-3" />
+                        Kalshi: {proposal.kalshiTicker}
+                      </Badge>
+                    )}
+                    {proposal.kalshiSynced === false && (
+                      <Badge variant="outline" className="text-xs">
+                        Local Only
+                      </Badge>
+                    )}
                   </div>
                   <h3 className="text-lg font-semibold mb-1">{proposal.title}</h3>
                   <p className="text-sm text-muted-foreground">{proposal.description}</p>
+                  {proposal.kalshiSyncMessage && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      📊 {proposal.kalshiSyncMessage}
+                    </p>
+                  )}
                 </div>
               </div>
 

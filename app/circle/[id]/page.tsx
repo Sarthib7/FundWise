@@ -31,7 +31,6 @@ import {
   Download,
   AlertCircle,
   Sparkles,
-  Plus,
 } from "lucide-react"
 
 export default function CircleDashboard() {
@@ -325,18 +324,7 @@ export default function CircleDashboard() {
                 </TabsList>
 
                 <TabsContent value="predictions" className="space-y-4">
-                  {/* Create Proposal Button - Only show if no active proposal */}
-                  {isMember && !hasActiveProposal && (
-                    <Button
-                      type="button"
-                      onClick={() => setShowCreateProposal(true)}
-                      className="w-full bg-accent hover:bg-accent/90"
-                      disabled={!connected}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Prediction Proposal
-                    </Button>
-                  )}
+                  {/* Create Proposal CTA removed; use + button in empty state within PredictionPolls */}
 
                   {/* Info message if proposal exists */}
                   {isMember && hasActiveProposal && (

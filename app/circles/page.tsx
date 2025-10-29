@@ -95,7 +95,7 @@ export default function CirclesPage() {
                 <p className="text-muted-foreground mb-6">
                   Be the first to create a public circle and invite others to join
                 </p>
-                <Button asChild>
+                <Button asChild className="bg-[#00ab79] hover:bg-[#009368] text-white">
                   <Link href="/">Create Circle</Link>
                 </Button>
               </Card>
@@ -154,18 +154,18 @@ export default function CirclesPage() {
                           </div>
                         </div>
 
-                                <div className="flex flex-col gap-3 md:w-40">
-                                  <Button asChild className="w-full">
-                                    <Link href={`/circle/${group.id}`}>View Circle</Link>
-                                  </Button>
-                                  <div className="text-center">
-                                    <p className="text-xs text-muted-foreground">Join with</p>
-                                    <p className="text-sm font-semibold flex items-center gap-1 justify-center">
-                                      <UsdcIcon className="h-4 w-4" />
-                                      $1 USDC tip
-                                    </p>
-                                  </div>
-                                </div>
+                        <div className="flex flex-col gap-3 md:w-40">
+                          <Button asChild className="w-full bg-[#00ab79] hover:bg-[#009368] text-white">
+                            <Link href={`/circle/${group.id}`}>View Circle</Link>
+                          </Button>
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">Join with</p>
+                            <p className="text-sm font-semibold flex items-center gap-1 justify-center">
+                              <UsdcIcon className="h-4 w-4" />
+                              $1 USDC tip
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </Card>
                   )

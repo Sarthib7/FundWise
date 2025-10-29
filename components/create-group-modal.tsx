@@ -306,7 +306,7 @@ export function CreateCircleModal({ open, onOpenChange }: CreateCircleModalProps
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1" disabled={isCreating || !connected}>
+            <Button type="submit" className="flex-1 text-white bg-[#00ab79] hover:bg-[#009368]" disabled={isCreating || !connected}>
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

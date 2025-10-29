@@ -1,5 +1,6 @@
 import { db } from './firebase'
 import { ref, push, set, get, update, onValue } from 'firebase/database'
+import { syncWithKalshi, isKalshiAvailable, placeKalshiBet } from './kalshi-integration'
 
 export interface PredictionProposal {
   id: string
@@ -19,6 +20,11 @@ export interface PredictionProposal {
   // Status
   status: 'active' | 'closed' | 'resolved'
   winningOption?: string
+  
+  // Kalshi integration
+  kalshiTicker?: string
+  kalshiSynced?: boolean
+  kalshiSyncMessage?: string
 }
 
 export interface PredictionOption {
@@ -45,7 +51,8 @@ export async function createProposal(
   title: string,
   description: string,
   options: string[],
-  durationHours: number
+  durationHours: number,
+  kalshiTicker?: string
 ): Promise<string> {
   try {
     // Check if circle already has a proposal
@@ -79,6 +86,43 @@ export async function createProposal(
     }
 
     await set(newProposalRef, proposal)
+    
+    // If Kalshi ticker provided directly, use it
+    if (kalshiTicker) {
+      console.log('[PredictionMarket] ✅ Linking to Kalshi market:', kalshiTicker)
+      await update(newProposalRef, {
+        kalshiTicker: kalshiTicker,
+        kalshiSynced: true,
+        kalshiSyncMessage: `Linked to Kalshi market: ${kalshiTicker}`
+      })
+    } else {
+      // Otherwise, try to sync with Kalshi if available
+      console.log('[PredictionMarket] Syncing with Kalshi...')
+      const kalshiSync = await syncWithKalshi(proposalId, {
+        title,
+        description,
+        options,
+        totalStake: 0,
+        closesAt
+      })
+      
+      // Update proposal with Kalshi sync status
+      if (kalshiSync.synced) {
+        await update(newProposalRef, {
+          kalshiTicker: kalshiSync.kalshiTicker,
+          kalshiSynced: true,
+          kalshiSyncMessage: kalshiSync.message
+        })
+        console.log('[PredictionMarket] ✅ Synced with Kalshi:', kalshiSync.kalshiTicker)
+      } else {
+        await update(newProposalRef, {
+          kalshiSynced: false,
+          kalshiSyncMessage: kalshiSync.message
+        })
+        console.log('[PredictionMarket] ℹ️ Running in local mode:', kalshiSync.message)
+      }
+    }
+    
     return proposalId
   } catch (error) {
     console.error('Error creating proposal:', error)
@@ -193,6 +237,23 @@ export async function placeBet(
       timestamp: Date.now()
     }
     await set(voteRef, vote)
+    
+    // Sync bet with Kalshi if market is linked
+    if (proposal.kalshiTicker && isKalshiAvailable()) {
+      console.log('[PredictionMarket] Syncing bet with Kalshi...')
+      const selectedOption = proposal.options[optionIndex]
+      
+      // For binary markets (Yes/No), map to Kalshi sides
+      const side = selectedOption.label.toLowerCase().includes('yes') ? 'yes' : 'no'
+      
+      try {
+        await placeKalshiBet(proposal.kalshiTicker, side, amount)
+        console.log('[PredictionMarket] ✅ Bet synced with Kalshi')
+      } catch (kalshiError) {
+        console.warn('[PredictionMarket] Kalshi bet sync failed, continuing with local bet:', kalshiError)
+        // Don't throw - local bet is still valid even if Kalshi sync fails
+      }
+    }
   } catch (error) {
     console.error('Error placing bet:', error)
     throw error

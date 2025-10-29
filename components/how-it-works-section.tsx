@@ -70,7 +70,7 @@ export function HowItWorksSection() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setCreateModalOpen(true)}
-                  className="px-6 py-3 rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground font-medium transition-colors"
+                  className="px-6 py-3 rounded-lg bg-[#00ab79] hover:bg-[#009368] text-white font-medium transition-colors"
                 >
                   Create Circle
                 </button>

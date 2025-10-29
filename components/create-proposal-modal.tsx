@@ -5,12 +5,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { createProposal } from "@/lib/prediction-market"
+import { searchKalshiMarkets, type KalshiMarket } from "@/lib/kalshi-integration"
 import { toast } from "sonner"
-import { Loader2, Plus, X } from "lucide-react"
+import { Loader2, Search, TrendingUp } from "lucide-react"
 
 interface CreateProposalModalProps {
   isOpen: boolean
@@ -22,23 +24,52 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
   const { publicKey, connected } = useWallet()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
+  // Kalshi market search
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearching, setIsSearching] = useState(false)
+  const [kalshiMarkets, setKalshiMarkets] = useState<KalshiMarket[]>([])
+  const [selectedMarket, setSelectedMarket] = useState<KalshiMarket | null>(null)
+  
+  // Proposal fields (populated from selected market)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [duration, setDuration] = useState("24")
   const [options, setOptions] = useState<string[]>(["Yes", "No"])
-  const [newOption, setNewOption] = useState("")
 
-  const handleAddOption = () => {
-    if (newOption.trim() && options.length < 5) {
-      setOptions([...options, newOption.trim()])
-      setNewOption("")
+  const handleSearchKalshi = async () => {
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a search term")
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const markets = await searchKalshiMarkets(searchQuery)
+      setKalshiMarkets(markets)
+      
+      if (markets.length === 0) {
+        toast.info("No markets found", {
+          description: "Try different keywords or create a custom proposal"
+        })
+      } else {
+        toast.success(`Found ${markets.length} market${markets.length > 1 ? 's' : ''}`)
+      }
+    } catch (error) {
+      console.error("Search error:", error)
+      toast.error("Search failed", {
+        description: "Could not search Kalshi markets"
+      })
+    } finally {
+      setIsSearching(false)
     }
   }
 
-  const handleRemoveOption = (index: number) => {
-    if (options.length > 2) {
-      setOptions(options.filter((_, i) => i !== index))
-    }
+  const handleSelectMarket = (market: KalshiMarket) => {
+    setSelectedMarket(market)
+    setTitle(market.title)
+    setDescription(market.subtitle || market.title)
+    // Extract options from market if binary
+    setOptions(["Yes", "No"])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,20 +99,18 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
         title.trim(),
         description.trim(),
         options,
-        parseInt(duration)
+        parseInt(duration),
+        selectedMarket?.ticker // Pass Kalshi ticker if market selected
       )
 
       toast.success("Prediction proposal created!", {
-        description: "Circle members can now place their bets"
+        description: selectedMarket 
+          ? `Linked to Kalshi market: ${selectedMarket.ticker}` 
+          : "Circle members can now place their bets"
       })
 
       // Reset form
-      setTitle("")
-      setDescription("")
-      setDuration("24")
-      setOptions(["Yes", "No"])
-      setNewOption("")
-      
+      resetForm()
       onClose()
     } catch (error) {
       console.error("Error creating proposal:", error)
@@ -99,156 +128,173 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
     }
   }
 
+  const resetForm = () => {
+    setSearchQuery("")
+    setKalshiMarkets([])
+    setSelectedMarket(null)
+    setTitle("")
+    setDescription("")
+    setDuration("24")
+    setOptions(["Yes", "No"])
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { resetForm(); onClose() } }}>
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Prediction Proposal</DialogTitle>
           <DialogDescription>
-            Create a prediction market for your circle members to bet on outcomes
+            Search and select a Kalshi market for your circle
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="proposal-title">Proposal Title</Label>
-            <Input
-              id="proposal-title"
-              placeholder="e.g., Will BTC reach $100k this month?"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isSubmitting}
-              maxLength={120}
-            />
-            <p className="text-xs text-muted-foreground">
-              {title.length}/120 characters
-            </p>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="proposal-description">Description</Label>
-            <Textarea
-              id="proposal-description"
-              placeholder="Provide details about the prediction..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isSubmitting}
-              rows={3}
-              maxLength={500}
-            />
-            <p className="text-xs text-muted-foreground">
-              {description.length}/500 characters
-            </p>
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration">Betting Duration</Label>
-            <Select value={duration} onValueChange={setDuration} disabled={isSubmitting}>
-              <SelectTrigger id="duration">
-                <SelectValue placeholder="Select duration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="6">6 hours</SelectItem>
-                <SelectItem value="12">12 hours</SelectItem>
-                <SelectItem value="24">24 hours</SelectItem>
-                <SelectItem value="48">2 days</SelectItem>
-                <SelectItem value="72">3 days</SelectItem>
-                <SelectItem value="168">1 week</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Options */}
-          <div className="space-y-2">
-            <Label>Betting Options</Label>
+        <div className="space-y-4">
+            {/* Search Bar */}
             <div className="space-y-2">
-              {options.map((option, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    value={option}
-                    onChange={(e) => {
-                      const newOptions = [...options]
-                      newOptions[index] = e.target.value
-                      setOptions(newOptions)
-                    }}
-                    disabled={isSubmitting}
-                    placeholder={`Option ${index + 1}`}
-                  />
-                  {options.length > 2 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveOption(index)}
-                      disabled={isSubmitting}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {options.length < 5 && (
-              <div className="flex items-center gap-2 mt-2">
+              <Label htmlFor="kalshi-search">Search Kalshi Markets</Label>
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Add another option..."
-                  value={newOption}
-                  onChange={(e) => setNewOption(e.target.value)}
+                  id="kalshi-search"
+                  placeholder="e.g., Bitcoin, Election, Stock market..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
-                      handleAddOption()
+                      handleSearchKalshi()
                     }
                   }}
-                  disabled={isSubmitting}
+                  disabled={isSearching}
                 />
                 <Button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleAddOption}
-                  disabled={isSubmitting || !newOption.trim()}
+                  onClick={handleSearchKalshi}
+                  disabled={isSearching || !searchQuery.trim()}
                 >
-                  <Plus className="h-4 w-4" />
+                  {isSearching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              You can add up to 5 options (minimum 2)
-            </p>
-          </div>
+              <p className="text-xs text-muted-foreground">
+                Search for active prediction markets on Kalshi
+              </p>
+            </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !connected}
-              className="flex-1 bg-accent hover:bg-accent/90"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Proposal"
-              )}
-            </Button>
+            {/* Search Results */}
+            {kalshiMarkets.length > 0 && (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                <Label>Found {kalshiMarkets.length} Market{kalshiMarkets.length > 1 ? 's' : ''}</Label>
+                {kalshiMarkets.map((market) => (
+                  <Card
+                    key={market.ticker}
+                    className={`p-4 cursor-pointer transition-all ${
+                      selectedMarket?.ticker === market.ticker
+                        ? 'border-[#00ab79] bg-[#00ab79]/5'
+                        : 'hover:border-accent/50'
+                    }`}
+                    onClick={() => handleSelectMarket(market)}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <h4 className="font-semibold line-clamp-2">{market.title}</h4>
+                          {market.subtitle && (
+                            <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                              {market.subtitle}
+                            </p>
+                          )}
+                        </div>
+                        {selectedMarket?.ticker === market.ticker && (
+                          <Badge className="bg-[#00ab79] text-white">Selected</Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          <span>Ticker: {market.ticker}</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {market.status}
+                        </Badge>
+                      </div>
+
+                      {market.last_price && (
+                        <div className="flex gap-2 text-sm">
+                          <span className="text-green-600">Yes: {market.last_price}¢</span>
+                          <span className="text-red-600">No: {100 - market.last_price}¢</span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Market Confirmation */}
+            {selectedMarket && (
+              <form onSubmit={handleSubmit} className="space-y-4 pt-4 border-t">
+                <div className="bg-[#00ab79]/10 p-4 rounded-lg">
+                  <p className="text-sm font-medium mb-2">✅ Market Selected:</p>
+                  <p className="text-sm">{selectedMarket.title}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Betting Duration</Label>
+                  <Select value={duration} onValueChange={setDuration} disabled={isSubmitting}>
+                    <SelectTrigger id="duration">
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="6">6 hours</SelectItem>
+                      <SelectItem value="12">12 hours</SelectItem>
+                      <SelectItem value="24">24 hours</SelectItem>
+                      <SelectItem value="48">2 days</SelectItem>
+                      <SelectItem value="72">3 days</SelectItem>
+                      <SelectItem value="168">1 week</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSelectedMarket(null)}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    Back to Search
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !connected}
+                    className="flex-1 bg-[#00ab79] hover:bg-[#009368] text-white"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Proposal"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {/* No results message */}
+            {!isSearching && kalshiMarkets.length === 0 && searchQuery && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="mb-2">No markets found for "{searchQuery}"</p>
+                <p className="text-sm">Try different keywords</p>
+              </div>
+            )}
           </div>
-        </form>
       </DialogContent>
     </Dialog>
   )
