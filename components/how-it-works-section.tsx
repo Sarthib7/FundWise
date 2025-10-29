@@ -3,23 +3,23 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Plus, Share2, Wallet } from "lucide-react"
-import { CreateGroupModal } from "@/components/create-group-modal"
+import { CreateCircleModal } from "@/components/create-group-modal"
 
 const steps = [
   {
     icon: Plus,
-    title: "Create Your Group",
-    description: "Set up a fundraising group with a goal and description. Connect your wallet to get started.",
+    title: "Create Your Circle",
+    description: "Set up a private betting market or shared treasury for your friend group. Connect your wallet to get started.",
   },
   {
     icon: Share2,
     title: "Share Code or QR",
-    description: "Get a unique code or QR code to share with friends, family, or community members.",
+    description: "Get a unique code or QR code to invite friends to your private prediction market or treasury.",
   },
   {
     icon: Wallet,
-    title: "Collect Funds Together",
-    description: "Watch contributions come in privately. All transactions are ZK-compressed for maximum privacy.",
+    title: "Bet & Govern Together",
+    description: "Place bets, manage shared funds, and make group decisions. All settled on-chain with full transparency.",
   },
 ]
 
@@ -40,7 +40,7 @@ export function HowItWorksSection() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground text-lg">
-              Three simple steps to start collecting funds with your group
+              Three simple steps to start betting and managing funds with your circle
             </p>
           </div>
 
@@ -62,9 +62,9 @@ export function HowItWorksSection() {
           <div className="mt-12 p-8 rounded-2xl bg-card border border-border/50">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1">
-                <h3 className="text-2xl font-bold mb-2">Ready to start fundraising?</h3>
+                <h3 className="text-2xl font-bold mb-2">Ready to start betting with friends?</h3>
                 <p className="text-muted-foreground">
-                  Create your group in seconds and start collecting funds privately with ZK compression.
+                  Create your circle in seconds and start your private prediction market on Solana.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -72,7 +72,7 @@ export function HowItWorksSection() {
                   onClick={() => setCreateModalOpen(true)}
                   className="px-6 py-3 rounded-lg bg-accent hover:bg-accent/90 text-accent-foreground font-medium transition-colors"
                 >
-                  Create Group
+                  Create Circle
                 </button>
                 <button
                   onClick={handleLearnMore}
@@ -86,7 +86,7 @@ export function HowItWorksSection() {
         </div>
       </section>
 
-      <CreateGroupModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
+      <CreateCircleModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
     </>
   )
 }

@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Users, QrCode } from "lucide-react"
-import { CreateGroupModal } from "@/components/create-group-modal"
-import { JoinGroupModal } from "@/components/join-group-modal"
+import { CreateCircleModal } from "@/components/create-group-modal"
+import { JoinCircleModal } from "@/components/join-group-modal"
 
 export function HeroSection() {
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -16,16 +16,16 @@ export function HeroSection() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-muted/50 px-4 py-1.5 text-sm">
             <Users className="h-3.5 w-3.5 text-accent" />
-            <span className="text-muted-foreground">Privacy-first group fundraising on Solana</span>
+            <span className="text-muted-foreground">SocialFi prediction markets for friend groups</span>
           </div>
 
           <h1 className="mb-6 text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
-            Create a group, <span className="text-accent">collect funds together</span>
+            Create a circle, <span className="text-accent">Bet with Friends</span>
           </h1>
 
           <p className="mb-10 text-lg md:text-xl text-muted-foreground text-balance leading-relaxed">
-            Start a fundraising group, share a code or QR, and watch contributions roll in. Private, secure, and built
-            on Solana with ZK compression.
+            Create private prediction markets within your friend circles. Manage shared treasuries, settle bets on-chain, 
+            and make group decisions—all powered by Solana.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -34,7 +34,7 @@ export function HeroSection() {
               className="bg-accent hover:bg-accent/90 text-accent-foreground text-base"
               onClick={() => setCreateModalOpen(true)}
             >
-              Create Your Group
+              Create Your Circle
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button
@@ -63,8 +63,8 @@ export function HeroSection() {
         </div>
       </section>
 
-      <CreateGroupModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
-      <JoinGroupModal open={joinModalOpen} onOpenChange={setJoinModalOpen} />
+      <CreateCircleModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
+      <JoinCircleModal open={joinModalOpen} onOpenChange={setJoinModalOpen} />
     </>
   )
 }

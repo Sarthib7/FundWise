@@ -17,12 +17,12 @@ import { createGroup } from "@/lib/solana"
 import { Loader2, Lock, Globe } from "lucide-react"
 import { UsdcIcon } from "@/components/icons/usdc-icon"
 
-interface CreateGroupModalProps {
+interface CreateCircleModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) {
+export function CreateCircleModal({ open, onOpenChange }: CreateCircleModalProps) {
   const router = useRouter()
   // PHASE 1: Solana Wallet Adapter
   const { publicKey, connected } = useWallet()
@@ -55,8 +55,8 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
 
     try {
       const walletAddress = publicKey.toString()
-      console.log("[CreateGroup] ✅ Solana wallet connected:", walletAddress)
-      console.log("[CreateGroup] Using Solana Wallet Adapter (Phase 1)")
+      console.log("[CreateCircle] ✅ Solana wallet connected:", walletAddress)
+      console.log("[CreateCircle] Using Solana Wallet Adapter (Phase 1)")
 
       const { groupId, signature, onChainAddress, squadsVaultAddress } = await createGroup(
         walletAddress,
@@ -73,13 +73,13 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
         null // No wallet object needed for Phase 1 (simple wallet generation)
       )
 
-      console.log("[FundFlow] ✅ Group created successfully!")
-      console.log("[FundFlow] Group ID:", groupId)
+      console.log("[FundFlow] ✅ Circle created successfully!")
+      console.log("[FundFlow] Circle ID:", groupId)
       console.log("[FundFlow] On-chain address:", onChainAddress)
       console.log("[FundFlow] Squads vault address:", squadsVaultAddress)
       console.log("[FundFlow] Transaction signature:", signature)
 
-      router.push(`/group/${groupId}`)
+      router.push(`/circle/${groupId}`)
       onOpenChange(false)
 
       setFormData({
@@ -92,7 +92,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
         isPublic: true,
       })
     } catch (error) {
-      console.error("[FundFlow] ❌ Error creating group:", error)
+      console.error("[FundFlow] ❌ Error creating circle:", error)
       console.error("[FundFlow] Error details:", {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -101,7 +101,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
 
       // Show detailed error to user
       const errorMessage = error instanceof Error ? error.message : String(error)
-      alert(`Failed to create group:\n\n${errorMessage}\n\nCheck console (F12) for more details.`)
+      alert(`Failed to create circle:\n\n${errorMessage}\n\nCheck console (F12) for more details.`)
     } finally {
       setIsCreating(false)
     }
@@ -111,24 +111,24 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Create New Group</DialogTitle>
-          <DialogDescription>Set up your fundraising group with recurring contributions</DialogDescription>
+          <DialogTitle className="text-2xl">Create New Circle</DialogTitle>
+          <DialogDescription>Set up your private betting market or shared treasury for your friend group</DialogDescription>
         </DialogHeader>
 
         {isCreating ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-accent" />
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Creating Your Group</h3>
+              <h3 className="text-lg font-semibold">Creating Your Circle</h3>
               <p className="text-sm text-muted-foreground">
-                Setting up your fundraising group on Solana...
+                Setting up your private prediction market on Solana...
               </p>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Group Name</Label>
+            <Label htmlFor="name">Circle Name</Label>
             <Input
               id="name"
               placeholder="e.g., Team Vacation Fund"
@@ -139,7 +139,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
           </div>
 
           <div className="space-y-3">
-            <Label>Group Visibility</Label>
+            <Label>Circle Visibility</Label>
             <RadioGroup
               value={formData.isPublic ? "public" : "private"}
               onValueChange={(value) => setFormData({ ...formData, isPublic: value === "public" })}
@@ -152,7 +152,7 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
                     <Globe className="h-4 w-4 text-accent" />
                     Public
                   </div>
-                  <div className="text-sm text-muted-foreground">Anyone can discover and join this group</div>
+                  <div className="text-sm text-muted-foreground">Anyone can discover and join this circle</div>
                 </Label>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:border-accent/50 transition-colors">
@@ -169,7 +169,10 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="funding-goal">Funding Goal (SOL)</Label>
+            <Label htmlFor="funding-goal" className="flex items-center gap-2">
+              Funding Goal (USDC)
+              <UsdcIcon className="h-4 w-4" />
+            </Label>
             <Select
               value={formData.fundingGoal}
               onValueChange={(value) => setFormData({ ...formData, fundingGoal: value })}
@@ -180,16 +183,28 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="10">
-                  <span>10 SOL</span>
+                  <div className="flex items-center gap-2">
+                    <UsdcIcon className="h-4 w-4" />
+                    <span>$10 USDC</span>
+                  </div>
                 </SelectItem>
                 <SelectItem value="50">
-                  <span>50 SOL</span>
+                  <div className="flex items-center gap-2">
+                    <UsdcIcon className="h-4 w-4" />
+                    <span>$50 USDC</span>
+                  </div>
                 </SelectItem>
                 <SelectItem value="100">
-                  <span>100 SOL</span>
+                  <div className="flex items-center gap-2">
+                    <UsdcIcon className="h-4 w-4" />
+                    <span>$100 USDC</span>
+                  </div>
                 </SelectItem>
                 <SelectItem value="500">
-                  <span>500 SOL</span>
+                  <div className="flex items-center gap-2">
+                    <UsdcIcon className="h-4 w-4" />
+                    <span>$500 USDC</span>
+                  </div>
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -216,14 +231,15 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
 
           <div className="space-y-2">
             <Label htmlFor="amount" className="flex items-center gap-2">
-              Amount Per Recurrence (SOL)
+              Amount Per Recurrence (USDC)
+              <UsdcIcon className="h-4 w-4" />
             </Label>
             <Input
               id="amount"
               type="number"
-              step="0.01"
-              min="0.01"
-              placeholder="0.1"
+              step="1"
+              min="1"
+              placeholder="10"
               value={formData.amountPerRecurrence}
               onChange={(e) => setFormData({ ...formData, amountPerRecurrence: e.target.value })}
               required
@@ -297,13 +313,13 @@ export function CreateGroupModal({ open, onOpenChange }: CreateGroupModalProps) 
                   Creating...
                 </>
               ) : (
-                "Create Group"
+                "Create Circle"
               )}
             </Button>
           </div>
 
           {!connected && (
-            <p className="text-sm text-muted-foreground text-center">Please connect your Solana wallet to create a group</p>
+            <p className="text-sm text-muted-foreground text-center">Please connect your Solana wallet to create a circle</p>
           )}
         </form>
         )}

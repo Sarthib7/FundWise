@@ -122,14 +122,23 @@ export async function payToGroupWallet(
     console.error("❌ [SimplePayment] Payment failed:", error)
 
     // Provide helpful error messages
-    if (error.message?.includes("User rejected")) {
-      throw new Error("Transaction cancelled by user")
+    const errorMessage = error.message || error.toString() || ""
+    
+    // User cancelled/rejected transaction
+    if (errorMessage.includes("User rejected") || 
+        errorMessage.includes("user rejected") ||
+        errorMessage.includes("rejected the request") ||
+        errorMessage.includes("Transaction cancelled") ||
+        error.code === 4001) {
+      throw new Error("TRANSACTION_CANCELLED")
     }
-    if (error.message?.includes("insufficient")) {
+    
+    // Insufficient funds
+    if (errorMessage.includes("insufficient") || errorMessage.includes("Insufficient")) {
       throw new Error("Insufficient SOL balance. Please add devnet SOL to your wallet.")
     }
 
-    throw new Error(`Payment failed: ${error.message || error}`)
+    throw new Error(`Payment failed: ${errorMessage}`)
   }
 }
 

@@ -16,13 +16,14 @@ import { joinGroup } from "@/lib/solana"
 import { Loader2, QrCode, CheckCircle2, ArrowRight, Wallet } from "lucide-react"
 import { QrScannerDialog } from "./qr-scanner-dialog"
 import { UsdcIcon } from "@/components/icons/usdc-icon"
+import { toast } from "sonner"
 
-interface JoinGroupModalProps {
+interface JoinCircleModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
+export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
   const router = useRouter()
   // PHASE 1: Solana Wallet Adapter
   const { publicKey, connected } = useWallet()
@@ -46,7 +47,7 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
     }
 
     if (!groupCode.trim()) {
-      alert("Please enter a group code")
+      alert("Please enter a circle code")
       return
     }
 
@@ -57,24 +58,35 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
       const walletAddress = publicKey.toString()
       console.log("[FundFlow] Processing joining payment...")
       console.log("[FundFlow] From:", walletAddress)
-      console.log("[FundFlow] To: Group Treasury")
+      console.log("[FundFlow] To: Circle Treasury")
       console.log("[FundFlow] Amount: 0.01 SOL")
 
       const { signature } = await joinGroup(walletAddress, groupCode, 0.01)
 
       console.log("[FundFlow] ✅ Payment successful!")
-      console.log("[FundFlow] Successfully joined group with 0.01 SOL tip!")
+      console.log("[FundFlow] Successfully joined circle with 0.01 SOL tip!")
       console.log("[FundFlow] Transaction signature:", signature)
 
       setShowTransactionSimulation(false)
-      router.push(`/group/${groupCode}`)
+      router.push(`/circle/${groupCode}`)
       onOpenChange(false)
       setGroupCode("")
     } catch (error) {
-      console.error("[FundFlow] Error joining group:", error)
+      console.error("[FundFlow] Error joining circle:", error)
       setShowTransactionSimulation(false)
+      
+      // Handle user cancellation gracefully
+      if (error instanceof Error && error.message === "TRANSACTION_CANCELLED") {
+        toast.info("Transaction cancelled", {
+          description: "You cancelled joining the circle"
+        })
+        return
+      }
+      
       const errorMessage = error instanceof Error ? error.message : "Please check the code and try again."
-      alert(`Failed to join group: ${errorMessage}`)
+      toast.error("Failed to join circle", {
+        description: errorMessage
+      })
     } finally {
       setIsJoining(false)
     }
@@ -89,13 +101,13 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Join a Group</DialogTitle>
-            <DialogDescription>Enter the group code or scan a QR code to join</DialogDescription>
+            <DialogTitle className="text-2xl">Join a Circle</DialogTitle>
+            <DialogDescription>Enter the circle code or scan a QR code to join</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="group-code">Group Code</Label>
+              <Label htmlFor="group-code">Circle Code</Label>
               <Input
                 id="group-code"
                 placeholder="Enter 6-digit code"
@@ -116,10 +128,11 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
                   <p className="font-medium mb-1">Joining Tip</p>
                   <p className="text-sm text-muted-foreground">
                     A one-time tip of{" "}
-                    <span className="font-semibold text-foreground">
-                      0.01 SOL
+                    <span className="font-semibold text-foreground flex items-center gap-1 inline-flex">
+                      <UsdcIcon className="h-4 w-4" />
+                      $1 USDC
                     </span>{" "}
-                    is required to join this group and support the collective fund.
+                    is required to join this circle and support the collective fund.
                   </p>
                 </div>
               </div>
@@ -161,13 +174,15 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
                     Joining...
                   </>
                 ) : (
-                  "Join & Pay 0.01 SOL"
+                  <span className="flex items-center gap-1">
+                    Join & Pay <UsdcIcon className="h-4 w-4 ml-1" /> $1 USDC
+                  </span>
                 )}
               </Button>
             </div>
 
             {!connected && (
-              <p className="text-sm text-muted-foreground text-center">Please connect your Solana wallet to join a group</p>
+              <p className="text-sm text-muted-foreground text-center">Please connect your Solana wallet to join a circle</p>
             )}
           </form>
         </DialogContent>
@@ -180,7 +195,7 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="text-xl">Processing Transaction</DialogTitle>
-            <DialogDescription>Sending 0.01 SOL joining tip to the group</DialogDescription>
+            <DialogDescription>Sending $1 USDC joining tip to the circle</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
@@ -199,13 +214,14 @@ export function JoinGroupModal({ open, onOpenChange }: JoinGroupModalProps) {
 
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                 <span className="text-sm text-muted-foreground">To</span>
-                <span className="text-sm font-mono">Group Wallet</span>
+                <span className="text-sm font-mono">Circle Wallet</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20">
                 <span className="text-sm text-muted-foreground">Amount</span>
-                <span className="text-sm font-semibold">
-                  0.01 SOL
+                <span className="text-sm font-semibold flex items-center gap-1">
+                  <UsdcIcon className="h-4 w-4" />
+                  $1 USDC
                 </span>
               </div>
             </div>

@@ -44,8 +44,8 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/groups" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Groups
+          <Link href="/circles" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Circles
           </Link>
           <a
             href="/#how-it-works"

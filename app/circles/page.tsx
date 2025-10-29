@@ -10,10 +10,10 @@ import { Users, TrendingUp, Globe, DollarSign } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { UsdcIcon } from "@/components/icons/usdc-icon"
 import { GroupAvatar } from "@/components/avatar"
+import { UsdcIcon } from "@/components/icons/usdc-icon"
 
-export default function GroupsPage() {
+export default function CirclesPage() {
   const [groups, setGroups] = useState<GroupData[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -63,7 +63,7 @@ export default function GroupsPage() {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading public groups...</p>
+            <p className="text-muted-foreground">Loading public circles...</p>
           </div>
         </main>
         <Footer />
@@ -80,23 +80,23 @@ export default function GroupsPage() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent mb-4">
                 <Globe className="h-4 w-4" />
-                <span className="text-sm font-medium">Public Groups</span>
+                <span className="text-sm font-medium">Public Circles</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-balance">Discover Fundraising Groups</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-balance">Discover Betting Circles</h1>
               <p className="text-lg text-muted-foreground text-balance">
-                Join public groups and start contributing to collective goals
+                Join public circles and start contributing to collective goals
               </p>
             </div>
 
             {groups.length === 0 ? (
               <Card className="p-12 text-center border-border/50">
                 <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No Public Groups Yet</h3>
+                <h3 className="text-xl font-semibold mb-2">No Public Circles Yet</h3>
                 <p className="text-muted-foreground mb-6">
-                  Be the first to create a public group and invite others to join
+                  Be the first to create a public circle and invite others to join
                 </p>
                 <Button asChild>
-                  <Link href="/">Create Group</Link>
+                  <Link href="/">Create Circle</Link>
                 </Button>
               </Card>
             ) : (
@@ -129,8 +129,8 @@ export default function GroupsPage() {
                                 <span>{group.members.length} members</span>
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <DollarSign className="h-4 w-4" />
-                                <span>{group.fundingGoal.toLocaleString()} SOL goal</span>
+                                <UsdcIcon className="h-4 w-4" />
+                                <span>${group.fundingGoal.toLocaleString()} USDC goal</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <TrendingUp className={`h-4 w-4 ${getRiskColor(group.riskLevel)}`} />
@@ -142,8 +142,9 @@ export default function GroupsPage() {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Progress</span>
-                              <span className="font-medium">
-                                {group.totalCollected.toFixed(4)} / {group.fundingGoal.toLocaleString()} SOL
+                              <span className="font-medium flex items-center gap-1">
+                                <UsdcIcon className="h-4 w-4" />
+                                ${group.totalCollected.toFixed(0)} / ${group.fundingGoal.toLocaleString()} USDC
                               </span>
                             </div>
                             <Progress value={progress} className="h-2" />
@@ -155,12 +156,13 @@ export default function GroupsPage() {
 
                                 <div className="flex flex-col gap-3 md:w-40">
                                   <Button asChild className="w-full">
-                                    <Link href={`/group/${group.id}`}>View Group</Link>
+                                    <Link href={`/circle/${group.id}`}>View Circle</Link>
                                   </Button>
                                   <div className="text-center">
                                     <p className="text-xs text-muted-foreground">Join with</p>
-                                    <p className="text-sm font-semibold">
-                                      0.01 SOL tip
+                                    <p className="text-sm font-semibold flex items-center gap-1 justify-center">
+                                      <UsdcIcon className="h-4 w-4" />
+                                      $1 USDC tip
                                     </p>
                                   </div>
                                 </div>
