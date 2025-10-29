@@ -14,14 +14,14 @@ import {
   type PredictionProposal 
 } from "@/lib/prediction-market"
 import { toast } from "sonner"
-import { 
+import {
   TrendingUp, 
   Users, 
   Clock, 
   Trophy,
   Loader2,
   Vote,
-  Target
+  Sparkles
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,9 +35,10 @@ import {
 
 interface PredictionPollsProps {
   circleId: string
+  onProposalsChange?: (hasProposals: boolean) => void
 }
 
-export function PredictionPolls({ circleId }: PredictionPollsProps) {
+export function PredictionPolls({ circleId, onProposalsChange }: PredictionPollsProps) {
   const { publicKey, connected } = useWallet()
   const [proposals, setProposals] = useState<PredictionProposal[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -52,10 +53,15 @@ export function PredictionPolls({ circleId }: PredictionPollsProps) {
     const unsubscribe = subscribeToProposals(circleId, (updatedProposals) => {
       setProposals(updatedProposals)
       setIsLoading(false)
+      
+      // Notify parent component about proposals existence
+      if (onProposalsChange) {
+        onProposalsChange(updatedProposals.length > 0)
+      }
     })
 
     return () => unsubscribe()
-  }, [circleId])
+  }, [circleId, onProposalsChange])
 
   const handlePlaceBet = async () => {
     if (!connected || !publicKey || !selectedProposal || !selectedOption) {
@@ -135,7 +141,7 @@ export function PredictionPolls({ circleId }: PredictionPollsProps) {
   const hasUserVoted = (proposal: PredictionProposal): boolean => {
     if (!publicKey) return false
     const walletAddress = publicKey.toString()
-    return proposal.options.some(opt => opt.voters.includes(walletAddress))
+    return proposal.options.some(opt => opt.voters && Array.isArray(opt.voters) && opt.voters.includes(walletAddress))
   }
 
   if (isLoading) {
@@ -150,11 +156,11 @@ export function PredictionPolls({ circleId }: PredictionPollsProps) {
     return (
       <div className="text-center py-12">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-4">
-          <Target className="h-8 w-8 text-accent" />
+          <Sparkles className="h-8 w-8 text-accent" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">No Predictions Yet</h3>
+        <h3 className="text-lg font-semibold mb-2">No Active Prediction</h3>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Be the first to create a prediction market for your circle!
+          Create a prediction market for your circle to start betting with friends!
         </p>
       </div>
     )
@@ -163,7 +169,8 @@ export function PredictionPolls({ circleId }: PredictionPollsProps) {
   return (
     <>
       <div className="space-y-4">
-        {proposals.map((proposal) => {
+        {/* Only display the first (and should be only) proposal */}
+        {proposals.slice(0, 1).map((proposal) => {
           const userVoted = hasUserVoted(proposal)
           
           return (
@@ -187,27 +194,55 @@ export function PredictionPolls({ circleId }: PredictionPollsProps) {
 
               {/* Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="p-1.5 rounded-md bg-accent/10">
-                    <UsdcIcon className="h-4 w-4 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Total Stake</p>
-                    <p className="font-semibold">${proposal.totalStake}</p>
-                  </div>
-                </div>
+                {Date.now() >= proposal.closesAt ? (
+                  // After deadline: Show all stats
+                  <>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="p-1.5 rounded-md bg-accent/10">
+                        <UsdcIcon className="h-4 w-4 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Total Stake</p>
+                        <p className="font-semibold">${proposal.totalStake}</p>
+                      </div>
+                    </div>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="p-1.5 rounded-md bg-accent/10">
-                    <Users className="h-4 w-4 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Participants</p>
-                    <p className="font-semibold">
-                      {proposal.options.reduce((sum, opt) => sum + opt.voters.length, 0)}
-                    </p>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="p-1.5 rounded-md bg-accent/10">
+                        <Users className="h-4 w-4 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Participants</p>
+                        <p className="font-semibold">
+                          {proposal.options.reduce((sum, opt) => sum + (opt.voters && Array.isArray(opt.voters) ? opt.voters.length : 0), 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // Before deadline: Hide stake and participants
+                  <>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="p-1.5 rounded-md bg-accent/10">
+                        <UsdcIcon className="h-4 w-4 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Total Stake</p>
+                        <p className="font-semibold">Hidden</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="p-1.5 rounded-md bg-accent/10">
+                        <Users className="h-4 w-4 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Participants</p>
+                        <p className="font-semibold">Hidden</p>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="flex items-center gap-2 text-sm">
                   <div className="p-1.5 rounded-md bg-accent/10">
@@ -232,32 +267,52 @@ export function PredictionPolls({ circleId }: PredictionPollsProps) {
 
               {/* Options */}
               <div className="space-y-2 mb-4">
-                {proposal.options.map((option) => {
-                  const percentage = proposal.totalStake > 0 
-                    ? (option.stake / proposal.totalStake) * 100 
-                    : 0
-
-                  return (
-                    <div key={option.id} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{option.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">
-                            {option.voters.length} {option.voters.length === 1 ? 'bet' : 'bets'}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <UsdcIcon className="h-3.5 w-3.5" />
-                            <span className="font-semibold">${option.stake}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Progress value={percentage} className="h-2" />
-                      <p className="text-xs text-muted-foreground">
-                        {percentage.toFixed(1)}% of total stake
+                {Date.now() < proposal.closesAt ? (
+                  // Before deadline: Hide results, just show option names
+                  <>
+                    <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 mb-3">
+                      <p className="text-xs text-center text-muted-foreground">
+                        <Clock className="inline h-3.5 w-3.5 mr-1 mb-0.5" />
+                        Results will be revealed after betting closes
                       </p>
                     </div>
-                  )
-                })}
+                    {proposal.options.map((option) => (
+                      <div key={option.id} className="p-3 rounded-lg border border-border">
+                        <span className="font-medium text-sm">{option.label}</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  // After deadline: Show full results
+                  proposal.options.map((option) => {
+                    const percentage = proposal.totalStake > 0 
+                      ? (option.stake / proposal.totalStake) * 100 
+                      : 0
+                    
+                    const votersCount = option.voters && Array.isArray(option.voters) ? option.voters.length : 0
+
+                    return (
+                      <div key={option.id} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">{option.label}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">
+                              {votersCount} {votersCount === 1 ? 'bet' : 'bets'}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <UsdcIcon className="h-3.5 w-3.5" />
+                              <span className="font-semibold">${option.stake || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Progress value={percentage} className="h-2" />
+                        <p className="text-xs text-muted-foreground">
+                          {percentage.toFixed(1)}% of total stake
+                        </p>
+                      </div>
+                    )
+                  })
+                )}
               </div>
 
               {/* Action Button */}

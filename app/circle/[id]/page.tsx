@@ -30,10 +30,7 @@ import {
   Loader2,
   Download,
   AlertCircle,
-  Settings,
-  BarChart3,
-  XCircle,
-  Target,
+  Sparkles,
   Plus,
 } from "lucide-react"
 
@@ -53,11 +50,11 @@ export default function CircleDashboard() {
   const [isPaying, setIsPaying] = useState(false)
   const [activeTab, setActiveTab] = useState("predictions")
   const [showCreateProposal, setShowCreateProposal] = useState(false)
+  const [hasActiveProposal, setHasActiveProposal] = useState(false)
 
   // Check if user is a member
   const walletAddress = publicKey?.toString() || ""
   const isMember = group?.members.includes(walletAddress) || false
-  const isCreator = group?.creator === walletAddress
 
   // Calculate progress
   const progress = group ? (group.totalCollected / group.fundingGoal) * 100 : 0
@@ -310,7 +307,7 @@ export default function CircleDashboard() {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4 mb-6">
                   <TabsTrigger value="predictions">
-                    <Target className="h-4 w-4 mr-2" />
+                    <Sparkles className="h-4 w-4 mr-2" />
                     Predictions
                   </TabsTrigger>
                   <TabsTrigger value="members">
@@ -328,8 +325,8 @@ export default function CircleDashboard() {
                 </TabsList>
 
                 <TabsContent value="predictions" className="space-y-4">
-                  {/* Create Proposal Button */}
-                  {isMember && (
+                  {/* Create Proposal Button - Only show if no active proposal */}
+                  {isMember && !hasActiveProposal && (
                     <Button
                       type="button"
                       onClick={() => setShowCreateProposal(true)}
@@ -341,8 +338,21 @@ export default function CircleDashboard() {
                     </Button>
                   )}
 
+                  {/* Info message if proposal exists */}
+                  {isMember && hasActiveProposal && (
+                    <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                      <p className="text-sm text-center text-muted-foreground">
+                        <Sparkles className="inline h-4 w-4 mr-1 mb-0.5" />
+                        This circle has an active prediction market
+                      </p>
+                    </div>
+                  )}
+
                   {/* Prediction Polls */}
-                  <PredictionPolls circleId={group.id} />
+                  <PredictionPolls 
+                    circleId={group.id} 
+                    onProposalsChange={setHasActiveProposal}
+                  />
                 </TabsContent>
 
                 <TabsContent value="members" className="space-y-3">
@@ -480,46 +490,6 @@ export default function CircleDashboard() {
                 </div>
               </div>
             </Card>
-
-            {/* Admin Settings (if creator) */}
-            {isCreator && (
-              <Card className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge variant="secondary">Admin</Badge>
-                  <h3 className="font-semibold">Circle Settings</h3>
-                </div>
-                
-                <div className="space-y-2">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => toast.info("Edit functionality coming soon!")}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Details
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => toast.info("Analytics coming soon!")}
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    View Analytics
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                    onClick={() => toast.error("Are you sure you want to close this circle?")}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Close Circle
-                  </Button>
-                </div>
-              </Card>
-            )}
           </div>
         </div>
       </main>

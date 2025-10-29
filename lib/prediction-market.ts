@@ -48,6 +48,12 @@ export async function createProposal(
   durationHours: number
 ): Promise<string> {
   try {
+    // Check if circle already has a proposal
+    const existingProposals = await getCircleProposals(circleId)
+    if (existingProposals.length > 0) {
+      throw new Error('This circle already has an active prediction proposal. Only one proposal per circle is allowed.')
+    }
+
     const proposalsRef = ref(db, `predictions/${circleId}`)
     const newProposalRef = push(proposalsRef)
     const proposalId = newProposalRef.key!
@@ -66,7 +72,7 @@ export async function createProposal(
         id: `opt_${Math.random().toString(36).substring(7)}`,
         label,
         stake: 0,
-        voters: []
+        voters: [] // Always initialize as empty array
       })),
       totalStake: 0,
       status: 'active'
@@ -94,7 +100,15 @@ export async function getCircleProposals(circleId: string): Promise<PredictionPr
 
     const proposals: PredictionProposal[] = []
     snapshot.forEach((child) => {
-      proposals.push(child.val())
+      const proposal = child.val()
+      // Ensure voters arrays exist for all options
+      if (proposal.options) {
+        proposal.options = proposal.options.map((opt: any) => ({
+          ...opt,
+          voters: opt.voters || []
+        }))
+      }
+      proposals.push(proposal)
     })
 
     return proposals.sort((a, b) => b.createdAt - a.createdAt)
@@ -124,6 +138,15 @@ export async function placeBet(
 
     const proposal: PredictionProposal = snapshot.val()
     
+    // Ensure voters arrays exist for all options
+    if (proposal.options) {
+      proposal.options = proposal.options.map((opt: any) => ({
+        ...opt,
+        voters: opt.voters || [],
+        stake: opt.stake || 0
+      }))
+    }
+    
     if (proposal.status !== 'active') {
       throw new Error('Proposal is not active')
     }
@@ -138,15 +161,22 @@ export async function placeBet(
       throw new Error('Option not found')
     }
 
-    // Check if user already voted
-    const hasVoted = proposal.options.some(opt => opt.voters.includes(voter))
+    // Check if user already voted (with defensive checks)
+    const hasVoted = proposal.options.some(opt => 
+      opt.voters && Array.isArray(opt.voters) && opt.voters.includes(voter)
+    )
     if (hasVoted) {
       throw new Error('You have already placed a bet on this proposal')
     }
 
-    proposal.options[optionIndex].stake += amount
+    // Ensure voters array exists before pushing
+    if (!proposal.options[optionIndex].voters) {
+      proposal.options[optionIndex].voters = []
+    }
+
+    proposal.options[optionIndex].stake = (proposal.options[optionIndex].stake || 0) + amount
     proposal.options[optionIndex].voters.push(voter)
-    proposal.totalStake += amount
+    proposal.totalStake = (proposal.totalStake || 0) + amount
 
     await update(proposalRef, {
       options: proposal.options,
@@ -186,7 +216,15 @@ export function subscribeToProposals(
 
     const proposals: PredictionProposal[] = []
     snapshot.forEach((child) => {
-      proposals.push(child.val())
+      const proposal = child.val()
+      // Ensure voters arrays exist for all options
+      if (proposal.options) {
+        proposal.options = proposal.options.map((opt: any) => ({
+          ...opt,
+          voters: opt.voters || []
+        }))
+      }
+      proposals.push(proposal)
     })
 
     callback(proposals.sort((a, b) => b.createdAt - a.createdAt))
