@@ -5,7 +5,7 @@
   "description": "Privacy-First Group Fundraising on Solana - Built with Next.js and modern web technologies",
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev --hostname 127.0.0.1",
     "lint": "eslint .",
     "start": "next start"
   },
