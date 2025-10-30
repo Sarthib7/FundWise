@@ -11,7 +11,7 @@ import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { GroupAvatar } from "@/components/avatar"
-import { UsdcIcon } from "@/components/icons/usdc-icon"
+import { SolIcon } from "@/components/icons/sol-icon"
 
 export default function CirclesPage() {
   const [groups, setGroups] = useState<GroupData[]>([])
@@ -129,8 +129,8 @@ export default function CirclesPage() {
                                 <span>{group.members.length} members</span>
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <UsdcIcon className="h-4 w-4" />
-                                <span>${group.fundingGoal.toLocaleString()} USDC goal</span>
+                                <SolIcon className="h-4 w-4" />
+                                <span>{group.fundingGoal.toLocaleString()} SOL goal</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <TrendingUp className={`h-4 w-4 ${getRiskColor(group.riskLevel)}`} />
@@ -143,8 +143,8 @@ export default function CirclesPage() {
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">Progress</span>
                               <span className="font-medium flex items-center gap-1">
-                                <UsdcIcon className="h-4 w-4" />
-                                ${group.totalCollected.toFixed(0)} / ${group.fundingGoal.toLocaleString()} USDC
+                                <SolIcon className="h-4 w-4" />
+                                {group.totalCollected.toFixed(2)} / {group.fundingGoal.toLocaleString()} SOL
                               </span>
                             </div>
                             <Progress value={progress} className="h-2" />
@@ -161,8 +161,8 @@ export default function CirclesPage() {
                           <div className="text-center">
                             <p className="text-xs text-muted-foreground">Join with</p>
                             <p className="text-sm font-semibold flex items-center gap-1 justify-center">
-                              <UsdcIcon className="h-4 w-4" />
-                              $1 USDC tip
+                              <SolIcon className="h-4 w-4" />
+                              0.01 SOL tip
                             </p>
                           </div>
                         </div>

@@ -16,7 +16,7 @@ import { joinGroup, fetchGroupData, type GroupData } from "@/lib/solana"
 import { payToGroupWallet, getWalletBalance } from "@/lib/simple-payment"
 import { toast } from "sonner"
 import { generateGroupQRCode } from "@/lib/qr-code"
-import { UsdcIcon } from "@/components/icons/usdc-icon"
+import { SolIcon } from "@/components/icons/sol-icon"
 import { CreateProposalModal } from "@/components/create-proposal-modal"
 import { PredictionPolls } from "@/components/prediction-polls"
 import {
@@ -134,7 +134,7 @@ export default function CircleDashboard() {
         group.amountPerRecurrence
       )
 
-      toast.success(`Payment of $${group.amountPerRecurrence} USDC successful!`, {
+      toast.success(`Payment of ${group.amountPerRecurrence} SOL successful!`, {
         description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`,
       })
 
@@ -254,9 +254,9 @@ export default function CircleDashboard() {
             <Card className="p-6">
               <p className="text-sm text-muted-foreground mb-2">Total Collected</p>
               <div className="flex items-center gap-2 mb-6">
-                <h2 className="text-4xl font-bold">${walletBalance.toFixed(0)}</h2>
-                <UsdcIcon className="h-6 w-6" />
-                <span className="text-lg text-muted-foreground">USDC</span>
+                <h2 className="text-4xl font-bold">{walletBalance.toFixed(2)}</h2>
+                <SolIcon className="h-6 w-6" />
+                <span className="text-lg text-muted-foreground">SOL</span>
               </div>
 
               {/* Progress */}
@@ -264,14 +264,14 @@ export default function CircleDashboard() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Funding Goal</span>
                   <div className="flex items-center gap-1">
-                    <UsdcIcon className="h-4 w-4" />
-                    <span className="font-medium">${group.fundingGoal.toLocaleString()} USDC</span>
+                    <SolIcon className="h-4 w-4" />
+                    <span className="font-medium">{group.fundingGoal.toLocaleString()} SOL</span>
                   </div>
                 </div>
                 <Progress value={progress} className="h-2" />
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-green-600 dark:text-green-400">{progress.toFixed(1)}% Complete</span>
-                  <span className="text-muted-foreground">${(group.fundingGoal - walletBalance).toFixed(0)} remaining</span>
+                  <span className="text-muted-foreground">{(group.fundingGoal - walletBalance).toFixed(2)} SOL remaining</span>
                 </div>
               </div>
             </Card>
@@ -294,10 +294,10 @@ export default function CircleDashboard() {
               </Card>
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <UsdcIcon className="h-4 w-4" />
+                  <SolIcon className="h-4 w-4" />
                   <span className="text-xs">Per Period</span>
                 </div>
-                <p className="text-2xl font-bold">${group.amountPerRecurrence}</p>
+                <p className="text-2xl font-bold">{group.amountPerRecurrence} SOL</p>
               </Card>
             </div>
 
@@ -358,8 +358,8 @@ export default function CircleDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">$10</p>
-                        <p className="text-xs text-muted-foreground">USDC</p>
+                        <p className="font-bold">0.1 SOL</p>
+                        <p className="text-xs text-muted-foreground">Contribution</p>
                       </div>
                     </div>
                   ))}
@@ -416,8 +416,8 @@ export default function CircleDashboard() {
                   <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
                     <p className="text-sm text-muted-foreground mb-1">Amount Due</p>
                     <div className="flex items-center gap-2">
-                      <UsdcIcon className="h-5 w-5" />
-                      <p className="text-2xl font-bold">${group.amountPerRecurrence} USDC</p>
+                      <SolIcon className="h-5 w-5" />
+                      <p className="text-2xl font-bold">{group.amountPerRecurrence} SOL</p>
                     </div>
                   </div>
 
@@ -450,7 +450,7 @@ export default function CircleDashboard() {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Join This Circle</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start contributing ${group.amountPerRecurrence} USDC {group.recurringPeriod}
+                  Start contributing {group.amountPerRecurrence} SOL {group.recurringPeriod}
                 </p>
                 <Button 
                   type="button"

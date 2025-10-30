@@ -15,7 +15,7 @@ import { useWallet } from "@solana/wallet-adapter-react"
 import { joinGroup } from "@/lib/solana"
 import { Loader2, QrCode, CheckCircle2, ArrowRight, Wallet } from "lucide-react"
 import { QrScannerDialog } from "./qr-scanner-dialog"
-import { UsdcIcon } from "@/components/icons/usdc-icon"
+import { SolIcon } from "@/components/icons/sol-icon"
 import { toast } from "sonner"
 
 interface JoinCircleModalProps {
@@ -129,8 +129,8 @@ export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
                   <p className="text-sm text-muted-foreground">
                     A one-time tip of{" "}
                     <span className="font-semibold text-foreground flex items-center gap-1 inline-flex">
-                      <UsdcIcon className="h-4 w-4" />
-                      $1 USDC
+                      <SolIcon className="h-4 w-4" />
+                      0.01 SOL
                     </span>{" "}
                     is required to join this circle and support the collective fund.
                   </p>
@@ -175,7 +175,7 @@ export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
                   </>
                 ) : (
                   <span className="flex items-center gap-1">
-                    Join & Pay <UsdcIcon className="h-4 w-4 ml-1" /> $1 USDC
+                    Join & Pay <SolIcon className="h-4 w-4 ml-1" /> 0.01 SOL
                   </span>
                 )}
               </Button>
@@ -195,7 +195,7 @@ export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="text-xl">Processing Transaction</DialogTitle>
-            <DialogDescription>Sending $1 USDC joining tip to the circle</DialogDescription>
+            <DialogDescription>Sending 0.01 SOL joining tip to the circle</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
@@ -220,8 +220,8 @@ export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
               <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20">
                 <span className="text-sm text-muted-foreground">Amount</span>
                 <span className="text-sm font-semibold flex items-center gap-1">
-                  <UsdcIcon className="h-4 w-4" />
-                  $1 USDC
+                  <SolIcon className="h-4 w-4" />
+                  0.01 SOL
                 </span>
               </div>
             </div>

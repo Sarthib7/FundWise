@@ -48,6 +48,12 @@ export interface KalshiOrder {
  */
 export function getKalshiConfig(): Configuration | null {
   try {
+    // Check if running in browser environment
+    if (typeof window !== 'undefined') {
+      console.log('[Kalshi] Configuration skipped - browser environment')
+      return null
+    }
+
     if (!KALSHI_CONFIG.apiKey) {
       console.warn('[Kalshi] API key not configured. Set NEXT_PUBLIC_KALSHI_API_KEY in .env.local')
       return null
@@ -150,6 +156,12 @@ export async function placeKalshiBet(
   price?: number
 ): Promise<KalshiOrder | null> {
   try {
+    // Check if running in browser environment
+    if (typeof window !== 'undefined') {
+      console.log('[Kalshi] Bet placement skipped - browser environment (local bet only)')
+      return null
+    }
+
     if (!isKalshiAvailable()) {
       console.log('[Kalshi] Not configured - bet placed locally only')
       return null
@@ -195,6 +207,12 @@ export async function placeKalshiBet(
  */
 export async function getKalshiMarketData(ticker: string): Promise<KalshiMarket | null> {
   try {
+    // Check if running in browser environment
+    if (typeof window !== 'undefined') {
+      console.log('[Kalshi] Market data fetch skipped - browser environment')
+      return null
+    }
+
     if (!isKalshiAvailable()) {
       return null
     }

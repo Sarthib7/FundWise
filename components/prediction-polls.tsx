@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { UsdcIcon } from "@/components/icons/usdc-icon"
+import { SolIcon } from "@/components/icons/sol-icon"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { 
   getCircleProposals, 
@@ -89,7 +89,7 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
       )
 
       toast.success("Bet placed successfully!", {
-        description: `You bet $${amount} USDC`
+        description: `You bet ${amount} SOL`
       })
 
       setSelectedProposal(null)
@@ -220,13 +220,13 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                 {Date.now() >= proposal.closesAt ? (
                   // After deadline: Show all stats
                   <>
                     <div className="flex items-center gap-2 text-sm">
                       <div className="p-1.5 rounded-md bg-accent/10">
-                        <UsdcIcon className="h-4 w-4 text-accent" />
+                        <SolIcon className="h-4 w-4 text-accent" />
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Total Stake</p>
@@ -251,7 +251,7 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                   <>
                     <div className="flex items-center gap-2 text-sm">
                       <div className="p-1.5 rounded-md bg-accent/10">
-                        <UsdcIcon className="h-4 w-4 text-accent" />
+                        <SolIcon className="h-4 w-4 text-accent" />
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Total Stake</p>
@@ -281,65 +281,6 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="p-1.5 rounded-md bg-accent/10">
-                    <TrendingUp className="h-4 w-4 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Options</p>
-                    <p className="font-semibold">{proposal.options.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Options */}
-              <div className="space-y-2 mb-4">
-                {Date.now() < proposal.closesAt ? (
-                  // Before deadline: Hide results, just show option names
-                  <>
-                    <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 mb-3">
-                      <p className="text-xs text-center text-muted-foreground">
-                        <Clock className="inline h-3.5 w-3.5 mr-1 mb-0.5" />
-                        Results will be revealed after betting closes
-                      </p>
-                    </div>
-                    {proposal.options.map((option) => (
-                      <div key={option.id} className="p-3 rounded-lg border border-border">
-                        <span className="font-medium text-sm">{option.label}</span>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  // After deadline: Show full results
-                  proposal.options.map((option) => {
-                    const percentage = proposal.totalStake > 0 
-                      ? (option.stake / proposal.totalStake) * 100 
-                      : 0
-                    
-                    const votersCount = option.voters && Array.isArray(option.voters) ? option.voters.length : 0
-
-                    return (
-                      <div key={option.id} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">{option.label}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              {votersCount} {votersCount === 1 ? 'bet' : 'bets'}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <UsdcIcon className="h-3.5 w-3.5" />
-                              <span className="font-semibold">${option.stake || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Progress value={percentage} className="h-2" />
-                        <p className="text-xs text-muted-foreground">
-                          {percentage.toFixed(1)}% of total stake
-                        </p>
-                      </div>
-                    )
-                  })
-                )}
               </div>
 
               {/* Action Button */}
@@ -360,7 +301,7 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                     </>
                   ) : (
                     <>
-                      <UsdcIcon className="mr-2 h-4 w-4" />
+                      <SolIcon className="mr-2 h-4 w-4" />
                       Place Your Bet
                     </>
                   )}
@@ -419,8 +360,8 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{option.label}</span>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <UsdcIcon className="h-3.5 w-3.5" />
-                        <span>${option.stake}</span>
+                        <SolIcon className="h-3.5 w-3.5" />
+                        <span>{option.stake} SOL</span>
                       </div>
                     </div>
                   </button>
@@ -430,9 +371,9 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
 
             {/* Bet Amount */}
             <div className="space-y-2">
-              <Label htmlFor="bet-amount">Bet Amount (USDC)</Label>
+              <Label htmlFor="bet-amount">Bet Amount (SOL)</Label>
               <div className="flex items-center gap-2">
-                <UsdcIcon className="h-5 w-5" />
+                <SolIcon className="h-5 w-5" />
                 <Input
                   id="bet-amount"
                   type="number"
@@ -445,7 +386,7 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Minimum bet: $1 USDC
+                Minimum bet: 0.01 SOL
               </p>
             </div>
 
@@ -493,7 +434,7 @@ export function PredictionPolls({ circleId, onProposalsChange }: PredictionPolls
                   </>
                 ) : (
                   <>
-                    <UsdcIcon className="mr-2 h-4 w-4" />
+                    <SolIcon className="mr-2 h-4 w-4" />
                     Confirm Bet
                   </>
                 )}

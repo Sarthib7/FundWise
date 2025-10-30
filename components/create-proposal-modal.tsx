@@ -29,6 +29,7 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
   const [isSearching, setIsSearching] = useState(false)
   const [kalshiMarkets, setKalshiMarkets] = useState<KalshiMarket[]>([])
   const [selectedMarket, setSelectedMarket] = useState<KalshiMarket | null>(null)
+  const [showConfirmation, setShowConfirmation] = useState(false) // New state for confirmation step
   
   // Proposal fields (populated from selected market)
   const [title, setTitle] = useState("")
@@ -132,6 +133,7 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
     setSearchQuery("")
     setKalshiMarkets([])
     setSelectedMarket(null)
+    setShowConfirmation(false)
     setTitle("")
     setDescription("")
     setDuration("24")
@@ -150,54 +152,56 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
 
         <div className="space-y-4">
             {/* Search Bar */}
-            <div className="space-y-2">
-              <Label htmlFor="kalshi-search">Search Kalshi Markets</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="kalshi-search"
-                  placeholder="e.g., Bitcoin, Election, Stock market..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleSearchKalshi()
-                    }
-                  }}
-                  disabled={isSearching}
-                />
-                <Button
-                  type="button"
-                  onClick={handleSearchKalshi}
-                  disabled={isSearching || !searchQuery.trim()}
-                >
-                  {isSearching ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                </Button>
+            {!showConfirmation && (
+              <div className="space-y-2">
+                <Label htmlFor="kalshi-search">Search Kalshi Markets</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="kalshi-search"
+                    placeholder="e.g., Bitcoin, Election, Stock market..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleSearchKalshi()
+                      }
+                    }}
+                    disabled={isSearching}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleSearchKalshi}
+                    disabled={isSearching || !searchQuery.trim()}
+                  >
+                    {isSearching ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Search for active prediction markets on Kalshi
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Search for active prediction markets on Kalshi
-              </p>
-            </div>
+            )}
 
             {/* Search Results */}
-            {kalshiMarkets.length > 0 && (
+            {kalshiMarkets.length > 0 && !showConfirmation && (
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 <Label>Found {kalshiMarkets.length} Market{kalshiMarkets.length > 1 ? 's' : ''}</Label>
                 {kalshiMarkets.map((market) => (
                   <Card
                     key={market.ticker}
-                    className={`p-4 cursor-pointer transition-all ${
+                    className={`p-4 transition-all ${
                       selectedMarket?.ticker === market.ticker
                         ? 'border-[#00ab79] bg-[#00ab79]/5'
-                        : 'hover:border-accent/50'
+                        : 'hover:border-accent/50 cursor-pointer'
                     }`}
-                    onClick={() => handleSelectMarket(market)}
+                    onClick={() => selectedMarket?.ticker !== market.ticker && handleSelectMarket(market)}
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <h4 className="font-semibold line-clamp-2">{market.title}</h4>
@@ -228,67 +232,105 @@ export function CreateProposalModal({ isOpen, onClose, circleId }: CreateProposa
                           <span className="text-red-600">No: {100 - market.last_price}¢</span>
                         </div>
                       )}
+
+                      {/* Show Continue button on selected card */}
+                      {selectedMarket?.ticker === market.ticker && !showConfirmation && (
+                        <div className="flex gap-2 pt-2 border-t border-[#00ab79]/20">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedMarket(null)
+                              setShowConfirmation(false)
+                            }}
+                            className="flex-1"
+                          >
+                            Change
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShowConfirmation(true)
+                            }}
+                            className="flex-1 bg-[#00ab79] hover:bg-[#009368] text-white"
+                          >
+                            Continue
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 ))}
               </div>
             )}
 
-            {/* Selected Market Confirmation */}
-            {selectedMarket && (
-              <form onSubmit={handleSubmit} className="space-y-4 pt-4 border-t">
-                <div className="bg-[#00ab79]/10 p-4 rounded-lg">
-                  <p className="text-sm font-medium mb-2">✅ Market Selected:</p>
-                  <p className="text-sm">{selectedMarket.title}</p>
-                </div>
-
+            {/* Confirmation Card - Duration and Submit */}
+            {selectedMarket && showConfirmation && (
+              <Card className="p-6 space-y-4 border-accent/50 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Betting Duration</Label>
-                  <Select value={duration} onValueChange={setDuration} disabled={isSubmitting}>
-                    <SelectTrigger id="duration">
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="6">6 hours</SelectItem>
-                      <SelectItem value="12">12 hours</SelectItem>
-                      <SelectItem value="24">24 hours</SelectItem>
-                      <SelectItem value="48">2 days</SelectItem>
-                      <SelectItem value="72">3 days</SelectItem>
-                      <SelectItem value="168">1 week</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <h3 className="text-lg font-semibold">Finalize Prediction</h3>
+                  <div className="bg-muted/50 p-3 rounded-lg">
+                    <p className="text-sm font-medium">{selectedMarket.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Ticker: {selectedMarket.ticker}</p>
+                  </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setSelectedMarket(null)}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                  >
-                    Back to Search
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting || !connected}
-                    className="flex-1 bg-[#00ab79] hover:bg-[#009368] text-white"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      "Create Proposal"
-                    )}
-                  </Button>
-                </div>
-              </form>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Betting Duration</Label>
+                    <Select value={duration} onValueChange={setDuration} disabled={isSubmitting}>
+                      <SelectTrigger id="duration">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6 hours</SelectItem>
+                        <SelectItem value="12">12 hours</SelectItem>
+                        <SelectItem value="24">24 hours</SelectItem>
+                        <SelectItem value="48">2 days</SelectItem>
+                        <SelectItem value="72">3 days</SelectItem>
+                        <SelectItem value="168">1 week</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      How long circle members can place bets on this prediction
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowConfirmation(false)}
+                      disabled={isSubmitting}
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || !connected}
+                      className="flex-1 bg-[#00ab79] hover:bg-[#009368] text-white"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create Proposal"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Card>
             )}
 
             {/* No results message */}
-            {!isSearching && kalshiMarkets.length === 0 && searchQuery && (
+            {!isSearching && kalshiMarkets.length === 0 && searchQuery && !showConfirmation && (
               <div className="text-center py-8 text-muted-foreground">
                 <p className="mb-2">No markets found for "{searchQuery}"</p>
                 <p className="text-sm">Try different keywords</p>
