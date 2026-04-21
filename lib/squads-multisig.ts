@@ -1,5 +1,5 @@
 /**
- * Squads Protocol Multisig Integration for FundFlow
+ * Squads Protocol Multisig Integration for FundWise
  *
  * Flow:
  * 1. Pay: User wallet → Squads multisig vault

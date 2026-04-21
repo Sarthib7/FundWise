@@ -12,12 +12,12 @@ export async function generateQRCode(data: string): Promise<string> {
     })
     return qrCodeDataUrl
   } catch (error) {
-    console.error("[FundFlow] Error generating QR code:", error)
+    console.error("[FundWise] Error generating QR code:", error)
     throw new Error("Failed to generate QR code")
   }
 }
 
 export async function generateGroupQRCode(groupId: string, groupName: string): Promise<string> {
-  const shareData = `Join ${groupName} on FundFlow! Use code: ${groupId}`
+  const shareData = `Join ${groupName} on FundWise! Use code: ${groupId}`
   return generateQRCode(shareData)
 }

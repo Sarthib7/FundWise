@@ -1,5 +1,5 @@
 /**
- * FundFlow Anchor Program Integration
+ * FundWise Anchor Program Integration
  * Connects Next.js frontend to deployed Solana programs
  */
 
@@ -118,8 +118,8 @@ export async function createGroupOnChain(
       allocationStrategyEnum = { split: { ratio: params.allocationStrategy.split.ratio } }
     }
 
-    console.log("[FundFlow Anchor] Creating group...")
-    console.log("[FundFlow Anchor] Group Pool PDA:", groupPoolPDA.toString())
+    console.log("[FundWise Anchor] Creating group...")
+    console.log("[FundWise Anchor] Group Pool PDA:", groupPoolPDA.toString())
 
     const tx = await program.methods
       .createGroup(
@@ -140,14 +140,14 @@ export async function createGroupOnChain(
       })
       .rpc()
 
-    console.log("[FundFlow Anchor] Group created! TX:", tx)
+    console.log("[FundWise Anchor] Group created! TX:", tx)
 
     return {
       groupPoolPDA,
       signature: tx,
     }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error creating group:", error)
+    console.error("[FundWise Anchor] Error creating group:", error)
     throw error
   }
 }
@@ -166,9 +166,9 @@ export async function contributeToGroupOnChain(
 
     const [memberPDA] = await getMemberPDA(groupPoolPDA, provider.wallet.publicKey)
 
-    console.log("[FundFlow Anchor] Contributing to group...")
-    console.log("[FundFlow Anchor] Amount:", amount, "lamports")
-    console.log("[FundFlow Anchor] Member PDA:", memberPDA.toString())
+    console.log("[FundWise Anchor] Contributing to group...")
+    console.log("[FundWise Anchor] Amount:", amount, "lamports")
+    console.log("[FundWise Anchor] Member PDA:", memberPDA.toString())
 
     const tx = await program.methods
       .contribute(new BN(amount))
@@ -180,11 +180,11 @@ export async function contributeToGroupOnChain(
       })
       .rpc()
 
-    console.log("[FundFlow Anchor] Contribution successful! TX:", tx)
+    console.log("[FundWise Anchor] Contribution successful! TX:", tx)
 
     return { signature: tx }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error contributing:", error)
+    console.error("[FundWise Anchor] Error contributing:", error)
     throw error
   }
 }
@@ -202,7 +202,7 @@ export async function fetchGroupDataOnChain(
 
     const groupData = await program.account.groupPool.fetch(groupPoolPDA)
 
-    console.log("[FundFlow Anchor] Fetched group data:", groupData)
+    console.log("[FundWise Anchor] Fetched group data:", groupData)
 
     return {
       name: groupData.name,
@@ -216,7 +216,7 @@ export async function fetchGroupDataOnChain(
       createdAt: new Date(groupData.createdAt.toNumber() * 1000).toISOString(),
     }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error fetching group:", error)
+    console.error("[FundWise Anchor] Error fetching group:", error)
     throw error
   }
 }
@@ -245,7 +245,7 @@ export async function fetchMemberDataOnChain(
       lastContribution: new Date(memberData.lastContribution.toNumber() * 1000).toISOString(),
     }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error fetching member:", error)
+    console.error("[FundWise Anchor] Error fetching member:", error)
     throw error
   }
 }
@@ -267,8 +267,8 @@ export async function makePaymentOnChain(
 
     const [memberPDA] = await getMemberPDA(groupPoolPDA, provider.wallet.publicKey)
 
-    console.log("[FundFlow Anchor] Making recurring payment...")
-    console.log("[FundFlow Anchor] Amount:", contributionAmount, "lamports")
+    console.log("[FundWise Anchor] Making recurring payment...")
+    console.log("[FundWise Anchor] Amount:", contributionAmount, "lamports")
 
     const tx = await program.methods
       .contribute(new BN(contributionAmount))
@@ -280,11 +280,11 @@ export async function makePaymentOnChain(
       })
       .rpc()
 
-    console.log("[FundFlow Anchor] Payment successful! TX:", tx)
+    console.log("[FundWise Anchor] Payment successful! TX:", tx)
 
     return { signature: tx, amount: contributionAmount }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error making payment:", error)
+    console.error("[FundWise Anchor] Error making payment:", error)
     throw error
   }
 }
@@ -303,8 +303,8 @@ export async function withdrawFromGroupOnChain(
 
     const [memberPDA] = await getMemberPDA(groupPoolPDA, provider.wallet.publicKey)
 
-    console.log("[FundFlow Anchor] Withdrawing from group...")
-    console.log("[FundFlow Anchor] Amount:", amount, "lamports")
+    console.log("[FundWise Anchor] Withdrawing from group...")
+    console.log("[FundWise Anchor] Amount:", amount, "lamports")
 
     const tx = await program.methods
       .withdrawContribution(new BN(amount))
@@ -316,11 +316,11 @@ export async function withdrawFromGroupOnChain(
       })
       .rpc()
 
-    console.log("[FundFlow Anchor] Withdrawal successful! TX:", tx)
+    console.log("[FundWise Anchor] Withdrawal successful! TX:", tx)
 
     return { signature: tx }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error withdrawing:", error)
+    console.error("[FundWise Anchor] Error withdrawing:", error)
     throw error
   }
 }
@@ -361,14 +361,14 @@ export async function createInviteOnChain(
       })
       .rpc()
 
-    console.log("[FundFlow Anchor] Invite created! TX:", tx)
+    console.log("[FundWise Anchor] Invite created! TX:", tx)
 
     return {
       inviteCodePDA,
       signature: tx,
     }
   } catch (error) {
-    console.error("[FundFlow Anchor] Error creating invite:", error)
+    console.error("[FundWise Anchor] Error creating invite:", error)
     throw error
   }
 }

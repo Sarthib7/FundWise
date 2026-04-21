@@ -9,7 +9,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <Image
-                src="/fundflow-logo.png"
+                src="/fundwise-logo.png"
                 alt="FundWise"
                 width={24}
                 height={24}

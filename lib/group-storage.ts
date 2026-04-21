@@ -1,6 +1,6 @@
 import type { GroupData } from "./solana"
 
-const STORAGE_KEY = "fundflow_groups"
+const STORAGE_KEY = "fundwise_groups"
 
 export function getAllGroups(): Record<string, GroupData> {
   if (typeof window === "undefined") return {}
@@ -9,7 +9,7 @@ export function getAllGroups(): Record<string, GroupData> {
     const stored = localStorage.getItem(STORAGE_KEY)
     return stored ? JSON.parse(stored) : {}
   } catch (error) {
-    console.error("[FundFlow] Error reading groups from storage:", error)
+    console.error("[FundWise] Error reading groups from storage:", error)
     return {}
   }
 }
@@ -21,7 +21,7 @@ export function getPublicGroups(): GroupData[] {
     const groups = getAllGroups()
     return Object.values(groups).filter((group) => group.isPublic)
   } catch (error) {
-    console.error("[FundFlow] Error getting public groups:", error)
+    console.error("[FundWise] Error getting public groups:", error)
     return []
   }
 }
@@ -33,9 +33,9 @@ export function saveGroup(group: GroupData): void {
     const groups = getAllGroups()
     groups[group.id] = group
     localStorage.setItem(STORAGE_KEY, JSON.stringify(groups))
-    console.log("[FundFlow] Group saved to storage:", group.id)
+    console.log("[FundWise] Group saved to storage:", group.id)
   } catch (error) {
-    console.error("[FundFlow] Error saving group to storage:", error)
+    console.error("[FundWise] Error saving group to storage:", error)
     throw new Error("Failed to save group")
   }
 }
@@ -47,7 +47,7 @@ export function getGroup(groupId: string): GroupData | null {
     const groups = getAllGroups()
     return groups[groupId] || null
   } catch (error) {
-    console.error("[FundFlow] Error getting group from storage:", error)
+    console.error("[FundWise] Error getting group from storage:", error)
     return null
   }
 }
@@ -65,9 +65,9 @@ export function updateGroup(groupId: string, updates: Partial<GroupData>): void 
 
     groups[groupId] = { ...existingGroup, ...updates }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(groups))
-    console.log("[FundFlow] Group updated in storage:", groupId)
+    console.log("[FundWise] Group updated in storage:", groupId)
   } catch (error) {
-    console.error("[FundFlow] Error updating group in storage:", error)
+    console.error("[FundWise] Error updating group in storage:", error)
     throw new Error("Failed to update group")
   }
 }
@@ -86,10 +86,10 @@ export function addMemberToGroup(groupId: string, memberAddress: string): void {
       group.members.push(memberAddress)
       group.totalCollected += 10
       saveGroup(group)
-      console.log("[FundFlow] Member added to group:", memberAddress)
+      console.log("[FundWise] Member added to group:", memberAddress)
     }
   } catch (error) {
-    console.error("[FundFlow] Error adding member to group:", error)
+    console.error("[FundWise] Error adding member to group:", error)
     throw new Error("Failed to add member to group")
   }
 }
@@ -106,9 +106,9 @@ export function addContribution(groupId: string, amount: number): void {
 
     group.totalCollected += amount
     saveGroup(group)
-    console.log("[FundFlow] Contribution added to group:", amount, "USDC")
+    console.log("[FundWise] Contribution added to group:", amount, "USDC")
   } catch (error) {
-    console.error("[FundFlow] Error adding contribution:", error)
+    console.error("[FundWise] Error adding contribution:", error)
     throw new Error("Failed to add contribution")
   }
 }
