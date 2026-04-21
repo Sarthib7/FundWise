@@ -1,7 +1,7 @@
 # FundWise — Status
 
 **Snapshot date:** 2026-04-21
-**Phase:** 0 — pivot cleanup
+**Phase:** 1 — Split Mode MVP (Phase 0 complete)
 
 ---
 
