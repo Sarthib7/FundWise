@@ -24,16 +24,16 @@ export default function CirclesPage() {
                 const { getPublicGroupsFromFirebase } = await import("@/lib/firebase-group-storage")
                 const firebaseGroups = await getPublicGroupsFromFirebase()
                 if (firebaseGroups.length > 0) {
-                  console.log("[FundFlow] Loaded groups from Firebase Realtime Database:", firebaseGroups.length)
+                  console.log("[FundWise] Loaded groups from Firebase Realtime Database:", firebaseGroups.length)
                   setGroups(firebaseGroups)
                 } else {
                   // Fallback to localStorage
                   const publicGroups = getPublicGroups()
-                  console.log("[FundFlow] No Firebase groups, using localStorage:", publicGroups.length)
+                  console.log("[FundWise] No Firebase groups, using localStorage:", publicGroups.length)
                   setGroups(publicGroups)
                 }
               } catch (error) {
-                console.warn("[FundFlow] Firebase Realtime Database failed, using localStorage:", error)
+                console.warn("[FundWise] Firebase Realtime Database failed, using localStorage:", error)
                 const publicGroups = getPublicGroups()
                 setGroups(publicGroups)
               }

@@ -16,7 +16,7 @@ const GROUPS_PATH = 'groups'
 
 export async function saveGroupToFirebase(group: GroupData): Promise<string> {
   try {
-    console.log('[FundFlow] Saving group to Firebase Realtime Database:', group.id)
+    console.log('[FundWise] Saving group to Firebase Realtime Database:', group.id)
     
     // Prepare data for Firebase Realtime Database
     const groupData = {
@@ -40,16 +40,16 @@ export async function saveGroupToFirebase(group: GroupData): Promise<string> {
       // squadsMultisigAddress: group.squadsMultisigAddress,
     }
     
-    console.log('[FundFlow] Group data prepared for Firebase:', groupData)
+    console.log('[FundWise] Group data prepared for Firebase:', groupData)
     
     // Use the group ID as the key in Realtime Database
     const groupRef = ref(db, `${GROUPS_PATH}/${group.id}`)
     await set(groupRef, groupData)
-    console.log('[FundFlow] Group saved to Firebase with ID:', group.id)
+    console.log('[FundWise] Group saved to Firebase with ID:', group.id)
     return group.id
   } catch (error) {
-    console.error('[FundFlow] Error saving group to Firebase:', error)
-    console.error('[FundFlow] Error details:', {
+    console.error('[FundWise] Error saving group to Firebase:', error)
+    console.error('[FundWise] Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       code: (error as any)?.code,
       stack: error instanceof Error ? error.stack : undefined
@@ -60,14 +60,14 @@ export async function saveGroupToFirebase(group: GroupData): Promise<string> {
 
 export async function getGroupFromFirebase(groupId: string): Promise<GroupData | null> {
   try {
-    console.log('[FundFlow] Fetching group from Firebase Realtime Database:', groupId)
+    console.log('[FundWise] Fetching group from Firebase Realtime Database:', groupId)
     
     const groupRef = ref(db, `${GROUPS_PATH}/${groupId}`)
     const snapshot = await get(groupRef)
     
     if (snapshot.exists()) {
       const data = snapshot.val()
-      console.log('[FundFlow] Group found in Firebase:', data)
+      console.log('[FundWise] Group found in Firebase:', data)
       
       // Convert Firebase data back to GroupData format
       return {
@@ -91,18 +91,18 @@ export async function getGroupFromFirebase(groupId: string): Promise<GroupData |
         // squadsMultisigAddress: data.squadsMultisigAddress,
       } as GroupData
     } else {
-      console.log('[FundFlow] Group not found in Firebase')
+      console.log('[FundWise] Group not found in Firebase')
       return null
     }
   } catch (error) {
-    console.error('[FundFlow] Error fetching group from Firebase:', error)
+    console.error('[FundWise] Error fetching group from Firebase:', error)
     throw new Error('Failed to fetch group from Firebase')
   }
 }
 
 export async function getAllGroupsFromFirebase(): Promise<GroupData[]> {
   try {
-    console.log('[FundFlow] Fetching all groups from Firebase Realtime Database')
+    console.log('[FundWise] Fetching all groups from Firebase Realtime Database')
     
     const groupsRef = ref(db, GROUPS_PATH)
     const snapshot = await get(groupsRef)
@@ -136,17 +136,17 @@ export async function getAllGroupsFromFirebase(): Promise<GroupData[]> {
       })
     }
     
-    console.log('[FundFlow] Found', groups.length, 'groups in Firebase')
+    console.log('[FundWise] Found', groups.length, 'groups in Firebase')
     return groups
   } catch (error) {
-    console.error('[FundFlow] Error fetching all groups from Firebase:', error)
+    console.error('[FundWise] Error fetching all groups from Firebase:', error)
     throw new Error('Failed to fetch groups from Firebase')
   }
 }
 
 export async function getPublicGroupsFromFirebase(): Promise<GroupData[]> {
   try {
-    console.log('[FundFlow] Fetching public groups from Firebase Realtime Database')
+    console.log('[FundWise] Fetching public groups from Firebase Realtime Database')
     
     const groupsRef = ref(db, GROUPS_PATH)
     const snapshot = await get(groupsRef)
@@ -185,17 +185,17 @@ export async function getPublicGroupsFromFirebase(): Promise<GroupData[]> {
     // Sort by createdAt in JavaScript
     groups.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     
-    console.log('[FundFlow] Found', groups.length, 'public groups in Firebase')
+    console.log('[FundWise] Found', groups.length, 'public groups in Firebase')
     return groups
   } catch (error) {
-    console.error('[FundFlow] Error fetching public groups from Firebase:', error)
+    console.error('[FundWise] Error fetching public groups from Firebase:', error)
     throw new Error('Failed to fetch public groups from Firebase')
   }
 }
 
 export async function updateGroupInFirebase(groupId: string, updates: Partial<GroupData>): Promise<void> {
   try {
-    console.log('[FundFlow] Updating group in Firebase Realtime Database:', groupId)
+    console.log('[FundWise] Updating group in Firebase Realtime Database:', groupId)
     
     const groupRef = ref(db, `${GROUPS_PATH}/${groupId}`)
     const updateData = {
@@ -204,16 +204,16 @@ export async function updateGroupInFirebase(groupId: string, updates: Partial<Gr
     }
     
     await update(groupRef, updateData)
-    console.log('[FundFlow] Group updated in Firebase:', groupId)
+    console.log('[FundWise] Group updated in Firebase:', groupId)
   } catch (error) {
-    console.error('[FundFlow] Error updating group in Firebase:', error)
+    console.error('[FundWise] Error updating group in Firebase:', error)
     throw new Error('Failed to update group in Firebase')
   }
 }
 
 export async function addMemberToGroupInFirebase(groupId: string, memberAddress: string): Promise<void> {
   try {
-    console.log('[FundFlow] Adding member to group in Firebase Realtime Database:', groupId, memberAddress)
+    console.log('[FundWise] Adding member to group in Firebase Realtime Database:', groupId, memberAddress)
     
     const group = await getGroupFromFirebase(groupId)
     if (!group) {
@@ -229,17 +229,17 @@ export async function addMemberToGroupInFirebase(groupId: string, memberAddress:
         totalCollected: updatedTotalCollected,
       })
       
-      console.log('[FundFlow] Member added to group in Firebase:', memberAddress)
+      console.log('[FundWise] Member added to group in Firebase:', memberAddress)
     }
   } catch (error) {
-    console.error('[FundFlow] Error adding member to group in Firebase:', error)
+    console.error('[FundWise] Error adding member to group in Firebase:', error)
     throw new Error('Failed to add member to group in Firebase')
   }
 }
 
 export async function addContributionToGroupInFirebase(groupId: string, amount: number): Promise<void> {
   try {
-    console.log('[FundFlow] Adding contribution to group in Firebase Realtime Database:', groupId, amount)
+    console.log('[FundWise] Adding contribution to group in Firebase Realtime Database:', groupId, amount)
     
     const group = await getGroupFromFirebase(groupId)
     if (!group) {
@@ -252,9 +252,9 @@ export async function addContributionToGroupInFirebase(groupId: string, amount: 
       totalCollected: updatedTotalCollected,
     })
     
-    console.log('[FundFlow] Contribution added to group in Firebase:', amount, 'USDC')
+    console.log('[FundWise] Contribution added to group in Firebase:', amount, 'USDC')
   } catch (error) {
-    console.error('[FundFlow] Error adding contribution to group in Firebase:', error)
+    console.error('[FundWise] Error adding contribution to group in Firebase:', error)
     throw new Error('Failed to add contribution to group in Firebase')
   }
 }

@@ -71,7 +71,7 @@ export function AvatarCustomizer({
         })
       }
     } catch (error) {
-      console.error("[FundFlow] Failed to update avatar variant:", error)
+      console.error("[FundWise] Failed to update avatar variant:", error)
       // Revert the selection on error
       setSelectedVariant(currentAvatarData.variant)
     }
@@ -91,7 +91,7 @@ export function AvatarCustomizer({
         })
       }
     } catch (error) {
-      console.error("[FundFlow] Failed to update avatar colors:", error)
+      console.error("[FundWise] Failed to update avatar colors:", error)
       // Revert the selection on error
       setSelectedColors(currentAvatarData.customColors || currentAvatarData.colors)
     }

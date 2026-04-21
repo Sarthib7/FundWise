@@ -20,8 +20,8 @@ export function WalletButton() {
     setMounted(true)
   }, [])
 
-  console.log("[FundFlow] WalletButton render - connected:", connected, "mounted:", mounted)
-  console.log("[FundFlow] PublicKey:", publicKey?.toString())
+  console.log("[FundWise] WalletButton render - connected:", connected, "mounted:", mounted)
+  console.log("[FundWise] PublicKey:", publicKey?.toString())
 
   // Show loading during SSR and initial mount
   if (!mounted) {
@@ -39,7 +39,7 @@ export function WalletButton() {
   if (connected && publicKey) {
     const address = publicKey.toString()
     const shortAddress = `${address.slice(0, 4)}...${address.slice(-4)}`
-    console.log("[FundFlow] Wallet connected:", address)
+    console.log("[FundWise] Wallet connected:", address)
 
     return (
       <DropdownMenu>
@@ -66,7 +66,7 @@ export function WalletButton() {
 
   // Not connected - show connect button
   const handleConnect = () => {
-    console.log("[FundFlow] Connect Wallet button clicked")
+    console.log("[FundWise] Connect Wallet button clicked")
     setVisible(true) // Opens wallet selection modal
   }
 

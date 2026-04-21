@@ -24,7 +24,7 @@ export function AvatarAdmin() {
       const data = await getAllStoredAvatars()
       setAvatars(data)
     } catch (error) {
-      console.error("[FundFlow] Failed to load avatars:", error)
+      console.error("[FundWise] Failed to load avatars:", error)
     } finally {
       setIsLoading(false)
     }
@@ -41,7 +41,7 @@ export function AvatarAdmin() {
       await loadAvatars()
       alert("All avatar data has been cleared successfully!")
     } catch (error) {
-      console.error("[FundFlow] Failed to clear avatar data:", error)
+      console.error("[FundWise] Failed to clear avatar data:", error)
       alert("Failed to clear avatar data. Please try again.")
     } finally {
       setIsClearing(false)
@@ -58,7 +58,7 @@ export function AvatarAdmin() {
       await loadAvatars()
       alert("Avatar deleted successfully!")
     } catch (error) {
-      console.error("[FundFlow] Failed to delete avatar:", error)
+      console.error("[FundWise] Failed to delete avatar:", error)
       alert("Failed to delete avatar. Please try again.")
     }
   }

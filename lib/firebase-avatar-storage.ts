@@ -41,12 +41,12 @@ export async function getAvatarData(id: string, name: string, type: "user" | "gr
       const avatarData: AvatarData = snapshot.val()
       // Verify the data is still valid
       if (avatarData.id === id && avatarData.name === name) {
-        console.log(`[FundFlow] Loaded avatar data from Firebase for ${type}:`, id)
+        console.log(`[FundWise] Loaded avatar data from Firebase for ${type}:`, id)
         return avatarData
       }
     }
   } catch (error) {
-    console.warn("[FundFlow] Failed to load avatar data from Firebase:", error)
+    console.warn("[FundWise] Failed to load avatar data from Firebase:", error)
   }
   
   // Create new avatar data
@@ -71,9 +71,9 @@ export async function saveAvatarData(avatarData: AvatarData, type: "user" | "gro
   
   try {
     await set(avatarRef, avatarData)
-    console.log(`[FundFlow] Saved avatar data to Firebase for ${type}:`, avatarData.id)
+    console.log(`[FundWise] Saved avatar data to Firebase for ${type}:`, avatarData.id)
   } catch (error) {
-    console.error("[FundFlow] Failed to save avatar data to Firebase:", error)
+    console.error("[FundWise] Failed to save avatar data to Firebase:", error)
     throw error
   }
 }
@@ -89,10 +89,10 @@ export async function updateAvatarVariant(id: string, variant: AvatarData["varia
       avatarData.variant = variant
       avatarData.lastUpdated = new Date().toISOString()
       await saveAvatarData(avatarData, type)
-      console.log(`[FundFlow] Updated avatar variant in Firebase for ${type}:`, id)
+      console.log(`[FundWise] Updated avatar variant in Firebase for ${type}:`, id)
     }
   } catch (error) {
-    console.error("[FundFlow] Failed to update avatar variant in Firebase:", error)
+    console.error("[FundWise] Failed to update avatar variant in Firebase:", error)
     throw error
   }
 }
@@ -108,10 +108,10 @@ export async function updateAvatarColors(id: string, colors: string[], type: "us
       avatarData.customColors = colors
       avatarData.lastUpdated = new Date().toISOString()
       await saveAvatarData(avatarData, type)
-      console.log(`[FundFlow] Updated avatar colors in Firebase for ${type}:`, id)
+      console.log(`[FundWise] Updated avatar colors in Firebase for ${type}:`, id)
     }
   } catch (error) {
-    console.error("[FundFlow] Failed to update avatar colors in Firebase:", error)
+    console.error("[FundWise] Failed to update avatar colors in Firebase:", error)
     throw error
   }
 }
@@ -142,9 +142,9 @@ export async function getAllStoredAvatars(): Promise<{ users: AvatarData[], grou
       })
     }
     
-    console.log(`[FundFlow] Loaded ${users.length} user avatars and ${groups.length} group avatars from Firebase`)
+    console.log(`[FundWise] Loaded ${users.length} user avatars and ${groups.length} group avatars from Firebase`)
   } catch (error) {
-    console.error("[FundFlow] Failed to get all stored avatars from Firebase:", error)
+    console.error("[FundWise] Failed to get all stored avatars from Firebase:", error)
   }
   
   return { users, groups }
@@ -155,9 +155,9 @@ export async function clearAllAvatarData(): Promise<void> {
   try {
     const avatarsRef = ref(db, AVATARS_PATH)
     await remove(avatarsRef)
-    console.log("[FundFlow] Cleared all avatar data from Firebase")
+    console.log("[FundWise] Cleared all avatar data from Firebase")
   } catch (error) {
-    console.error("[FundFlow] Failed to clear avatar data from Firebase:", error)
+    console.error("[FundWise] Failed to clear avatar data from Firebase:", error)
     throw error
   }
 }
@@ -173,7 +173,7 @@ export async function getAvatarById(id: string, type: "user" | "group"): Promise
     }
     return null
   } catch (error) {
-    console.error("[FundFlow] Failed to get avatar by ID from Firebase:", error)
+    console.error("[FundWise] Failed to get avatar by ID from Firebase:", error)
     return null
   }
 }
@@ -184,9 +184,9 @@ export async function deleteAvatarData(id: string, type: "user" | "group"): Prom
   
   try {
     await remove(avatarRef)
-    console.log(`[FundFlow] Deleted avatar data from Firebase for ${type}:`, id)
+    console.log(`[FundWise] Deleted avatar data from Firebase for ${type}:`, id)
   } catch (error) {
-    console.error("[FundFlow] Failed to delete avatar data from Firebase:", error)
+    console.error("[FundWise] Failed to delete avatar data from Firebase:", error)
     throw error
   }
 }
@@ -209,7 +209,7 @@ export async function searchAvatarsByName(name: string, type: "user" | "group"):
     
     return avatars
   } catch (error) {
-    console.error("[FundFlow] Failed to search avatars by name in Firebase:", error)
+    console.error("[FundWise] Failed to search avatars by name in Firebase:", error)
     return []
   }
 }

@@ -34,7 +34,7 @@ export function Avatar({
         const storedData = await getAvatarData(avatarId, name, type)
         setAvatarData(storedData)
       } catch (error) {
-        console.error("[FundFlow] Failed to load avatar data:", error)
+        console.error("[FundWise] Failed to load avatar data:", error)
         // Set fallback data
         setAvatarData({
           id: id || name,

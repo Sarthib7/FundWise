@@ -65,11 +65,11 @@ export function CreateCircleModal({ open, onOpenChange }: CreateCircleModalProps
         null // No wallet object needed for Phase 1 (simple wallet generation)
       )
 
-      console.log("[FundFlow] ✅ Circle created successfully!")
-      console.log("[FundFlow] Circle ID:", groupId)
-      console.log("[FundFlow] On-chain address:", onChainAddress)
-      console.log("[FundFlow] Squads vault address:", squadsVaultAddress)
-      console.log("[FundFlow] Transaction signature:", signature)
+      console.log("[FundWise] ✅ Circle created successfully!")
+      console.log("[FundWise] Circle ID:", groupId)
+      console.log("[FundWise] On-chain address:", onChainAddress)
+      console.log("[FundWise] Squads vault address:", squadsVaultAddress)
+      console.log("[FundWise] Transaction signature:", signature)
 
       router.push(`/circle/${groupId}`)
       onOpenChange(false)
@@ -82,8 +82,8 @@ export function CreateCircleModal({ open, onOpenChange }: CreateCircleModalProps
         isPublic: true,
       })
     } catch (error) {
-      console.error("[FundFlow] ❌ Error creating circle:", error)
-      console.error("[FundFlow] Error details:", {
+      console.error("[FundWise] ❌ Error creating circle:", error)
+      console.error("[FundWise] Error details:", {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         fullError: error

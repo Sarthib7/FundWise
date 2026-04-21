@@ -58,15 +58,15 @@ export async function createGroup(
   wallet: any // Privy wallet for signing transactions
 ): Promise<{ groupId: string; signature: string; onChainAddress: string; squadsVaultAddress: string }> {
   try {
-    console.log("[FundFlow] Creating group on Solana...")
-    console.log("[FundFlow] Creator wallet address (raw):", creatorPublicKey)
-    console.log("[FundFlow] Creator wallet type:", typeof creatorPublicKey)
-    console.log("[FundFlow] Creator wallet length:", creatorPublicKey?.length)
-    console.log("[FundFlow] Wallet object:", wallet)
-    console.log("[FundFlow] Wallet.address:", wallet?.address)
-    console.log("[FundFlow] Group data:", groupData)
-    console.log("[FundFlow] Funding goal:", groupData.fundingGoal, "SOL")
-    console.log("[FundFlow] Visibility:", groupData.isPublic ? "Public" : "Private")
+    console.log("[FundWise] Creating group on Solana...")
+    console.log("[FundWise] Creator wallet address (raw):", creatorPublicKey)
+    console.log("[FundWise] Creator wallet type:", typeof creatorPublicKey)
+    console.log("[FundWise] Creator wallet length:", creatorPublicKey?.length)
+    console.log("[FundWise] Wallet object:", wallet)
+    console.log("[FundWise] Wallet.address:", wallet?.address)
+    console.log("[FundWise] Group data:", groupData)
+    console.log("[FundWise] Funding goal:", groupData.fundingGoal, "SOL")
+    console.log("[FundWise] Visibility:", groupData.isPublic ? "Public" : "Private")
 
     // Validate wallet address
     if (!creatorPublicKey || typeof creatorPublicKey !== 'string') {
@@ -101,40 +101,40 @@ export async function createGroup(
       )
     }
 
-    console.log("[FundFlow] ✅ Wallet address validation passed")
+    console.log("[FundWise] ✅ Wallet address validation passed")
 
     const groupId = generateGroupCode()
-    console.log("[FundFlow] Generated group ID:", groupId)
+    console.log("[FundWise] Generated group ID:", groupId)
 
     // =============================================================================
     // PHASE 1: SIMPLE WALLET GENERATION (Active)
     // =============================================================================
-    console.log("[FundFlow] Step 1: Generating simple group wallet...")
+    console.log("[FundWise] Step 1: Generating simple group wallet...")
     const { address: groupWalletAddress } = generateGroupWallet()
-    console.log("[FundFlow] ✅ Simple group wallet created!")
-    console.log("[FundFlow]    Wallet address:", groupWalletAddress)
+    console.log("[FundWise] ✅ Simple group wallet created!")
+    console.log("[FundWise]    Wallet address:", groupWalletAddress)
 
     // =============================================================================
     // PHASE 2: SQUADS MULTISIG (Commented out - will implement after Phase 1 works)
     // =============================================================================
     /*
-    console.log("[FundFlow] Step 1: Creating Squads multisig vault...")
+    console.log("[FundWise] Step 1: Creating Squads multisig vault...")
     let multisigPDA: PublicKey
     let vaultPDA: PublicKey
 
     try {
-      console.log("[FundFlow] Converting wallet address to PublicKey...")
+      console.log("[FundWise] Converting wallet address to PublicKey...")
       let creatorPubKey: PublicKey
 
       try {
         creatorPubKey = new PublicKey(creatorPublicKey)
-        console.log("[FundFlow] ✅ PublicKey created successfully:", creatorPubKey.toString())
+        console.log("[FundWise] ✅ PublicKey created successfully:", creatorPubKey.toString())
       } catch (pubKeyError) {
-        console.error("[FundFlow] ❌ Failed to create PublicKey:", pubKeyError)
+        console.error("[FundWise] ❌ Failed to create PublicKey:", pubKeyError)
         throw new Error(`Invalid Solana address format: ${creatorPublicKey}. Error: ${pubKeyError instanceof Error ? pubKeyError.message : String(pubKeyError)}`)
       }
 
-      console.log("[FundFlow] Calling createSquadsMultisig...")
+      console.log("[FundWise] Calling createSquadsMultisig...")
       const result = await createSquadsMultisig(
         creatorPubKey,
         groupData.name,
@@ -144,11 +144,11 @@ export async function createGroup(
       multisigPDA = result.multisigPDA
       vaultPDA = result.vaultPDA
 
-      console.log("[FundFlow] ✅ Squads vault created!")
-      console.log("[FundFlow]    Multisig:", multisigPDA.toString())
-      console.log("[FundFlow]    Vault:", vaultPDA.toString())
+      console.log("[FundWise] ✅ Squads vault created!")
+      console.log("[FundWise]    Multisig:", multisigPDA.toString())
+      console.log("[FundWise]    Vault:", vaultPDA.toString())
     } catch (squadsError) {
-      console.error("[FundFlow] ❌ Failed to create Squads vault:", squadsError)
+      console.error("[FundWise] ❌ Failed to create Squads vault:", squadsError)
       throw new Error("Failed to create Squads multisig vault: " + (squadsError instanceof Error ? squadsError.message : String(squadsError)))
     }
     */
@@ -176,21 +176,21 @@ export async function createGroup(
     }
 
     // Step 2: No on-chain creation needed for Phase 1
-    console.log("[FundFlow] Step 2: Preparing group metadata...")
-    console.log("[FundFlow] ℹ️  Using simple wallet - no on-chain contract needed")
-    console.log("[FundFlow] ℹ️  Payments will go directly to group wallet")
+    console.log("[FundWise] Step 2: Preparing group metadata...")
+    console.log("[FundWise] ℹ️  Using simple wallet - no on-chain contract needed")
+    console.log("[FundWise] ℹ️  Payments will go directly to group wallet")
 
     const signature = `group_created_${Date.now()}` // Mock signature
 
-    console.log("[FundFlow] ✅ Group metadata prepared!")
-    console.log("[FundFlow]    Group wallet:", groupWalletAddress)
+    console.log("[FundWise] ✅ Group metadata prepared!")
+    console.log("[FundWise]    Group wallet:", groupWalletAddress)
 
     // Phase 2 code (commented out):
     // const mockGroupPoolPDA = PublicKey.unique()
-    // console.log("[FundFlow]    Group Pool PDA (mock):", mockGroupPoolPDA.toString())
-    // console.log("[FundFlow]    Will use Squads vault for payments:", vaultPDA.toString())
+    // console.log("[FundWise]    Group Pool PDA (mock):", mockGroupPoolPDA.toString())
+    // console.log("[FundWise]    Will use Squads vault for payments:", vaultPDA.toString())
 
-    console.log("[FundFlow] Preparing group data...")
+    console.log("[FundWise] Preparing group data...")
     const completeGroupData: GroupData = {
       ...groupData,
       id: groupId,
@@ -203,31 +203,31 @@ export async function createGroup(
       // squadsVaultAddress: vaultPDA.toString(),
       // squadsMultisigAddress: multisigPDA.toString(),
     }
-    console.log("[FundFlow] Group data prepared successfully")
+    console.log("[FundWise] Group data prepared successfully")
 
     // Save to localStorage
     try {
-      console.log("[FundFlow] Saving to localStorage...")
+      console.log("[FundWise] Saving to localStorage...")
       saveGroup(completeGroupData)
-      console.log("[FundFlow] ✅ Group saved to localStorage successfully")
+      console.log("[FundWise] ✅ Group saved to localStorage successfully")
     } catch (localStorageError) {
-      console.error("[FundFlow] ❌ Failed to save to localStorage:", localStorageError)
+      console.error("[FundWise] ❌ Failed to save to localStorage:", localStorageError)
       throw new Error("Failed to save group to localStorage: " + (localStorageError instanceof Error ? localStorageError.message : String(localStorageError)))
     }
 
     // Try to save to Firebase
     try {
-      console.log("[FundFlow] Saving to Firebase...")
+      console.log("[FundWise] Saving to Firebase...")
       await saveGroupToFirebase(completeGroupData)
-      console.log("[FundFlow] ✅ Group also saved to Firebase successfully")
+      console.log("[FundWise] ✅ Group also saved to Firebase successfully")
     } catch (firebaseError) {
-      console.warn("[FundFlow] ⚠️ Failed to save to Firebase, using localStorage only:", firebaseError)
-      console.warn("[FundFlow] Firebase is optional, continuing anyway...")
+      console.warn("[FundWise] ⚠️ Failed to save to Firebase, using localStorage only:", firebaseError)
+      console.warn("[FundWise] Firebase is optional, continuing anyway...")
     }
 
-    console.log("[FundFlow] ✅ Group created successfully with ID:", groupId)
-    console.log("[FundFlow] Flow (Phase 1): User Wallet → Pay → Group Wallet")
-    console.log("[FundFlow] Flow (Phase 2 - later): User Wallet → Pay → Multisig → Pool → Withdraw")
+    console.log("[FundWise] ✅ Group created successfully with ID:", groupId)
+    console.log("[FundWise] Flow (Phase 1): User Wallet → Pay → Group Wallet")
+    console.log("[FundWise] Flow (Phase 2 - later): User Wallet → Pay → Multisig → Pool → Withdraw")
 
     return {
       groupId,
@@ -236,11 +236,11 @@ export async function createGroup(
       squadsVaultAddress: groupWalletAddress, // Same for Phase 1
     }
   } catch (error) {
-    console.error("[FundFlow] ❌❌❌ Error creating group:", error)
-    console.error("[FundFlow] Error type:", typeof error)
-    console.error("[FundFlow] Error message:", error instanceof Error ? error.message : String(error))
-    console.error("[FundFlow] Error stack:", error instanceof Error ? error.stack : "No stack")
-    console.error("[FundFlow] Full error object:", error)
+    console.error("[FundWise] ❌❌❌ Error creating group:", error)
+    console.error("[FundWise] Error type:", typeof error)
+    console.error("[FundWise] Error message:", error instanceof Error ? error.message : String(error))
+    console.error("[FundWise] Error stack:", error instanceof Error ? error.stack : "No stack")
+    console.error("[FundWise] Full error object:", error)
 
     // Provide more specific error messages
     if (error instanceof Error) {
@@ -265,39 +265,39 @@ export async function joinGroup(
   joiningTipAmount = 0.01, // 0.01 SOL joining tip (approximately $2-3 on devnet)
 ): Promise<{ signature: string }> {
   try {
-    console.log("[FundFlow] Joining group on Solana...")
-    console.log("[FundFlow] Member:", memberPublicKey)
-    console.log("[FundFlow] Group ID:", groupId)
-    console.log("[FundFlow] Joining tip:", joiningTipAmount, "SOL")
+    console.log("[FundWise] Joining group on Solana...")
+    console.log("[FundWise] Member:", memberPublicKey)
+    console.log("[FundWise] Group ID:", groupId)
+    console.log("[FundWise] Joining tip:", joiningTipAmount, "SOL")
 
     // Try to get group from localStorage first
-    console.log("[FundFlow] Step 1: Checking localStorage for group...")
+    console.log("[FundWise] Step 1: Checking localStorage for group...")
     let group = getGroup(groupId)
 
     // If not in localStorage, try Firebase
     if (!group) {
-      console.log("[FundFlow] Group not found in localStorage, checking Firebase...")
+      console.log("[FundWise] Group not found in localStorage, checking Firebase...")
       try {
         const { getGroupFromFirebase } = await import("./firebase-group-storage")
         group = await getGroupFromFirebase(groupId)
 
         if (group) {
-          console.log("[FundFlow] ✅ Group found in Firebase!")
+          console.log("[FundWise] ✅ Group found in Firebase!")
           // Save to localStorage for future use
           const { saveGroup } = await import("./group-storage")
           saveGroup(group)
-          console.log("[FundFlow] Group saved to localStorage cache")
+          console.log("[FundWise] Group saved to localStorage cache")
         }
       } catch (error) {
-        console.warn("[FundFlow] Firebase lookup failed:", error)
+        console.warn("[FundWise] Firebase lookup failed:", error)
       }
     } else {
-      console.log("[FundFlow] ✅ Group found in localStorage")
+      console.log("[FundWise] ✅ Group found in localStorage")
     }
 
     if (!group) {
-      console.error("[FundFlow] ❌ Group not found in localStorage OR Firebase")
-      console.error("[FundFlow] Searched for group ID:", groupId)
+      console.error("[FundWise] ❌ Group not found in localStorage OR Firebase")
+      console.error("[FundWise] Searched for group ID:", groupId)
       throw new Error(`Group not found with code: ${groupId}. Please verify the group code is correct.`)
     }
 
@@ -307,17 +307,17 @@ export async function joinGroup(
 
     // Check if member is already in the group
     if (group.members.includes(memberPublicKey)) {
-      console.log("[FundFlow] User is already a member of this group")
+      console.log("[FundWise] User is already a member of this group")
       return {
         signature: "already_member_" + Date.now(),
       }
     }
 
     // Phase 1: Process payment to group wallet
-    console.log("[FundFlow] Processing joining tip payment...")
-    console.log("[FundFlow] From:", memberPublicKey)
-    console.log("[FundFlow] To:", group.groupWalletAddress)
-    console.log("[FundFlow] Amount:", joiningTipAmount, "SOL")
+    console.log("[FundWise] Processing joining tip payment...")
+    console.log("[FundWise] From:", memberPublicKey)
+    console.log("[FundWise] To:", group.groupWalletAddress)
+    console.log("[FundWise] Amount:", joiningTipAmount, "SOL")
 
     const { payToGroupWallet } = await import("./simple-payment")
     const { signature } = await payToGroupWallet(
@@ -327,16 +327,16 @@ export async function joinGroup(
       joiningTipAmount
     )
 
-    console.log("[FundFlow] ✅ Payment successful! Signature:", signature)
+    console.log("[FundWise] ✅ Payment successful! Signature:", signature)
 
     // Add member to both localStorage (fallback) and Firebase
     addMemberToGroup(groupId, memberPublicKey)
 
     try {
       await addMemberToGroupInFirebase(groupId, memberPublicKey)
-      console.log("[FundFlow] Member added to Firebase Realtime Database successfully")
+      console.log("[FundWise] Member added to Firebase Realtime Database successfully")
     } catch (firebaseError) {
-      console.warn("[FundFlow] Failed to add member to Firebase, using localStorage only:", firebaseError)
+      console.warn("[FundWise] Failed to add member to Firebase, using localStorage only:", firebaseError)
     }
 
     // Update totalCollected with the joining tip
@@ -346,18 +346,18 @@ export async function joinGroup(
 
       const { addContributionToGroupInFirebase } = await import("./firebase-group-storage")
       await addContributionToGroupInFirebase(groupId, joiningTipAmount)
-      console.log("[FundFlow] Joining tip added to totalCollected")
+      console.log("[FundWise] Joining tip added to totalCollected")
     } catch (error) {
-      console.warn("[FundFlow] Failed to update totalCollected:", error)
+      console.warn("[FundWise] Failed to update totalCollected:", error)
     }
 
-    console.log("[FundFlow] ✅ Successfully joined group:", groupId)
+    console.log("[FundWise] ✅ Successfully joined group:", groupId)
 
     return {
       signature,
     }
   } catch (error) {
-    console.error("[FundFlow] Error joining group:", error)
+    console.error("[FundWise] Error joining group:", error)
     throw error instanceof Error ? error : new Error("Failed to join group")
   }
 }
@@ -369,10 +369,10 @@ export async function joinGroupWithTip(
   signTransaction: (transaction: Transaction) => Promise<Transaction>,
 ): Promise<{ signature: string }> {
   try {
-    console.log("[FundFlow] Joining group with tip...")
-    console.log("[FundFlow] Member:", memberPublicKey)
-    console.log("[FundFlow] Treasury:", groupTreasuryAddress.toString())
-    console.log("[FundFlow] Tip amount:", tipAmount, "USDC")
+    console.log("[FundWise] Joining group with tip...")
+    console.log("[FundWise] Member:", memberPublicKey)
+    console.log("[FundWise] Treasury:", groupTreasuryAddress.toString())
+    console.log("[FundWise] Tip amount:", tipAmount, "USDC")
 
     const transaction = new Transaction().add(
       SystemProgram.transfer({
@@ -390,11 +390,11 @@ export async function joinGroupWithTip(
     const signature = await connection.sendRawTransaction(signedTransaction.serialize())
     await connection.confirmTransaction(signature, "confirmed")
 
-    console.log("[FundFlow] Join with tip successful:", signature)
+    console.log("[FundWise] Join with tip successful:", signature)
 
     return { signature }
   } catch (error) {
-    console.error("[FundFlow] Error joining group with tip:", error)
+    console.error("[FundWise] Error joining group with tip:", error)
     throw new Error("Failed to join group with tip")
   }
 }
@@ -406,10 +406,10 @@ export async function contributeToGroup(
   signTransaction: (transaction: Transaction) => Promise<Transaction>,
 ): Promise<{ signature: string }> {
   try {
-    console.log("[FundFlow] Contributing to group...")
-    console.log("[FundFlow] From:", memberPublicKey)
-    console.log("[FundFlow] To:", groupTreasuryAddress.toString())
-    console.log("[FundFlow] Amount:", amount, "USDC")
+    console.log("[FundWise] Contributing to group...")
+    console.log("[FundWise] From:", memberPublicKey)
+    console.log("[FundWise] To:", groupTreasuryAddress.toString())
+    console.log("[FundWise] Amount:", amount, "USDC")
 
     const transaction = new Transaction().add(
       SystemProgram.transfer({
@@ -430,16 +430,16 @@ export async function contributeToGroup(
             // Add contribution to Firebase Realtime Database
             try {
               await addContributionToGroupInFirebase(groupTreasuryAddress.toString(), amount)
-              console.log("[FundFlow] Contribution added to Firebase Realtime Database successfully")
+              console.log("[FundWise] Contribution added to Firebase Realtime Database successfully")
             } catch (firebaseError) {
-              console.warn("[FundFlow] Failed to add contribution to Firebase:", firebaseError)
+              console.warn("[FundWise] Failed to add contribution to Firebase:", firebaseError)
             }
 
-    console.log("[FundFlow] Contribution successful:", signature)
+    console.log("[FundWise] Contribution successful:", signature)
 
     return { signature }
   } catch (error) {
-    console.error("[FundFlow] Error contributing to group:", error)
+    console.error("[FundWise] Error contributing to group:", error)
     throw new Error("Failed to contribute to group")
   }
 }
@@ -449,39 +449,39 @@ export async function getGroupBalance(treasuryAddress: PublicKey): Promise<numbe
     const balance = await connection.getBalance(treasuryAddress)
     return lamportsToSol(balance)
   } catch (error) {
-    console.error("[FundFlow] Error fetching group balance:", error)
+    console.error("[FundWise] Error fetching group balance:", error)
     return 0
   }
 }
 
 export async function fetchGroupData(groupId: string): Promise<GroupData | null> {
   try {
-    console.log("[FundFlow] Fetching group data for:", groupId)
+    console.log("[FundWise] Fetching group data for:", groupId)
 
             // Try Firebase Realtime Database first, fallback to localStorage
             try {
               const firebaseGroup = await getGroupFromFirebase(groupId)
               if (firebaseGroup) {
-                console.log("[FundFlow] Group found in Firebase Realtime Database:", firebaseGroup)
+                console.log("[FundWise] Group found in Firebase Realtime Database:", firebaseGroup)
                 return firebaseGroup
               }
             } catch (firebaseError) {
-              console.warn("[FundFlow] Failed to fetch from Firebase, trying localStorage:", firebaseError)
+              console.warn("[FundWise] Failed to fetch from Firebase, trying localStorage:", firebaseError)
             }
 
     // Fallback to localStorage
     const group = getGroup(groupId)
 
     if (group) {
-      console.log("[FundFlow] Group found in localStorage:", group)
+      console.log("[FundWise] Group found in localStorage:", group)
       return group
     }
 
-    console.log("[FundFlow] Group not found in storage")
+    console.log("[FundWise] Group not found in storage")
     return null
 
   } catch (error) {
-    console.error("[FundFlow] Error fetching group data:", error)
+    console.error("[FundWise] Error fetching group data:", error)
     return null
   }
 }

@@ -43,7 +43,7 @@ export function QrScannerDialog({ open, onOpenChange, onScan }: QrScannerDialogP
           qrbox: { width: 250, height: 250 },
         },
         (decodedText) => {
-          console.log("[FundFlow] QR Code scanned:", decodedText)
+          console.log("[FundWise] QR Code scanned:", decodedText)
 
           let groupCode = decodedText
           try {
@@ -62,7 +62,7 @@ export function QrScannerDialog({ open, onOpenChange, onScan }: QrScannerDialogP
         (errorMessage) => {},
       )
     } catch (err) {
-      console.error("[FundFlow] Error starting QR scanner:", err)
+      console.error("[FundWise] Error starting QR scanner:", err)
       setError("Failed to access camera. Please check permissions.")
       setIsScanning(false)
     }
@@ -75,7 +75,7 @@ export function QrScannerDialog({ open, onOpenChange, onScan }: QrScannerDialogP
         scannerRef.current.clear()
         scannerRef.current = null
       } catch (err) {
-        console.error("[FundFlow] Error stopping scanner:", err)
+        console.error("[FundWise] Error stopping scanner:", err)
       }
     }
     setIsScanning(false)

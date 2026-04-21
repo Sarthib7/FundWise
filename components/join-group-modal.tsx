@@ -48,23 +48,23 @@ export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
 
     try {
       const walletAddress = publicKey.toString()
-      console.log("[FundFlow] Processing joining payment...")
-      console.log("[FundFlow] From:", walletAddress)
-      console.log("[FundFlow] To: Circle Treasury")
-      console.log("[FundFlow] Amount: 0.01 SOL")
+      console.log("[FundWise] Processing joining payment...")
+      console.log("[FundWise] From:", walletAddress)
+      console.log("[FundWise] To: Circle Treasury")
+      console.log("[FundWise] Amount: 0.01 SOL")
 
       const { signature } = await joinGroup(walletAddress, groupCode, 0.01)
 
-      console.log("[FundFlow] ✅ Payment successful!")
-      console.log("[FundFlow] Successfully joined circle with 0.01 SOL tip!")
-      console.log("[FundFlow] Transaction signature:", signature)
+      console.log("[FundWise] ✅ Payment successful!")
+      console.log("[FundWise] Successfully joined circle with 0.01 SOL tip!")
+      console.log("[FundWise] Transaction signature:", signature)
 
       setShowTransactionSimulation(false)
       router.push(`/circle/${groupCode}`)
       onOpenChange(false)
       setGroupCode("")
     } catch (error) {
-      console.error("[FundFlow] Error joining circle:", error)
+      console.error("[FundWise] Error joining circle:", error)
       setShowTransactionSimulation(false)
       
       // Handle user cancellation gracefully
