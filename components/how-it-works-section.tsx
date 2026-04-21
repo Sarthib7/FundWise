@@ -8,18 +8,18 @@ import { CreateCircleModal } from "@/components/create-group-modal"
 const steps = [
   {
     icon: Plus,
-    title: "Create Your Circle",
-    description: "Set up a private betting market or shared treasury for your friend group. Connect your wallet to get started.",
+    title: "Create a Group",
+    description: "Pick a stablecoin, add your friends by wallet, handle, or invite link. Connect your Solana wallet to get started.",
   },
   {
     icon: Share2,
-    title: "Share Code or QR",
-    description: "Get a unique code or QR code to invite friends to your private prediction market or treasury.",
+    title: "Log Expenses Together",
+    description: "Anyone in the group can add an expense — pick participants and a split method (equal, exact, or shares).",
   },
   {
     icon: Wallet,
-    title: "Bet & Govern Together",
-    description: "Place bets, manage shared funds, and make group decisions. All settled on-chain with full transparency.",
+    title: "Settle On-Chain",
+    description: "One click sends stablecoins from who owes to who paid. Transaction signatures are recorded as proof.",
   },
 ]
 
@@ -40,7 +40,7 @@ export function HowItWorksSection() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground text-lg">
-              Three simple steps to start betting and managing funds with your circle
+              Three simple steps to start splitting with your group
             </p>
           </div>
 
@@ -62,9 +62,9 @@ export function HowItWorksSection() {
           <div className="mt-12 p-8 rounded-2xl bg-card border border-border/50">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1">
-                <h3 className="text-2xl font-bold mb-2">Ready to start betting with friends?</h3>
+                <h3 className="text-2xl font-bold mb-2">Ready to stop chasing friends for money?</h3>
                 <p className="text-muted-foreground">
-                  Create your circle in seconds and start your private prediction market on Solana.
+                  Create a group in seconds and settle your next dinner, trip, or shared subscription on-chain.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -72,7 +72,7 @@ export function HowItWorksSection() {
                   onClick={() => setCreateModalOpen(true)}
                   className="px-6 py-3 rounded-lg bg-[#00ab79] hover:bg-[#009368] text-white font-medium transition-colors"
                 >
-                  Create Circle
+                  Create Group
                 </button>
                 <button
                   onClick={handleLearnMore}

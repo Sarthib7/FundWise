@@ -4,9 +4,6 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 
-// FundFlow - Privacy-First Group Fundraising on Solana
-// Built with Next.js, Solana, and modern web technologies
-
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-sans"
@@ -17,9 +14,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "FundFlow - Privacy-First Group Fundraising on Solana",
+  title: "FundWise — Splitwise on Solana",
   description:
-    "Create fundraising groups, share codes, and collect funds together. Built on Solana with ZK compression for complete privacy.",
+    "Split expenses with friends and settle instantly in stablecoins on Solana. Pool shared treasuries and spend via on-chain proposals.",
   generator: "Next.js",
 }
 

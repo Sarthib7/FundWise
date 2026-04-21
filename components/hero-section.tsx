@@ -17,11 +17,11 @@ export function HeroSection() {
         <FlowBackground height="clamp(360px, 52vw, 720px)" top="clamp(8px, 2vw, 48px)" />
         <div className="container mx-auto max-w-3xl text-center">
           <h1 className="mb-6 text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance">
-            Create a circle, <span className="text-accent">Bet with Friends</span>
+            Split it, <span className="text-accent">settle on-chain</span>
           </h1>
 
           <p className="mb-10 text-lg md:text-xl text-muted-foreground text-balance leading-relaxed">
-            Create private prediction markets within your friend circles. Manage shared treasuries powered by Solana.
+            Splitwise on Solana. Track group expenses with friends and settle in stablecoins — one click, no IOUs. Or pool a shared treasury and spend from it together.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -30,7 +30,7 @@ export function HeroSection() {
               className="bg-accent hover:bg-accent/90 text-accent-foreground text-base"
               onClick={() => setCreateModalOpen(true)}
             >
-              Create Your Circle
+              Create a Group
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button
@@ -46,12 +46,12 @@ export function HeroSection() {
           <div className="mt-16 flex items-center justify-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <QrCode className="h-4 w-4 text-accent" />
-              <span>Share via QR</span>
+              <span>Invite by QR or link</span>
             </div>
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-accent" />
-              <span>Invite unlimited members</span>
+              <span>Stablecoin settlements</span>
             </div>
           </div>
 

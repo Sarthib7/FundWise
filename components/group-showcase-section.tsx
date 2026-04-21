@@ -95,8 +95,7 @@ export function GroupShowcaseSection() {
 
         <div className="mt-8 p-6 rounded-xl bg-accent/5 border border-accent/20 text-center">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-accent">Privacy Protected:</span> All contribution amounts and wallet
-            addresses are encrypted with ZK compression. Only aggregate totals are visible.
+            <span className="font-semibold text-accent">On-chain settlement:</span> Every settle-up is an SPL token transfer. No ledger tricks, no "I'll send it later."
           </p>
         </div>
       </div>
