@@ -17,8 +17,6 @@ import { payToGroupWallet, getWalletBalance } from "@/lib/simple-payment"
 import { toast } from "sonner"
 import { generateGroupQRCode } from "@/lib/qr-code"
 import { SolIcon } from "@/components/icons/sol-icon"
-import { CreateProposalModal } from "@/components/create-proposal-modal"
-import { PredictionPolls } from "@/components/prediction-polls"
 import {
   Users,
   Calendar,
@@ -30,7 +28,7 @@ import {
   Loader2,
   Download,
   AlertCircle,
-  Sparkles,
+  Receipt,
 } from "lucide-react"
 
 export default function CircleDashboard() {
@@ -47,9 +45,7 @@ export default function CircleDashboard() {
   const [qrCodeImage, setQrCodeImage] = useState<string>("")
   const [isGeneratingQR, setIsGeneratingQR] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
-  const [activeTab, setActiveTab] = useState("predictions")
-  const [showCreateProposal, setShowCreateProposal] = useState(false)
-  const [hasActiveProposal, setHasActiveProposal] = useState(false)
+  const [activeTab, setActiveTab] = useState("expenses")
 
   // Check if user is a member
   const walletAddress = publicKey?.toString() || ""
@@ -305,9 +301,9 @@ export default function CircleDashboard() {
             <Card className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4 mb-6">
-                  <TabsTrigger value="predictions">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Predictions
+                  <TabsTrigger value="expenses">
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Expenses
                   </TabsTrigger>
                   <TabsTrigger value="members">
                     <Users className="h-4 w-4 mr-2" />
@@ -323,24 +319,12 @@ export default function CircleDashboard() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="predictions" className="space-y-4">
-                  {/* Create Proposal CTA removed; use + button in empty state within PredictionPolls */}
-
-                  {/* Info message if proposal exists */}
-                  {isMember && hasActiveProposal && (
-                    <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
-                      <p className="text-sm text-center text-muted-foreground">
-                        <Sparkles className="inline h-4 w-4 mr-1 mb-0.5" />
-                        This circle has an active prediction market
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Prediction Polls */}
-                  <PredictionPolls 
-                    circleId={group.id} 
-                    onProposalsChange={setHasActiveProposal}
-                  />
+                <TabsContent value="expenses" className="space-y-4">
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Receipt className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p className="font-medium">Expenses coming in Phase 1</p>
+                    <p className="text-sm mt-1">Add and split expenses in stablecoins — see ROADMAP.md</p>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="members" className="space-y-3">
@@ -471,9 +455,9 @@ export default function CircleDashboard() {
                   <Shield className="h-5 w-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Privacy Protected</h3>
+                  <h3 className="font-semibold mb-1">On-chain settlement</h3>
                   <p className="text-sm text-muted-foreground">
-                    All transactions use ZK compression on Solana for maximum privacy and security.
+                    Expenses and settlements are verified by Solana transaction signatures — no one can edit the ledger after the fact.
                   </p>
                 </div>
               </div>
@@ -481,13 +465,6 @@ export default function CircleDashboard() {
           </div>
         </div>
       </main>
-
-      {/* Create Proposal Modal */}
-      <CreateProposalModal
-        isOpen={showCreateProposal}
-        onClose={() => setShowCreateProposal(false)}
-        circleId={group.id}
-      />
 
       {/* QR Code Modal */}
       <Dialog open={showQRModal} onOpenChange={setShowQRModal}>

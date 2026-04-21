@@ -11,10 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
-// PHASE 1: Using Solana Wallet Adapter (Active)
 import { useWallet } from "@solana/wallet-adapter-react"
-// PHASE 2: Privy (Commented out)
-// import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { createGroup } from "@/lib/solana"
 import { Loader2, Lock, Globe } from "lucide-react"
 import { SolIcon } from "@/components/icons/sol-icon"
@@ -26,12 +23,7 @@ interface CreateCircleModalProps {
 
 export function CreateCircleModal({ open, onOpenChange }: CreateCircleModalProps) {
   const router = useRouter()
-  // PHASE 1: Solana Wallet Adapter
   const { publicKey, connected } = useWallet()
-  // PHASE 2: Privy (commented out)
-  // const { authenticated } = usePrivy()
-  // const { wallets } = useWallets()
-  // const connectedWallet = wallets[0]
 
   const [isCreating, setIsCreating] = useState(false)
   const [formData, setFormData] = useState({
@@ -119,7 +111,7 @@ export function CreateCircleModal({ open, onOpenChange }: CreateCircleModalProps
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold">Creating Your Circle</h3>
               <p className="text-sm text-muted-foreground">
-                Setting up your private prediction market on Solana...
+                Setting up your group on Solana...
               </p>
             </div>
           </div>
