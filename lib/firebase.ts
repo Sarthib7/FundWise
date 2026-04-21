@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from 'firebase/app'
-import { getDatabase } from 'firebase/database'
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
+import { getDatabase, type Database } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,18 +11,28 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 }
 
-// Validate Firebase configuration
-if (!firebaseConfig.projectId || !firebaseConfig.databaseURL) {
-  console.error('Firebase configuration error:', {
-    projectId: firebaseConfig.projectId,
-    databaseURL: firebaseConfig.databaseURL,
-    apiKey: firebaseConfig.apiKey ? '***' : 'missing'
-  })
-  throw new Error('Firebase configuration is incomplete. Check your .env.local file.')
+let cachedApp: FirebaseApp | null = null
+let cachedDb: Database | null = null
+
+function getFirebaseApp(): FirebaseApp {
+  if (cachedApp) return cachedApp
+  if (!firebaseConfig.projectId || !firebaseConfig.databaseURL) {
+    throw new Error(
+      'Firebase configuration is incomplete. Set NEXT_PUBLIC_FIREBASE_* env vars in .env.local.'
+    )
+  }
+  cachedApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+  return cachedApp
 }
 
-// Initialize Firebase (avoid duplicate initialization)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+export function getDb(): Database {
+  if (cachedDb) return cachedDb
+  cachedDb = getDatabase(getFirebaseApp(), firebaseConfig.databaseURL)
+  return cachedDb
+}
 
-// Initialize Realtime Database with explicit URL
-export const db = getDatabase(app, firebaseConfig.databaseURL)
+export const db = new Proxy({} as Database, {
+  get(_target, prop) {
+    return Reflect.get(getDb() as unknown as object, prop)
+  },
+})
