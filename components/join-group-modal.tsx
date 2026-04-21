@@ -8,10 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-// PHASE 1: Using Solana Wallet Adapter (Active)
 import { useWallet } from "@solana/wallet-adapter-react"
-// PHASE 2: Privy (Commented out)
-// import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { joinGroup } from "@/lib/solana"
 import { Loader2, QrCode, CheckCircle2, ArrowRight, Wallet } from "lucide-react"
 import { QrScannerDialog } from "./qr-scanner-dialog"
@@ -25,12 +22,7 @@ interface JoinCircleModalProps {
 
 export function JoinCircleModal({ open, onOpenChange }: JoinCircleModalProps) {
   const router = useRouter()
-  // PHASE 1: Solana Wallet Adapter
   const { publicKey, connected } = useWallet()
-  // PHASE 2: Privy (commented out)
-  // const { authenticated } = usePrivy()
-  // const { wallets } = useWallets()
-  // const connectedWallet = wallets[0]
 
   const [isJoining, setIsJoining] = useState(false)
   const [groupCode, setGroupCode] = useState("")
