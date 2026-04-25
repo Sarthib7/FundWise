@@ -49,13 +49,13 @@ groups/{groupId}/settlements/{settlementId} = {
 - [x] Balance computation + simplified settlement graph (minimize # of transfers).
 - [x] Settle-up flow: pick debt → sign SPL transfer → write `txSig` back.
 - [x] Activity feed (expenses + settlements, chronological).
-- [ ] Edit / delete expense (only if no settlements reference it).
+- [~] Edit / delete expense (delete guard shipped; edit still pending).
 - [~] Empty-state + onboarding copy (mostly done; minor polish left).
-- [ ] Payment receipt view (tx signature, amounts, who paid whom).
+- [x] Payment receipt view (tx signature, amounts, who paid whom).
 
 **Hackathon-specific polish (Visa track):**
 - [ ] PYUSD stablecoin support (PayPal stablecoin — Visa-relevant).
-- [ ] Smooth one-click settlement UX (2 taps + wallet sign).
+- [~] Smooth one-click settlement UX (post-settlement receipt flow shipped; more polish still needed).
 - [ ] Group total settled volume display.
 - [ ] QuickNode RPC for production.
 
@@ -68,11 +68,11 @@ groups/{groupId}/settlements/{settlementId} = {
 **Goal:** Enable cross-chain stablecoin contributions for Fund Mode. This is the core submission for the **Build with LI.FI track**.
 
 **Work items:**
-- [ ] Install `@lifi/sdk` and configure integrator ID.
-- [ ] Cross-chain contribution modal: detect user's tokens on other chains.
-- [ ] LI.FI route discovery (`getQuote()`) and execution (`executeRoute()`).
-- [ ] Support at least 2 chains (Ethereum + Solana, or Base + Solana).
-- [ ] UI: "You have 50 USDC on Base. Bridge to Solana and contribute in one click."
+- [x] Install `@lifi/sdk` and configure integrator ID.
+- [~] Cross-chain contribution modal: wallet top-up flow shipped; treasury deposit still pending.
+- [x] LI.FI route discovery (`getQuote()`) and execution (`executeRoute()`).
+- [x] Support at least 2 chains (Ethereum/Base → Solana wallet flow).
+- [~] UI: bridge-to-wallet flow shipped; treasury contribution copy still pending.
 
 **Exit criterion:** A user with USDC on Base can bridge to Solana and deposit into a Fund Mode treasury via LI.FI in a single click.
 
