@@ -1,0 +1,282 @@
+import { Connection, PublicKey, Transaction } from "@solana/web3.js"
+import {
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
+  getAccount,
+} from "@solana/spl-token"
+import type { Database } from "./database.types"
+import { getExpenses, getAllSplitsForGroup, getSettlements, getMembers } from "./db"
+
+type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
+type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+
+const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
+export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
+
+// Devnet stablecoin mints
+export const STABLECOIN_MINTS: Record<string, { mint: string; name: string; decimals: number }> = {
+  USDC: {
+    mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+    name: "USDC",
+    decimals: 6,
+  },
+  USDT: {
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ",
+    name: "USDT",
+    decimals: 6,
+  },
+  PYUSD: {
+    mint: "CXFaY4cXf25ZhFlexqroBfBceJ8YqWBsfaY3HQd9qucz",
+    name: "PYUSD",
+    decimals: 6,
+  },
+}
+
+export const DEFAULT_STABLECOIN = STABLECOIN_MINTS.USDC
+
+// =============================================
+// BALANCE COMPUTATION
+// =============================================
+
+export interface Balance {
+  wallet: string
+  displayName: string
+  amount: number // positive = owed, negative = owes (in smallest token unit)
+}
+
+export interface SettlementTransfer {
+  from: string
+  to: string
+  amount: number
+  fromName?: string
+  toName?: string
+}
+
+/**
+ * Compute net balances for all members from expenses and settlements.
+ * Pulls data from Supabase via the db module.
+ */
+export async function computeGroupBalances(groupId: string): Promise<Balance[]> {
+  const [expenses, allSplits, settlements, members] = await Promise.all([
+    getExpenses(groupId),
+    getAllSplitsForGroup(groupId),
+    getSettlements(groupId),
+    getMembers(groupId),
+  ])
+
+  const balances: Record<string, number> = {}
+  for (const member of members) {
+    balances[member.wallet] = 0
+  }
+
+  // Process expenses: payer gets +amount, each participant gets -theirShare
+  for (const expense of expenses) {
+    balances[expense.payer] = (balances[expense.payer] || 0) + expense.amount
+  }
+
+  // Process splits: each participant's share is subtracted
+  for (const split of allSplits) {
+    balances[split.wallet] = (balances[split.wallet] || 0) - split.share
+  }
+
+  // Process settlements: from_wallet gets +amount (reduces their debt)
+  for (const settlement of settlements) {
+    balances[settlement.from_wallet] = (balances[settlement.from_wallet] || 0) + settlement.amount
+    balances[settlement.to_wallet] = (balances[settlement.to_wallet] || 0) - settlement.amount
+  }
+
+  return members.map((member) => ({
+    wallet: member.wallet,
+    displayName: member.display_name || `${member.wallet.slice(0, 4)}...${member.wallet.slice(-4)}`,
+    amount: balances[member.wallet] || 0,
+  }))
+}
+
+/**
+ * Simplify balances into minimum number of transfers.
+ * Greedy algorithm: pair largest creditor with largest debtor.
+ */
+export function simplifySettlements(balances: Balance[]): SettlementTransfer[] {
+  const transfers: SettlementTransfer[] = []
+
+  const creditors = balances
+    .filter((b) => b.amount > 0)
+    .map((b) => ({ ...b }))
+    .sort((a, b) => b.amount - a.amount)
+
+  const debtors = balances
+    .filter((b) => b.amount < 0)
+    .map((b) => ({ ...b, amount: Math.abs(b.amount) }))
+    .sort((a, b) => b.amount - a.amount)
+
+  let i = 0
+  let j = 0
+
+  while (i < creditors.length && j < debtors.length) {
+    const amount = Math.min(creditors[i].amount, debtors[j].amount)
+    if (amount > 0) {
+      transfers.push({
+        from: debtors[j].wallet,
+        to: creditors[i].wallet,
+        amount,
+        fromName: debtors[j].displayName,
+        toName: creditors[i].displayName,
+      })
+    }
+
+    creditors[i].amount -= amount
+    debtors[j].amount -= amount
+
+    if (creditors[i].amount <= 0) i++
+    if (debtors[j].amount <= 0) j++
+  }
+
+  return transfers
+}
+
+// =============================================
+// SPLIT CALCULATION
+// =============================================
+
+export interface SplitInput {
+  wallet: string
+  share: number
+}
+
+/**
+ * Calculate splits for an expense based on the split method.
+ * Returns array of { wallet, share } where shares sum to totalAmount (in smallest token unit).
+ */
+export function calculateSplits(
+  totalAmount: number,
+  participants: string[],
+  method: "equal" | "exact" | "shares" | "percentage",
+  customValues?: Record<string, number>
+): SplitInput[] {
+  switch (method) {
+    case "equal": {
+      const sharePerPerson = Math.floor(totalAmount / participants.length)
+      const remainder = totalAmount - sharePerPerson * participants.length
+      return participants.map((wallet, index) => ({
+        wallet,
+        share: sharePerPerson + (index < remainder ? 1 : 0),
+      }))
+    }
+
+    case "exact": {
+      if (!customValues) throw new Error("Custom values required for exact split")
+      return participants.map((wallet) => ({
+        wallet,
+        share: customValues[wallet] || 0,
+      }))
+    }
+
+    case "shares": {
+      if (!customValues) throw new Error("Custom values required for shares split")
+      const totalShares = participants.reduce((sum, w) => sum + (customValues[w] || 0), 0)
+      if (totalShares === 0) throw new Error("Total shares cannot be zero")
+      let allocated = 0
+      return participants.map((wallet, index) => {
+        const share = index === participants.length - 1
+          ? totalAmount - allocated
+          : Math.floor((totalAmount * (customValues[wallet] || 0)) / totalShares)
+        allocated += share
+        return { wallet, share }
+      })
+    }
+
+    case "percentage": {
+      if (!customValues) throw new Error("Custom values required for percentage split")
+      let allocated = 0
+      return participants.map((wallet, index) => {
+        const share = index === participants.length - 1
+          ? totalAmount - allocated
+          : Math.floor((totalAmount * (customValues[wallet] || 0)) / 100)
+        allocated += share
+        return { wallet, share }
+      })
+    }
+  }
+}
+
+// =============================================
+// ON-CHAIN SETTLEMENT
+// =============================================
+
+/**
+ * Execute an SPL token transfer for settlement.
+ * Creates destination ATA if it doesn't exist.
+ */
+export async function executeSettlement(
+  fromWallet: any,
+  fromAddress: string,
+  toAddress: string,
+  amount: number,
+  mintAddress: string
+): Promise<{ signature: string }> {
+  const mint = new PublicKey(mintAddress)
+  const fromPubkey = new PublicKey(fromAddress)
+  const toPubkey = new PublicKey(toAddress)
+
+  const fromAta = await getAssociatedTokenAddress(mint, fromPubkey)
+  const toAta = await getAssociatedTokenAddress(mint, toPubkey)
+
+  const transaction = new Transaction()
+
+  try {
+    await getAccount(connection, toAta)
+  } catch {
+    transaction.add(
+      createAssociatedTokenAccountInstruction(fromPubkey, toAta, toPubkey, mint)
+    )
+  }
+
+  transaction.add(
+    createTransferInstruction(fromAta, toAta, fromPubkey, BigInt(amount))
+  )
+
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+  transaction.recentBlockhash = blockhash
+  transaction.feePayer = fromPubkey
+
+  let signature: string
+  if (fromWallet.signAndSendTransaction) {
+    signature = await fromWallet.signAndSendTransaction(transaction)
+  } else if (fromWallet.signTransaction) {
+    const signed = await fromWallet.signTransaction(transaction)
+    signature = await connection.sendRawTransaction(signed.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    })
+  } else {
+    throw new Error("Wallet does not support transaction signing")
+  }
+
+  await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed")
+  return { signature }
+}
+
+// =============================================
+// TOKEN UTILS
+// =============================================
+
+export async function getTokenBalance(walletAddress: string, mintAddress: string): Promise<number> {
+  try {
+    const mint = new PublicKey(mintAddress)
+    const wallet = new PublicKey(walletAddress)
+    const ata = await getAssociatedTokenAddress(mint, wallet)
+    const account = await getAccount(connection, ata)
+    return Number(account.amount)
+  } catch {
+    return 0
+  }
+}
+
+export function formatTokenAmount(amount: number, decimals: number = 6): string {
+  return (amount / Math.pow(10, decimals)).toFixed(2)
+}
+
+export function parseTokenAmount(amount: string, decimals: number = 6): number {
+  return Math.round(parseFloat(amount) * Math.pow(10, decimals))
+}
