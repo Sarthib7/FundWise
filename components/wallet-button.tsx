@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Wallet, LogOut } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { UserAvatar } from "@/components/avatar"
 import { useEffect, useState } from "react"
 // PHASE 1: Using Solana Wallet Adapter (Active)
 import { useWallet } from "@solana/wallet-adapter-react"
@@ -45,12 +44,9 @@ export function WalletButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <UserAvatar
-              name={address}
-              id={address}
-              size={16}
-              className="h-4 w-4 mr-2"
-            />
+            <div className="h-4 w-4 mr-2 rounded-full bg-accent/30 flex items-center justify-center text-[8px] font-bold text-accent">
+              {address.slice(0, 1).toUpperCase()}
+            </div>
             {shortAddress}
           </Button>
         </DropdownMenuTrigger>
