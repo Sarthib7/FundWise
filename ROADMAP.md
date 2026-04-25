@@ -6,28 +6,28 @@ See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for track-specific strategy.
 
 ---
 
-## Phase 0 — Pivot cleanup (April 25–26)
+## Phase 0 — Pivot cleanup (April 25–26) ✅
 
 **Goal:** Strip all prediction-market / Kalshi / ZK / LP-yield code. Rebuild landing page around Splitwise-on-Solana narrative.
 
 **Work items:**
-- [ ] Delete files listed in STATUS.md §Still needs cleanup.
-- [ ] Drop unused deps from `package.json` (Kalshi, Light Protocol, Privy, Abstract, permissionless).
-- [ ] Rewrite `README.md` for the new product.
-- [ ] Rewrite `app/page.tsx`, `components/hero-section.tsx`, `components/how-it-works-section.tsx` for Split Mode framing.
-- [ ] Rename "circles" → "groups" across UI + routes.
-- [ ] Update `components/header.tsx` nav (remove prediction links).
-- [ ] Verify `pnpm build` passes with zero references to removed modules.
+- [x] Delete files listed in STATUS.md §Still needs cleanup.
+- [x] Drop unused deps from `package.json` (Kalshi, Light Protocol, Privy, Abstract, permissionless).
+- [x] Rewrite `README.md` for the new product.
+- [x] Rewrite `app/page.tsx`, `components/hero-section.tsx`, `components/how-it-works-section.tsx` for Split Mode framing.
+- [x] Rename "circles" → "groups" across UI + routes.
+- [x] Update `components/header.tsx` nav (remove prediction links).
+- [x] Verify `pnpm build` passes with zero references to removed modules.
 
 **Exit criterion:** `pnpm build` green, landing page says "Splitwise on Solana," no prediction-market UI reachable.
 
 ---
 
-## Phase 1 — Split Mode MVP (April 27 – May 4)
+## Phase 1 — Split Mode MVP (April 27 – May 4) ✅ Core complete
 
 **Goal:** A user can create a group, add expenses, see balances, and settle on-chain with USDC. This is the core submission for the **Visa Frontier track**.
 
-**Data model (off-chain, Firebase):**
+**Data model (off-chain, Supabase/Postgres):**
 ```
 groups/{groupId} = {
   name, stablecoinMint, createdBy, createdAt, mode: "split",
@@ -44,13 +44,13 @@ groups/{groupId}/settlements/{settlementId} = {
 ```
 
 **Work items:**
-- [ ] Group CRUD UI (`/groups`, `/groups/[id]`, invite-link + QR).
-- [ ] Expense entry modal: payer, amount, participants, split method (equal / exact / shares / %).
-- [ ] Balance computation + simplified settlement graph (minimize # of transfers).
-- [ ] Settle-up flow: pick debt → sign SPL transfer → write `txSig` back.
-- [ ] Activity feed (expenses + settlements, chronological).
+- [x] Group CRUD UI (`/groups`, `/groups/[id]`, invite-link + QR).
+- [x] Expense entry modal: payer, amount, participants, split method (equal / exact / shares / %).
+- [x] Balance computation + simplified settlement graph (minimize # of transfers).
+- [x] Settle-up flow: pick debt → sign SPL transfer → write `txSig` back.
+- [x] Activity feed (expenses + settlements, chronological).
 - [ ] Edit / delete expense (only if no settlements reference it).
-- [ ] Empty-state + onboarding copy.
+- [~] Empty-state + onboarding copy (mostly done; minor polish left).
 - [ ] Payment receipt view (tx signature, amounts, who paid whom).
 
 **Hackathon-specific polish (Visa track):**
@@ -63,7 +63,7 @@ groups/{groupId}/settlements/{settlementId} = {
 
 ---
 
-## Phase 1.5 — LI.FI Integration (May 2–4)
+## Phase 1.5 — LI.FI Integration (May 2–4) ▶ Next
 
 **Goal:** Enable cross-chain stablecoin contributions for Fund Mode. This is the core submission for the **Build with LI.FI track**.
 
