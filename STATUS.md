@@ -1,7 +1,7 @@
 # FundWise — Status
 
 **Snapshot date:** 2026-04-25
-**Phase:** 0 → 1 transition (Hackathon sprint)
+**Phase:** 1 complete (Split Mode core) — paused before Phase 1.5
 **Hackathon:** Colosseum Frontier (April 6 – May 11, 2026)
 
 ---
@@ -53,25 +53,29 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 **Stack:**
 
 - Next.js 15 (App Router) + React 19 + Tailwind v4 + Radix/shadcn UI
-- `@solana/wallet-adapter-`* (Phantom, Solflare, etc.)
+- `@solana/wallet-adapter-*` (Phantom, Solflare, etc.)
 - `@solana/web3.js`, `@solana/spl-token`
-- Firebase (Realtime DB for group metadata; Storage for avatars)
+- Supabase (`@supabase/supabase-js`) + Postgres schema in `supabase/schema.sql`
 - Squads multisig (`@sqds/multisig`) — reserved for Fund Mode
 
-**Features present:**
+**Completed in this phase:**
 
-- Group ("circle") creation, joining via invite code, QR share
-- Wallet connection UI (wallet-button pattern)
-- Landing page, avatar customizer, group showcase
-- SOL-based group wallet generation (Phase 1 simple-wallet approach)
-- Squads multisig scaffolding (commented out, for Fund Mode)
-- Firebase + localStorage dual storage
+- Firebase removed; Supabase introduced as the only off-chain data layer
+- New normalized DB model implemented (`groups`, `members`, `expenses`, `expense_splits`, `settlements`, `contributions`, `proposals`, `proposal_approvals`)
+- New Split Mode data + logic modules:
+  - `lib/db.ts` (CRUD and activity feed)
+  - `lib/expense-engine.ts` (split math, balances, settlement graph, SPL settlement)
+- New routes and dashboard:
+  - `/groups`
+  - `/groups/[id]`
+- "circles" legacy routes removed and replaced with "groups"
+- Build verified green with the new structure
 
-**Still needs cleanup (from Phase 0):**
+**Still pending in Split Mode (before submission polish):**
 
-- Prediction-market / Kalshi / ZK / LP-yield code removal (some files may still exist)
-- "circles" → "groups" rename in UI + routes
-- Landing page rewrite for Splitwise-on-Solana framing
+- Edit/delete expense with settlement guard
+- Dedicated settlement receipt screen (currently toast + tx sig)
+- Final empty-state and copy polish on a few edge views
 
 ---
 
@@ -91,12 +95,14 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 
 ---
 
-## What's next (immediate — this week)
+## Resume point (next session)
 
-1. **Phase 0 cleanup:** Remove prediction-market code, rewrite landing page.
-2. **Phase 1 start:** Split Mode — group CRUD, expense entry, balance computation.
-3. **LI.FI integration:** Add `@lifi/sdk` for cross-chain Fund Mode contributions.
-4. **Verify** `pnpm build` passes with zero references to removed modules.
+1. **Setup unblock:** Run `supabase/schema.sql` and set:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. **Phase 1.5:** LI.FI integration (`@lifi/sdk`) for cross-chain fund contributions.
+3. **Visa polish:** PYUSD pass + settlement receipt UI + flow polish.
+4. **Phase 2:** Fund Mode treasury and proposals on top of Squads.
 
 ---
 
