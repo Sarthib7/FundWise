@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WalletAvatar } from "@/components/avatar"
 import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
+import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
+import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
 import {
   getGroup,
   getMembers,
@@ -63,7 +65,7 @@ type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 export default function GroupDashboard() {
   const params = useParams()
   const router = useRouter()
-  const { publicKey, connected, signTransaction } = useWallet()
+  const { publicKey, connected } = useWallet()
 
   const walletAddress = publicKey?.toString() || ""
 
@@ -95,6 +97,8 @@ export default function GroupDashboard() {
   const [isSettling, setIsSettling] = useState(false)
 
   const groupId = params.id as string
+  const lifiSupported = isLifiSupportedForCurrentCluster()
+  const clusterLabel = getFundWiseClusterLabel()
 
   const loadData = useCallback(async () => {
     if (!groupId) return
@@ -207,7 +211,7 @@ export default function GroupDashboard() {
         group?.stablecoin_mint || DEFAULT_STABLECOIN.mint
       )
 
-      await dbAddSettlement({
+      const settlement = await dbAddSettlement({
         groupId,
         fromWallet: walletAddress,
         toWallet: transfer.to,
@@ -216,10 +220,7 @@ export default function GroupDashboard() {
         txSig: signature,
       })
 
-      toast.success(`Settled $${formatTokenAmount(transfer.amount)}!`, {
-        description: `TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`,
-      })
-      loadData()
+      router.push(`/groups/${groupId}/settlements/${settlement.id}`)
     } catch (error) {
       if (error instanceof Error && error.message === "TRANSACTION_CANCELLED") {
         toast.info("Transaction cancelled")
@@ -454,16 +455,22 @@ export default function GroupDashboard() {
             {/* Cross-Chain Bridge */}
             {isMember && (
               <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
-                <h3 className="text-lg font-semibold mb-2">Cross-Chain Fund</h3>
+                <h3 className="text-lg font-semibold mb-2">Bridge USDC To Solana</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Bridge USDC from Ethereum, Base, or other chains directly into this group.
+                  Top up your Solana wallet from Base, Ethereum, or another EVM chain before settling in this group.
                 </p>
+                {!lifiSupported && (
+                  <p className="mb-4 text-xs text-muted-foreground">
+                    LI.FI only routes into Solana mainnet. FundWise is currently using {clusterLabel}, so this bridge stays disabled until the app moves to mainnet.
+                  </p>
+                )}
                 <Button
                   className="w-full bg-accent hover:bg-accent/90"
                   onClick={() => setShowBridge(true)}
+                  disabled={!lifiSupported}
                 >
                   <ArrowRightLeft className="h-4 w-4 mr-2" />
-                  Bridge & Contribute
+                  Bridge To My Wallet
                 </Button>
               </Card>
             )}
@@ -571,13 +578,11 @@ export default function GroupDashboard() {
         open={showBridge}
         onOpenChange={setShowBridge}
         destinationAddress={walletAddress}
-        groupId={groupId}
         groupName={group.name}
         onSuccess={(txHash, amount) => {
-          toast.success(`Bridged ${amount} USDC to Solana!`, {
-            description: `TX: ${txHash.slice(0, 8)}...`,
+          toast.success(`Bridged ${amount} USDC toward your Solana wallet.`, {
+            description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
           })
-          loadData()
         }}
       />
 
