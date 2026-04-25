@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,15 +8,22 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, ArrowRight, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react"
 import { getBridgeQuote, executeBridgeRoute, getSupportedSourceChains, type BridgeQuote, type BridgeStatus } from "@/lib/lifi-bridge"
-import { CHAIN_NAMES } from "@/lib/lifi-config"
-import { useWallet } from "@solana/wallet-adapter-react"
+import {
+  CHAIN_NAMES,
+  ensureLifiChainsLoaded,
+  getInjectedEvmWallet,
+  isLifiSupportedForCurrentCluster,
+  requestInjectedEvmWallet,
+  setLifiEvmProvider,
+  type InjectedEvmWallet,
+} from "@/lib/lifi-config"
 import { toast } from "sonner"
+import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
 
 interface CrossChainBridgeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  destinationAddress: string // Solana address receiving the funds
-  groupId: string
+  destinationAddress: string
   groupName: string
   onSuccess?: (txHash: string, amount: string) => void
 }
@@ -25,30 +32,64 @@ export function CrossChainBridgeModal({
   open,
   onOpenChange,
   destinationAddress,
-  groupId,
   groupName,
   onSuccess,
 }: CrossChainBridgeModalProps) {
-  const { publicKey, connected } = useWallet()
   const sourceChains = getSupportedSourceChains()
+  const lifiSupported = isLifiSupportedForCurrentCluster()
+  const clusterLabel = getFundWiseClusterLabel()
 
   const [selectedChain, setSelectedChain] = useState(sourceChains[1]) // Default to Base
   const [amount, setAmount] = useState("")
   const [quote, setQuote] = useState<BridgeQuote | null>(null)
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>({ status: "idle" })
   const [isQuoting, setIsQuoting] = useState(false)
+  const [evmWallet, setEvmWallet] = useState<InjectedEvmWallet | null>(null)
+  const [isConnectingEvmWallet, setIsConnectingEvmWallet] = useState(false)
 
-  const walletAddress = publicKey?.toString() || ""
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    getInjectedEvmWallet()
+      .then((wallet) => {
+        setEvmWallet(wallet)
+        setLifiEvmProvider(wallet)
+      })
+      .catch((error) => {
+        console.error("[FundWise] Failed to read injected EVM wallet:", error)
+      })
+  }, [open])
+
+  const handleConnectEvmWallet = async () => {
+    setIsConnectingEvmWallet(true)
+    try {
+      await ensureLifiChainsLoaded()
+      const wallet = await requestInjectedEvmWallet()
+      setLifiEvmProvider(wallet)
+      setEvmWallet(wallet)
+      toast.success("EVM wallet connected")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to connect EVM wallet")
+    } finally {
+      setIsConnectingEvmWallet(false)
+    }
+  }
 
   const handleGetQuote = useCallback(async () => {
-    if (!amount || !walletAddress) return
+    if (!amount || !evmWallet || !destinationAddress) return
     setIsQuoting(true)
     setBridgeStatus({ status: "quoting" })
     try {
+      await ensureLifiChainsLoaded()
+      setLifiEvmProvider(evmWallet)
+
       const bridgeQuote = await getBridgeQuote({
         fromChain: selectedChain.chainId,
         fromAmount: amount,
-        fromAddress: walletAddress, // For MVP, we use the Solana address; in production, detect EVM wallet
+        fromAddress: evmWallet.address,
+        toAddress: destinationAddress,
       })
       setQuote(bridgeQuote)
       setBridgeStatus({ status: "idle" })
@@ -58,18 +99,19 @@ export function CrossChainBridgeModal({
     } finally {
       setIsQuoting(false)
     }
-  }, [amount, walletAddress, selectedChain])
+  }, [amount, destinationAddress, evmWallet, selectedChain])
 
   const handleExecute = async () => {
-    if (!quote) return
+    if (!quote || !evmWallet) return
     try {
+      setLifiEvmProvider(evmWallet)
       const result = await executeBridgeRoute(quote.route, setBridgeStatus)
-      if (bridgeStatus.status === "done" || result.txHash) {
-        toast.success("Bridge complete! USDC is on Solana.")
+      if (result.txHash) {
+        toast.success("Bridge submitted. Funds will arrive on Solana after confirmation.")
         onSuccess?.(result.txHash || "", quote.toAmount)
       }
     } catch (error) {
-      toast.error("Bridge failed")
+      toast.error(error instanceof Error ? error.message : "Bridge failed")
     }
   }
 
@@ -85,13 +127,53 @@ export function CrossChainBridgeModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Cross-Chain Contribution</DialogTitle>
+          <DialogTitle>Bridge USDC To Solana</DialogTitle>
           <DialogDescription>
-            Bridge USDC from {CHAIN_NAMES[selectedChain.chainId]} to Solana and contribute to {groupName}
+            Bridge USDC from an EVM chain into your connected Solana wallet so you can settle balances in {groupName}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
+          {!lifiSupported && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+              LI.FI routes bridge into Solana mainnet. FundWise is currently configured for {clusterLabel}, so this flow is disabled until you switch the app to mainnet.
+            </div>
+          )}
+
+          {lifiSupported && (
+            <div className="space-y-2">
+              <Label>EVM Source Wallet</Label>
+              {evmWallet ? (
+                <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-medium">
+                      {evmWallet.address.slice(0, 6)}...{evmWallet.address.slice(-4)}
+                    </span>
+                    <Badge variant="secondary">
+                      {CHAIN_NAMES[evmWallet.chainId] || `Chain ${evmWallet.chainId}`}
+                    </Badge>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full justify-between bg-transparent"
+                  onClick={handleConnectEvmWallet}
+                  disabled={isConnectingEvmWallet}
+                >
+                  {isConnectingEvmWallet ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connecting EVM wallet...
+                    </>
+                  ) : (
+                    "Connect EVM wallet"
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* Source Chain Selection */}
           <div className="space-y-2">
             <Label>Bridge From</Label>
@@ -130,7 +212,7 @@ export function CrossChainBridgeModal({
               <Button
                 variant="outline"
                 onClick={handleGetQuote}
-                disabled={!amount || isQuoting}
+                disabled={!lifiSupported || !amount || !evmWallet || isQuoting}
               >
                 {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Quote"}
               </Button>
@@ -166,6 +248,9 @@ export function CrossChainBridgeModal({
                 <p className="text-xs text-muted-foreground">
                   Destination: {destinationAddress.slice(0, 6)}...{destinationAddress.slice(-4)}
                 </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Funds land in your connected Solana wallet, not directly in a group treasury.
+                </p>
               </div>
             </div>
           )}
@@ -185,9 +270,9 @@ export function CrossChainBridgeModal({
                 )}
                 <div>
                   <p className="font-medium text-sm">{bridgeStatus.message || bridgeStatus.status}</p>
-                  {bridgeStatus.txHash && (
+                  {bridgeStatus.txLink && (
                     <a
-                      href={`https://solscan.io/tx/${bridgeStatus.txHash}`}
+                      href={bridgeStatus.txLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-accent hover:underline flex items-center gap-1 mt-1"
@@ -205,7 +290,12 @@ export function CrossChainBridgeModal({
             <Button
               className="w-full bg-accent hover:bg-accent/90"
               onClick={handleExecute}
-              disabled={bridgeStatus.status === "signing" || bridgeStatus.status === "executing"}
+              disabled={
+                !lifiSupported ||
+                !evmWallet ||
+                bridgeStatus.status === "signing" ||
+                bridgeStatus.status === "executing"
+              }
             >
               {bridgeStatus.status === "signing" ? (
                 <>
@@ -214,7 +304,7 @@ export function CrossChainBridgeModal({
                 </>
               ) : (
                 <>
-                  Bridge & Contribute
+                  Bridge To My Solana Wallet
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

@@ -6,21 +6,22 @@ import { ConnectionProvider, WalletProvider, useWallet } from "@solana/wallet-ad
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base"
 import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets"
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui"
-import { initLifiConfig, setLifiSolanaProvider } from "@/lib/lifi-config"
+import { ensureLifiChainsLoaded, setLifiSolanaProvider } from "@/lib/lifi-config"
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base"
 
 import "@solana/wallet-adapter-react-ui/styles.css"
-
-// Initialize LI.FI config once at module level
-initLifiConfig()
 
 function LifiProvider({ children }: { children: React.ReactNode }) {
   const { wallet } = useWallet()
 
   useEffect(() => {
-    if (wallet?.adapter) {
-      setLifiSolanaProvider(wallet.adapter as SignerWalletAdapter)
-    }
+    ensureLifiChainsLoaded().catch((error) => {
+      console.error("[FundWise] Failed to initialize LI.FI chains:", error)
+    })
+  }, [])
+
+  useEffect(() => {
+    setLifiSolanaProvider((wallet?.adapter as SignerWalletAdapter) || null)
   }, [wallet?.adapter])
 
   return <>{children}</>
