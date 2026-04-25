@@ -1,7 +1,7 @@
 # FundWise — Status
 
 **Snapshot date:** 2026-04-25
-**Phase:** 1 complete (Split Mode core) + early polish + Phase 1.5 groundwork
+**Phase:** 1 complete (Split Mode core) + Phase 1.5/2 vertical slices underway
 **Hackathon:** Colosseum Frontier (April 6 – May 11, 2026)
 
 ---
@@ -37,7 +37,9 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 │       ├── 0005-squads-multisig-for-fund-mode.md
 │       ├── 0006-wallet-only-auth.md
 │       ├── 0007-rename-circles-to-groups.md
-│       └── 0008-keep-nextjs-shadcn-stack.md
+│       ├── 0008-keep-nextjs-shadcn-stack.md
+│       ├── 0009-switch-from-firebase-to-supabase.md
+│       └── 0010-store-multisig-and-vault-addresses-for-fund-mode.md
 ├── DECISIONS.md            ← Legacy ADR log (superseded by docs/adr/)
 ├── app/                    ← Next.js App Router pages
 ├── components/             ← React components (ui/ = shadcn primitives)
@@ -72,10 +74,19 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
   - `/groups/[id]/settlements/[settlementId]`
 - Conservative expense delete guard shipped:
   - payer can delete only while no later settlement exists in the same group
+- Fund Mode vertical slice shipped:
+  - Group creation now supports Split Mode or Fund Mode
+  - Fund Mode captures funding goal + approval threshold at creation
+  - creator can initialize a Squads Treasury from the Group page
+  - members can make on-chain Contributions into the Treasury
+  - dashboard shows on-chain Treasury balance + Contribution history
 - LI.FI groundwork shipped:
   - client-only SDK initialization
   - injected EVM wallet source + Solana destination wallet routing
   - bridge UI is mainnet-aware and disabled on devnet/custom RPCs
+- Group Treasury persistence now stores both:
+  - `multisig_address` for future proposal/approval flows
+  - `treasury_address` for the current vault receive path
 - Supabase env wiring updated for current publishable-key format at project-root `.env.local`
 - "circles" legacy routes removed and replaced with "groups"
 - Build verified green with the new structure
@@ -85,6 +96,12 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 - Edit expense flow (delete-only shipped; edit still missing)
 - Final empty-state and copy polish on a few edge views
 - Group total settled volume display
+
+**Still pending in Fund Mode / LI.FI:**
+
+- One-click LI.FI bridge directly into Treasury Contribution flow (today it is still bridge to wallet, then contribute)
+- Proposal creation / approval / execution UI on top of stored Squads multisig
+- Clear signer-management rules after Treasury initialization
 
 ---
 
@@ -106,10 +123,10 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 
 ## Resume point (next session)
 
-1. **Setup verify:** Confirm `supabase/schema.sql` has been applied to the linked project. Env wiring is now in place via root `.env.local`.
-2. **Split Mode:** Add expense edit flow using the same post-settlement guard model as delete.
-3. **Phase 1.5:** Move the current LI.FI wallet top-up flow into real Fund Mode contribution flow (treasury deposit, not just wallet receive).
-4. **Phase 2:** Fund Mode treasury creation and proposals on top of Squads.
+1. **Setup verify:** Apply the latest `supabase/schema.sql` changes. The Fund Mode Treasury flow now depends on `groups.multisig_address` plus the open `groups` update policy used by the wallet-only MVP.
+2. **Phase 1.5:** Replace the current bridge-to-wallet flow with a bridge-then-contribute Treasury flow so LI.FI lands in a true Contribution path.
+3. **Phase 2:** Build proposal creation / approval / execution on top of the stored Squads multisig address.
+4. **Split Mode:** Add expense edit flow using the same post-Settlement guard model as delete.
 
 ---
 
