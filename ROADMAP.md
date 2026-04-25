@@ -69,10 +69,10 @@ groups/{groupId}/settlements/{settlementId} = {
 
 **Work items:**
 - [x] Install `@lifi/sdk` and configure integrator ID.
-- [~] Cross-chain contribution modal: wallet top-up flow shipped; treasury deposit still pending.
+- [~] Cross-chain contribution modal: wallet top-up flow + Fund Mode contribution handoff shipped; one-click Treasury deposit still pending.
 - [x] LI.FI route discovery (`getQuote()`) and execution (`executeRoute()`).
 - [x] Support at least 2 chains (Ethereum/Base → Solana wallet flow).
-- [~] UI: bridge-to-wallet flow shipped; treasury contribution copy still pending.
+- [~] UI: bridge-to-wallet flow shipped; Fund Mode treasury contribution copy now shipped; one-click Treasury path still pending.
 
 **Exit criterion:** A user with USDC on Base can bridge to Solana and deposit into a Fund Mode treasury via LI.FI in a single click.
 
@@ -83,9 +83,9 @@ groups/{groupId}/settlements/{settlementId} = {
 **Goal:** A group can pool USDC into a Squads multisig and approve proposal-based spending.
 
 **Work items:**
-- [ ] "Fund" concept alongside Group in data model (or as a group flag `mode: "fund"`).
-- [ ] Create fund → spawn Squads multisig, register members as signers, set threshold.
-- [ ] Contribute flow (SPL transfer → multisig vault) + LI.FI cross-chain option.
+- [x] "Fund" concept alongside Group in data model (or as a group flag `mode: "fund"`).
+- [~] Create fund → spawn Squads multisig, register members as signers, set threshold.
+- [~] Contribute flow (SPL transfer → multisig vault) + LI.FI cross-chain option.
 - [ ] Proposal creation modal (recipient, amount, memo, optional receipt-hash).
 - [ ] Approval UI (sign on proposal until threshold hit; auto-execute).
 - [ ] Close fund: remaining balance → proportional refund to contributors.
