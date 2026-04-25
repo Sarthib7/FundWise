@@ -158,3 +158,4 @@ temp/
 # Claude AI generated files
 *CLAUDE*.md
 *claude*.md
+supabase/env.local
