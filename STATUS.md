@@ -1,7 +1,7 @@
 # FundWise — Status
 
 **Snapshot date:** 2026-04-25
-**Phase:** 1 complete (Split Mode core) — paused before Phase 1.5
+**Phase:** 1 complete (Split Mode core) + early polish + Phase 1.5 groundwork
 **Hackathon:** Colosseum Frontier (April 6 – May 11, 2026)
 
 ---
@@ -68,14 +68,23 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 - New routes and dashboard:
   - `/groups`
   - `/groups/[id]`
+- Dedicated settlement receipt route:
+  - `/groups/[id]/settlements/[settlementId]`
+- Conservative expense delete guard shipped:
+  - payer can delete only while no later settlement exists in the same group
+- LI.FI groundwork shipped:
+  - client-only SDK initialization
+  - injected EVM wallet source + Solana destination wallet routing
+  - bridge UI is mainnet-aware and disabled on devnet/custom RPCs
+- Supabase env wiring updated for current publishable-key format at project-root `.env.local`
 - "circles" legacy routes removed and replaced with "groups"
 - Build verified green with the new structure
 
 **Still pending in Split Mode (before submission polish):**
 
-- Edit/delete expense with settlement guard
-- Dedicated settlement receipt screen (currently toast + tx sig)
+- Edit expense flow (delete-only shipped; edit still missing)
 - Final empty-state and copy polish on a few edge views
+- Group total settled volume display
 
 ---
 
@@ -97,12 +106,10 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 
 ## Resume point (next session)
 
-1. **Setup unblock:** Run `supabase/schema.sql` and set:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-2. **Phase 1.5:** LI.FI integration (`@lifi/sdk`) for cross-chain fund contributions.
-3. **Visa polish:** PYUSD pass + settlement receipt UI + flow polish.
-4. **Phase 2:** Fund Mode treasury and proposals on top of Squads.
+1. **Setup verify:** Confirm `supabase/schema.sql` has been applied to the linked project. Env wiring is now in place via root `.env.local`.
+2. **Split Mode:** Add expense edit flow using the same post-settlement guard model as delete.
+3. **Phase 1.5:** Move the current LI.FI wallet top-up flow into real Fund Mode contribution flow (treasury deposit, not just wallet receive).
+4. **Phase 2:** Fund Mode treasury creation and proposals on top of Squads.
 
 ---
 
@@ -111,4 +118,3 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 - **No git operations** performed by the assistant — commits and pushes are the owner's.
 - Work only inside `/Users/sarthiborkar/Build/FundWise`.
 - Tell the owner whenever an external input is needed (RPC URL, API key, mint address, etc.) rather than guessing.
-
