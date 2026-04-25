@@ -212,6 +212,42 @@ export async function getAllSplitsForGroup(groupId: string) {
 }
 
 export async function deleteExpense(expenseId: string) {
+  const { data: expense, error: expenseError } = await supabase
+    .from("expenses")
+    .select("id, group_id, created_at, edited_at, deleted_at")
+    .eq("id", expenseId)
+    .maybeSingle()
+
+  if (expenseError) {
+    throw new Error(`Failed to load expense before delete: ${expenseError.message}`)
+  }
+
+  if (!expense || expense.deleted_at) {
+    throw new Error("Expense not found")
+  }
+
+  // Conservative guard: once a later settlement exists in the group, deleting
+  // this expense would rewrite the balance history that settlement relied on.
+  const expenseLockTimestamp = expense.edited_at || expense.created_at
+
+  const { data: laterSettlement, error: settlementError } = await supabase
+    .from("settlements")
+    .select("id")
+    .eq("group_id", expense.group_id)
+    .gt("confirmed_at", expenseLockTimestamp)
+    .limit(1)
+    .maybeSingle()
+
+  if (settlementError) {
+    throw new Error(`Failed to validate expense delete guard: ${settlementError.message}`)
+  }
+
+  if (laterSettlement) {
+    throw new Error(
+      "This expense is locked because a later settlement has already been recorded in the group"
+    )
+  }
+
   const { error } = await supabase
     .from("expenses")
     .update({ deleted_at: new Date().toISOString() })
