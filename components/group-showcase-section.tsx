@@ -1,39 +1,31 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, TrendingUp, DollarSign } from "lucide-react"
+import { Users, Receipt, ArrowRightLeft, Wallet } from "lucide-react"
 
-const groupData = [
+const scenarios = [
   {
-    name: "Team Vacation Fund",
-    members: 8,
-    collected: "$2,840",
-    goal: "$5,000",
-    progress: 57,
-    category: "Travel",
+    title: "Dinner with Friends",
+    description: "Split the bill equally. One person pays, everyone else settles in USDC with one tap.",
+    icon: Receipt,
+    tag: "Split Mode",
   },
   {
-    name: "Birthday Gift Pool",
-    members: 12,
-    collected: "$480",
-    goal: "$600",
-    progress: 80,
-    category: "Gift",
+    title: "Group Trip Fund",
+    description: "Pool USDC into a shared treasury. Approve spending for hotels, activities, and meals together.",
+    icon: Wallet,
+    tag: "Fund Mode",
   },
   {
-    name: "Office Party Budget",
-    members: 24,
-    collected: "$1,920",
-    goal: "$2,000",
-    progress: 96,
-    category: "Event",
+    title: "Shared Apartment",
+    description: "Track rent, utilities, and groceries. Settle balances at the end of each month on-chain.",
+    icon: ArrowRightLeft,
+    tag: "Split Mode",
   },
   {
-    name: "Community Project",
-    members: 45,
-    collected: "$8,750",
-    goal: "$10,000",
-    progress: 88,
-    category: "Community",
+    title: "Birthday Gift Pool",
+    description: "Everyone chips in. One proposal to buy the gift, threshold approval, and it ships.",
+    icon: Users,
+    tag: "Fund Mode",
   },
 ]
 
@@ -42,60 +34,37 @@ export function GroupShowcaseSection() {
     <section id="groups" className="container py-16 md:py-24 bg-muted/30">
       <div className="mx-auto max-w-5xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Active Fundraising Groups</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Real Life</h2>
           <p className="text-muted-foreground text-lg">
-            See what groups are collecting funds together. All contributions are private and secure.
+            Every group expense scenario, settled on-chain in stablecoins.
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {groupData.map((group, index) => (
-            <Card key={index} className="p-6 hover:border-accent/50 transition-colors">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{group.name}</h3>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="h-3.5 w-3.5" />
-                    <span>{group.members} members</span>
+          {scenarios.map((scenario, index) => {
+            const Icon = scenario.icon
+            return (
+              <Card key={index} className="p-6 hover:border-accent/50 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <Icon className="h-5 w-5 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-lg">{scenario.title}</h3>
                   </div>
+                  <Badge variant="secondary" className="bg-accent/10 text-accent hover:bg-accent/20 text-xs">
+                    {scenario.tag}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="bg-accent/10 text-accent hover:bg-accent/20">
-                  {group.category}
-                </Badge>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="font-semibold">{group.progress}%</span>
-                </div>
-
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-accent transition-all duration-500"
-                    style={{ width: `${group.progress}%` }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-accent" />
-                    <span className="font-semibold">{group.collected}</span>
-                    <span className="text-sm text-muted-foreground">collected</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Goal: {group.goal}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
+                <p className="text-muted-foreground leading-relaxed">{scenario.description}</p>
+              </Card>
+            )
+          })}
         </div>
 
         <div className="mt-8 p-6 rounded-xl bg-accent/5 border border-accent/20 text-center">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-accent">On-chain settlement:</span> Every settle-up is an SPL token transfer. No ledger tricks, no "I'll send it later."
+            <span className="font-semibold text-accent">On-chain settlement:</span> Every settle-up is an SPL token transfer recorded on Solana. No ledger tricks, no &quot;I&apos;ll send it later.&quot;
           </p>
         </div>
       </div>
