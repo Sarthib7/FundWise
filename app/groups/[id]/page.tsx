@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { Header } from "@/components/header"
@@ -20,11 +20,9 @@ import {
   getGroup,
   getMembers,
   addMember,
-  getExpenses,
   addExpense as dbAddExpense,
-  getExpenseSplits,
   addSettlement as dbAddSettlement,
-  getSettlements,
+  deleteExpense as dbDeleteExpense,
   isMember as checkIsMember,
   getActivityFeed,
   type ActivityItem,
@@ -56,11 +54,12 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  Trash2,
 } from "lucide-react"
 
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
-type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
+type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 
 export default function GroupDashboard() {
   const params = useParams()
@@ -95,6 +94,7 @@ export default function GroupDashboard() {
   // Settlement state
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
 
   const groupId = params.id as string
   const lifiSupported = isLifiSupportedForCurrentCluster()
@@ -138,6 +138,20 @@ export default function GroupDashboard() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  const settlementTimestamps = useMemo(() => {
+    return activity
+      .filter((item): item is Extract<ActivityItem, { type: "settlement" }> => item.type === "settlement")
+      .map((item) => new Date(item.data.confirmed_at).getTime())
+  }, [activity])
+
+  const canDeleteExpense = useCallback(
+    (expense: ActivityExpense) => {
+      const expenseTimestamp = new Date(expense.edited_at || expense.created_at).getTime()
+      return !settlementTimestamps.some((settlementTimestamp) => settlementTimestamp > expenseTimestamp)
+    },
+    [settlementTimestamps]
+  )
 
   // Handlers
   const handleCopyCode = () => {
@@ -230,6 +244,37 @@ export default function GroupDashboard() {
     } finally {
       setIsSettling(false)
       setSettlingTransfer(null)
+    }
+  }
+
+  const handleDeleteExpense = async (expense: ActivityExpense) => {
+    if (expense.payer !== walletAddress) {
+      toast.error("Only the payer can delete this expense")
+      return
+    }
+
+    if (!canDeleteExpense(expense)) {
+      toast.error("This expense is locked because a later settlement already exists")
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Delete "${expense.memo || expense.category}" for ${formatTokenAmount(expense.amount)} ${tokenName}?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setDeletingExpenseId(expense.id)
+    try {
+      await dbDeleteExpense(expense.id)
+      toast.success("Expense deleted")
+      loadData()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete expense")
+    } finally {
+      setDeletingExpenseId(null)
     }
   }
 
@@ -407,6 +452,8 @@ export default function GroupDashboard() {
                   {activity.map((item, i) => {
                     if (item.type === "expense") {
                       const e = item.data
+                      const expenseCanBeDeleted = canDeleteExpense(e)
+                      const isExpenseOwnedByWallet = e.payer === walletAddress
                       return (
                         <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
                           <div className="flex items-center gap-3">
@@ -420,7 +467,30 @@ export default function GroupDashboard() {
                               </p>
                             </div>
                           </div>
-                          <span className="font-semibold">{formatTokenAmount(e.amount)} {tokenName}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{formatTokenAmount(e.amount)} {tokenName}</span>
+                            {isExpenseOwnedByWallet && (
+                              expenseCanBeDeleted ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                                  disabled={deletingExpenseId === e.id}
+                                  onClick={() => handleDeleteExpense(e)}
+                                >
+                                  {deletingExpenseId === e.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Locked After Settlement
+                                </Badge>
+                              )
+                            )}
+                          </div>
                         </div>
                       )
                     } else {
