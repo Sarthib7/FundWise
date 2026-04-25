@@ -1,82 +1,108 @@
 # FundWise — Status
 
-**Snapshot date:** 2026-04-21
-**Phase:** 1 — Split Mode MVP (Phase 0 complete)
+**Snapshot date:** 2026-04-25
+**Phase:** 0 → 1 transition (Hackathon sprint)
+**Hackathon:** Colosseum Frontier (April 6 – May 11, 2026)
 
 ---
 
 ## TL;DR
 
-Project was a Solana prediction-market + group-fundraising hackathon app called "Fund Flow." It has been renamed to **FundWise** and is pivoting to a two-mode consumer expense app:
+FundWise is **Splitwise on Solana** — a two-mode consumer expense app:
 
-1. **Split Mode** — Splitwise on Solana (MVP priority).
-2. **Fund Mode** — shared on-chain treasury with proposal-based spending (phase 2).
+1. **Split Mode** — Track expenses, compute balances, settle in stablecoins (MVP priority).
+2. **Fund Mode** — Shared on-chain treasury with proposal-based spending (phase 2).
 
-See [PRD.md](./PRD.md), [ROADMAP.md](./ROADMAP.md), [DECISIONS.md](./DECISIONS.md).
+We are participating in the **Colosseum Frontier** hackathon with focus on Germany-only tracks (LI.FI, Visa, Zerion). See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for track strategy.
+
+---
+
+## File Structure
+
+```
+/
+├── AGENTS.md               ← Instructions for all AI agents (READ FIRST)
+├── CONTEXT.md              ← Domain model, language, relationships
+├── HACKATHON_PLAN.md       ← Track analysis, submission strategy, timeline
+├── PRD.md                  ← Product Requirements Document
+├── README.md               ← Project overview + getting started
+├── ROADMAP.md              ← Phased delivery plan
+├── STATUS.md               ← This file — current state
+├── docs/
+│   └── adr/                ← Architecture Decision Records
+│       ├── 0001-pivot-from-fund-flow-to-fundwise.md
+│       ├── 0002-stablecoins-only-for-balances.md
+│       ├── 0003-off-chain-metadata-on-chain-money.md
+│       ├── 0004-drop-hackathon-dependencies.md
+│       ├── 0005-squads-multisig-for-fund-mode.md
+│       ├── 0006-wallet-only-auth.md
+│       ├── 0007-rename-circles-to-groups.md
+│       └── 0008-keep-nextjs-shadcn-stack.md
+├── DECISIONS.md            ← Legacy ADR log (superseded by docs/adr/)
+├── app/                    ← Next.js App Router pages
+├── components/             ← React components (ui/ = shadcn primitives)
+├── lib/                    ← Client-side logic
+├── hooks/                  ← React hooks
+└── public/                 ← Static assets
+```
 
 ---
 
 ## What's in the repo today
 
-**Stack (keep):**
+**Stack:**
+
 - Next.js 15 (App Router) + React 19 + Tailwind v4 + Radix/shadcn UI
-- `@solana/wallet-adapter-*` (Phantom, Solflare, etc.)
+- `@solana/wallet-adapter-`* (Phantom, Solflare, etc.)
 - `@solana/web3.js`, `@solana/spl-token`
 - Firebase (Realtime DB for group metadata; Storage for avatars)
 - Squads multisig (`@sqds/multisig`) — reserved for Fund Mode
 
-**Features present (mixed — see Removals):**
+**Features present:**
+
 - Group ("circle") creation, joining via invite code, QR share
-- Wallet connection UI and a "wallet-button" pattern
+- Wallet connection UI (wallet-button pattern)
 - Landing page, avatar customizer, group showcase
-- Prediction-market / Kalshi / challenge-market code (**to be removed**)
-- ZK compression scaffolding (**to be removed**)
-- Liquidity-pool / Meteora scaffolding (**to be removed**)
+- SOL-based group wallet generation (Phase 1 simple-wallet approach)
+- Squads multisig scaffolding (commented out, for Fund Mode)
+- Firebase + localStorage dual storage
+
+**Still needs cleanup (from Phase 0):**
+
+- Prediction-market / Kalshi / ZK / LP-yield code removal (some files may still exist)
+- "circles" → "groups" rename in UI + routes
+- Landing page rewrite for Splitwise-on-Solana framing
 
 ---
 
-## Removals (Phase 0 cleanup list)
+## Hackathon Tracks — Submission Plan
 
-### Files to delete
-- `app/api/kalshi/` (whole dir)
-- `lib/kalshi-integration.ts`
-- `lib/prediction-market.ts`
-- `lib/zk-compression.ts`
-- `lib/anchor/challenge_market.ts` + `.json`
-- `lib/anchor/compressed_pool.ts` + `.json`
-- `lib/anchor/liquidity_interface.ts` + `.json`
-- `lib/anchor/fund_flow_programs.ts` + `.json`
-- `components/prediction-polls.tsx`
-- `components/leaderboard-section.tsx` (prediction leaderboard; rebuild later if needed)
 
-### `package.json` deps to drop
-- `kalshi-typescript`
-- `@lightprotocol/compressed-token`, `@lightprotocol/stateless.js`
-- `@abstract-foundation/agw-client`
-- `@privy-io/react-auth`
-- `permissionless`
+| Priority | Track                          | Prize        | Status         |
+| -------- | ------------------------------ | ------------ | -------------- |
+| **P1**   | Visa Frontier (DE)             | $10,000 USDG | Must-submit    |
+| **P1**   | Build with LI.FI (DE)          | $2,500 USDC  | Must-submit    |
+| P2       | Zerion CLI Agent (DE)          | $2,000 USDC  | If time allows |
+| P2       | Live dApp / Eitherway (Global) | $20,000 USDC | If time allows |
+| —        | Jupiter (Global)               | 3,000 jupUSD | Skip           |
 
-### Copy / UI to rewrite
-- `README.md` — rewrite around FundWise pitch.
-- `app/page.tsx`, `components/hero-section.tsx`, `components/how-it-works-section.tsx`, `components/group-showcase-section.tsx` — reframe for Splitwise-on-Solana.
-- `components/header.tsx` — remove any prediction links.
 
-### Rename (ADR-007)
-- `circles` → `groups` in UI, code, and routes.
+**Deadline:** May 11, 2026 (Colosseum) / May 26-27 (side track announcements)
 
 ---
 
-## What's next (immediate)
+## What's next (immediate — this week)
 
-1. Apply the Phase 0 removals (above).
-2. Verify `pnpm build` still passes with zero references to the removed modules.
-3. Rewrite landing page copy around Split Mode.
-4. Start Phase 1 work (see [ROADMAP.md](./ROADMAP.md)).
+1. **Phase 0 cleanup:** Remove prediction-market code, rewrite landing page.
+2. **Phase 1 start:** Split Mode — group CRUD, expense entry, balance computation.
+3. **LI.FI integration:** Add `@lifi/sdk` for cross-chain Fund Mode contributions.
+4. **Verify** `pnpm build` passes with zero references to removed modules.
 
 ---
 
-## Ground rules (from owner)
+## Ground rules
 
 - **No git operations** performed by the assistant — commits and pushes are the owner's.
 - Work only inside `/Users/sarthiborkar/Build/FundWise`.
 - Tell the owner whenever an external input is needed (RPC URL, API key, mint address, etc.) rather than guessing.
+
