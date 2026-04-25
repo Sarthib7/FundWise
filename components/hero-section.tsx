@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { Button } from "@/components/ui/button"
 import { FlowBackground } from "@/components/flow-background"
@@ -11,7 +11,7 @@ import { createGroup } from "@/lib/db"
 import { STABLECOIN_MINTS, DEFAULT_STABLECOIN, parseTokenAmount } from "@/lib/expense-engine"
 import { toast } from "sonner"
 import { ArrowRight, Users, QrCode, Loader2 } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 type GroupMode = "split" | "fund"
 
@@ -25,13 +25,6 @@ export function HeroSection() {
   const [isCreating, setIsCreating] = useState(false)
   const { publicKey, connected } = useWallet()
   const router = useRouter()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    if (searchParams.get("create") === "true") {
-      setCreateModalOpen(true)
-    }
-  }, [searchParams])
 
   const canCreate = useMemo(() => {
     if (!groupName.trim()) {

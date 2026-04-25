@@ -1,132 +1,178 @@
 "use client"
 
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
+import { PublicKey } from "@solana/web3.js"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import { WalletAvatar } from "@/components/avatar"
 import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
-import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
+import {
+  getFundWiseClusterLabel,
+  getSolanaExplorerTxUrl,
+} from "@/lib/solana-cluster"
 import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
 import {
-  getGroup,
-  getMembers,
-  addMember,
+  addContribution as dbAddContribution,
   addExpense as dbAddExpense,
+  addMember,
   addSettlement as dbAddSettlement,
   deleteExpense as dbDeleteExpense,
-  isMember as checkIsMember,
   getActivityFeed,
+  getContributions,
+  getGroup,
+  getMembers,
+  isMember as checkIsMember,
   type ActivityItem,
+  updateGroupTreasury,
 } from "@/lib/db"
 import {
-  computeGroupBalances,
-  simplifySettlements,
   calculateSplits,
+  computeGroupBalances,
+  DEFAULT_STABLECOIN,
   executeSettlement,
   formatTokenAmount,
   parseTokenAmount,
+  simplifySettlements,
   STABLECOIN_MINTS,
-  DEFAULT_STABLECOIN,
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
+import {
+  contributeStablecoinToTreasury,
+  createSquadsMultisig,
+  getTreasuryStablecoinBalance,
+} from "@/lib/squads-multisig"
 import type { Database } from "@/lib/database.types"
 import { toast } from "sonner"
 import {
-  Users,
-  Receipt,
-  ArrowRightLeft,
-  Plus,
-  Loader2,
   AlertCircle,
-  Share2,
-  Copy,
+  ArrowRightLeft,
   Check,
-  TrendingDown,
-  TrendingUp,
+  Copy,
+  ExternalLink,
+  Landmark,
+  Loader2,
   Minus,
+  Plus,
+  Receipt,
+  Share2,
+  ShieldCheck,
+  Target,
   Trash2,
+  TrendingUp,
+  Wallet,
 } from "lucide-react"
 
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
+
+function shortWallet(address: string) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
 
 export default function GroupDashboard() {
   const params = useParams()
   const router = useRouter()
-  const { publicKey, connected } = useWallet()
+  const { publicKey, connected, wallet } = useWallet()
 
   const walletAddress = publicKey?.toString() || ""
+  const groupId = params.id as string
+  const lifiSupported = isLifiSupportedForCurrentCluster()
+  const clusterLabel = getFundWiseClusterLabel()
 
-  // Data state
   const [group, setGroup] = useState<GroupRow | null>(null)
   const [members, setMembers] = useState<MemberRow[]>([])
   const [balances, setBalances] = useState<Balance[]>([])
   const [transfers, setTransfers] = useState<SettlementTransfer[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
+  const [contributions, setContributions] = useState<ContributionRow[]>([])
+  const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isMember, setIsMember] = useState(false)
 
-  // Modal states
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
-  const [showJoinGroup, setShowJoinGroup] = useState(false)
-  const [showSettle, setShowSettle] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Expense form
   const [expenseAmount, setExpenseAmount] = useState("")
   const [expenseMemo, setExpenseMemo] = useState("")
   const [expenseCategory, setExpenseCategory] = useState("general")
   const [splitMethod, setSplitMethod] = useState<"equal" | "exact" | "shares" | "percentage">("equal")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Settlement state
+  const [contributionAmount, setContributionAmount] = useState("")
+  const [isCreatingTreasury, setIsCreatingTreasury] = useState(false)
+  const [isContributing, setIsContributing] = useState(false)
+
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
 
-  const groupId = params.id as string
-  const lifiSupported = isLifiSupportedForCurrentCluster()
-  const clusterLabel = getFundWiseClusterLabel()
-
   const loadData = useCallback(async () => {
-    if (!groupId) return
+    if (!groupId) {
+      return
+    }
+
     setIsLoading(true)
+
     try {
       const [groupData, memberData] = await Promise.all([
         getGroup(groupId),
         getMembers(groupId),
       ])
+
       setGroup(groupData)
       setMembers(memberData)
 
-      // Check membership
-      if (walletAddress) {
-        const memberCheck = await checkIsMember(groupId, walletAddress)
-        setIsMember(memberCheck)
+      const memberCheck = walletAddress ? await checkIsMember(groupId, walletAddress) : false
+      setIsMember(memberCheck)
+
+      if (groupData.mode === "split") {
+        setContributions([])
+        setTreasuryBalance(0)
+
+        if (memberCheck) {
+          const [nextBalances, nextActivity] = await Promise.all([
+            computeGroupBalances(groupId),
+            getActivityFeed(groupId),
+          ])
+
+          setBalances(nextBalances)
+          setTransfers(simplifySettlements(nextBalances))
+          setActivity(nextActivity)
+        } else {
+          setBalances([])
+          setTransfers([])
+          setActivity([])
+        }
+
+        return
       }
 
-      // Load balances and activity only for members
-      if (walletAddress && memberData.some((m) => m.wallet === walletAddress)) {
-        const [bal, act] = await Promise.all([
-          computeGroupBalances(groupId),
-          getActivityFeed(groupId),
-        ])
-        setBalances(bal)
-        setTransfers(simplifySettlements(bal))
-        setActivity(act)
-      }
+      setBalances([])
+      setTransfers([])
+      setActivity([])
+
+      const [nextContributions, nextTreasuryBalance] = await Promise.all([
+        getContributions(groupId),
+        groupData.treasury_address
+          ? getTreasuryStablecoinBalance(groupData.treasury_address, groupData.stablecoin_mint)
+          : Promise.resolve(0),
+      ])
+
+      setContributions(nextContributions)
+      setTreasuryBalance(nextTreasuryBalance)
     } catch (error) {
       console.error("[FundWise] Failed to load group:", error)
       toast.error("Failed to load group")
@@ -141,7 +187,9 @@ export default function GroupDashboard() {
 
   const settlementTimestamps = useMemo(() => {
     return activity
-      .filter((item): item is Extract<ActivityItem, { type: "settlement" }> => item.type === "settlement")
+      .filter(
+        (item): item is Extract<ActivityItem, { type: "settlement" }> => item.type === "settlement"
+      )
       .map((item) => new Date(item.data.confirmed_at).getTime())
   }, [activity])
 
@@ -153,14 +201,15 @@ export default function GroupDashboard() {
     [settlementTimestamps]
   )
 
-  // Handlers
   const handleCopyCode = () => {
-    if (group) {
-      navigator.clipboard.writeText(group.code)
-      setCopied(true)
-      toast.success("Group code copied!")
-      setTimeout(() => setCopied(false), 2000)
+    if (!group) {
+      return
     }
+
+    navigator.clipboard.writeText(group.code)
+    setCopied(true)
+    toast.success("Group code copied!")
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleJoin = async () => {
@@ -168,36 +217,40 @@ export default function GroupDashboard() {
       toast.error("Connect your wallet first")
       return
     }
+
     try {
       await addMember(groupId, walletAddress)
-      toast.success("Joined group!")
-      setShowJoinGroup(false)
+      toast.success(group?.mode === "fund" ? "Joined Fund Mode group!" : "Joined group!")
       loadData()
     } catch (error) {
-      toast.error("Failed to join group")
+      toast.error(error instanceof Error ? error.message : "Failed to join group")
     }
   }
 
   const handleAddExpense = async () => {
-    if (!connected || !walletAddress || !expenseAmount) return
+    if (!connected || !walletAddress || !expenseAmount || group?.mode !== "split") {
+      return
+    }
+
     setIsSubmitting(true)
+
     try {
       const amount = parseTokenAmount(expenseAmount)
-      const participantWallets = members.map((m) => m.wallet)
+      const participantWallets = members.map((member) => member.wallet)
       const splits = calculateSplits(amount, participantWallets, splitMethod)
 
       await dbAddExpense({
         groupId,
         payer: walletAddress,
         amount,
-        mint: group?.stablecoin_mint || DEFAULT_STABLECOIN.mint,
+        mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
         memo: expenseMemo,
         category: expenseCategory,
         splitMethod,
         splits,
       })
 
-      toast.success(`Expense of $${expenseAmount} added!`)
+      toast.success(`Expense of ${expenseAmount} added!`)
       setShowAddExpense(false)
       setExpenseAmount("")
       setExpenseMemo("")
@@ -210,19 +263,26 @@ export default function GroupDashboard() {
   }
 
   const handleSettle = async (transfer: SettlementTransfer) => {
-    if (!connected || !publicKey) return
+    if (!connected || !walletAddress || group?.mode !== "split") {
+      return
+    }
+
     setIsSettling(true)
     setSettlingTransfer(transfer)
+
     try {
-      const wallet = (window as any).solana
-      if (!wallet) throw new Error("No wallet found")
+      const signingWallet = wallet?.adapter ?? (window as { solana?: unknown }).solana
+
+      if (!signingWallet) {
+        throw new Error("No wallet found")
+      }
 
       const { signature } = await executeSettlement(
-        wallet,
+        signingWallet,
         walletAddress,
         transfer.to,
         transfer.amount,
-        group?.stablecoin_mint || DEFAULT_STABLECOIN.mint
+        group.stablecoin_mint || DEFAULT_STABLECOIN.mint
       )
 
       const settlement = await dbAddSettlement({
@@ -230,7 +290,7 @@ export default function GroupDashboard() {
         fromWallet: walletAddress,
         toWallet: transfer.to,
         amount: transfer.amount,
-        mint: group?.stablecoin_mint || DEFAULT_STABLECOIN.mint,
+        mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
         txSig: signature,
       })
 
@@ -247,14 +307,14 @@ export default function GroupDashboard() {
     }
   }
 
-  const handleDeleteExpense = async (expense: ActivityExpense) => {
+  const handleDeleteExpense = async (expense: ActivityExpense, tokenName: string) => {
     if (expense.payer !== walletAddress) {
-      toast.error("Only the payer can delete this expense")
+      toast.error("Only the payer can delete this Expense")
       return
     }
 
     if (!canDeleteExpense(expense)) {
-      toast.error("This expense is locked because a later settlement already exists")
+      toast.error("This Expense is locked because a later Settlement already exists")
       return
     }
 
@@ -267,6 +327,7 @@ export default function GroupDashboard() {
     }
 
     setDeletingExpenseId(expense.id)
+
     try {
       await dbDeleteExpense(expense.id)
       toast.success("Expense deleted")
@@ -278,7 +339,112 @@ export default function GroupDashboard() {
     }
   }
 
-  // Loading state
+  const handleCreateTreasury = async () => {
+    if (!group || group.mode !== "fund" || !connected || !publicKey || !walletAddress) {
+      return
+    }
+
+    if (group.created_by !== walletAddress) {
+      toast.error("Only the group creator can initialize the Treasury")
+      return
+    }
+
+    const approvalThreshold = group.approval_threshold ?? 1
+    if (approvalThreshold > members.length) {
+      toast.error(`Invite at least ${approvalThreshold} Members before initializing the Treasury`)
+      return
+    }
+
+    const signingWallet = wallet?.adapter ?? (window as { solana?: unknown }).solana
+    if (!signingWallet) {
+      toast.error("No wallet found")
+      return
+    }
+
+    setIsCreatingTreasury(true)
+
+    try {
+      const memberKeys = members.map((member) => new PublicKey(member.wallet))
+      const result = await createSquadsMultisig(
+        publicKey,
+        group.name,
+        memberKeys,
+        approvalThreshold,
+        signingWallet
+      )
+
+      await updateGroupTreasury({
+        groupId,
+        creatorWallet: walletAddress,
+        multisigAddress: result.multisigPDA.toString(),
+        treasuryAddress: result.vaultPDA.toString(),
+      })
+
+      toast.success("Treasury initialized")
+      loadData()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to initialize Treasury")
+    } finally {
+      setIsCreatingTreasury(false)
+    }
+  }
+
+  const handleContribute = async () => {
+    if (!group || group.mode !== "fund" || !connected || !walletAddress || !contributionAmount) {
+      return
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before making a Contribution")
+      return
+    }
+
+    if (!group.treasury_address) {
+      toast.error("Treasury is not initialized yet")
+      return
+    }
+
+    const signingWallet = wallet?.adapter ?? (window as { solana?: unknown }).solana
+    if (!signingWallet) {
+      toast.error("No wallet found")
+      return
+    }
+
+    setIsContributing(true)
+
+    try {
+      const amount = parseTokenAmount(contributionAmount)
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Enter a valid Contribution amount")
+      }
+
+      const { signature } = await contributeStablecoinToTreasury(
+        signingWallet,
+        walletAddress,
+        group.treasury_address,
+        group.stablecoin_mint,
+        amount
+      )
+
+      await dbAddContribution({
+        groupId,
+        memberWallet: walletAddress,
+        amount,
+        mint: group.stablecoin_mint,
+        txSig: signature,
+      })
+
+      toast.success(`Contribution of ${contributionAmount} confirmed`)
+      setContributionAmount("")
+      loadData()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to contribute")
+    } finally {
+      setIsContributing(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -300,7 +466,7 @@ export default function GroupDashboard() {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Group Not Found</h2>
             <p className="text-muted-foreground mb-4">
-              This group doesn&apos;t exist or has been removed.
+              This Group doesn&apos;t exist or has been removed.
             </p>
             <Button onClick={() => router.push("/groups")} className="bg-accent hover:bg-accent/90">
               View Groups
@@ -312,32 +478,45 @@ export default function GroupDashboard() {
     )
   }
 
-  const mintInfo = Object.values(STABLECOIN_MINTS).find((m) => m.mint === group.stablecoin_mint)
+  const mintInfo = Object.values(STABLECOIN_MINTS).find((mint) => mint.mint === group.stablecoin_mint)
   const tokenName = mintInfo?.name || "Token"
+  const isFundMode = group.mode === "fund"
+  const isGroupCreator = group.created_by === walletAddress
+  const approvalThreshold = group.approval_threshold ?? 1
+  const missingMembersForTreasury = Math.max(0, approvalThreshold - members.length)
+  const contributionTotal = contributions.reduce((sum, contribution) => sum + contribution.amount, 0)
+  const contributorCount = new Set(contributions.map((contribution) => contribution.member_wallet)).size
+  const fundingProgress = group.funding_goal
+    ? Math.min(100, Math.round((contributionTotal / group.funding_goal) * 100))
+    : 0
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-        {/* Group Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">{group.name}</h1>
               <Badge className="bg-accent/10 text-accent border-accent/20">
-                {group.mode === "split" ? "Split Mode" : "Fund Mode"}
+                {isFundMode ? "Fund Mode" : "Split Mode"}
               </Badge>
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <button onClick={handleCopyCode} className="flex items-center gap-1 hover:text-foreground transition-colors">
+              <button
+                onClick={handleCopyCode}
+                className="flex items-center gap-1 hover:text-foreground transition-colors"
+              >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? "Copied!" : group.code}
               </button>
               <span>·</span>
               <span>{tokenName}</span>
               <span>·</span>
-              <span>{members.length} member{members.length !== 1 ? "s" : ""}</span>
+              <span>
+                {members.length} Member{members.length !== 1 ? "s" : ""}
+              </span>
             </div>
           </div>
 
@@ -346,23 +525,41 @@ export default function GroupDashboard() {
               <Share2 className="h-4 w-4 mr-2" />
               Invite
             </Button>
-            {isMember && (
+            {!isFundMode && isMember && (
               <Button size="sm" className="bg-accent hover:bg-accent/90" onClick={() => setShowAddExpense(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Expense
               </Button>
             )}
+            {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
+              <Button
+                size="sm"
+                className="bg-accent hover:bg-accent/90"
+                onClick={handleCreateTreasury}
+                disabled={isCreatingTreasury || missingMembersForTreasury > 0}
+              >
+                {isCreatingTreasury ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Landmark className="h-4 w-4 mr-2" />
+                )}
+                Initialize Treasury
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Join prompt if not a member */}
         {!isMember && connected && (
           <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <h3 className="font-semibold mb-1">Join this group</h3>
+                <h3 className="font-semibold mb-1">
+                  {isFundMode ? "Join this Fund Mode Group" : "Join this Group"}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  You&apos;re not a member yet. Join to start splitting expenses.
+                  {isFundMode
+                    ? "Join to make Contributions and participate in this Group Treasury."
+                    : "Join to start tracking Expenses and Settlements in this Group."}
                 </p>
               </div>
               <Button className="bg-accent hover:bg-accent/90" onClick={handleJoin}>
@@ -373,51 +570,66 @@ export default function GroupDashboard() {
         )}
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left: Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Balances */}
-            {isMember && balances.length > 0 && (
+            {!isFundMode && isMember && balances.length > 0 && (
               <Card className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Balances</h2>
                 <div className="space-y-3">
-                  {balances.map((bal) => (
-                    <div key={bal.wallet} className="flex items-center justify-between py-2">
+                  {balances.map((balance) => (
+                    <div key={balance.wallet} className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-3">
-                        <WalletAvatar address={bal.wallet} size={32} />
-                        <span className="font-medium">{bal.displayName}</span>
-                        {bal.wallet === walletAddress && (
-                          <Badge variant="secondary" className="text-xs">You</Badge>
+                        <WalletAvatar address={balance.wallet} size={32} />
+                        <span className="font-medium">{balance.displayName}</span>
+                        {balance.wallet === walletAddress && (
+                          <Badge variant="secondary" className="text-xs">
+                            You
+                          </Badge>
                         )}
                       </div>
-                      <span className={`font-semibold ${bal.amount > 0 ? "text-green-600 dark:text-green-400" : bal.amount < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
-                        {bal.amount > 0 ? "+" : ""}{formatTokenAmount(bal.amount)} {tokenName}
+                      <span
+                        className={`font-semibold ${
+                          balance.amount > 0
+                            ? "text-green-600 dark:text-green-400"
+                            : balance.amount < 0
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-muted-foreground"
+                        }`}
+                      >
+                        {balance.amount > 0 ? "+" : ""}
+                        {formatTokenAmount(balance.amount)} {tokenName}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                {/* Settlement Suggestions */}
                 {transfers.length > 0 && (
                   <div className="mt-6 pt-4 border-t">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Suggested Settlements</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                      Suggested Settlements
+                    </h3>
                     <div className="space-y-2">
-                      {transfers.map((t, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      {transfers.map((transfer, index) => (
+                        <div
+                          key={`${transfer.from}-${transfer.to}-${index}`}
+                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                        >
                           <div className="flex items-center gap-2 text-sm">
-                            <span>{t.fromName || `${t.from.slice(0, 4)}...`}</span>
+                            <span>{transfer.fromName || shortWallet(transfer.from)}</span>
                             <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                            <span>{t.toName || `${t.to.slice(0, 4)}...`}</span>
+                            <span>{transfer.toName || shortWallet(transfer.to)}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="font-semibold">{formatTokenAmount(t.amount)} {tokenName}</span>
-                            {t.from === walletAddress && (
+                            <span className="font-semibold">
+                              {formatTokenAmount(transfer.amount)} {tokenName}
+                            </span>
+                            {transfer.from === walletAddress && (
                               <Button
                                 size="sm"
                                 className="bg-accent hover:bg-accent/90"
                                 disabled={isSettling}
-                                onClick={() => handleSettle(t)}
+                                onClick={() => handleSettle(transfer)}
                               >
-                                {isSettling && settlingTransfer === t ? (
+                                {isSettling && settlingTransfer === transfer ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                   "Settle"
@@ -433,70 +645,80 @@ export default function GroupDashboard() {
               </Card>
             )}
 
-            {/* Activity Feed */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Activity</h2>
-              {activity.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No expenses yet</p>
-                  {isMember && (
-                    <Button variant="outline" className="mt-3" onClick={() => setShowAddExpense(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add the first expense
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {activity.map((item, i) => {
-                    if (item.type === "expense") {
-                      const e = item.data
-                      const expenseCanBeDeleted = canDeleteExpense(e)
-                      const isExpenseOwnedByWallet = e.payer === walletAddress
-                      return (
-                        <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                              <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            {!isFundMode && (
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold mb-4">Activity</h2>
+                {activity.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No Expenses yet</p>
+                    {isMember && (
+                      <Button variant="outline" className="mt-3" onClick={() => setShowAddExpense(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add the first Expense
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activity.map((item, index) => {
+                      if (item.type === "expense") {
+                        const expense = item.data
+                        const expenseCanBeDeleted = canDeleteExpense(expense)
+                        const isExpenseOwnedByWallet = expense.payer === walletAddress
+
+                        return (
+                          <div
+                            key={`${item.type}-${expense.id}-${index}`}
+                            className="flex items-center justify-between py-2 border-b last:border-0"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{expense.memo || expense.category}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {shortWallet(expense.payer)} paid ·{" "}
+                                  {new Date(expense.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-sm">{e.memo || e.category}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {`${e.payer.slice(0, 4)}...${e.payer.slice(-4)}`} paid · {new Date(e.created_at).toLocaleDateString()}
-                              </p>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">
+                                {formatTokenAmount(expense.amount)} {tokenName}
+                              </span>
+                              {isExpenseOwnedByWallet &&
+                                (expenseCanBeDeleted ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                                    disabled={deletingExpenseId === expense.id}
+                                    onClick={() => handleDeleteExpense(expense, tokenName)}
+                                  >
+                                    {deletingExpenseId === expense.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Badge variant="outline" className="text-[10px]">
+                                    Locked After Settlement
+                                  </Badge>
+                                ))}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">{formatTokenAmount(e.amount)} {tokenName}</span>
-                            {isExpenseOwnedByWallet && (
-                              expenseCanBeDeleted ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-red-600"
-                                  disabled={deletingExpenseId === e.id}
-                                  onClick={() => handleDeleteExpense(e)}
-                                >
-                                  {deletingExpenseId === e.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              ) : (
-                                <Badge variant="outline" className="text-[10px]">
-                                  Locked After Settlement
-                                </Badge>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )
-                    } else {
-                      const s = item.data
+                        )
+                      }
+
+                      const settlement = item.data
                       return (
-                        <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                        <div
+                          key={`${item.type}-${settlement.id}-${index}`}
+                          className="flex items-center justify-between py-2 border-b last:border-0"
+                        >
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
                               <Minus className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -504,30 +726,239 @@ export default function GroupDashboard() {
                             <div>
                               <p className="font-medium text-sm">Settlement</p>
                               <p className="text-xs text-muted-foreground">
-                                {`${s.from_wallet.slice(0, 4)}...`} → {`${s.to_wallet.slice(0, 4)}...`} · {new Date(s.confirmed_at).toLocaleDateString()}
+                                {shortWallet(settlement.from_wallet)} → {shortWallet(settlement.to_wallet)} ·{" "}
+                                {new Date(settlement.confirmed_at).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
                           <span className="font-semibold text-green-600 dark:text-green-400">
-                            {formatTokenAmount(s.amount)} {tokenName}
+                            {formatTokenAmount(settlement.amount)} {tokenName}
                           </span>
                         </div>
                       )
-                    }
-                  })}
+                    })}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {isFundMode && (
+              <>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Card className="p-5">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Landmark className="h-4 w-4 text-accent" />
+                      Treasury Balance
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold">
+                      {formatTokenAmount(treasuryBalance)} {tokenName}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {group.treasury_address
+                        ? `Vault ${shortWallet(group.treasury_address)}`
+                        : "Treasury not initialized yet"}
+                    </p>
+                  </Card>
+
+                  <Card className="p-5">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Target className="h-4 w-4 text-accent" />
+                      Funding Goal
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold">
+                      {group.funding_goal ? `${formatTokenAmount(group.funding_goal)} ${tokenName}` : "No goal"}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {formatTokenAmount(contributionTotal)} {tokenName} contributed
+                    </p>
+                    {group.funding_goal && (
+                      <div className="mt-3 space-y-2">
+                        <Progress value={fundingProgress} />
+                        <p className="text-[11px] text-muted-foreground">{fundingProgress}% funded</p>
+                      </div>
+                    )}
+                  </Card>
+
+                  <Card className="p-5">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <ShieldCheck className="h-4 w-4 text-accent" />
+                      Approval Threshold
+                    </div>
+                    <p className="mt-3 text-2xl font-semibold">
+                      {approvalThreshold} of {members.length}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {contributorCount} contributor{contributorCount === 1 ? "" : "s"} so far
+                    </p>
+                  </Card>
                 </div>
-              )}
-            </Card>
+
+                {!group.treasury_address ? (
+                  <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-2">
+                        <h2 className="text-lg font-semibold">Initialize Treasury</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Create the Squads multisig and Treasury vault for this Fund Mode Group.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Treasury signers are captured from the current Member list when initialization happens.
+                        </p>
+                        {missingMembersForTreasury > 0 && (
+                          <p className="text-xs text-amber-700 dark:text-amber-300">
+                            Invite {missingMembersForTreasury} more Member{missingMembersForTreasury === 1 ? "" : "s"} before a {approvalThreshold}-of-{members.length + missingMembersForTreasury} Treasury can be initialized.
+                          </p>
+                        )}
+                      </div>
+                      {isGroupCreator ? (
+                        <Button
+                          className="bg-accent hover:bg-accent/90"
+                          onClick={handleCreateTreasury}
+                          disabled={isCreatingTreasury || missingMembersForTreasury > 0}
+                        >
+                          {isCreatingTreasury ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Landmark className="h-4 w-4 mr-2" />
+                          )}
+                          Initialize Treasury
+                        </Button>
+                      ) : (
+                        <Badge variant="outline">Creator Action</Badge>
+                      )}
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="p-6">
+                    <div className="flex items-start justify-between gap-4 mb-5">
+                      <div>
+                        <h2 className="text-lg font-semibold">Make a Contribution</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Transfer stablecoins from your connected Solana wallet into this Group Treasury.
+                        </p>
+                      </div>
+                      <Badge className="bg-accent/10 text-accent border-accent/20">Treasury Live</Badge>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4 mb-5">
+                      <div className="rounded-lg border p-4">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                          Vault Address
+                        </p>
+                        <p className="font-mono text-sm break-all">{group.treasury_address}</p>
+                      </div>
+                      <div className="rounded-lg border p-4">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                          Multisig Address
+                        </p>
+                        <p className="font-mono text-sm break-all">{group.multisig_address}</p>
+                      </div>
+                    </div>
+
+                    {isMember ? (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1 space-y-2">
+                          <Label>Contribution Amount ({tokenName})</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="25.00"
+                            value={contributionAmount}
+                            onChange={(event) => setContributionAmount(event.target.value)}
+                          />
+                        </div>
+                        <Button
+                          className="sm:self-end bg-accent hover:bg-accent/90"
+                          disabled={isContributing || !contributionAmount}
+                          onClick={handleContribute}
+                        >
+                          {isContributing ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Wallet className="h-4 w-4 mr-2" />
+                          )}
+                          Contribute
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                        Join this Group first to make a Contribution.
+                      </div>
+                    )}
+                  </Card>
+                )}
+
+                <Card className="p-6">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold">Contributions</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Every Contribution recorded for this Group Treasury.
+                      </p>
+                    </div>
+                    <Badge variant="outline">
+                      {contributions.length} Contribution{contributions.length === 1 ? "" : "s"}
+                    </Badge>
+                  </div>
+
+                  {contributions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No Contributions yet</p>
+                      <p className="mt-1 text-xs">
+                        Bridge into Solana or contribute directly once the Treasury is live.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {contributions.map((contribution) => (
+                        <div
+                          key={contribution.id}
+                          className="flex items-center justify-between gap-4 py-3 border-b last:border-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            <WalletAvatar address={contribution.member_wallet} size={32} />
+                            <div>
+                              <p className="font-medium text-sm">{shortWallet(contribution.member_wallet)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(contribution.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">
+                              {formatTokenAmount(contribution.amount)} {tokenName}
+                            </p>
+                            <a
+                              href={getSolanaExplorerTxUrl(contribution.tx_sig)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                            >
+                              View tx
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </>
+            )}
           </div>
 
-          {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Cross-Chain Bridge */}
             {isMember && (
               <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
-                <h3 className="text-lg font-semibold mb-2">Bridge USDC To Solana</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {isFundMode ? "Bridge USDC To Contribute" : "Bridge USDC To Solana"}
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Top up your Solana wallet from Base, Ethereum, or another EVM chain before settling in this group.
+                  {isFundMode
+                    ? "Top up your Solana wallet from Base, Ethereum, or another EVM chain before making a Contribution to this Group Treasury."
+                    : "Top up your Solana wallet from Base, Ethereum, or another EVM chain before settling in this Group."}
                 </p>
                 {!lifiSupported && (
                   <p className="mb-4 text-xs text-muted-foreground">
@@ -545,7 +976,6 @@ export default function GroupDashboard() {
               </Card>
             )}
 
-            {/* Members */}
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4">Members</h2>
               <div className="space-y-3">
@@ -554,14 +984,16 @@ export default function GroupDashboard() {
                     <WalletAvatar address={member.wallet} size={32} />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
-                        {member.display_name || `${member.wallet.slice(0, 6)}...${member.wallet.slice(-4)}`}
+                        {member.display_name || shortWallet(member.wallet)}
                       </p>
                       {member.wallet === group.created_by && (
                         <p className="text-xs text-accent">Creator</p>
                       )}
                     </div>
                     {member.wallet === walletAddress && (
-                      <Badge variant="secondary" className="text-xs">You</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        You
+                      </Badge>
                     )}
                   </div>
                 ))}
@@ -571,88 +1003,93 @@ export default function GroupDashboard() {
         </div>
       </main>
 
-      {/* Add Expense Modal */}
-      <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Expense</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Amount ({tokenName})</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={expenseAmount}
-                onChange={(e) => setExpenseAmount(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Input
-                placeholder="e.g., Dinner, Uber, Groceries"
-                value={expenseMemo}
-                onChange={(e) => setExpenseMemo(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Split Method</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {(["equal", "exact", "shares", "percentage"] as const).map((method) => (
-                  <Button
-                    key={method}
-                    variant={splitMethod === method ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSplitMethod(method)}
-                    className={splitMethod === method ? "bg-accent hover:bg-accent/90" : ""}
-                  >
-                    {method.charAt(0).toUpperCase() + method.slice(1)}
-                  </Button>
-                ))}
+      {!isFundMode && (
+        <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Expense</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Amount ({tokenName})</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={expenseAmount}
+                  onChange={(event) => setExpenseAmount(event.target.value)}
+                />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {["general", "food", "transport", "shopping", "accommodation", "entertainment"].map((cat) => (
-                  <Button
-                    key={cat}
-                    variant={expenseCategory === cat ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setExpenseCategory(cat)}
-                    className={expenseCategory === cat ? "bg-accent hover:bg-accent/90 text-xs" : "text-xs"}
-                  >
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </Button>
-                ))}
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Input
+                  placeholder="e.g., Dinner, Uber, Groceries"
+                  value={expenseMemo}
+                  onChange={(event) => setExpenseMemo(event.target.value)}
+                />
               </div>
+              <div className="space-y-2">
+                <Label>Split Method</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["equal", "exact", "shares", "percentage"] as const).map((method) => (
+                    <Button
+                      key={method}
+                      variant={splitMethod === method ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSplitMethod(method)}
+                      className={splitMethod === method ? "bg-accent hover:bg-accent/90" : ""}
+                    >
+                      {method.charAt(0).toUpperCase() + method.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["general", "food", "transport", "shopping", "accommodation", "entertainment"].map((category) => (
+                    <Button
+                      key={category}
+                      variant={expenseCategory === category ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setExpenseCategory(category)}
+                      className={expenseCategory === category ? "bg-accent hover:bg-accent/90 text-xs" : "text-xs"}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Split equally among {members.length} Member{members.length !== 1 ? "s" : ""}
+              </p>
+              <Button
+                className="w-full bg-accent hover:bg-accent/90"
+                onClick={handleAddExpense}
+                disabled={isSubmitting || !expenseAmount}
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Add Expense
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Split equally among {members.length} member{members.length !== 1 ? "s" : ""}
-            </p>
-            <Button
-              className="w-full bg-accent hover:bg-accent/90"
-              onClick={handleAddExpense}
-              disabled={isSubmitting || !expenseAmount}
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Add Expense
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      {/* Cross-Chain Bridge Modal */}
       <CrossChainBridgeModal
         open={showBridge}
         onOpenChange={setShowBridge}
         destinationAddress={walletAddress}
         groupName={group.name}
         onSuccess={(txHash, amount) => {
-          toast.success(`Bridged ${amount} USDC toward your Solana wallet.`, {
-            description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
-          })
+          toast.success(
+            isFundMode
+              ? `Bridged ${amount} USDC toward your Solana wallet. Continue with a Contribution next.`
+              : `Bridged ${amount} USDC toward your Solana wallet.`,
+            {
+              description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
+            }
+          )
         }}
       />
 
