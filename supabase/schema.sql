@@ -19,6 +19,7 @@ create table public.groups (
   -- Fund Mode fields (nullable, only used when mode = 'fund')
   funding_goal bigint, -- in smallest token unit
   approval_threshold int default 1, -- N-of-M approvals needed
+  multisig_address text, -- Squads multisig PDA
   treasury_address text, -- Squads multisig vault address
 
   constraint valid_stablecoin check (stablecoin_mint ~ '^[1-9A-HJ-NP-Za-km-z]{32,44}$')
