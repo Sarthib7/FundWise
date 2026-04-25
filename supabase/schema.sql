@@ -156,6 +156,13 @@ create policy "Only creator can update groups"
   on public.groups for update
   using (created_by = auth.uid()::text);
 
+-- Wallet-only MVP: Group metadata updates currently come from the public client,
+-- so Treasury initialization needs an open update policy until wallet auth is added.
+create policy "Wallet-only MVP can update groups"
+  on public.groups for update
+  using (true)
+  with check (true);
+
 -- Members: anyone can read, anyone can join
 create policy "Members are viewable by everyone"
   on public.members for select
