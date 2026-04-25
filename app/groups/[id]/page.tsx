@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { WalletAvatar } from "@/components/avatar"
+import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
 import {
   getGroup,
   getMembers,
@@ -77,6 +78,7 @@ export default function GroupDashboard() {
 
   // Modal states
   const [showAddExpense, setShowAddExpense] = useState(false)
+  const [showBridge, setShowBridge] = useState(false)
   const [showJoinGroup, setShowJoinGroup] = useState(false)
   const [showSettle, setShowSettle] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -449,6 +451,23 @@ export default function GroupDashboard() {
 
           {/* Right Sidebar */}
           <div className="space-y-6">
+            {/* Cross-Chain Bridge */}
+            {isMember && (
+              <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
+                <h3 className="text-lg font-semibold mb-2">Cross-Chain Fund</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Bridge USDC from Ethereum, Base, or other chains directly into this group.
+                </p>
+                <Button
+                  className="w-full bg-accent hover:bg-accent/90"
+                  onClick={() => setShowBridge(true)}
+                >
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                  Bridge & Contribute
+                </Button>
+              </Card>
+            )}
+
             {/* Members */}
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-4">Members</h2>
@@ -546,6 +565,21 @@ export default function GroupDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Cross-Chain Bridge Modal */}
+      <CrossChainBridgeModal
+        open={showBridge}
+        onOpenChange={setShowBridge}
+        destinationAddress={walletAddress}
+        groupId={groupId}
+        groupName={group.name}
+        onSuccess={(txHash, amount) => {
+          toast.success(`Bridged ${amount} USDC to Solana!`, {
+            description: `TX: ${txHash.slice(0, 8)}...`,
+          })
+          loadData()
+        }}
+      />
 
       <Footer />
     </div>
