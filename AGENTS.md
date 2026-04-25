@@ -1,0 +1,245 @@
+# AGENTS.md — Instructions for AI Agents
+
+This file is the shared instruction set for all AI agents (Claude Codex, GLM, Cursor, etc.) working on FundWise. Read this file before making any changes to the codebase.
+
+---
+
+## Project Summary
+
+**FundWise** is Splitwise on Solana — a two-mode consumer expense app:
+
+1. **Split Mode** (MVP): Track expenses, compute who owes whom, settle in stablecoins with one-click on-chain transfers.
+2. **Fund Mode** (Phase 2): Pool stablecoins into a shared treasury with proposal-based spending.
+
+**Hackathon context:** We are submitting to the Colosseum Frontier hackathon (deadline May 11, 2026) with focus on Germany-only tracks: Visa Frontier ($10K) and LI.FI ($2.5K). See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for full strategy.
+
+---
+
+## Reading Order
+
+Every agent must read these files before touching code:
+
+1. **[STATUS.md](./STATUS.md)** — what's live, what's stubbed, what's removed, what's next.
+2. **[CONTEXT.md](./CONTEXT.md)** — domain language, relationships, and terminology. Use these terms in code, comments, and commit messages. Do not invent new terms.
+3. **[ROADMAP.md](./ROADMAP.md)** — phased delivery plan with hackathon deadlines.
+4. **[HACKATHON_PLAN.md](./HACKATHON_PLAN.md)** — track analysis, submission strategy, sponsor integration details.
+5. **[PRD.md](./PRD.md)** — product requirements, user flows, scope, non-goals.
+6. **[docs/adr/](./docs/adr/)** — architecture decisions. Check these before making architectural choices. A new ADR is needed when a decision is hard to reverse, surprising without context, and the result of a genuine trade-off.
+
+---
+
+## Ground Rules
+
+### Never do these
+
+- **No `git push`, `git reset --hard`, or force-push.** The owner handles all git operations.
+- **No committing.** Only the owner commits and pushes.
+- **No destructive file operations without confirmation.** Ask before deleting files, even if they're listed for removal in STATUS.md.
+- **No guessing secrets.** If you need an RPC URL, API key, mint address, or Firebase config, ask the owner. Never hardcode or invent values.
+- **No prediction-market, Kalshi, ZK-compression, or LP-yield code.** That era is over. See ADR-0001 and ADR-0004.
+- **No email/password auth.** Identity = Solana wallet only. See ADR-0006.
+
+### Always do these
+
+- **Use the domain language from CONTEXT.md.** "Group" not "circle", "Settlement" not "payment" (in Split Mode), "Contribution" not "payment" (in Fund Mode).
+- **Keep stablecoins-only for balances.** SOL is for gas only. See ADR-0002.
+- **Off-chain metadata, on-chain money.** Group/expense metadata in Firebase; money movement via SPL token transfers. See ADR-0003.
+- **Follow the roadmap phases.** Don't skip ahead. Phase 0 cleanup → Phase 1 Split Mode → Phase 1.5 LI.FI → Phase 2 Fund Mode.
+- **Run `pnpm build` after changes.** Verify zero build errors before reporting completion.
+- **Create ADRs for significant decisions.** Follow the format in `docs/adr/`. Number sequentially. See ADR format guidance below.
+
+---
+
+## Architecture
+
+### Stack (do not change without an ADR)
+
+- **Framework:** Next.js 15 (App Router), React 19, Tailwind v4
+- **UI:** Radix / shadcn components (`components/ui/`)
+- **Wallet:** `@solana/wallet-adapter-`* (Phantom, Solflare, Backpack)
+- **Chain:** Solana (devnet → mainnet)
+- **Tokens:** `@solana/spl-token` for SPL stablecoin transfers
+- **Off-chain:** Firebase Realtime DB (group metadata, expenses, members)
+- **Treasury:** Squads Protocol (`@sqds/multisig`) for Fund Mode
+- **Cross-chain:** LI.FI SDK (`@lifi/sdk`) for bridge+swap contributions
+
+### File structure
+
+```
+/
+├── CONTEXT.md              ← Domain model, language (READ FIRST)
+├── AGENTS.md               ← This file
+├── HACKATHON_PLAN.md       ← Hackathon track strategy
+├── PRD.md                  ← Product requirements
+├── README.md               ← Project overview
+├── ROADMAP.md              ← Phased delivery plan
+├── STATUS.md               ← Current state, next actions
+├── DECISIONS.md            ← Legacy ADR log (points to docs/adr/)
+├── docs/
+│   └── adr/                ← Architecture Decision Records
+├── app/                    ← Next.js App Router pages
+├── components/
+│   ├── ui/                 ← shadcn primitives (do not hand-edit)
+│   └── *.tsx               ← App-level components
+├── lib/                    ← Client-side business logic
+├── hooks/                  ← React hooks
+└── public/                 ← Static assets
+```
+
+### Key source files
+
+
+| File                                    | Purpose                                               |
+| --------------------------------------- | ----------------------------------------------------- |
+| `lib/solana.ts`                         | Group CRUD, wallet interactions, Firebase persistence |
+| `lib/simple-payment.ts`                 | SOL/SPL transfer implementation                       |
+| `lib/squads-multisig.ts`                | Squads multisig for Fund Mode treasury                |
+| `lib/firebase-group-storage.ts`         | Firebase Realtime DB persistence                      |
+| `lib/firebase.ts`                       | Firebase configuration                                |
+| `components/wallet-provider.tsx`        | Solana wallet adapter setup                           |
+| `components/solana-wallet-provider.tsx` | Solana wallet context                                 |
+| `app/page.tsx`                          | Landing page                                          |
+| `app/circle/[id]/page.tsx`              | Group dashboard (to be renamed to `/groups/[id]`)     |
+
+
+---
+
+## ADR Format
+
+When creating a new ADR, follow this format (from the domain-model skill pattern):
+
+```md
+# {Short title of the decision}
+
+{1-3 sentences: what's the context, what did we decide, and why.}
+```
+
+That's it. Place in `docs/adr/NNNN-slug.md` with sequential numbering. Scan `docs/adr/` for the highest existing number and increment by one.
+
+Only create an ADR when ALL THREE are true:
+
+1. **Hard to reverse** — changing your mind later is costly
+2. **Surprising without context** — a future reader will wonder "why?"
+3. **Result of a real trade-off** — there were genuine alternatives
+
+---
+
+## Agent Coordination
+
+This project uses multiple AI agents in parallel. Follow these conventions to avoid conflicts:
+
+### Task ownership
+
+- Only one agent modifies a given file at a time.
+- Before editing, check if another agent has claimed the task (ask the owner).
+- When starting a task, announce it: "I'm working on [file/feature]."
+
+### Code style
+
+- **TypeScript strict mode** — no `any` types unless explicitly justified with a comment.
+- **Functional components** with named exports (not default exports).
+- **Tailwind classes** for styling — no inline styles, no CSS modules.
+- **shadcn/ui components** for UI primitives — don't rebuild what shadcn provides.
+- **Conventional comments** — explain *why*, not *what*. Avoid obvious comments like "// Import the module".
+
+### Commit messages (when the owner asks you to draft)
+
+Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/):
+
+```
+feat(split): add expense entry modal with equal-split support
+fix(wallet): handle rejected transaction signatures gracefully
+chore(cleanup): remove prediction-market dependencies
+docs(adr): add ADR-0009 for LI.FI SDK integration
+```
+
+### Testing expectations
+
+- No tests yet (hackathon MVP). After hackathon, add tests for:
+  - Balance computation and simplified settlement graph
+  - SPL token transfer flow
+  - Firebase read/write operations
+  - LI.FI route discovery and execution
+
+---
+
+## Design Skills Reference
+
+This project follows patterns from the [designskills](https://github.com/mattpocock/skills) collection. When applicable, use these approaches:
+
+### Planning
+
+
+| Skill                     | When to use                 | Key idea                                             |
+| ------------------------- | --------------------------- | ---------------------------------------------------- |
+| **to-prd**                | When scoping a new feature  | Synthesize conversation context into a PRD           |
+| **to-issues**             | When breaking down a phase  | Split work into vertical-slice GitHub issues         |
+| **grill-me**              | Before starting a phase     | Get relentlessly interviewed about the plan          |
+| **design-an-interface**   | When designing a new module | Spawn 3+ parallel designs with different constraints |
+| **request-refactor-plan** | Before a major refactor     | Create a detailed plan via user interview            |
+
+
+### Development
+
+
+| Skill                             | When to use                           | Key idea                                                  |
+| --------------------------------- | ------------------------------------- | --------------------------------------------------------- |
+| **tdd**                           | When building features post-hackathon | Red-green-refactor loop, one vertical slice at a time     |
+| **triage-issue**                  | When investigating a bug              | Explore codebase, identify root cause, file GitHub issue  |
+| **improve-codebase-architecture** | When the codebase gets messy          | Find shallow modules, deepen them, propose boundary tests |
+
+
+### Domain modeling
+
+
+| Skill                   | When to use             | Key idea                                                  |
+| ----------------------- | ----------------------- | --------------------------------------------------------- |
+| **domain-model**        | When terms are unclear  | Grilling session that sharpens CONTEXT.md and ADRs inline |
+| **ubiquitous-language** | When the glossary grows | Extract DDD-style glossary from conversation              |
+
+
+### How to use these skills in this project
+
+1. **Before starting a new phase:** Read ROADMAP.md, then run a `grill-me` session on the phase's work items.
+2. **When designing a new module** (e.g., LI.FI integration, Zerion agent): Use `design-an-interface` to generate 3+ interface options before coding.
+3. **When terms are fuzzy:** Update CONTEXT.md immediately. Don't batch — capture terms as they crystallize.
+4. **When breaking work into tasks:** Use `to-issues` to create vertical-slice GitHub issues from ROADMAP phases.
+5. **When an architectural decision is needed:** Create an ADR in `docs/adr/`. Follow the 3-criterion test (hard to reverse, surprising, genuine trade-off).
+
+---
+
+## Hackathon-Specific Notes
+
+### LI.FI Integration (Track 1 — P1)
+
+- Install `@lifi/sdk` as a dependency
+- Key methods: `getQuote()`, `executeRoute()`, `getContractCallsQuote()`
+- Integration point: Fund Mode contribution flow (cross-chain bridge+swap)
+- Must support at least 2 chains (Ethereum + Solana or Base + Solana)
+- Docs: [https://docs.li.fi/](https://docs.li.fi/)
+
+### Visa Frontier (Track 2 — P1)
+
+- No extra code needed — core payment flows ARE the submission
+- Focus on UX polish: receipt views, settlement speed, PYUSD support
+- Emphasize: one-click settlements, instant finality, consumer payments use case
+
+### Zerion CLI Agent (Track 3 — P2, stretch)
+
+- Install `zerion-cli` globally
+- Build a background agent that monitors wallets and suggests settlements
+- Uses `zerion-cli wallet analyze <address>` for wallet data
+- Can use x402 pay-per-call (no API key needed)
+- Docs: [https://developers.zerion.io/build-with-ai/zerion-cli](https://developers.zerion.io/build-with-ai/zerion-cli)
+
+### Key deadlines
+
+
+| Date         | Event                                    |
+| ------------ | ---------------------------------------- |
+| May 11, 2026 | Colosseum Frontier submission deadline   |
+| May 12, 2026 | Demo Day (Superteam Germany)             |
+| May 26, 2026 | LI.FI / Zerion track winner announcement |
+| May 27, 2026 | Visa track winner announcement           |
+
+
