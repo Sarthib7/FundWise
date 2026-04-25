@@ -20,6 +20,7 @@ export interface Database {
           created_at: string
           funding_goal: number | null
           approval_threshold: number | null
+          multisig_address: string | null
           treasury_address: string | null
         }
         Insert: {
@@ -32,6 +33,7 @@ export interface Database {
           created_at?: string
           funding_goal?: number | null
           approval_threshold?: number | null
+          multisig_address?: string | null
           treasury_address?: string | null
         }
         Update: {
@@ -44,6 +46,7 @@ export interface Database {
           created_at?: string
           funding_goal?: number | null
           approval_threshold?: number | null
+          multisig_address?: string | null
           treasury_address?: string | null
         }
       }

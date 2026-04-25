@@ -43,6 +43,29 @@ export async function createGroup(data: {
   return { id: group.id, code: group.code }
 }
 
+export async function updateGroupTreasury(data: {
+  groupId: string
+  creatorWallet: string
+  multisigAddress: string
+  treasuryAddress: string
+}) {
+  const { data: updatedGroup, error } = await supabase
+    .from("groups")
+    .update({
+      multisig_address: data.multisigAddress,
+      treasury_address: data.treasuryAddress,
+    })
+    .eq("id", data.groupId)
+    .eq("created_by", data.creatorWallet)
+    .select("id")
+    .maybeSingle()
+
+  if (error) throw new Error(`Failed to update treasury addresses: ${error.message}`)
+  if (!updatedGroup) {
+    throw new Error("Only the group creator can initialize the Treasury")
+  }
+}
+
 export async function getGroup(groupId: string) {
   const { data, error } = await supabase
     .from("groups")
@@ -293,6 +316,40 @@ export async function getSettlements(groupId: string) {
     .order("confirmed_at", { ascending: false })
 
   if (error) throw new Error(`Failed to get settlements: ${error.message}`)
+  return data
+}
+
+export async function addContribution(data: {
+  groupId: string
+  memberWallet: string
+  amount: number
+  mint: string
+  txSig: string
+}) {
+  const { data: contribution, error } = await supabase
+    .from("contributions")
+    .insert({
+      group_id: data.groupId,
+      member_wallet: data.memberWallet,
+      amount: data.amount,
+      mint: data.mint,
+      tx_sig: data.txSig,
+    })
+    .select("id")
+    .single()
+
+  if (error) throw new Error(`Failed to add contribution: ${error.message}`)
+  return contribution
+}
+
+export async function getContributions(groupId: string) {
+  const { data, error } = await supabase
+    .from("contributions")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false })
+
+  if (error) throw new Error(`Failed to get contributions: ${error.message}`)
   return data
 }
 

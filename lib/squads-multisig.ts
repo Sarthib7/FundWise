@@ -1,13 +1,17 @@
 /**
- * Squads Protocol Multisig Integration for FundWise
+ * Squads Protocol treasury helpers for FundWise Fund Mode.
  *
- * Flow:
- * 1. Pay: User wallet → Squads multisig vault
- * 2. Later: Multisig → Pool (with compression)
- * 3. Withdraw: Pool → Multisig → User wallet (with decompression)
+ * Treasury funds live in the Squads vault PDA while governance actions target
+ * the Squads multisig PDA.
  */
 
 import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL, TransactionInstruction } from "@solana/web3.js"
+import {
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
+  getAccount,
+  getAssociatedTokenAddress,
+} from "@solana/spl-token"
 import * as multisig from "@sqds/multisig"
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
@@ -18,13 +22,13 @@ export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
  * Create a new Squads multisig for a group
  * This is the group's treasury where all funds are collected
  *
- * For MVP: Creates a 1/1 multisig (single-signer) for testing
- * In production: Can be configured for M/N multi-signature schemes
+ * For MVP: creates the Squads multisig and its first vault PDA on-chain.
  */
 export async function createSquadsMultisig(
   creator: PublicKey,
   groupName: string,
   members: PublicKey[] = [],
+  threshold: number = 1,
   wallet?: any // Optional wallet for on-chain initialization
 ): Promise<{ multisigPDA: PublicKey; vaultPDA: PublicKey; signature: string }> {
   try {
@@ -50,90 +54,83 @@ export async function createSquadsMultisig(
 
     console.log("[Squads] Vault PDA:", vaultPda.toString())
 
-    // For MVP: Create a simple 1/1 multisig (single signer - the creator)
-    // This allows testing without requiring multiple signers
-    const multisigMembers = [
-      {
-        key: creator,
-        permissions: multisig.types.Permissions.all(),
-      },
-    ]
+    const uniqueMembers = Array.from(
+      new Set([creator.toString(), ...members.map((member) => member.toString())])
+    ).map((member) => new PublicKey(member))
 
-    console.log("[Squads] Configuring 1/1 multisig (single-signer for testing)")
-    console.log("[Squads] In production, configure M/N threshold as needed")
+    const multisigMembers = uniqueMembers.map((member) => ({
+      key: member,
+      permissions: multisig.types.Permissions.all(),
+    }))
+
+    if (threshold < 1) {
+      throw new Error("Approval threshold must be at least 1")
+    }
+
+    if (threshold > multisigMembers.length) {
+      throw new Error(
+        `Approval threshold ${threshold} exceeds current member count ${multisigMembers.length}`
+      )
+    }
+
+    const resolvedThreshold = threshold
+
+    console.log(`[Squads] Configuring ${resolvedThreshold}/${multisigMembers.length} multisig`)
 
     // If wallet is provided, actually create the multisig on-chain
     if (wallet) {
-      try {
-        console.log("[Squads] Creating multisig on-chain...")
+      console.log("[Squads] Creating multisig on-chain...")
 
-        // Create multisig initialization instruction
-        const createMultisigIx = multisig.instructions.multisigCreate({
-          createKey,
-          creator,
-          multisigPda,
-          configAuthority: null, // No separate config authority
-          threshold: 1, // 1/1 multisig
-          members: multisigMembers,
-          timeLock: 0, // No time lock for MVP
+      const createMultisigIx = multisig.instructions.multisigCreate({
+        createKey,
+        creator,
+        multisigPda,
+        configAuthority: null,
+        threshold: resolvedThreshold,
+        members: multisigMembers,
+        timeLock: 0,
+      })
+
+      const tx = new Transaction().add(createMultisigIx)
+
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+      tx.recentBlockhash = blockhash
+      tx.feePayer = creator
+
+      console.log("[Squads] 🎉 WALLET POPUP WILL APPEAR - Please approve multisig creation")
+
+      let signature: string
+
+      if (wallet.sendTransaction) {
+        signature = await wallet.sendTransaction(tx, connection)
+      } else {
+        const signedTx = await wallet.signTransaction(tx)
+        signature = await connection.sendRawTransaction(signedTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: "confirmed",
         })
+      }
 
-        // Create the transaction
-        const tx = new Transaction().add(createMultisigIx)
+      console.log("[Squads] Waiting for confirmation...")
 
-        // Get recent blockhash
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-        tx.recentBlockhash = blockhash
-        tx.feePayer = creator
+      const confirmation = await connection.confirmTransaction({
+        signature,
+        blockhash,
+        lastValidBlockHeight,
+      }, "confirmed")
 
-        console.log("[Squads] 🎉 WALLET POPUP WILL APPEAR - Please approve multisig creation")
+      if (confirmation.value.err) {
+        throw new Error("Multisig creation failed: " + JSON.stringify(confirmation.value.err))
+      }
 
-        // Sign and send
-        let signature: string
+      console.log("[Squads] ✅ Multisig created on-chain!")
+      console.log("[Squads] Transaction:", signature)
+      console.log("[Squads] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
 
-        if (wallet.sendTransaction) {
-          signature = await wallet.sendTransaction(tx, connection)
-        } else {
-          const signedTx = await wallet.signTransaction(tx)
-          signature = await connection.sendRawTransaction(signedTx.serialize(), {
-            skipPreflight: false,
-            preflightCommitment: "confirmed",
-          })
-        }
-
-        console.log("[Squads] Waiting for confirmation...")
-
-        // Wait for confirmation
-        const confirmation = await connection.confirmTransaction({
-          signature,
-          blockhash,
-          lastValidBlockHeight,
-        }, "confirmed")
-
-        if (confirmation.value.err) {
-          throw new Error("Multisig creation failed: " + JSON.stringify(confirmation.value.err))
-        }
-
-        console.log("[Squads] ✅ Multisig created on-chain!")
-        console.log("[Squads] Transaction:", signature)
-        console.log("[Squads] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
-
-        return {
-          multisigPDA: multisigPda,
-          vaultPDA: vaultPda,
-          signature,
-        }
-      } catch (onChainError) {
-        console.error("[Squads] Failed to create multisig on-chain:", onChainError)
-        console.log("[Squads] Falling back to PDA-only mode (multisig not initialized)")
-        console.log("[Squads] Note: Withdrawals will fail until multisig is initialized")
-
-        // Fall back to just returning the PDAs
-        return {
-          multisigPDA: multisigPda,
-          vaultPDA: vaultPda,
-          signature: `multisig_pda_only_${Date.now()}`,
-        }
+      return {
+        multisigPDA: multisigPda,
+        vaultPDA: vaultPda,
+        signature,
       }
     }
 
@@ -244,6 +241,96 @@ export async function payToSquadsVault(
     }
 
     throw new Error("Failed to pay to Squads vault: " + (error instanceof Error ? error.message : String(error)))
+  }
+}
+
+export async function contributeStablecoinToTreasury(
+  wallet: any,
+  contributorAddress: string,
+  treasuryAddress: string,
+  mintAddress: string,
+  amount: number
+): Promise<{ signature: string }> {
+  try {
+    const contributorPubkey = new PublicKey(contributorAddress)
+    const treasuryPubkey = new PublicKey(treasuryAddress)
+    const mintPubkey = new PublicKey(mintAddress)
+
+    const contributorAta = await getAssociatedTokenAddress(mintPubkey, contributorPubkey)
+    const treasuryAta = await getAssociatedTokenAddress(mintPubkey, treasuryPubkey, true)
+
+    const transaction = new Transaction()
+
+    try {
+      await getAccount(connection, treasuryAta)
+    } catch {
+      transaction.add(
+        createAssociatedTokenAccountInstruction(
+          contributorPubkey,
+          treasuryAta,
+          treasuryPubkey,
+          mintPubkey
+        )
+      )
+    }
+
+    transaction.add(
+      createTransferInstruction(
+        contributorAta,
+        treasuryAta,
+        contributorPubkey,
+        BigInt(amount)
+      )
+    )
+
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+    transaction.recentBlockhash = blockhash
+    transaction.feePayer = contributorPubkey
+
+    let signature: string
+
+    if (wallet.sendTransaction) {
+      signature = await wallet.sendTransaction(transaction, connection)
+    } else if (wallet.signTransaction) {
+      const signedTransaction = await wallet.signTransaction(transaction)
+      signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      })
+    } else {
+      throw new Error("Wallet does not support token transfer signing")
+    }
+
+    const confirmation = await connection.confirmTransaction(
+      { signature, blockhash, lastValidBlockHeight },
+      "confirmed"
+    )
+
+    if (confirmation.value.err) {
+      throw new Error("Contribution failed: " + JSON.stringify(confirmation.value.err))
+    }
+
+    return { signature }
+  } catch (error) {
+    throw new Error(
+      "Failed to contribute stablecoins to treasury: " +
+        (error instanceof Error ? error.message : String(error))
+    )
+  }
+}
+
+export async function getTreasuryStablecoinBalance(
+  treasuryAddress: string,
+  mintAddress: string
+): Promise<number> {
+  try {
+    const treasuryPubkey = new PublicKey(treasuryAddress)
+    const mintPubkey = new PublicKey(mintAddress)
+    const treasuryAta = await getAssociatedTokenAddress(mintPubkey, treasuryPubkey, true)
+    const account = await getAccount(connection, treasuryAta)
+    return Number(account.amount)
+  } catch {
+    return 0
   }
 }
 
