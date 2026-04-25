@@ -1,18 +1,74 @@
-import { createConfig, Solana, EVM, config } from "@lifi/sdk"
+import { ChainType, EVM, Solana, config, createConfig, getChains } from "@lifi/sdk"
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base"
+import type { Address } from "viem"
+import { createWalletClient, custom } from "viem"
+import { arbitrum, base, mainnet, optimism, polygon } from "viem/chains"
+import { isSolanaMainnetCluster } from "./solana-cluster"
 
 let configured = false
+let chainsLoadedPromise: Promise<void> | null = null
+let solanaProvider: ReturnType<typeof Solana> | null = null
+let evmProvider: ReturnType<typeof EVM> | null = null
+
+type InjectedProviderRequest = {
+  method: string
+  params?: unknown[] | Record<string, unknown>
+}
+
+type InjectedProvider = {
+  request(args: InjectedProviderRequest): Promise<unknown>
+}
+
+export type InjectedEvmWallet = {
+  address: string
+  chainId: number
+}
+
+const EVM_CHAINS = {
+  [mainnet.id]: mainnet,
+  [base.id]: base,
+  [arbitrum.id]: arbitrum,
+  [optimism.id]: optimism,
+  [polygon.id]: polygon,
+} as const
 
 export function initLifiConfig() {
   if (configured) return
 
   createConfig({
     integrator: "FundWise",
-    // Default to mainnet chains for LI.FI routing
-    // The actual on-chain settlement still uses the app's network (devnet/mainnet)
+    disableVersionCheck: true,
+    preloadChains: false,
   })
 
   configured = true
+}
+
+export async function ensureLifiChainsLoaded() {
+  initLifiConfig()
+
+  if (!chainsLoadedPromise) {
+    chainsLoadedPromise = getChains({
+      chainTypes: [ChainType.EVM, ChainType.SVM],
+    })
+      .then((chains) => {
+        config.setChains(chains)
+      })
+      .catch((error) => {
+        chainsLoadedPromise = null
+        throw error
+      })
+  }
+
+  return chainsLoadedPromise
+}
+
+function syncProviders() {
+  config.setProviders(
+    [solanaProvider, evmProvider].filter(Boolean) as NonNullable<
+      typeof solanaProvider | typeof evmProvider
+    >[]
+  )
 }
 
 /**
@@ -20,27 +76,167 @@ export function initLifiConfig() {
  * Call this from a React effect when the wallet connects.
  */
 export function setLifiSolanaProvider(walletAdapter: SignerWalletAdapter | null) {
-  if (!walletAdapter) return
+  initLifiConfig()
 
-  config.setProviders([
-    Solana({
+  if (!walletAdapter) {
+    solanaProvider = null
+    syncProviders()
+    return
+  }
+
+  if (!solanaProvider) {
+    solanaProvider = Solana({
       async getWalletAdapter() {
         return walletAdapter
       },
-    }),
-  ])
+    })
+  } else {
+    solanaProvider.setOptions({
+      async getWalletAdapter() {
+        return walletAdapter
+      },
+    })
+  }
+
+  syncProviders()
 }
 
 /**
  * Configure LI.FI SDK with an EVM wallet (for users bridging FROM Ethereum/Base).
  * This is used when we detect the user has tokens on another chain.
  */
-export function setLifiEVMProvider(evmProvider: any) {
-  config.setProviders([
-    EVM({
-      getWalletAdapter: () => evmProvider,
-    }),
-  ])
+export function setLifiEvmProvider(wallet: InjectedEvmWallet | null) {
+  initLifiConfig()
+
+  if (!wallet) {
+    evmProvider = null
+    syncProviders()
+    return
+  }
+
+  const getWalletClient = async (chainId: number = wallet.chainId) => {
+    const provider = getInjectedProvider()
+    if (!provider) {
+      throw new Error("No injected EVM wallet found")
+    }
+
+    const chain = EVM_CHAINS[chainId as keyof typeof EVM_CHAINS]
+    if (!chain) {
+      throw new Error(`Unsupported EVM chain: ${chainId}`)
+    }
+
+    return createWalletClient({
+      account: wallet.address as Address,
+      chain,
+      transport: custom(provider),
+    })
+  }
+
+  const switchChain = async (chainId: number) => {
+    const provider = getInjectedProvider()
+    const chain = EVM_CHAINS[chainId as keyof typeof EVM_CHAINS]
+
+    if (!provider || !chain) {
+      throw new Error(`Unsupported EVM chain: ${chainId}`)
+    }
+
+    try {
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: `0x${chainId.toString(16)}` }],
+      })
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : `Failed to switch your EVM wallet to ${chain.name}`
+      )
+    }
+
+    const refreshedWallet = await getInjectedEvmWallet()
+    if (!refreshedWallet) {
+      throw new Error("Failed to read the active EVM wallet after switching chains")
+    }
+
+    return getWalletClient(refreshedWallet.chainId)
+  }
+
+  if (!evmProvider) {
+    evmProvider = EVM({
+      getWalletClient: async () => getWalletClient(),
+      switchChain,
+    })
+  } else {
+    evmProvider.setOptions({
+      getWalletClient: async () => getWalletClient(),
+      switchChain,
+    })
+  }
+
+  syncProviders()
+}
+
+function getInjectedProvider(): InjectedProvider | null {
+  if (typeof window === "undefined") {
+    return null
+  }
+
+  const injectedProvider = (window as Window & { ethereum?: InjectedProvider }).ethereum
+  return injectedProvider || null
+}
+
+function normalizeWalletState(address: string | null, chainIdHex: string | null) {
+  if (!address || !chainIdHex) {
+    return null
+  }
+
+  return {
+    address,
+    chainId: Number.parseInt(chainIdHex, 16),
+  }
+}
+
+export async function getInjectedEvmWallet(): Promise<InjectedEvmWallet | null> {
+  const provider = getInjectedProvider()
+
+  if (!provider) {
+    return null
+  }
+
+  const [address] = ((await provider.request({
+    method: "eth_accounts",
+  })) as string[]) || []
+  const chainIdHex = (await provider.request({
+    method: "eth_chainId",
+  })) as string | null
+
+  return normalizeWalletState(address || null, chainIdHex)
+}
+
+export async function requestInjectedEvmWallet(): Promise<InjectedEvmWallet> {
+  const provider = getInjectedProvider()
+
+  if (!provider) {
+    throw new Error("Install or unlock an injected EVM wallet such as MetaMask or Rabby")
+  }
+
+  const [address] = ((await provider.request({
+    method: "eth_requestAccounts",
+  })) as string[]) || []
+  const chainIdHex = (await provider.request({
+    method: "eth_chainId",
+  })) as string | null
+  const wallet = normalizeWalletState(address || null, chainIdHex)
+
+  if (!wallet) {
+    throw new Error("Failed to connect the injected EVM wallet")
+  }
+
+  return wallet
+}
+
+export function isLifiSupportedForCurrentCluster() {
+  return isSolanaMainnetCluster()
 }
 
 // Supported chains for cross-chain bridge UI

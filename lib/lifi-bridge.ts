@@ -1,7 +1,10 @@
-import { getQuote, executeRoute, convertQuoteToRoute, type Route } from "@lifi/sdk"
-import { initLifiConfig, USDC_ADDRESSES, CHAIN_NAMES, LIFI_CHAINS } from "./lifi-config"
-
-initLifiConfig()
+import { getQuote, executeRoute, convertQuoteToRoute, type RouteExtended } from "@lifi/sdk"
+import {
+  CHAIN_NAMES,
+  ensureLifiChainsLoaded,
+  LIFI_CHAINS,
+  USDC_ADDRESSES,
+} from "./lifi-config"
 
 export interface BridgeQuote {
   fromChain: number
@@ -13,12 +16,13 @@ export interface BridgeQuote {
   toAmountMin: string
   estimatedDuration: string
   tool: string
-  route: Route
+  route: RouteExtended
 }
 
 export interface BridgeStatus {
   status: "idle" | "quoting" | "signing" | "executing" | "done" | "error"
   txHash?: string
+  txLink?: string
   message?: string
 }
 
@@ -29,7 +33,10 @@ export async function getBridgeQuote(params: {
   fromChain: number
   fromAmount: string // in human-readable (e.g., "10" for 10 USDC)
   fromAddress: string
+  toAddress: string
 }): Promise<BridgeQuote> {
+  await ensureLifiChainsLoaded()
+
   const fromToken = USDC_ADDRESSES[params.fromChain]
   const toToken = USDC_ADDRESSES[LIFI_CHAINS.SOLANA]
 
@@ -47,6 +54,8 @@ export async function getBridgeQuote(params: {
     toToken,
     fromAmount: amountInSmallestUnit,
     fromAddress: params.fromAddress,
+    toAddress: params.toAddress,
+    slippage: 0.005,
   })
 
   const route = convertQuoteToRoute(quote)
@@ -70,49 +79,73 @@ export async function getBridgeQuote(params: {
  * Returns the execution result with tx hashes.
  */
 export async function executeBridgeRoute(
-  route: Route,
+  route: RouteExtended,
   onStatusChange: (status: BridgeStatus) => void
 ): Promise<{ txHash?: string }> {
-  onStatusChange({ status: "executing" })
+  await ensureLifiChainsLoaded()
+  onStatusChange({ status: "executing", message: "Preparing bridge route..." })
 
   try {
     const result = await executeRoute(route, {
       updateRouteHook: (updatedRoute) => {
-        const step = updatedRoute.steps[0]
-        if (step?.execution) {
-          switch (step.execution.status) {
-            case "ACTION_REQUIRED":
-              onStatusChange({ status: "signing", message: "Please sign in your wallet" })
-              break
-            case "WAIT_USER":
-              onStatusChange({ status: "signing", message: "Confirm in wallet" })
-              break
-            case "PENDING":
-              onStatusChange({
-                status: "executing",
-                txHash: step.execution.txHash,
-                message: "Bridge in progress...",
-              })
-              break
-            case "DONE":
-              onStatusChange({
-                status: "done",
-                txHash: step.execution.txHash,
-                message: "Bridge complete!",
-              })
-              break
-            case "FAILED":
-              onStatusChange({
-                status: "error",
-                message: step.execution.process[0]?.message || "Bridge failed",
-              })
-              break
-          }
+        const processes = updatedRoute.steps.flatMap((step) => step.execution?.process || [])
+        const latestProcessWithTx = [...processes].reverse().find((process) => process.txHash)
+        const failedProcess = processes.find((process) => process.status === "FAILED")
+        const requiresAction = processes.find(
+          (process) =>
+            process.status === "ACTION_REQUIRED" ||
+            process.status === "MESSAGE_REQUIRED" ||
+            process.status === "RESET_REQUIRED"
+        )
+        const pendingProcess = [...processes].reverse().find(
+          (process) => process.status === "PENDING"
+        )
+        const isDone = updatedRoute.steps.every((step) => step.execution?.status === "DONE")
+
+        if (failedProcess) {
+          onStatusChange({
+            status: "error",
+            txHash: latestProcessWithTx?.txHash,
+            txLink: latestProcessWithTx?.txLink,
+            message: failedProcess.error?.message || failedProcess.message || "Bridge failed",
+          })
+          return
+        }
+
+        if (requiresAction) {
+          onStatusChange({
+            status: "signing",
+            txHash: latestProcessWithTx?.txHash,
+            txLink: latestProcessWithTx?.txLink,
+            message: requiresAction.message || "Approve the transaction in your wallet",
+          })
+          return
+        }
+
+        if (isDone) {
+          onStatusChange({
+            status: "done",
+            txHash: latestProcessWithTx?.txHash,
+            txLink: latestProcessWithTx?.txLink,
+            message: "Bridge complete!",
+          })
+          return
+        }
+
+        if (pendingProcess) {
+          onStatusChange({
+            status: "executing",
+            txHash: latestProcessWithTx?.txHash,
+            txLink: latestProcessWithTx?.txLink,
+            message: pendingProcess.message || "Bridge in progress...",
+          })
         }
       },
     })
 
-    const txHash = result.steps[0]?.execution?.txHash
+    const txHash = [...result.steps.flatMap((step) => step.execution?.process || [])]
+      .reverse()
+      .find((process) => process.txHash)?.txHash
     return { txHash }
   } catch (error) {
     onStatusChange({

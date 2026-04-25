@@ -260,6 +260,17 @@ export async function getSettlements(groupId: string) {
   return data
 }
 
+export async function getSettlementById(settlementId: string) {
+  const { data, error } = await supabase
+    .from("settlements")
+    .select("*")
+    .eq("id", settlementId)
+    .single()
+
+  if (error) throw new Error(`Failed to get settlement: ${error.message}`)
+  return data
+}
+
 // =============================================
 // ACTIVITY FEED
 // =============================================
