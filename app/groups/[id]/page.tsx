@@ -997,8 +997,8 @@ export default function GroupDashboard() {
           </Card>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div className="space-y-6 xl:col-span-2">
             {!isFundMode && hasSettlementRequest && (
               <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
