@@ -132,6 +132,17 @@ export async function addMember(
   }
 }
 
+
+export async function updateMemberDisplayName(groupId: string, wallet: string, displayName: string) {
+  const { error } = await supabase
+    .from("members")
+    .update({ display_name: displayName })
+    .eq("group_id", groupId)
+    .eq("wallet", wallet)
+
+  if (error) throw new Error(`Failed to update display name: ${error.message}`)
+}
+
 export async function getMembers(groupId: string) {
   const { data, error } = await supabase
     .from("members")
