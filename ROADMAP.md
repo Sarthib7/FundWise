@@ -39,11 +39,20 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 **Still to finish before calling the Split Mode path polished:**
 
+- Frontend responsiveness pass across the landing page, Group list, Group page, join flow, dialogs, and Receipt
 - Global profile display-name polish
 - Group total settled volume display
 - Final empty states and copy pass
 
-**Mainnet-beta hardening inside Phase 1:**
+**Execution order inside Phase 1:**
+
+1. Frontend polish and responsive sign-off
+2. Backend trust and data-hardening pass
+3. On-chain settlement hardening plus devnet wiring
+4. Sponsor-layer integrations
+5. Isolated audits and integration testing
+
+**Backend trust and mainnet-beta hardening inside Phase 1:**
 
 - Authenticated wallet-bound server-side ledger writes with member-scoped RLS
 - RPC verification before persisting Settlement and Contribution receipts
@@ -51,7 +60,13 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Clear insufficient-USDC and insufficient-SOL states
 - Recipient USDC token-account auto-creation inside settlement flow
 - Production RPC wiring
-- Mobile-web polish for join and settle flows
+
+**On-chain integration rule for this phase:**
+
+- Keep Split Mode on the simplest credible path:
+  direct Solana USDC settlement plus the minimum on-chain handling required for safety and devnet rehearsal
+- Do not invent new custom contracts unless the product actually needs them
+- If custom contract work is needed later, prefer it in Fund Mode or isolated sponsor / treasury surfaces instead of the core Split Mode flow
 
 **Exit criterion:** a real user can open the web app on mobile or desktop, join a Group, log Expenses, settle their current net Balance in USDC, and land on a usable Receipt flow that is structurally ready for mainnet-beta.
 
@@ -60,6 +75,8 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 ## Phase 1.5 - Sponsor support layers
 
 This phase supports the MVP. It does not redefine it.
+
+This phase starts only after the frontend pass, backend trust pass, and on-chain settlement hardening are in place.
 
 ### LI.FI support
 
@@ -138,6 +155,7 @@ This phase supports the MVP. It does not redefine it.
 - Demo videos
 - Submission copy
 - End-to-end rehearsals
+- End-to-end devnet testing after the full stack is rewired
 - Judge-oriented screenshots and notes
 - Mainnet-beta readiness review or clearly explained mainnet-beta target with devnet rehearsal evidence
 
