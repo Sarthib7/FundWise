@@ -25,3 +25,4 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-009 → [0009-switch-from-firebase-to-supabase.md](./docs/adr/0009-switch-from-firebase-to-supabase.md)
 - ADR-010 → [0010-store-multisig-and-vault-addresses-for-fund-mode.md](./docs/adr/0010-store-multisig-and-vault-addresses-for-fund-mode.md)
 - ADR-011 → [0011-fix-usdc-as-the-mvp-settlement-asset.md](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)
+- ADR-012 → [0012-require-authenticated-and-verified-ledger-writes-before-mainnet.md](./docs/adr/0012-require-authenticated-and-verified-ledger-writes-before-mainnet.md)
