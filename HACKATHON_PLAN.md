@@ -31,7 +31,7 @@ That is the primary demo path.
 Everything else is a supporting layer:
 
 - `LI.FI` helps a debtor arrive at Solana USDC if their funds are on another chain.
-- `Zerion` helps with wallet analysis, reminders, and agent-style assistance.
+- `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
 - `Fund Mode` broadens the product story, but it is not the primary hackathon demo path.
 
 ---
@@ -84,7 +84,7 @@ The strongest LI.FI story is not "FundWise is a generic multichain app." The str
 
 - LI.FI support for Fund Mode Contributions
 
-### 3. Zerion - Priority 2
+### 3. Zerion CLI - Active sponsor focus
 
 **Why it fits:**
 
@@ -96,7 +96,7 @@ The strongest LI.FI story is not "FundWise is a generic multichain app." The str
 - Wallet analysis before settlement
 - Insufficient-funds guidance
 - Reminder / suggestion layer
-- Stretch agent demo for group expense operations
+- Zerion CLI demo for group expense operations
 
 **Explicitly later:**
 
@@ -135,6 +135,7 @@ Low fit for the current product direction.
 - Analyze wallet readiness
 - Suggest next action
 - Keep core settlement still wallet-native and user-authorized
+- Use Zerion CLI as the implementation surface for the sponsor-track demo
 
 ---
 
