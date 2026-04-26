@@ -1,6 +1,6 @@
 export function HowItWorksSection() {
   return (
-    <section id="how" className="py-24 px-6 lg:px-[max(24px,calc(50%-660px))]">
+    <section id="how" className="px-4 py-24 sm:px-6 lg:px-[max(24px,calc(50%-660px))]">
       <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-mid mb-3">
         How it works
       </div>
@@ -11,7 +11,7 @@ export function HowItWorksSection() {
         Designed for people who want financial clarity without the friction.
       </p>
 
-      <div className="grid md:grid-cols-3 gap-10">
+      <div className="grid gap-8 md:grid-cols-3 md:gap-10">
         <div>
           <div className="font-serif text-[56px] leading-none mb-5 text-brand-grad opacity-30">
             01
