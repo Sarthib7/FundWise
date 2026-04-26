@@ -39,23 +39,20 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Group total settled volume display on the Group page
 - Global profile display-name editing with reuse across Groups
 - Final empty-state and copy pass across Group screens
+- Responsive pass across the landing page, Group list, Group page, Receipt, and modal surfaces
+- Consumer landing polish with product-first messaging, cleaner partner branding, and consistent iconography
 
-**Still to finish before calling the Split Mode path polished:**
+**Still to finish before mainnet-beta rehearsal:**
 
-- Frontend responsiveness pass across the landing page, Group list, Group page, join flow, dialogs, and Receipt
-
-**Current local work in progress:**
-
-- Responsive and spacing cleanup is actively underway on shared chrome, landing CTA surfaces, Group list, Group detail, Receipt, and the bridge modal
-- Treat this as unfinished until the current pass is rebuilt and checked across mobile, tablet, and desktop widths
+- Backend trust and data-hardening pass
+- Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
 
 **Execution order inside Phase 1:**
 
-1. Frontend polish and responsive sign-off
-2. Backend trust and data-hardening pass
-3. On-chain settlement hardening plus devnet wiring
-4. Sponsor-layer integrations
-5. Isolated audits and integration testing
+1. Backend trust and data-hardening pass
+2. On-chain settlement hardening plus devnet wiring
+3. Sponsor-layer integrations
+4. Isolated audits and integration testing
 
 **Backend trust and mainnet-beta hardening inside Phase 1:**
 
