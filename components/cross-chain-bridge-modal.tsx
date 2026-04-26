@@ -39,13 +39,16 @@ export function CrossChainBridgeModal({
   const lifiSupported = isLifiSupportedForCurrentCluster()
   const clusterLabel = getFundWiseClusterLabel()
 
-  const [selectedChain, setSelectedChain] = useState(sourceChains[1]) // Default to Base
+  const [selectedChain, setSelectedChain] = useState(sourceChains[1] ?? sourceChains[0])
   const [amount, setAmount] = useState("")
   const [quote, setQuote] = useState<BridgeQuote | null>(null)
   const [bridgeStatus, setBridgeStatus] = useState<BridgeStatus>({ status: "idle" })
   const [isQuoting, setIsQuoting] = useState(false)
   const [evmWallet, setEvmWallet] = useState<InjectedEvmWallet | null>(null)
   const [isConnectingEvmWallet, setIsConnectingEvmWallet] = useState(false)
+
+  const needsWalletConnection = !evmWallet
+  const needsAmount = !amount.trim()
 
   useEffect(() => {
     if (!open) {
@@ -140,6 +143,14 @@ export function CrossChainBridgeModal({
             </div>
           )}
 
+          <div className="rounded-lg border bg-muted/30 px-4 py-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Destination Wallet</p>
+            <p className="mt-2 break-all font-mono text-sm">{destinationAddress}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Funds land in your connected Solana wallet first. Settle or contribute in {groupName} after the bridge confirms.
+            </p>
+          </div>
+
           {lifiSupported && (
             <div className="space-y-2">
               <Label>EVM Source Wallet</Label>
@@ -157,7 +168,7 @@ export function CrossChainBridgeModal({
               ) : (
                 <Button
                   variant="outline"
-                  className="w-full justify-between bg-transparent"
+                  className="min-h-11 w-full justify-between bg-transparent"
                   onClick={handleConnectEvmWallet}
                   disabled={isConnectingEvmWallet}
                 >
@@ -187,21 +198,27 @@ export function CrossChainBridgeModal({
                     setSelectedChain(chain)
                     setQuote(null)
                   }}
-                  className={selectedChain.chainId === chain.chainId ? "bg-accent hover:bg-accent/90" : ""}
+                  className={`min-h-10 ${selectedChain.chainId === chain.chainId ? "bg-accent hover:bg-accent/90" : ""}`}
                 >
                   {chain.name}
                 </Button>
               ))}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Pick the EVM chain where your USDC already sits before requesting a route.
+            </p>
           </div>
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label>Amount (USDC)</Label>
+            <Label htmlFor="bridge-amount">Amount (USDC)</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
+                id="bridge-amount"
                 type="number"
+                min="0"
                 step="0.01"
+                inputMode="decimal"
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => {
@@ -211,14 +228,40 @@ export function CrossChainBridgeModal({
               />
               <Button
                 variant="outline"
-                className="sm:min-w-24"
+                className="min-h-11 sm:min-w-28"
                 onClick={handleGetQuote}
                 disabled={!lifiSupported || !amount || !evmWallet || isQuoting}
               >
-                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Quote"}
+                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Get Quote"}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Request a route after you connect an EVM wallet and enter the exact USDC amount you want bridged.
+            </p>
           </div>
+
+          {lifiSupported && !quote && (
+            <div className="rounded-lg border border-dashed bg-muted/20 p-4 text-sm">
+              <p className="font-medium">
+                {needsWalletConnection
+                  ? "Step 1: connect the EVM wallet that holds your USDC"
+                  : needsAmount
+                    ? "Step 2: enter a USDC amount to price the route"
+                    : isQuoting
+                      ? "Finding the best route into Solana"
+                      : "Step 3: review the quote before you bridge"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {needsWalletConnection
+                  ? "FundWise uses your injected EVM wallet to source the LI.FI route and request the bridge signature."
+                  : needsAmount
+                    ? "We only fetch the route once you provide an amount, so the min received and estimated timing stay accurate."
+                    : isQuoting
+                      ? "This usually takes a moment while LI.FI compares bridge paths and fees."
+                      : "You’ll see the expected amount out, minimum received, and route provider before funds move."}
+              </p>
+            </div>
+          )}
 
           {/* Bridge Route Display */}
           {quote && (
@@ -289,7 +332,7 @@ export function CrossChainBridgeModal({
           {/* Execute Button */}
           {quote && bridgeStatus.status !== "done" && bridgeStatus.status !== "executing" && (
             <Button
-              className="w-full bg-accent hover:bg-accent/90"
+              className="min-h-11 w-full bg-accent hover:bg-accent/90"
               onClick={handleExecute}
               disabled={
                 !lifiSupported ||
