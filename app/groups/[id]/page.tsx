@@ -841,19 +841,19 @@ export default function GroupDashboard() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold">{group.name}</h1>
+      <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <div className="mb-2 flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
               <Badge className="bg-accent/10 text-accent border-accent/20">
                 {isFundMode ? "Fund Mode" : "Split Mode"}
               </Badge>
             </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
               <button
                 onClick={handleCopyCode}
-                className="flex items-center gap-1 hover:text-foreground transition-colors"
+                className="inline-flex min-h-10 items-center gap-1 rounded-md px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? "Copied!" : group.code}
@@ -867,13 +867,17 @@ export default function GroupDashboard() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleCopyCode}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
+            <Button variant="outline" size="sm" className="min-h-11 sm:min-h-10" onClick={handleCopyCode}>
               <Share2 className="h-4 w-4 mr-2" />
               Invite
             </Button>
             {!isFundMode && isMember && (
-              <Button size="sm" className="bg-accent hover:bg-accent/90" onClick={openCreateExpenseDialog}>
+              <Button
+                size="sm"
+                className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
+                onClick={openCreateExpenseDialog}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Expense
               </Button>
@@ -881,7 +885,7 @@ export default function GroupDashboard() {
             {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
               <Button
                 size="sm"
-                className="bg-accent hover:bg-accent/90"
+                className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
                 onClick={handleCreateTreasury}
                 disabled={isCreatingTreasury || missingMembersForTreasury > 0}
               >
@@ -898,7 +902,7 @@ export default function GroupDashboard() {
 
         {!isMember && connected && (
           <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="font-semibold mb-1">
                   {isFundMode ? "Join this Fund Mode Group" : "Join this Group"}
@@ -909,7 +913,7 @@ export default function GroupDashboard() {
                     : "Join to start tracking Expenses and Settlements in this Group."}
                 </p>
               </div>
-              <Button className="bg-accent hover:bg-accent/90" onClick={handleJoin}>
+              <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto" onClick={handleJoin}>
                 Join Group
               </Button>
             </div>
@@ -920,7 +924,7 @@ export default function GroupDashboard() {
           <div className="lg:col-span-2 space-y-6">
             {!isFundMode && hasSettlementRequest && (
               <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Badge className="bg-accent/10 text-accent border-accent/20">
@@ -968,15 +972,16 @@ export default function GroupDashboard() {
                       </>
                     )}
                   </div>
-                  <Button variant="ghost" size="sm" onClick={clearSettlementRequest}>
+                  <Button variant="ghost" size="sm" className="self-start" onClick={clearSettlementRequest}>
                     Dismiss
                   </Button>
                 </div>
 
                 {connected && isMember && requestedTransfer && (
-                  <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                     <Button
                       variant="outline"
+                      className="w-full sm:w-auto"
                       onClick={() => handleShareSettlementRequest(requestedTransfer)}
                       disabled={sharingTransferKey === `${requestedTransfer.from}:${requestedTransfer.to}`}
                     >
@@ -989,7 +994,7 @@ export default function GroupDashboard() {
                     </Button>
                     {walletAddress === requestedTransfer.from && (
                       <Button
-                        className="bg-accent hover:bg-accent/90"
+                        className="w-full bg-accent hover:bg-accent/90 sm:w-auto"
                         disabled={isSettling}
                         onClick={() => handleSettle(requestedTransfer)}
                       >
@@ -1009,10 +1014,10 @@ export default function GroupDashboard() {
                 <h2 className="text-lg font-semibold mb-4">Balances</h2>
                 <div className="space-y-3">
                   {balances.map((balance) => (
-                    <div key={balance.wallet} className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-3">
+                    <div key={balance.wallet} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-center gap-3">
                         <WalletAvatar address={balance.wallet} size={32} />
-                        <span className="font-medium">{balance.displayName}</span>
+                        <span className="truncate font-medium">{balance.displayName}</span>
                         {balance.wallet === walletAddress && (
                           <Badge variant="secondary" className="text-xs">
                             You
@@ -1026,7 +1031,7 @@ export default function GroupDashboard() {
                             : balance.amount < 0
                               ? "text-red-600 dark:text-red-400"
                               : "text-muted-foreground"
-                        }`}
+                        } sm:text-right`}
                       >
                         {balance.amount > 0 ? "+" : ""}
                         {formatTokenAmount(balance.amount)} {tokenName}
@@ -1052,20 +1057,21 @@ export default function GroupDashboard() {
                         return (
                           <div
                             key={`${transfer.from}-${transfer.to}-${index}`}
-                            className={`flex items-center justify-between p-3 rounded-lg ${
+                            className={`flex flex-col gap-3 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between ${
                               isRequested ? "border border-accent/40 bg-accent/5" : "bg-muted/50"
                             }`}
                           >
-                            <div className="flex items-center gap-2 text-sm">
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
                               <span>{transfer.fromName || shortWallet(transfer.from)}</span>
                               <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
                               <span>{transfer.toName || shortWallet(transfer.to)}</span>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-muted-foreground hover:text-foreground"
+                                aria-label={`Share settlement request link for ${transfer.fromName || shortWallet(transfer.from)} to ${transfer.toName || shortWallet(transfer.to)}`}
+                                className="min-h-10 justify-start text-muted-foreground hover:text-foreground sm:min-h-9 sm:justify-center"
                                 disabled={sharingTransferKey === transferKey}
                                 onClick={() => handleShareSettlementRequest(transfer)}
                               >
@@ -1081,7 +1087,7 @@ export default function GroupDashboard() {
                               {transfer.from === walletAddress && (
                                 <Button
                                   size="sm"
-                                  className="bg-accent hover:bg-accent/90"
+                                  className="min-h-10 bg-accent hover:bg-accent/90 sm:min-h-9"
                                   disabled={isSettling}
                                   onClick={() => handleSettle(transfer)}
                                 >
@@ -1131,14 +1137,14 @@ export default function GroupDashboard() {
                         return (
                           <div
                             key={`${item.type}-${expense.id}-${index}`}
-                            className="flex items-center justify-between py-2 border-b last:border-0"
+                            className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
                               <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                                 <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                               </div>
-                              <div>
-                                <p className="font-medium text-sm">{expense.memo || expense.category}</p>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-sm">{expense.memo || expense.category}</p>
                                 <p className="text-xs text-muted-foreground">
                                   {payerLabel} paid
                                   {expense.created_by !== expense.payer ? ` · ${creatorLabel} logged` : ""} ·{" "}
@@ -1146,7 +1152,7 @@ export default function GroupDashboard() {
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                               {expense.edited_at && (
                                 <Badge variant="outline" className="text-[10px]">
                                   Edited
@@ -1161,6 +1167,7 @@ export default function GroupDashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
+                                      aria-label={`Edit ${expense.memo || expense.category}`}
                                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                       disabled={isSubmitting}
                                       onClick={() => openEditExpenseDialog(expense)}
@@ -1170,6 +1177,7 @@ export default function GroupDashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
+                                      aria-label={`Delete ${expense.memo || expense.category}`}
                                       className="h-8 w-8 text-muted-foreground hover:text-red-600"
                                       disabled={deletingExpenseId === expense.id}
                                       onClick={() => handleDeleteExpense(expense, tokenName)}
@@ -1195,7 +1203,7 @@ export default function GroupDashboard() {
                       return (
                         <div
                           key={`${item.type}-${settlement.id}-${index}`}
-                          className="flex items-center justify-between py-2 border-b last:border-0"
+                          className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
@@ -1222,7 +1230,7 @@ export default function GroupDashboard() {
 
             {isFundMode && (
               <>
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <Card className="p-5">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Landmark className="h-4 w-4 text-accent" />
@@ -1273,7 +1281,7 @@ export default function GroupDashboard() {
 
                 {!group.treasury_address ? (
                   <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-2">
                         <h2 className="text-lg font-semibold">Initialize Treasury</h2>
                         <p className="text-sm text-muted-foreground">
@@ -1290,7 +1298,7 @@ export default function GroupDashboard() {
                       </div>
                       {isGroupCreator ? (
                         <Button
-                          className="bg-accent hover:bg-accent/90"
+                          className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto"
                           onClick={handleCreateTreasury}
                           disabled={isCreatingTreasury || missingMembersForTreasury > 0}
                         >
@@ -1308,7 +1316,7 @@ export default function GroupDashboard() {
                   </Card>
                 ) : (
                   <Card className="p-6">
-                    <div className="flex items-start justify-between gap-4 mb-5">
+                    <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h2 className="text-lg font-semibold">Make a Contribution</h2>
                         <p className="text-sm text-muted-foreground">
@@ -1347,7 +1355,7 @@ export default function GroupDashboard() {
                           />
                         </div>
                         <Button
-                          className="sm:self-end bg-accent hover:bg-accent/90"
+                          className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:self-end"
                           disabled={isContributing || !contributionAmount}
                           onClick={handleContribute}
                         >
@@ -1393,12 +1401,12 @@ export default function GroupDashboard() {
                       {contributions.map((contribution) => (
                         <div
                           key={contribution.id}
-                          className="flex items-center justify-between gap-4 py-3 border-b last:border-0"
+                          className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
                             <WalletAvatar address={contribution.member_wallet} size={32} />
-                            <div>
-                              <p className="font-medium text-sm">{shortWallet(contribution.member_wallet)}</p>
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-sm">{shortWallet(contribution.member_wallet)}</p>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(contribution.created_at).toLocaleDateString()}
                               </p>
@@ -1444,7 +1452,7 @@ export default function GroupDashboard() {
                   </p>
                 )}
                 <Button
-                  className="w-full bg-accent hover:bg-accent/90"
+                  className="min-h-11 w-full bg-accent hover:bg-accent/90"
                   onClick={() => setShowBridge(true)}
                   disabled={!lifiSupported}
                 >
@@ -1483,21 +1491,22 @@ export default function GroupDashboard() {
 
       {!isFundMode && (
         <Dialog open={showExpenseDialog} onOpenChange={handleExpenseDialogOpenChange}>
-          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+          <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>{editingExpense ? "Edit Expense" : "Add Expense"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-5 py-2">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Amount ({tokenName})</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    value={expenseAmount}
-                    onChange={(event) => setExpenseAmount(event.target.value)}
+                  <div className="space-y-2">
+                    <Label>Amount ({tokenName})</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={expenseAmount}
+                      onChange={(event) => setExpenseAmount(event.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -1553,7 +1562,7 @@ export default function GroupDashboard() {
                     {expenseDialogParticipantWallets.map((participantWallet) => (
                       <div
                         key={participantWallet}
-                        className="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-3"
+                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_120px] sm:items-center sm:gap-3"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">
@@ -1566,6 +1575,7 @@ export default function GroupDashboard() {
                         <Input
                           type="number"
                           min="0"
+                          inputMode="decimal"
                           step={splitMethod === "shares" ? "0.1" : "0.01"}
                           placeholder={splitMethod === "shares" ? "1" : "0.00"}
                           value={customSplitValues[participantWallet] || ""}
@@ -1583,7 +1593,7 @@ export default function GroupDashboard() {
               )}
               <div className="space-y-2">
                 <Label>Category</Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {EXPENSE_CATEGORIES.map((category) => (
                     <Button
                       key={category}
@@ -1603,7 +1613,7 @@ export default function GroupDashboard() {
                   : `This Expense currently includes ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}.`}
               </p>
               <Button
-                className="w-full bg-accent hover:bg-accent/90"
+                className="min-h-11 w-full bg-accent hover:bg-accent/90"
                 onClick={handleSubmitExpense}
                 disabled={isSubmitting || !expenseAmount || !expensePayer}
               >
