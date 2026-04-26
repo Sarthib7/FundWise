@@ -1,102 +1,111 @@
 # FundWise
 
-**Splitwise on Solana.** Split expenses with friends and settle instantly in stablecoins — no IOUs, no chasing anyone on Venmo.
+**Splitwise on Solana.** Create a private Group, log shared Expenses, see live Balances, and settle exact USDC amounts on Solana with a clear Receipt.
 
-A second mode, **Fund Mode**, flips the model: pool money into a shared treasury up front (a "reverse Splitwise") and spend from it via lightweight proposals. Great for group trips, shared gifts, or any recurring shared cost.
+FundWise also has a second mode, **Fund Mode**, for pooled USDC Treasuries with Proposal-based spending. That remains part of the product direction, but the current MVP is optimized around **Split Mode**.
 
----
+## Documentation Map
 
-## Status
+Read these in order:
 
-This repo is currently in **Phase 0 → 1 transition** — hackathon sprint for the Colosseum Frontier hackathon (April 6 – May 11, 2026). Focused on Germany-only tracks: LI.FI, Visa, Zerion.
+1. [AGENTS.md](./AGENTS.md)
+2. [STATUS.md](./STATUS.md)
+3. [CONTEXT.md](./CONTEXT.md)
+4. [ROADMAP.md](./ROADMAP.md)
+5. [HACKATHON_PLAN.md](./HACKATHON_PLAN.md)
+6. [PRD.md](./PRD.md)
+7. [docs/adr/](./docs/adr/)
 
-For the full plan:
+Quick links:
 
-- [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) — hackathon track analysis and submission strategy
-- [CONTEXT.md](./CONTEXT.md) — domain model, language, relationships
-- [PRD.md](./PRD.md) — product vision, modes, user flows, scope
-- [ROADMAP.md](./ROADMAP.md) — phased delivery plan (hackathon-timed)
-- [STATUS.md](./STATUS.md) — what's in the repo today, what's next
-- [docs/adr/](./docs/adr/) — architecture decision records
+- [STATUS.md](./STATUS.md) - current repo state, locked decisions, next session
+- [CONTEXT.md](./CONTEXT.md) - domain language and product invariants
+- [PRD.md](./PRD.md) - MVP scope, user stories, implementation decisions
+- [ROADMAP.md](./ROADMAP.md) - phased delivery plan
+- [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
+- [DECISIONS.md](./DECISIONS.md) - ADR index
 
----
+## Current Product Shape
 
-## Modes
+### Split Mode
 
-### Split Mode (MVP priority)
+The current MVP path is:
 
-- Create a group of friends (by wallet, handle, or share-link/QR).
-- Log expenses in the group's chosen stablecoin (USDC by default; any SPL stablecoin supported).
-- See per-member balances with a simplified settlement graph (minimum transactions to zero out).
-- Settle debts with a one-click on-chain SPL transfer. The tx signature is recorded as proof.
+`Group -> Expense -> Balance -> Settlement -> Receipt`
 
-### Fund Mode (Phase 2)
+- Web app first
+- Wallet-native auth only
+- Invite link or QR join flow
+- USDC-only settlement asset
+- Activity Feed, not chat
+- Current net Group Balance settlement, not per-Expense settlement
 
-- Pool stablecoins into a shared treasury (Squads multisig for MVP).
-- Propose spends (recipient, amount, memo).
-- Threshold-based approval; approved proposals execute automatically.
-- Cross-chain contributions via LI.FI (bridge from any chain).
-- Optional: unused balance refunds proportionally to contributors.
+### Fund Mode
 
----
+Fund Mode remains in the product and repo, but it is not the primary hackathon demo path.
 
-## Tech stack
+- Group-owned Treasury using Squads primitives
+- Contributions into Treasury
+- Proposal / approval / execution flow still pending
 
-- **Frontend:** Next.js 15 (App Router), React 19, Tailwind v4, Radix / shadcn UI
-- **Wallets:** `@solana/wallet-adapter-`* — Phantom, Solflare, Backpack
-- **Chain:** Solana (devnet for MVP, mainnet at Phase 4)
-- **Tokens:** `@solana/spl-token` for SPL stablecoin transfers
-- **Treasury (Fund Mode):** Squads Protocol (`@sqds/multisig`)
-- **Cross-chain:** LI.FI SDK (`@lifi/sdk`) for bridge+swap contributions
-- **Off-chain state:** Firebase Realtime DB (group metadata, expenses, members)
-- **RPC:** QuickNode (production)
+### Sponsor layers
 
----
+- `LI.FI` is a secondary top-up and cross-chain recovery layer that helps a debtor arrive at Solana USDC.
+- `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future agent flows.
 
-## Project structure
+Neither sponsor integration should complicate the primary Split Mode settlement path.
 
-```
+## Tech Stack
+
+- Frontend: Next.js 15, React 19, Tailwind v4, Radix / shadcn UI
+- Wallets: `@solana/wallet-adapter-*`
+- Chain: Solana
+- Settlement asset: USDC
+- Off-chain state: Supabase / Postgres
+- Fund Mode Treasury: Squads (`@sqds/multisig`)
+- Cross-chain support: LI.FI SDK
+
+## Repo Structure
+
+```text
 /
-├── AGENTS.md               ← Instructions for all AI agents (READ FIRST)
-├── CONTEXT.md              ← Domain model, language, relationships
-├── HACKATHON_PLAN.md       ← Hackathon track strategy
-├── PRD.md                  ← Product Requirements Document
-├── ROADMAP.md              ← Phased delivery plan
-├── STATUS.md               ← Current state and next actions
-├── docs/
-│   └── adr/                ← Architecture Decision Records
-├── app/                    ← Next.js App Router pages
-│   ├── page.tsx            ← Landing page
-│   ├── layout.tsx          ← Root layout
-│   ├── circles/page.tsx    ← Groups list (to be renamed)
-│   └── circle/[id]/page.tsx ← Group dashboard (to be renamed)
-├── components/             ← React components
-│   ├── ui/                 ← shadcn primitives
-│   ├── header.tsx          ← Navigation
-│   ├── hero-section.tsx    ← Landing hero
-│   ├── wallet-provider.tsx ← Solana wallet adapter
-│   └── ...                 ← App-level components
-├── lib/                    ← Client-side logic
-│   ├── solana.ts           ← Group CRUD + wallet interactions
-│   ├── simple-payment.ts   ← SOL transfer implementation
-│   ├── squads-multisig.ts  ← Squads multisig (Fund Mode)
-│   ├── firebase.ts         ← Firebase config
-│   ├── firebase-group-storage.ts ← Firebase group persistence
-│   └── ...
-├── hooks/                  ← React hooks
-└── public/                 ← Static assets
+├── AGENTS.md
+├── CONTEXT.md
+├── HACKATHON_PLAN.md
+├── PRD.md
+├── ROADMAP.md
+├── STATUS.md
+├── DECISIONS.md
+├── docs/adr/
+├── app/
+│   ├── page.tsx
+│   └── groups/
+│       ├── page.tsx
+│       └── [id]/
+│           ├── page.tsx
+│           └── settlements/[settlementId]/page.tsx
+├── components/
+├── hooks/
+├── lib/
+│   ├── db.ts
+│   ├── expense-engine.ts
+│   ├── simple-payment.ts
+│   ├── lifi-bridge.ts
+│   ├── squads-multisig.ts
+│   └── supabase.ts
+└── supabase/
+    └── schema.sql
 ```
 
----
-
-## Getting started
+## Getting Started
 
 ### Prerequisites
 
-- Node 20+ and `pnpm`
-- A Solana wallet (Phantom / Solflare / Backpack) with devnet SOL
-- A Solana RPC URL (Helius, QuickNode, or `https://api.devnet.solana.com`)
-- A Firebase project with Realtime Database enabled
+- Node 20+
+- `pnpm`
+- A Solana wallet
+- A Solana RPC URL
+- A Supabase project with the current schema applied
 
 ### Install
 
@@ -106,45 +115,32 @@ pnpm install
 
 ### Environment
 
-Copy the example and fill in your keys:
+Create `.env.local` manually. The repo does not currently ship an `.env.example`.
 
-```bash
-cp .env.example .env.local
-```
+Required keys used by the app:
 
-Required:
+- `NEXT_PUBLIC_SOLANA_RPC_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-- `NEXT_PUBLIC_SOLANA_RPC_URL` — RPC endpoint
-- `NEXT_PUBLIC_SOLANA_NETWORK` — `devnet` or `mainnet-beta`
-- `NEXT_PUBLIC_FIREBASE_*` — Firebase web-app config
+Fallback compatibility is present for:
+
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ### Run
 
 ```bash
-pnpm dev       # starts Next.js on http://127.0.0.1:3000
-pnpm build     # production build
-pnpm lint      # eslint
+pnpm dev
+pnpm build
+pnpm lint
 ```
 
----
+## MVP Notes
 
-## Onboarding
-
-Read in this order:
-
-1. [AGENTS.md](./AGENTS.md) — shared instructions for all AI agents.
-2. [STATUS.md](./STATUS.md) — what's live, what's stubbed, what's removed.
-3. [CONTEXT.md](./CONTEXT.md) — domain language and relationships.
-4. [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) — hackathon strategy.
-5. [PRD.md](./PRD.md) — product intent and scope.
-6. [ROADMAP.md](./ROADMAP.md) — what's being built and when.
-7. [docs/adr/](./docs/adr/) — why the code looks the way it does.
-
----
-
-## Contributing
-
-Private project right now — no PRs expected from outside.
+- Mainnet-beta is the product target.
+- Devnet is still the test and rehearsal environment.
+- Members need SOL for gas even though Settlements use USDC.
+- The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
 
 ## License
 
