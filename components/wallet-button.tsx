@@ -19,9 +19,9 @@ export function WalletButton() {
 
   if (!mounted) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="h-9 w-20 rounded-lg bg-muted animate-pulse" />
-        <div className="h-9 w-28 rounded-lg bg-muted animate-pulse" />
+      <div className="flex items-center justify-end gap-2">
+        <div className="h-10 w-24 animate-pulse rounded-lg bg-muted" />
+        <div className="hidden h-10 w-28 animate-pulse rounded-lg bg-muted sm:block" />
       </div>
     )
   }
@@ -31,21 +31,22 @@ export function WalletButton() {
     const shortAddress = `${address.slice(0, 4)}...${address.slice(-4)}`
 
     return (
-      <div className="flex items-center gap-2">
-        <Link href="/groups">
-          <Button
-            size="sm"
-            className="bg-brand-grad text-white hover:brightness-110 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)] transition-all font-bold tracking-tight"
-          >
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button
+          asChild
+          size="sm"
+          className="min-h-10 bg-brand-grad font-bold tracking-tight text-white transition-all hover:-translate-y-px hover:brightness-110 hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)]"
+        >
+          <Link href="/groups">
             Launch app
             <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="bg-brand-grad text-white hover:brightness-110 transition-all font-bold"
+              className="min-h-10 bg-brand-grad font-bold text-white transition-all hover:brightness-110"
             >
               {shortAddress}
             </Button>
@@ -63,15 +64,18 @@ export function WalletButton() {
 
   return (
     <div className="flex items-center gap-2.5">
-      <button
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
         onClick={() => setVisible(true)}
-        className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-brand-text-2 border border-brand-border-c hover:bg-brand-surface hover:text-foreground transition-all"
+        className="hidden min-h-10 border-brand-border-c bg-transparent font-semibold text-brand-text-2 transition-all hover:bg-brand-surface hover:text-foreground sm:inline-flex"
       >
         Sign in
-      </button>
+      </Button>
       <Button
         size="sm"
-        className="bg-brand-grad text-white hover:brightness-110 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)] transition-all font-bold tracking-tight"
+        className="min-h-10 bg-brand-grad font-bold tracking-tight text-white transition-all hover:-translate-y-px hover:brightness-110 hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)]"
         onClick={() => setVisible(true)}
       >
         <Wallet className="h-4 w-4 mr-1.5" />
