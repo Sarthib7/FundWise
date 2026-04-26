@@ -166,6 +166,12 @@ export function calculateSplits(
 
     case "exact": {
       if (!customValues) throw new Error("Custom values required for exact split")
+      const hasNegativeAmount = participants.some((wallet) => (customValues[wallet] || 0) < 0)
+      if (hasNegativeAmount) throw new Error("Exact split amounts cannot be negative")
+      const totalExactAmount = participants.reduce((sum, wallet) => sum + (customValues[wallet] || 0), 0)
+      if (totalExactAmount !== totalAmount) {
+        throw new Error("Exact split must add up to the full Expense amount")
+      }
       return participants.map((wallet) => ({
         wallet,
         share: customValues[wallet] || 0,
@@ -174,6 +180,8 @@ export function calculateSplits(
 
     case "shares": {
       if (!customValues) throw new Error("Custom values required for shares split")
+      const hasNegativeShare = participants.some((wallet) => (customValues[wallet] || 0) < 0)
+      if (hasNegativeShare) throw new Error("Share values cannot be negative")
       const totalShares = participants.reduce((sum, w) => sum + (customValues[w] || 0), 0)
       if (totalShares === 0) throw new Error("Total shares cannot be zero")
       let allocated = 0
@@ -188,6 +196,12 @@ export function calculateSplits(
 
     case "percentage": {
       if (!customValues) throw new Error("Custom values required for percentage split")
+      const hasNegativePercentage = participants.some((wallet) => (customValues[wallet] || 0) < 0)
+      if (hasNegativePercentage) throw new Error("Percentages cannot be negative")
+      const totalPercentage = participants.reduce((sum, wallet) => sum + (customValues[wallet] || 0), 0)
+      if (Math.abs(totalPercentage - 100) > 0.01) {
+        throw new Error("Percentages must add up to 100")
+      }
       let allocated = 0
       return participants.map((wallet, index) => {
         const share = index === participants.length - 1
