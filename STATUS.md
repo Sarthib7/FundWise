@@ -1,6 +1,6 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-04-26
+**Snapshot date:** 2026-04-27
 **Phase:** Split Mode MVP hardening for mainnet-beta target
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 
@@ -17,7 +17,7 @@ The product direction is now sharper:
 
 - The primary hackathon demo is Split Mode, not Fund Mode.
 - The web app is the source of truth for the MVP.
-- Frontend sign-off now comes before backend and sponsor-layer expansion.
+- The frontend pass is shipped; backend trust hardening is now the next engineering slice.
 - Mainnet-beta is the product target; devnet remains the test environment.
 - Wallet-native auth stays in place.
 - USDC is the only settlement asset in the MVP.
@@ -46,6 +46,8 @@ The product direction is now sharper:
 - Shareable Settlement Request Links that deep-link back into the Group and resolve debtor-to-creditor amounts from the live simplified settlement graph
 - Global profile display-name editing with reuse across Groups
 - Final empty-state and copy polish across Group screens
+- Responsive pass across landing, Group list, Group detail, Receipt, and modal surfaces
+- Consumer landing rewrite with product-first messaging, tighter CTAs, and consistent iconography
 - Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
@@ -56,19 +58,18 @@ The product direction is now sharper:
 
 - The core web app flows exist and build successfully:
   landing, Group list, Group detail, Expense dialog, Settlement flow, and Receipt
-- The UI is usable, but it is not signed off yet as fully polished across mobile breakpoints
-- Responsive behavior and spacing density still need one dedicated pass before backend and sponsor work resumes
+- The responsive cleanup pass is in place across the main consumer surfaces
+- Remaining UI risk is now manual breakpoint QA and edge-case review, not large pending layout work
 
-## Current work in progress
+## Next active work
 
-- The frontend responsiveness pass has started in the local worktree
-- Current surfaces being reflowed and tightened:
-  shared header/footer/wallet chrome, landing hero and CTA, Group list, Group detail, Receipt, and the LI.FI bridge modal
-- This pass is not signed off yet and should be treated as in progress until it is rebuilt and reviewed end to end
+- Replace public Supabase ledger writes with authenticated server-side mutations
+- Scope read and write access to real Group membership instead of open MVP scaffolding
+- Verify Settlement and Contribution transactions over RPC before persisting receipts
 
 ---
 
-## Product decisions locked on 2026-04-26
+## Product decisions locked on 2026-04-27
 
 - Split Mode is the primary MVP path for the hackathon demo.
 - The Group page owns the full flow:
@@ -90,14 +91,14 @@ The product direction is now sharper:
 - LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
 - The next delivery sequence is locked:
-  frontend responsiveness -> backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion support -> isolated audits -> full rewiring -> end-to-end devnet testing
+  backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion support -> isolated audits -> full rewiring -> end-to-end devnet testing
 
 ---
 
 ## Still pending for the primary MVP
 
-- Frontend responsiveness pass across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 - Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
+- Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
 
@@ -135,11 +136,10 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Finish and validate the current frontend responsiveness pass:
-   rebuild and review mobile breakpoints across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
-3. Add RPC verification before persisting Settlement and Contribution receipts.
-4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+1. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
+2. Add RPC verification before persisting Settlement and Contribution receipts.
+3. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+4. Run manual breakpoint QA across landing, Group list, Group detail, Receipt, join flow, and modal surfaces while the trust-hardening slice lands.
 5. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
 6. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
 7. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
