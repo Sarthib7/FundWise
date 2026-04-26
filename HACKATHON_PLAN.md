@@ -143,17 +143,23 @@ Low fit for the current product direction.
 
 ### April 26 to early May
 
-- Finish Split Mode polish
-- Harden mainnet USDC settlement behavior
+- Finish Split Mode frontend polish first
+- Sign off responsive behavior across desktop and mobile
+- Tighten Receipt, join flow, and Group-page UX before backend and sponsor branches
 
 ### Early May
 
+- Harden backend trust model and verified ledger writes
+- Tighten on-chain settlement behavior and devnet wiring
 - Add LI.FI top-up branch
-- Tighten Receipt and mobile UX
+- Add Zerion CLI support around wallet readiness and guidance
 - Prepare judge-friendly demo script
 
 ### Final stretch before May 11, 2026
 
+- Audit the contract / on-chain surface
+- Rewire frontend, backend, and sponsor integrations into one coherent flow
+- Run full end-to-end devnet testing
 - Rehearse end-to-end flows
 - Record demos
 - Write submission copy
@@ -198,8 +204,23 @@ Mainnet-beta settlement friction:
 - missing SOL for gas
 - missing recipient token account
 - confusing wallet behavior on mobile
+- insecure or unverified ledger writes
 
 **Mitigation:** harden those paths before adding more feature branches.
+
+### Build-order guardrail
+
+Do the work in this order:
+
+1. Frontend responsiveness and UX sign-off
+2. Backend trust hardening and verified receipts
+3. On-chain settlement / devnet hardening
+4. LI.FI and Zerion support layers
+5. Contract audit
+6. Full-stack rewiring
+7. End-to-end devnet testing
+
+This keeps the MVP narrow while still leaving room for sponsor-track demos.
 
 ### Biggest demo risk
 
