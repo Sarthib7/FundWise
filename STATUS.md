@@ -17,6 +17,7 @@ The product direction is now sharper:
 
 - The primary hackathon demo is Split Mode, not Fund Mode.
 - The web app is the source of truth for the MVP.
+- Frontend sign-off now comes before backend and sponsor-layer expansion.
 - Mainnet-beta is the product target; devnet remains the test environment.
 - Wallet-native auth stays in place.
 - USDC is the only settlement asset in the MVP.
@@ -49,6 +50,15 @@ The product direction is now sharper:
 
 ---
 
+## Frontend readiness today
+
+- The core web app flows exist and build successfully:
+  landing, Group list, Group detail, Expense dialog, Settlement flow, and Receipt
+- The UI is usable, but it is not signed off yet as fully polished across mobile breakpoints
+- Responsive behavior, spacing density, empty states, and copy consistency still need one dedicated pass before backend and sponsor work resumes
+
+---
+
 ## Product decisions locked on 2026-04-26
 
 - Split Mode is the primary MVP path for the hackathon demo.
@@ -70,16 +80,19 @@ The product direction is now sharper:
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
 - LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
+- The next delivery sequence is locked:
+  frontend responsiveness -> backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion support -> isolated audits -> full rewiring -> end-to-end devnet testing
 
 ---
 
 ## Still pending for the primary MVP
 
-- Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
-- Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
+- Frontend responsiveness pass across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 - Global profile display-name UX and polish
 - Final empty-state and copy polish across Group screens
 - Group total settled volume display
+- Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
+- Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
 
 ---
@@ -116,13 +129,15 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
-2. Add RPC verification before persisting Settlement and Contribution receipts.
-3. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-4. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
-5. Add global profile display-name polish plus the final empty-state and copy pass.
-6. Add Group total settled volume display.
-7. Return to Fund Mode proposals only after the Split Mode demo path is polished.
+1. Finish the dedicated frontend pass:
+   responsive layout audit, mobile polish, empty states, copy pass, and Group total settled volume
+2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
+3. Add RPC verification before persisting Settlement and Contribution receipts.
+4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+5. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
+6. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
+7. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
+8. Return to Fund Mode proposals only after the Split Mode demo path is polished.
 
 ---
 
