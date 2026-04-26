@@ -38,11 +38,11 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Shareable Settlement Request Link flow from the Group page
 - Group total settled volume display on the Group page
 - Global profile display-name editing with reuse across Groups
+- Final empty-state and copy pass across Group screens
 
 **Still to finish before calling the Split Mode path polished:**
 
 - Frontend responsiveness pass across the landing page, Group list, Group page, join flow, dialogs, and Receipt
-- Final empty states and copy pass
 
 **Current local work in progress:**
 

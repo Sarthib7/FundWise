@@ -45,6 +45,7 @@ The product direction is now sharper:
 - Creator-owned Expense edit and delete flow with later-Settlement safety guard plus working equal, exact, percentage, and shares split inputs
 - Shareable Settlement Request Links that deep-link back into the Group and resolve debtor-to-creditor amounts from the live simplified settlement graph
 - Global profile display-name editing with reuse across Groups
+- Final empty-state and copy polish across Group screens
 - Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
@@ -56,7 +57,7 @@ The product direction is now sharper:
 - The core web app flows exist and build successfully:
   landing, Group list, Group detail, Expense dialog, Settlement flow, and Receipt
 - The UI is usable, but it is not signed off yet as fully polished across mobile breakpoints
-- Responsive behavior, spacing density, empty states, and copy consistency still need one dedicated pass before backend and sponsor work resumes
+- Responsive behavior and spacing density still need one dedicated pass before backend and sponsor work resumes
 
 ## Current work in progress
 
@@ -96,7 +97,6 @@ The product direction is now sharper:
 ## Still pending for the primary MVP
 
 - Frontend responsiveness pass across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-- Final empty-state and copy polish across Group screens
 - Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
@@ -136,7 +136,7 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 ## Resume point for the next session
 
 1. Finish and validate the current frontend responsiveness pass:
-   rebuild, review mobile breakpoints, then complete any remaining empty-state and copy polish
+   rebuild and review mobile breakpoints across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
 3. Add RPC verification before persisting Settlement and Contribution receipts.
 4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
