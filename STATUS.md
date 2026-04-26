@@ -73,6 +73,7 @@ Backend trust hardening infrastructure added (non-breaking):
 - Supabase Edge Functions for all future server-side mutations
 - RPC receipt verification for Settlement and Contribution
 - Design doc: docs/BACKEND_TRUST_HARDENING.md
+- Split Mode Anchor program scaffolded (lib.rs, Cargo.toml, README, smoke test)
 
 Next: Deploy Edge Functions, integrate Supabase Auth, then migrate client mutations to use server-side APIs.
 
