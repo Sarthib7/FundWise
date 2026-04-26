@@ -8,7 +8,7 @@ This file is the shared instruction set for all AI agents (Claude Codex, GLM, Cu
 
 **FundWise** is Splitwise on Solana — a two-mode consumer expense app:
 
-1. **Split Mode** (MVP): Track expenses, compute who owes whom, settle in stablecoins with one-click on-chain transfers.
+1. **Split Mode** (MVP): Track expenses, compute who owes whom, and settle exact USDC amounts on Solana.
 2. **Fund Mode** (Phase 2): Pool stablecoins into a shared treasury with proposal-based spending.
 
 **Hackathon context:** We are submitting to the Colosseum Frontier hackathon (deadline May 11, 2026) with focus on Germany-only tracks: Visa Frontier ($10K) and LI.FI ($2.5K). See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for full strategy.
@@ -19,12 +19,15 @@ This file is the shared instruction set for all AI agents (Claude Codex, GLM, Cu
 
 Every agent must read these files before touching code:
 
-1. **[STATUS.md](./STATUS.md)** — what's live, what's stubbed, what's removed, what's next.
-2. **[CONTEXT.md](./CONTEXT.md)** — domain language, relationships, and terminology. Use these terms in code, comments, and commit messages. Do not invent new terms.
-3. **[ROADMAP.md](./ROADMAP.md)** — phased delivery plan with hackathon deadlines.
-4. **[HACKATHON_PLAN.md](./HACKATHON_PLAN.md)** — track analysis, submission strategy, sponsor integration details.
-5. **[PRD.md](./PRD.md)** — product requirements, user flows, scope, non-goals.
-6. **[docs/adr/](./docs/adr/)** — architecture decisions. Check these before making architectural choices. A new ADR is needed when a decision is hard to reverse, surprising without context, and the result of a genuine trade-off.
+1. **[README.md](./README.md)** — project overview plus documentation map.
+2. **[STATUS.md](./STATUS.md)** — what's live, what's next, and the currently locked product decisions.
+3. **[CONTEXT.md](./CONTEXT.md)** — domain language, relationships, and product invariants. Use these terms in code, comments, and commit messages. Do not invent new terms.
+4. **[PRD.md](./PRD.md)** — MVP scope, user stories, implementation decisions, and out-of-scope boundaries.
+5. **[ROADMAP.md](./ROADMAP.md)** — phased delivery plan.
+6. **[HACKATHON_PLAN.md](./HACKATHON_PLAN.md)** — judge-facing story and sponsor framing.
+7. **[docs/adr/](./docs/adr/)** — architecture decisions. Check these before making architectural choices. A new ADR is needed when a decision is hard to reverse, surprising without context, and the result of a genuine trade-off.
+
+If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the latest ADRs as the source of truth.
 
 ---
 
@@ -35,15 +38,15 @@ Every agent must read these files before touching code:
 - **No `git push`, `git reset --hard`, or force-push.** The owner handles all git operations.
 - **No committing.** Only the owner commits and pushes.
 - **No destructive file operations without confirmation.** Ask before deleting files, even if they're listed for removal in STATUS.md.
-- **No guessing secrets.** If you need an RPC URL, API key, mint address, or Firebase config, ask the owner. Never hardcode or invent values.
+- **No guessing secrets.** If you need an RPC URL, API key, mint address, or Supabase config, ask the owner. Never hardcode or invent values.
 - **No prediction-market, Kalshi, ZK-compression, or LP-yield code.** That era is over. See ADR-0001 and ADR-0004.
 - **No email/password auth.** Identity = Solana wallet only. See ADR-0006.
 
 ### Always do these
 
 - **Use the domain language from CONTEXT.md.** "Group" not "circle", "Settlement" not "payment" (in Split Mode), "Contribution" not "payment" (in Fund Mode).
-- **Keep stablecoins-only for balances.** SOL is for gas only. See ADR-0002.
-- **Off-chain metadata, on-chain money.** Group/expense metadata in Firebase; money movement via SPL token transfers. See ADR-0003.
+- **Keep stablecoins-only for balances.** SOL is for gas only. The current MVP settlement asset is USDC. See ADR-0002 and ADR-0011.
+- **Off-chain metadata, on-chain money.** Group and Expense metadata live in Supabase/Postgres; money movement happens via SPL token transfers. See ADR-0003 and ADR-0009.
 - **Follow the roadmap phases.** Don't skip ahead. Phase 0 cleanup → Phase 1 Split Mode → Phase 1.5 LI.FI → Phase 2 Fund Mode.
 - **Run `pnpm build` after changes.** Verify zero build errors before reporting completion.
 - **Create ADRs for significant decisions.** Follow the format in `docs/adr/`. Number sequentially. See ADR format guidance below.
@@ -57,31 +60,33 @@ Every agent must read these files before touching code:
 - **Framework:** Next.js 15 (App Router), React 19, Tailwind v4
 - **UI:** Radix / shadcn components (`components/ui/`)
 - **Wallet:** `@solana/wallet-adapter-`* (Phantom, Solflare, Backpack)
-- **Chain:** Solana (devnet → mainnet)
-- **Tokens:** `@solana/spl-token` for SPL stablecoin transfers
-- **Off-chain:** Firebase Realtime DB (group metadata, expenses, members)
+- **Chain:** Solana (mainnet-beta target, devnet for testing)
+- **Tokens:** `@solana/spl-token` for USDC settlement transfers
+- **Off-chain:** Supabase / Postgres
 - **Treasury:** Squads Protocol (`@sqds/multisig`) for Fund Mode
-- **Cross-chain:** LI.FI SDK (`@lifi/sdk`) for bridge+swap contributions
+- **Cross-chain:** LI.FI SDK (`@lifi/sdk`) for secondary top-up and recovery flows
 
 ### File structure
 
 ```
 /
+├── README.md               ← Project overview + docs map
 ├── CONTEXT.md              ← Domain model, language (READ FIRST)
 ├── AGENTS.md               ← This file
 ├── HACKATHON_PLAN.md       ← Hackathon track strategy
 ├── PRD.md                  ← Product requirements
-├── README.md               ← Project overview
 ├── ROADMAP.md              ← Phased delivery plan
 ├── STATUS.md               ← Current state, next actions
 ├── DECISIONS.md            ← Legacy ADR log (points to docs/adr/)
 ├── docs/
 │   └── adr/                ← Architecture Decision Records
 ├── app/                    ← Next.js App Router pages
+│   └── groups/             ← Group pages + settlement receipts
 ├── components/
 │   ├── ui/                 ← shadcn primitives (do not hand-edit)
 │   └── *.tsx               ← App-level components
 ├── lib/                    ← Client-side business logic
+├── supabase/               ← Current schema
 ├── hooks/                  ← React hooks
 └── public/                 ← Static assets
 ```
@@ -91,15 +96,17 @@ Every agent must read these files before touching code:
 
 | File                                    | Purpose                                               |
 | --------------------------------------- | ----------------------------------------------------- |
-| `lib/solana.ts`                         | Group CRUD, wallet interactions, Firebase persistence |
-| `lib/simple-payment.ts`                 | SOL/SPL transfer implementation                       |
+| `lib/db.ts`                             | Group, Expense, Settlement, and Contribution CRUD     |
+| `lib/expense-engine.ts`                 | Split math, balances, settlement graph, settlement UX |
+| `lib/simple-payment.ts`                 | SPL transfer implementation                           |
+| `lib/supabase.ts`                       | Supabase client configuration                         |
 | `lib/squads-multisig.ts`                | Squads multisig for Fund Mode treasury                |
-| `lib/firebase-group-storage.ts`         | Firebase Realtime DB persistence                      |
-| `lib/firebase.ts`                       | Firebase configuration                                |
+| `lib/lifi-bridge.ts`                    | LI.FI route and execution helpers                     |
 | `components/wallet-provider.tsx`        | Solana wallet adapter setup                           |
 | `components/solana-wallet-provider.tsx` | Solana wallet context                                 |
 | `app/page.tsx`                          | Landing page                                          |
-| `app/circle/[id]/page.tsx`              | Group dashboard (to be renamed to `/groups/[id]`)     |
+| `app/groups/[id]/page.tsx`              | Group dashboard                                       |
+| `app/groups/[id]/settlements/[settlementId]/page.tsx` | Settlement receipt view                    |
 
 
 ---
@@ -158,7 +165,7 @@ docs(adr): add ADR-0009 for LI.FI SDK integration
 - No tests yet (hackathon MVP). After hackathon, add tests for:
   - Balance computation and simplified settlement graph
   - SPL token transfer flow
-  - Firebase read/write operations
+  - Supabase read/write operations
   - LI.FI route discovery and execution
 
 ---
@@ -214,20 +221,21 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 
 - Install `@lifi/sdk` as a dependency
 - Key methods: `getQuote()`, `executeRoute()`, `getContractCallsQuote()`
-- Integration point: Fund Mode contribution flow (cross-chain bridge+swap)
+- Primary integration point: top-up or recovery into Solana USDC, then return to the normal Group Settlement flow
+- Secondary integration point: Fund Mode Contributions if time allows
 - Must support at least 2 chains (Ethereum + Solana or Base + Solana)
 - Docs: [https://docs.li.fi/](https://docs.li.fi/)
 
 ### Visa Frontier (Track 2 — P1)
 
 - No extra code needed — core payment flows ARE the submission
-- Focus on UX polish: receipt views, settlement speed, PYUSD support
+- Focus on UX polish: receipt views, settlement speed, mobile clarity, and USDC payment simplicity
 - Emphasize: one-click settlements, instant finality, consumer payments use case
 
 ### Zerion CLI Agent (Track 3 — P2, stretch)
 
 - Install `zerion-cli` globally
-- Build a background agent that monitors wallets and suggests settlements
+- Build a secondary intelligence layer or background agent that analyzes wallets and suggests next actions
 - Uses `zerion-cli wallet analyze <address>` for wallet data
 - Can use x402 pay-per-call (no API key needed)
 - Docs: [https://developers.zerion.io/build-with-ai/zerion-cli](https://developers.zerion.io/build-with-ai/zerion-cli)
@@ -241,5 +249,4 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 | May 12, 2026 | Demo Day (Superteam Germany)             |
 | May 26, 2026 | LI.FI / Zerion track winner announcement |
 | May 27, 2026 | Visa track winner announcement           |
-
 
