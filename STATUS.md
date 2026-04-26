@@ -41,7 +41,7 @@ The product direction is now sharper:
 - Split Mode data and logic modules for Group CRUD, Expense storage, balance math, simplified settlement graph, and settlement persistence
 - `/groups` and `/groups/[id]` routes
 - Settlement receipt route at `/groups/[id]/settlements/[settlementId]`
-- Conservative Expense delete guard for payer-owned deletes while no later Settlement exists in the same Group
+- Creator-owned Expense edit and delete flow with later-Settlement safety guard plus working equal, exact, percentage, and shares split inputs
 - Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
@@ -73,9 +73,6 @@ The product direction is now sharper:
 
 ## Still pending for the primary MVP
 
-- Align Expense ownership rules to the locked product model:
-  creator owns edit and delete
-  later-Settlement safety guard still applies
 - Shareable Settlement Request Link flow from the Group page
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Global profile display-name UX and polish
@@ -119,9 +116,9 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 ## Resume point for the next session
 
 1. Finish the Split Mode share-to-settle flow so a debtor can open the Group, see the live amount they owe, sign the Settlement, and land on a Receipt.
-2. Add Expense edit flow using the same post-Settlement safety model already used for delete.
-3. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-4. Keep LI.FI as a secondary top-up path and keep Zerion outside the primary settlement path.
+2. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+3. Keep LI.FI as a secondary top-up path and keep Zerion outside the primary settlement path.
+4. Add global profile display-name polish plus the final empty-state and copy pass.
 5. Return to Fund Mode proposals only after the Split Mode demo path is polished.
 
 ---
