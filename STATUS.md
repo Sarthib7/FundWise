@@ -20,7 +20,7 @@ The product direction is now sharper:
 - Mainnet-beta is the product target; devnet remains the test environment.
 - Wallet-native auth stays in place.
 - USDC is the only settlement asset in the MVP.
-- LI.FI and Zerion remain secondary layers, not the main user path.
+- LI.FI and Zerion CLI are active sponsor tracks, but neither should displace the main Split Mode user path.
 
 ---
 
@@ -68,7 +68,7 @@ The product direction is now sharper:
 - Mainnet-beta is the product target; devnet is for testing and rehearsals.
 - USDC is the only stablecoin in the MVP.
 - LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
-- Zerion is a secondary intelligence layer for later analysis, guidance, and agent flows.
+- Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
 
 ---
 
@@ -85,7 +85,6 @@ The product direction is now sharper:
 ## Secondary work kept out of the main path
 
 - LI.FI recovery/top-up branch when a debtor lacks USDC on Solana
-- Zerion-powered balance analysis, reminders, or agent suggestions
 - Telegram bot and Telegram mini app
 - Wallet-embedded mini dapp distribution
 - AI bill parsing or natural-language expense entry
@@ -116,7 +115,7 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 ## Resume point for the next session
 
 1. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-2. Keep LI.FI as a secondary top-up path and keep Zerion outside the primary settlement path.
+2. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
 3. Add global profile display-name polish plus the final empty-state and copy pass.
 4. Add Group total settled volume display.
 5. Return to Fund Mode proposals only after the Split Mode demo path is polished.
