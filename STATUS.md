@@ -44,6 +44,7 @@ The product direction is now sharper:
 - Settlement receipt route at `/groups/[id]/settlements/[settlementId]`
 - Creator-owned Expense edit and delete flow with later-Settlement safety guard plus working equal, exact, percentage, and shares split inputs
 - Shareable Settlement Request Links that deep-link back into the Group and resolve debtor-to-creditor amounts from the live simplified settlement graph
+- Global profile display-name editing with reuse across Groups
 - Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
@@ -95,7 +96,6 @@ The product direction is now sharper:
 ## Still pending for the primary MVP
 
 - Frontend responsiveness pass across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-- Global profile display-name UX and polish
 - Final empty-state and copy polish across Group screens
 - Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
