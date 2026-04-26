@@ -2,12 +2,14 @@
   "name": "fundwise",
   "version": "0.1.0",
   "private": true,
-  "description": "FundWise — Splitwise on Solana. Split expenses and settle in stablecoins; pool shared treasuries with proposal-based spending.",
+  "description": "FundWise \u2014 Splitwise on Solana. Split expenses and settle in stablecoins; pool shared treasuries with proposal-based spending.",
   "scripts": {
     "build": "next build",
     "dev": "next dev --hostname 127.0.0.1",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "anchor:build": "cd programs/fundwise && cargo build-bpf",
+    "anchor:test": "anchor test --skip-build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
@@ -86,6 +88,8 @@
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@coral-xyz/anchor": "^0.30.0",
+    "@solana/web3.js": "^1.91.0"
   }
 }

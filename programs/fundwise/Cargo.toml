@@ -1,0 +1,15 @@
+[package]
+name = "fundwise"
+version = "0.1.0"
+description = "FundWise Split Mode on-chain program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "fundwise"
+
+[dependencies]
+anchor-lang = "0.30.1"
+anchor-spl = "0.30.1"
+spl-token = { version = "4.0.0", features = ["no-entrypoint"] }
+spl-associated-token-account = "2.0.0"
