@@ -50,6 +50,26 @@ export interface Database {
           treasury_address?: string | null
         }
       }
+      profiles: {
+        Row: {
+          wallet: string
+          display_name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          wallet: string
+          display_name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          wallet?: string
+          display_name?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
       members: {
         Row: {
           id: string
