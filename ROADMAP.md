@@ -45,6 +45,8 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 **Mainnet-beta hardening inside Phase 1:**
 
+- Authenticated wallet-bound server-side ledger writes with member-scoped RLS
+- RPC verification before persisting Settlement and Contribution receipts
 - Supported mainnet USDC mint wiring
 - Clear insufficient-USDC and insufficient-SOL states
 - Recipient USDC token-account auto-creation inside settlement flow
