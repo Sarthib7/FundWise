@@ -3,7 +3,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-fundwise = "FGhS5xYdH7QnJq2bQ6wK9cVt3mXpL8rN5vM1wZ4kE7A"
+fundwise = "Ai2w51mduD8GjMamzkG17EUQzrELxEmWmKX3GDa2V99r"
 
 [registry]
 url = "https://api.apr.dev"

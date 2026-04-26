@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "fundwise"
 
 [dependencies]
-anchor-lang = "0.30.1"
+anchor-lang = { version = "0.30.1", features = ["init-space"] }
 anchor-spl = "0.30.1"
 spl-token = { version = "4.0.0", features = ["no-entrypoint"] }
 spl-associated-token-account = "2.0.0"

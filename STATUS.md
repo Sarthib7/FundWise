@@ -58,24 +58,60 @@ The product direction is now sharper:
 - Responsive behavior, spacing density, empty states, and copy consistency still need one dedicated pass before backend and sponsor work resumes
 
 ## Current work in progress
-Frontend responsiveness pass complete across all key surfaces:
+
+**Wallet data layer added via Zerion API** (server-side proxy, no client secret exposure):
+  - `lib/zerion/`: client singleton, types, wallet-service, React hook `useZerionWallet()`
+  - API routes: `/api/zerion/portfolio`, `/api/zerion/transactions` (server-side only, JWT proxy)
+  - Example component: `components/zerion/portfolio-card.tsx` with top holdings + 24h change
+  - ADR-007: rationale (unified multichain schema, free tier covers demo)
+  - ✓ Pending: wire PortfolioCard into header or profile dropdown
+
+**Swap provider infrastructure complete** (LiFi primary + Jupiter fallback):
+  - `lib/swaps/`: abstract provider, LiFi wrapper, Jupiter fallback, service orchestrator
+  - Error handling: structured `SwapError` codes, exponential backoff, price-impact guard
+  - ADRs: ADR-005 (provider selection strategy), ADR-006 (per-edge atomic settlement flow)
+  - Rate-limit mitigation: auto fallback after 2 LiFi quote attempts → Jupiter
+  - ✓ Pending: integrate `SwapService` into settlement page UI; add loading/error states; devnet smoke test
+
+**Frontend responsiveness pass remains signed off**:
   landing, header/footer/wallet chrome, hero, CTA, groups list, group detail,
   receipt, balance card, settlement request card, activity feed, join card,
   and the bridge modal.
 
-New UX improvements shipped:
+**New UX improvements shipped:**
 - Group total settled volume displayed in header (Split Mode only)
 - Global profile display name editing via modal (pencil icon on own balance)
 - QR scanner dialog and expense dialog validated across breakpoints (already responsive)
 
-Backend trust hardening infrastructure added (non-breaking):
-- Audit log table + RLS member-scoped policies
+**Backend trust hardening infrastructure added** (non-breaking):
+- Audit log table + RLS member-scoped policies (schema pending EF migration)
 - Supabase Edge Functions for all future server-side mutations
 - RPC receipt verification for Settlement and Contribution
-- Design doc: docs/BACKEND_TRUST_HARDENING.md
-- Split Mode Anchor program scaffolded (lib.rs, Cargo.toml, README, smoke test)
+- Design doc: `docs/BACKEND_TRUST_HARDENING.md`
 
-Next: Deploy Edge Functions, integrate Supabase Auth, then migrate client mutations to use server-side APIs.
+**Anchor program security hardening (in progress → ready for local build):**
+- `state.rs`: `expense_count` added to `Group`; `#[max_len]` constraints on `String`/`Vec` fields; overflow-checks enabled in `Cargo.toml`
+- `errors.rs`: `ReentrantCall` variant added; `SettlementLocked` clarified
+- Instructions (`create_group`, `join_group`, `add_expense`, `update_expense`, `delete_expense`, `record_settlement`): full **Checks-Effects-Interactions** ordering; settlement PDA lock via unique seeds; CPI `transfer_checked` with mint decimals validation; group `total_settled_volume` increment
+- Security test suite: `tests/security.test.ts` — 4 exploit scenarios (wrong owner, duplicate settlement, insufficient balance, happy path)
+- Keypair synced: program ID `Ai2w51mduD8GjMamzkG17EUQzrELxEmWmKX3GDa2V99r`
+- ✓ Build blocked on this host (ARM64 Linux): Solana BPF toolchain (`cargo-build-sbf`) unavailable. Requires x86_64 machine with `anchor build`
+
+**ADRs shipped today (DECIDED):**
+- ADR-005: Swap Provider Selection & Fallback Strategy
+- ADR-006: Settlement Flow: Swap-Based USDC Disbursement
+- ADR-007: Zerion API as Wallet Data Layer
+- ADR-013: Client Mutation Migration to Edge Functions
+- ADR-014: On-Chain Settlement Verification via CPI Token Transfer
+- ADR-015: Settlement Lock Enforcement via PDA Iteration & Duplicate Detection
+- docs/adr/0003-state-compression-strategy.md (updated)
+
+**Security documentation:**
+- `docs/SECURITY_THREAT_MODEL.md`: threat model, attack surface, mitigations, security checklist
+
+---
+
+## Next: integrate Zerion PortfolioCard into header/profile, then integrate SwapService into settlement UI.
 
 ## Product decisions locked on 2026-04-26
 
@@ -104,12 +140,15 @@ Next: Deploy Edge Functions, integrate Supabase Auth, then migrate client mutati
 ---
 
 ## Still pending for the primary MVP
+
 - Empty-state and copy polish across Group screens (copy review) — partially done, more may be needed
-- Deploy and test Edge Functions (requires Supabase service role key + Solana RPC URL)
-- Integrate Supabase Auth to activate member-scoped RLS
-- Migrate client mutations to call Edge Functions
+- **Deploy Edge Functions** (requires `SUPABASE_SERVICE_ROLE_KEY`)
+- **Integrate Supabase Auth** to activate member-scoped RLS
+- **Migrate client mutations** to call Edge Functions instead of direct table ops
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
+- **Anchor program local build** (requires x86_64 machine with Solana BPF toolchain)
+- **Devnet deployment** (local build → `anchor deploy` → smoke test)
 
 ## Secondary work kept out of the main path
 
@@ -128,13 +167,11 @@ Next: Deploy Edge Functions, integrate Supabase Auth, then migrate client mutati
 Fund Mode remains a real product mode, but it is no longer the primary demo path before the Split Mode MVP is polished.
 
 **Already present:**
-
 - Group creation supports Fund Mode
 - Treasury initialization exists
 - Contribution history and on-chain Treasury balance are surfaced
 
 **Still pending:**
-
 - Proposal creation, approval, and execution UI
 - Clear signer-management rules after Treasury initialization
 - One-click LI.FI into Treasury Contribution flow
@@ -143,19 +180,22 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Frontend responsiveness pass is complete; run a final visual QA across breakpoints and finish any remaining empty-state copy polish.
-2. Backend trust hardening infrastructure is in place (Edge Functions + migrations). Next: Deploy EF, set env vars, then integrate Supabase Auth.
-3. Migrate client mutations (addExpense, deleteExpense, addSettlement, addContribution, updateMemberDisplayName) to call Edge Functions instead of direct table ops.
-4. Verify RPC receipt verification for Settlement and Contribution transactions on-chain.
-5. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-6. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
-7. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
-8. Return to Fund Mode proposals only after the Split Mode demo path is fully polished.
+1. **Frontend responsiveness pass** — run final visual QA across breakpoints, finish any empty-state copy polish.
+2. **Anchor build** — compile program on x86_64 Linux with Solana BPF toolchain (`anchor build`), fix any compile errors, deploy to devnet (`anchor deploy`), test locally.
+3. **Edge Functions deployment** — after you provide `SUPABASE_SERVICE_ROLE_KEY`, run `supabase functions deploy` to all EF routes (`expense`, `expense/update`, `expense/delete`, `settlement`, `contribution`, `profile/name`).
+4. **Client mutation migration** — swap `supabase.from()` calls for `supabase.functions.invoke()` for all mutating operations.
+5. **Supabase Auth integration** — enable email/password or magic link; activate RLS policies; restrict EF access to authenticated members.
+6. **On-chain + Edge Functions integration** — wire `SwapService.executeSettlementSwap()` into settlement confirmation page; add Zerion PortfolioCard to header/profile dropdown.
+7. **Devnet smoke test** — end-to-end: create group → add expense → call EF settlement → submit on-chain TX → verify USDC transfer on Solscan devnet.
+8. **Mainnet hardening checklist** — mainnet USDC mint wiring, recipient token-account creation, insufficient-funds UX, SOL gas guidance.
+9. **Audit** — contract security review; then full-stack rewiring and polish before hackathon demo.
+10. Return to Fund Mode proposals only after the Split Mode demo path is fully polished.
 
 ---
 
 ## Ground rules
 
 - No git operations performed by the assistant; commits and pushes are the owner's.
-- Work only inside `/Users/sarthiborkar/Build/FundWise`.
+- Work only inside `/home/tokisaki/FundWise`.
 - If an external input is required (RPC URL, API key, mint address, contract address), ask the owner instead of guessing.
+
