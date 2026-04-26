@@ -31,7 +31,6 @@ import {
   addContribution as dbAddContribution,
   addExpense as dbAddExpense,
   addMember,
-  updateMemberDisplayName,
   addSettlement as dbAddSettlement,
   deleteExpense as dbDeleteExpense,
   getActivityFeed,
@@ -249,10 +248,6 @@ export default function GroupDashboard() {
 
   const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
-  const [showProfileDialog, setShowProfileDialog] = useState(false)
-  const [profileName, setProfileName] = useState("")
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
-
   const [copied, setCopied] = useState(false)
 
   const [expenseAmount, setExpenseAmount] = useState("")
@@ -850,33 +845,6 @@ export default function GroupDashboard() {
     }
   }
 
-
-  const openEditProfile = useCallback(() => {
-    const myMember = members.find((m) => m.wallet === walletAddress)
-    setProfileName(myMember?.display_name || "")
-    setShowProfileDialog(true)
-  }, [members, walletAddress])
-
-  const handleSaveProfileName = useCallback(async () => {
-    if (!profileName.trim() || !walletAddress || !group) return
-    setIsUpdatingProfile(true)
-    try {
-      await updateMemberDisplayName(groupId, walletAddress, profileName.trim())
-      // Optimistically update local members state
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.wallet === walletAddress ? { ...m, display_name: profileName.trim() } : m
-        )
-      )
-      setShowProfileDialog(false)
-      toast.success("Display name updated")
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update display name")
-    } finally {
-      setIsUpdatingProfile(false)
-    }
-  }, [groupId, walletAddress, group, profileName])
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -1068,20 +1036,9 @@ export default function GroupDashboard() {
                         <WalletAvatar address={balance.wallet} size={32} />
                         <span className="truncate font-medium">{balance.displayName}</span>
                         {balance.wallet === walletAddress && (
-                          <>
-                            <Badge variant="secondary" className="text-xs">
-                              You
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              onClick={openEditProfile}
-                              aria-label="Edit your display name"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </>
+                          <Badge variant="secondary" className="text-xs">
+                            You
+                          </Badge>
                         )}
                       </div>
                       <span
