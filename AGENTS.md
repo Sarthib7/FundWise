@@ -11,7 +11,7 @@ This file is the shared instruction set for all AI agents (Claude Codex, GLM, Cu
 1. **Split Mode** (MVP): Track expenses, compute who owes whom, and settle exact USDC amounts on Solana.
 2. **Fund Mode** (Phase 2): Pool stablecoins into a shared treasury with proposal-based spending.
 
-**Hackathon context:** We are submitting to the Colosseum Frontier hackathon (deadline May 11, 2026) with focus on Germany-only tracks: Visa Frontier ($10K) and LI.FI ($2.5K). See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for full strategy.
+**Hackathon context:** We are submitting to the Colosseum Frontier hackathon (deadline May 11, 2026) with active sponsor focus on Visa Frontier, LI.FI, and Zerion CLI. See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for full strategy.
 
 ---
 
@@ -232,10 +232,10 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 - Focus on UX polish: receipt views, settlement speed, mobile clarity, and USDC payment simplicity
 - Emphasize: one-click settlements, instant finality, consumer payments use case
 
-### Zerion CLI Agent (Track 3 — P2, stretch)
+### Zerion CLI Agent (Track 3 — active sponsor track)
 
 - Install `zerion-cli` globally
-- Build a secondary intelligence layer or background agent that analyzes wallets and suggests next actions
+- Build a wallet-intelligence layer or background agent that analyzes wallets and suggests next actions without disrupting the primary Split Mode settlement flow
 - Uses `zerion-cli wallet analyze <address>` for wallet data
 - Can use x402 pay-per-call (no API key needed)
 - Docs: [https://developers.zerion.io/build-with-ai/zerion-cli](https://developers.zerion.io/build-with-ai/zerion-cli)
@@ -249,4 +249,3 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 | May 12, 2026 | Demo Day (Superteam Germany)             |
 | May 26, 2026 | LI.FI / Zerion track winner announcement |
 | May 27, 2026 | Visa track winner announcement           |
-
