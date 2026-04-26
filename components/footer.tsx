@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 export function Footer() {
   return (
     <footer className="border-t border-brand-border-c px-4 py-10 sm:px-6 sm:py-11 lg:px-[max(24px,calc(50%-660px))]">
@@ -17,31 +19,31 @@ export function Footer() {
           <span className="font-serif text-[17px] text-brand-text-2">FundWise</span>
         </div>
 
-        <div className="flex flex-wrap gap-4 sm:gap-[22px]">
-          <a
-            href="#"
-            className="rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        <div className="flex flex-wrap gap-3.5 sm:gap-[22px]">
+          <Link
+            href="/#modes"
+            className="inline-flex min-h-10 items-center rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            Docs
-          </a>
-          <a
-            href="#"
-            className="rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            Modes
+          </Link>
+          <Link
+            href="/#how"
+            className="inline-flex min-h-10 items-center rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            GitHub
-          </a>
-          <a
-            href="#"
-            className="rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            How it works
+          </Link>
+          <Link
+            href="/#features"
+            className="inline-flex min-h-10 items-center rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            Twitter
-          </a>
-          <a
-            href="#"
-            className="rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            Features
+          </Link>
+          <Link
+            href="/groups"
+            className="inline-flex min-h-10 items-center rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            Colosseum
-          </a>
+            Launch app
+          </Link>
         </div>
 
         <div className="text-xs text-brand-text-3 sm:text-right">
