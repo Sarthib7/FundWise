@@ -261,7 +261,22 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      update_expense_with_splits: {
+        Args: {
+          p_expense_id: string
+          p_actor_wallet: string
+          p_payer: string
+          p_amount: number
+          p_mint: string
+          p_memo: string | null
+          p_category: string | null
+          p_split_method: "equal" | "exact" | "shares" | "percentage"
+          p_splits: Json
+        }
+        Returns: undefined
+      }
+    }
     Enums: {
       group_mode: "split" | "fund"
       split_method: "equal" | "exact" | "shares" | "percentage"

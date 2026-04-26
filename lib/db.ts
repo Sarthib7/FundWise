@@ -285,6 +285,32 @@ export async function deleteExpense(expenseId: string, actorWallet: string) {
   if (error) throw new Error(`Failed to delete expense: ${error.message}`)
 }
 
+export async function updateExpense(data: {
+  expenseId: string
+  actorWallet: string
+  payer: string
+  amount: number
+  mint: string
+  memo?: string
+  category?: string
+  splitMethod: "equal" | "exact" | "shares" | "percentage"
+  splits: { wallet: string; share: number }[]
+}) {
+  const { error } = await supabase.rpc("update_expense_with_splits", {
+    p_expense_id: data.expenseId,
+    p_actor_wallet: data.actorWallet,
+    p_payer: data.payer,
+    p_amount: data.amount,
+    p_mint: data.mint,
+    p_memo: data.memo || null,
+    p_category: data.category || null,
+    p_split_method: data.splitMethod,
+    p_splits: data.splits,
+  })
+
+  if (error) throw new Error(`Failed to update expense: ${error.message}`)
+}
+
 // =============================================
 // SETTLEMENTS
 // =============================================
