@@ -26,6 +26,16 @@ create table public.groups (
 );
 
 -- =============================================
+-- PROFILES
+-- =============================================
+create table public.profiles (
+  wallet text primary key,
+  display_name text not null check (char_length(display_name) between 1 and 32),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- =============================================
 -- GROUP MEMBERS
 -- =============================================
 create table public.members (
@@ -212,6 +222,7 @@ create index idx_proposals_group on public.proposals(group_id);
 -- ROW LEVEL SECURITY
 -- =============================================
 alter table public.groups enable row level security;
+alter table public.profiles enable row level security;
 alter table public.members enable row level security;
 alter table public.expenses enable row level security;
 alter table public.expense_splits enable row level security;
@@ -237,6 +248,20 @@ create policy "Only creator can update groups"
 -- so Treasury initialization needs an open update policy until wallet auth is added.
 create policy "Wallet-only MVP can update groups"
   on public.groups for update
+  using (true)
+  with check (true);
+
+-- Profiles: anyone can read; wallet-only MVP keeps writes open until authenticated wallet-bound mutations ship
+create policy "Profiles are viewable by everyone"
+  on public.profiles for select
+  using (true);
+
+create policy "Wallet-only MVP can create profiles"
+  on public.profiles for insert
+  with check (true);
+
+create policy "Wallet-only MVP can update profiles"
+  on public.profiles for update
   using (true)
   with check (true);
 
