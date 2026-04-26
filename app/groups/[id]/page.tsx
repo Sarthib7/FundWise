@@ -39,6 +39,7 @@ import {
   getMembers,
   isMember as checkIsMember,
   type ActivityItem,
+  updateProfileDisplayName,
   updateExpense as dbUpdateExpense,
   updateGroupTreasury,
 } from "@/lib/db"
@@ -99,6 +100,7 @@ const EXPENSE_CATEGORIES = [
 
 const EXPENSE_SPLIT_METHODS: SplitMethod[] = ["equal", "exact", "shares", "percentage"]
 const PERCENTAGE_BASIS_POINTS = 10_000
+const PROFILE_DISPLAY_NAME_MAX_LENGTH = 32
 
 function shortWallet(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -248,6 +250,9 @@ export default function GroupDashboard() {
 
   const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
+  const [showProfileDialog, setShowProfileDialog] = useState(false)
+  const [profileName, setProfileName] = useState("")
+  const [isSavingProfileName, setIsSavingProfileName] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const [expenseAmount, setExpenseAmount] = useState("")
@@ -393,6 +398,61 @@ export default function GroupDashboard() {
     setSplitMethod("equal")
     setCustomSplitValues({})
   }, [walletAddress])
+
+  const openProfileDialog = useCallback(() => {
+    const currentDisplayName =
+      members.find((member) => member.wallet === walletAddress)?.display_name || ""
+
+    setProfileName(currentDisplayName)
+    setShowProfileDialog(true)
+  }, [members, walletAddress])
+
+  const handleSaveProfileName = useCallback(async () => {
+    const trimmedDisplayName = profileName.trim()
+
+    if (!walletAddress) {
+      toast.error("Connect your wallet first")
+      return
+    }
+
+    if (!trimmedDisplayName) {
+      toast.error("Enter a profile display name")
+      return
+    }
+
+    if (trimmedDisplayName.length > PROFILE_DISPLAY_NAME_MAX_LENGTH) {
+      toast.error(`Display name must be ${PROFILE_DISPLAY_NAME_MAX_LENGTH} characters or fewer`)
+      return
+    }
+
+    setIsSavingProfileName(true)
+
+    try {
+      await updateProfileDisplayName(walletAddress, trimmedDisplayName)
+
+      setMembers((currentMembers) =>
+        currentMembers.map((member) =>
+          member.wallet === walletAddress
+            ? { ...member, display_name: trimmedDisplayName }
+            : member
+        )
+      )
+      setBalances((currentBalances) =>
+        currentBalances.map((balance) =>
+          balance.wallet === walletAddress
+            ? { ...balance, displayName: trimmedDisplayName }
+            : balance
+        )
+      )
+
+      setShowProfileDialog(false)
+      toast.success("Profile display name updated")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update profile display name")
+    } finally {
+      setIsSavingProfileName(false)
+    }
+  }, [profileName, walletAddress])
 
   const openCreateExpenseDialog = useCallback(() => {
     setEditingExpense(null)
@@ -1217,6 +1277,11 @@ export default function GroupDashboard() {
                       }
 
                       const settlement = item.data
+                      const settlementFromLabel =
+                        memberNameByWallet.get(settlement.from_wallet) || shortWallet(settlement.from_wallet)
+                      const settlementToLabel =
+                        memberNameByWallet.get(settlement.to_wallet) || shortWallet(settlement.to_wallet)
+
                       return (
                         <div
                           key={`${item.type}-${settlement.id}-${index}`}
@@ -1229,7 +1294,7 @@ export default function GroupDashboard() {
                             <div>
                               <p className="font-medium text-sm">Settlement</p>
                               <p className="text-xs text-muted-foreground">
-                                {shortWallet(settlement.from_wallet)} → {shortWallet(settlement.to_wallet)} ·{" "}
+                                {settlementFromLabel} → {settlementToLabel} ·{" "}
                                 {new Date(settlement.confirmed_at).toLocaleDateString()}
                               </p>
                             </div>
@@ -1423,7 +1488,10 @@ export default function GroupDashboard() {
                           <div className="flex min-w-0 items-center gap-3">
                             <WalletAvatar address={contribution.member_wallet} size={32} />
                             <div className="min-w-0">
-                              <p className="truncate font-medium text-sm">{shortWallet(contribution.member_wallet)}</p>
+                              <p className="truncate font-medium text-sm">
+                                {memberNameByWallet.get(contribution.member_wallet) ||
+                                  shortWallet(contribution.member_wallet)}
+                              </p>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(contribution.created_at).toLocaleDateString()}
                               </p>
@@ -1494,13 +1562,30 @@ export default function GroupDashboard() {
                       )}
                     </div>
                     {member.wallet === walletAddress && (
-                      <Badge variant="secondary" className="text-xs">
-                        You
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          You
+                        </Badge>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={openProfileDialog}
+                          aria-label="Edit your global profile display name"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
+              {isMember && walletAddress && (
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Your profile display name follows your wallet across every Group.
+                </p>
+              )}
             </Card>
           </div>
         </div>
@@ -1658,6 +1743,50 @@ export default function GroupDashboard() {
           )
         }}
       />
+
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile Display Name</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="profile-display-name">Display Name</Label>
+              <Input
+                id="profile-display-name"
+                value={profileName}
+                maxLength={PROFILE_DISPLAY_NAME_MAX_LENGTH}
+                onChange={(event) => setProfileName(event.target.value)}
+                placeholder="Add the name your Group should see"
+              />
+              <p className="text-xs text-muted-foreground">
+                This name is tied to your wallet and reused across every Group you join.
+              </p>
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowProfileDialog(false)}
+                disabled={isSavingProfileName}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-accent hover:bg-accent/90"
+                onClick={handleSaveProfileName}
+                disabled={isSavingProfileName || !profileName.trim()}
+              >
+                {isSavingProfileName ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Save Name
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
