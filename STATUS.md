@@ -1,52 +1,26 @@
-# FundWise — Status
+# FundWise - Status
 
-**Snapshot date:** 2026-04-25
-**Phase:** 1 complete (Split Mode core) + Phase 1.5/2 vertical slices underway
-**Hackathon:** Colosseum Frontier (April 6 – May 11, 2026)
+**Snapshot date:** 2026-04-26
+**Phase:** Split Mode MVP hardening for mainnet-beta target
+**Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 
 ---
 
 ## TL;DR
 
-FundWise is **Splitwise on Solana** — a two-mode consumer expense app:
+FundWise is still a two-mode product:
 
-1. **Split Mode** — Track expenses, compute balances, settle in stablecoins (MVP priority).
-2. **Fund Mode** — Shared on-chain treasury with proposal-based spending (phase 2).
+1. Split Mode: track shared expenses in a Group, compute who owes whom, and settle in USDC on Solana.
+2. Fund Mode: pool USDC into a shared Treasury and spend from it via Proposals.
 
-We are participating in the **Colosseum Frontier** hackathon with focus on Germany-only tracks (LI.FI, Visa, Zerion). See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for track strategy.
+The product direction is now sharper:
 
----
-
-## File Structure
-
-```
-/
-├── AGENTS.md               ← Instructions for all AI agents (READ FIRST)
-├── CONTEXT.md              ← Domain model, language, relationships
-├── HACKATHON_PLAN.md       ← Track analysis, submission strategy, timeline
-├── PRD.md                  ← Product Requirements Document
-├── README.md               ← Project overview + getting started
-├── ROADMAP.md              ← Phased delivery plan
-├── STATUS.md               ← This file — current state
-├── docs/
-│   └── adr/                ← Architecture Decision Records
-│       ├── 0001-pivot-from-fund-flow-to-fundwise.md
-│       ├── 0002-stablecoins-only-for-balances.md
-│       ├── 0003-off-chain-metadata-on-chain-money.md
-│       ├── 0004-drop-hackathon-dependencies.md
-│       ├── 0005-squads-multisig-for-fund-mode.md
-│       ├── 0006-wallet-only-auth.md
-│       ├── 0007-rename-circles-to-groups.md
-│       ├── 0008-keep-nextjs-shadcn-stack.md
-│       ├── 0009-switch-from-firebase-to-supabase.md
-│       └── 0010-store-multisig-and-vault-addresses-for-fund-mode.md
-├── DECISIONS.md            ← Legacy ADR log (superseded by docs/adr/)
-├── app/                    ← Next.js App Router pages
-├── components/             ← React components (ui/ = shadcn primitives)
-├── lib/                    ← Client-side logic
-├── hooks/                  ← React hooks
-└── public/                 ← Static assets
-```
+- The primary hackathon demo is Split Mode, not Fund Mode.
+- The web app is the source of truth for the MVP.
+- Mainnet-beta is the product target; devnet remains the test environment.
+- Wallet-native auth stays in place.
+- USDC is the only settlement asset in the MVP.
+- LI.FI and Zerion remain secondary layers, not the main user path.
 
 ---
 
@@ -55,83 +29,105 @@ We are participating in the **Colosseum Frontier** hackathon with focus on Germa
 **Stack:**
 
 - Next.js 15 (App Router) + React 19 + Tailwind v4 + Radix/shadcn UI
-- `@solana/wallet-adapter-*` (Phantom, Solflare, etc.)
+- `@solana/wallet-adapter-*` for wallet-native auth
 - `@solana/web3.js`, `@solana/spl-token`
-- Supabase (`@supabase/supabase-js`) + Postgres schema in `supabase/schema.sql`
-- Squads multisig (`@sqds/multisig`) — reserved for Fund Mode
+- Supabase (`@supabase/supabase-js`) with schema in `supabase/schema.sql`
+- Squads multisig (`@sqds/multisig`) reserved for Fund Mode Treasury flows
 
-**Completed in this phase:**
+**Already shipped:**
 
-- Firebase removed; Supabase introduced as the only off-chain data layer
-- New normalized DB model implemented (`groups`, `members`, `expenses`, `expense_splits`, `settlements`, `contributions`, `proposals`, `proposal_approvals`)
-- New Split Mode data + logic modules:
-  - `lib/db.ts` (CRUD and activity feed)
-  - `lib/expense-engine.ts` (split math, balances, settlement graph, SPL settlement)
-- New routes and dashboard:
-  - `/groups`
-  - `/groups/[id]`
-- Dedicated settlement receipt route:
-  - `/groups/[id]/settlements/[settlementId]`
-- Conservative expense delete guard shipped:
-  - payer can delete only while no later settlement exists in the same group
-- Fund Mode vertical slice shipped:
-  - Group creation now supports Split Mode or Fund Mode
-  - Fund Mode captures funding goal + approval threshold at creation
-  - creator can initialize a Squads Treasury from the Group page
-  - members can make on-chain Contributions into the Treasury
-  - dashboard shows on-chain Treasury balance + Contribution history
-- LI.FI groundwork shipped:
-  - client-only SDK initialization
-  - injected EVM wallet source + Solana destination wallet routing
-  - bridge UI is mainnet-aware and disabled on devnet/custom RPCs
-- Group Treasury persistence now stores both:
-  - `multisig_address` for future proposal/approval flows
-  - `treasury_address` for the current vault receive path
-- Supabase env wiring updated for current publishable-key format at project-root `.env.local`
-- "circles" legacy routes removed and replaced with "groups"
-- Build verified green with the new structure
+- Firebase removed; Supabase is the off-chain data layer
+- Normalized schema for `groups`, `members`, `expenses`, `expense_splits`, `settlements`, `contributions`, `proposals`, and `proposal_approvals`
+- Split Mode data and logic modules for Group CRUD, Expense storage, balance math, simplified settlement graph, and settlement persistence
+- `/groups` and `/groups/[id]` routes
+- Settlement receipt route at `/groups/[id]/settlements/[settlementId]`
+- Conservative Expense delete guard for payer-owned deletes while no later Settlement exists in the same Group
+- Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
+- LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
+- Group Treasury persistence stores both `multisig_address` and `treasury_address`
 
-**Still pending in Split Mode (before submission polish):**
+---
 
-- Edit expense flow (delete-only shipped; edit still missing)
-- Final empty-state and copy polish on a few edge views
+## Product decisions locked on 2026-04-26
+
+- Split Mode is the primary MVP path for the hackathon demo.
+- The Group page owns the full flow:
+  Group -> Expense -> Balance -> Settlement -> Receipt
+- Members join by invite link or QR after connecting a wallet.
+- Join is invite-based and does not require creator approval in the MVP.
+- Member identity is wallet-native with one global profile display name reused across Groups.
+- Expenses are off-chain records; Settlements are on-chain USDC transfers.
+- Any Member can log an Expense, and the payer can be any Member in the Group.
+- Only the Expense creator can edit or delete it.
+- The Activity Feed is the only in-Group timeline surface for now; there is no chat.
+- Only Members with a negative Balance see the Settle action.
+- Settlements resolve against the debtor's current net Balance, not a stale linked amount.
+- The primary settlement action is exact-amount settlement in one go.
+- Each suggested edge in the simplified settlement graph maps to one debtor-to-creditor transfer.
+- Mainnet-beta is the product target; devnet is for testing and rehearsals.
+- USDC is the only stablecoin in the MVP.
+- LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
+- Zerion is a secondary intelligence layer for later analysis, guidance, and agent flows.
+
+---
+
+## Still pending for the primary MVP
+
+- Align Expense ownership rules to the locked product model:
+  creator owns edit and delete
+  later-Settlement safety guard still applies
+- Shareable Settlement Request Link flow from the Group page
+- Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
+- Global profile display-name UX and polish
+- Final empty-state and copy polish across Group screens
 - Group total settled volume display
+- Mainnet deployment checklist and supported USDC mint wiring
 
-**Still pending in Fund Mode / LI.FI:**
+---
 
-- One-click LI.FI bridge directly into Treasury Contribution flow (today it is still bridge to wallet, then contribute)
-- Proposal creation / approval / execution UI on top of stored Squads multisig
+## Secondary work kept out of the main path
+
+- LI.FI recovery/top-up branch when a debtor lacks USDC on Solana
+- Zerion-powered balance analysis, reminders, or agent suggestions
+- Telegram bot and Telegram mini app
+- Wallet-embedded mini dapp distribution
+- AI bill parsing or natural-language expense entry
+- Embedded wallets and social login
+- Gas abstraction / gasless settlement
+- Multi-stablecoin or multi-chain primary settlement
+
+---
+
+## Fund Mode status
+
+Fund Mode remains a real product mode, but it is no longer the primary demo path before the Split Mode MVP is polished.
+
+**Already present:**
+
+- Group creation supports Fund Mode
+- Treasury initialization exists
+- Contribution history and on-chain Treasury balance are surfaced
+
+**Still pending:**
+
+- Proposal creation, approval, and execution UI
 - Clear signer-management rules after Treasury initialization
+- One-click LI.FI into Treasury Contribution flow
 
 ---
 
-## Hackathon Tracks — Submission Plan
+## Resume point for the next session
 
-
-| Priority | Track                          | Prize        | Status         |
-| -------- | ------------------------------ | ------------ | -------------- |
-| **P1**   | Visa Frontier (DE)             | $10,000 USDG | Must-submit    |
-| **P1**   | Build with LI.FI (DE)          | $2,500 USDC  | Must-submit    |
-| P2       | Zerion CLI Agent (DE)          | $2,000 USDC  | If time allows |
-| P2       | Live dApp / Eitherway (Global) | $20,000 USDC | If time allows |
-| —        | Jupiter (Global)               | 3,000 jupUSD | Skip           |
-
-
-**Deadline:** May 11, 2026 (Colosseum) / May 26-27 (side track announcements)
-
----
-
-## Resume point (next session)
-
-1. **Setup verify:** Apply the latest `supabase/schema.sql` changes. The Fund Mode Treasury flow now depends on `groups.multisig_address` plus the open `groups` update policy used by the wallet-only MVP.
-2. **Phase 1.5:** Replace the current bridge-to-wallet flow with a bridge-then-contribute Treasury flow so LI.FI lands in a true Contribution path.
-3. **Phase 2:** Build proposal creation / approval / execution on top of the stored Squads multisig address.
-4. **Split Mode:** Add expense edit flow using the same post-Settlement guard model as delete.
+1. Finish the Split Mode share-to-settle flow so a debtor can open the Group, see the live amount they owe, sign the Settlement, and land on a Receipt.
+2. Add Expense edit flow using the same post-Settlement safety model already used for delete.
+3. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+4. Keep LI.FI as a secondary top-up path and keep Zerion outside the primary settlement path.
+5. Return to Fund Mode proposals only after the Split Mode demo path is polished.
 
 ---
 
 ## Ground rules
 
-- **No git operations** performed by the assistant — commits and pushes are the owner's.
+- No git operations performed by the assistant; commits and pushes are the owner's.
 - Work only inside `/Users/sarthiborkar/Build/FundWise`.
-- Tell the owner whenever an external input is needed (RPC URL, API key, mint address, etc.) rather than guessing.
+- If an external input is required (RPC URL, API key, mint address, contract address), ask the owner instead of guessing.
