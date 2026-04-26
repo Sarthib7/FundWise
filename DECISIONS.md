@@ -14,6 +14,9 @@
 > - ADR-006 → [0006-wallet-only-auth.md](./docs/adr/0006-wallet-only-auth.md)
 > - ADR-007 → [0007-rename-circles-to-groups.md](./docs/adr/0007-rename-circles-to-groups.md)
 > - ADR-008 → [0008-keep-nextjs-shadcn-stack.md](./docs/adr/0008-keep-nextjs-shadcn-stack.md)
+> - ADR-009 → [0009-switch-from-firebase-to-supabase.md](./docs/adr/0009-switch-from-firebase-to-supabase.md)
+> - ADR-010 → [0010-store-multisig-and-vault-addresses-for-fund-mode.md](./docs/adr/0010-store-multisig-and-vault-addresses-for-fund-mode.md)
+> - ADR-011 → [0011-fix-usdc-as-the-mvp-settlement-asset.md](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)
 
 ---
 
