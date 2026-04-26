@@ -4,7 +4,7 @@ export function HeroSection() {
   return (
     <>
       {/* Hero */}
-      <section className="relative pt-24 pb-20 md:pt-28 md:pb-24 px-6 lg:px-[max(24px,calc(50%-660px))] text-center overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-20 pt-24 text-center sm:px-6 md:pb-24 md:pt-28 lg:px-[max(24px,calc(50%-660px))]">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -13,7 +13,7 @@ export function HeroSection() {
           aria-hidden="true"
         />
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-pale border border-brand-border-2 text-xs font-semibold text-brand-deep mb-8">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
           Split bills with friends — no more chasing
         </div>
@@ -24,14 +24,14 @@ export function HeroSection() {
           <em className="not-italic text-brand-grad font-serif">settled simply.</em>
         </h1>
 
-        <p className="mx-auto max-w-xl text-base md:text-lg text-brand-text-2 leading-relaxed mb-11 text-balance">
+        <p className="mx-auto mb-11 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:text-lg">
           Stop chasing friends for money. Split costs, track who owes whom, and settle up instantly — no IOUs, no awkward conversations.
         </p>
 
-        <div className="flex items-center justify-center gap-3.5 flex-wrap">
+        <div className="flex flex-wrap items-center justify-center gap-3.5">
           <a
             href="/groups"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-[10px] text-base font-bold text-white bg-brand-grad hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] transition-all"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
           >
             Start splitting
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
@@ -40,7 +40,7 @@ export function HeroSection() {
           </a>
           <a
             href="/#modes"
-            className="inline-flex items-center px-7 py-3.5 rounded-[10px] text-base font-bold text-foreground border-[1.5px] border-brand-border-2 bg-background hover:bg-brand-surface hover:-translate-y-0.5 transition-all"
+            className="inline-flex w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
           >
             Pool a fund
           </a>
@@ -48,7 +48,7 @@ export function HeroSection() {
       </section>
 
       {/* Demo Card */}
-      <section className="relative z-1 px-6 lg:px-[max(24px,calc(50%-660px))] pb-24">
+      <section className="relative z-1 px-4 pb-24 sm:px-6 lg:px-[max(24px,calc(50%-660px))]">
         <div className="mx-auto max-w-[880px]">
           <div className="rounded-[22px] border border-brand-border-c bg-card shadow-[0_0_0_1px_#d5e8da,0_40px_80px_rgba(13,31,20,0.1),0_12px_24px_rgba(13,31,20,0.06)] overflow-hidden">
             {/* Top bar */}
@@ -105,8 +105,8 @@ export function HeroSection() {
               </div>
 
               {/* Main content */}
-              <div className="p-[22px]">
-                <div className="flex items-start justify-between mb-1">
+              <div className="p-4 sm:p-[22px]">
+                <div className="mb-3 flex flex-col gap-3 sm:mb-1 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="font-serif text-lg tracking-tight text-foreground">Lisbon Trip 🏖️</div>
                     <div className="text-[11px] text-brand-text-2 mt-0.5">4 friends · Split expenses</div>
@@ -117,7 +117,7 @@ export function HeroSection() {
                 </div>
 
                 {/* Balance cards */}
-                <div className="grid grid-cols-3 gap-2.5 my-4">
+                <div className="my-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                   <div className="rounded-[10px] border border-brand-border-c bg-brand-surface p-3">
                     <div className="text-[10px] text-brand-text-2 mb-1">You are owed</div>
                     <div className="text-[17px] font-extrabold text-brand-mid">+$84.50</div>
