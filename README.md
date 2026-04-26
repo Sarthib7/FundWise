@@ -142,7 +142,7 @@ pnpm lint
 - Devnet is still the test and rehearsal environment.
 - Members need SOL for gas even though Settlements use USDC.
 - The current execution order is:
-  frontend responsiveness and UX polish -> backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion integration -> audit and full-flow devnet rehearsal
+  backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion integration -> audit and full-flow devnet rehearsal
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
 
 ## License
