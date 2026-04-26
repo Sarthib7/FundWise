@@ -11,13 +11,13 @@ export function CtaSection() {
       <h2 className="font-serif text-[clamp(1.875rem,5vw,3.375rem)] tracking-tight mb-4 text-foreground text-balance">
         Ready to ditch the IOUs?
       </h2>
-      <p className="text-[17px] text-brand-text-2 mb-11">
+      <p className="mb-9 text-[17px] text-brand-text-2 sm:mb-11">
         Create your first group in under a minute.
       </p>
-      <div className="flex flex-wrap items-center justify-center gap-3.5">
+      <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <a
           href="/groups"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
         >
           Connect Wallet
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
@@ -25,10 +25,10 @@ export function CtaSection() {
           </svg>
         </a>
         <a
-          href="https://github.com"
-          className="inline-flex w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+          href="/#how"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
         >
-          Read the docs
+          See how it works
         </a>
       </div>
     </section>
