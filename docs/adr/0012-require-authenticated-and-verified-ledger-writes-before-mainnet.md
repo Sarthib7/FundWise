@@ -1,0 +1,3 @@
+# Require authenticated and verified ledger writes before mainnet
+
+Before FundWise can target Solana mainnet-beta, every Group, Expense, Settlement, Contribution, Proposal, approval, and Treasury metadata mutation must move behind authenticated server-side boundaries, and Settlement plus Contribution receipts must be persisted only after RPC verification of the on-chain transfer details. We chose this because the current wallet-native UI still writes financial state from a public Supabase client with open RLS and caller-supplied wallet fields, which makes forged ledger state, fake receipts, and unauthorized reads a mainnet blocker.
