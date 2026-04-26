@@ -34,11 +34,10 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Simplified settlement graph
 - Settlement receipt route
 - Activity Feed
-- Delete guard for Expenses when later Settlements exist
+- Creator-owned Expense edit/delete flow with later-Settlement guard
 
 **Still to finish before calling the Split Mode path polished:**
 
-- Expense edit flow with the same safety model as delete
 - Shareable Settlement Request Link flow from the Group page
 - Global profile display-name polish
 - Group total settled volume display
