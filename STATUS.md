@@ -57,6 +57,13 @@ The product direction is now sharper:
 - The UI is usable, but it is not signed off yet as fully polished across mobile breakpoints
 - Responsive behavior, spacing density, empty states, and copy consistency still need one dedicated pass before backend and sponsor work resumes
 
+## Current work in progress
+
+- The frontend responsiveness pass has started in the local worktree
+- Current surfaces being reflowed and tightened:
+  shared header/footer/wallet chrome, landing hero and CTA, Group list, Group detail, Receipt, and the LI.FI bridge modal
+- This pass is not signed off yet and should be treated as in progress until it is rebuilt and reviewed end to end
+
 ---
 
 ## Product decisions locked on 2026-04-26
@@ -129,8 +136,8 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Finish the dedicated frontend pass:
-   responsive layout audit, mobile polish, empty states, copy pass, and Group total settled volume
+1. Finish and validate the current frontend responsiveness pass:
+   rebuild, review mobile breakpoints, then complete any remaining empty-state and copy polish plus Group total settled volume
 2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
 3. Add RPC verification before persisting Settlement and Contribution receipts.
 4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.

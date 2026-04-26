@@ -146,6 +146,7 @@ Low fit for the current product direction.
 - Finish Split Mode frontend polish first
 - Sign off responsive behavior across desktop and mobile
 - Tighten Receipt, join flow, and Group-page UX before backend and sponsor branches
+- The frontend pass is currently in progress locally and still needs validation before it is called done
 
 ### Early May
 

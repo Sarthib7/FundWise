@@ -44,6 +44,11 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Group total settled volume display
 - Final empty states and copy pass
 
+**Current local work in progress:**
+
+- Responsive and spacing cleanup is actively underway on shared chrome, landing CTA surfaces, Group list, Group detail, Receipt, and the bridge modal
+- Treat this as unfinished until the current pass is rebuilt and checked across mobile, tablet, and desktop widths
+
 **Execution order inside Phase 1:**
 
 1. Frontend polish and responsive sign-off
