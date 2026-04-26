@@ -79,13 +79,13 @@ This phase supports the MVP. It does not redefine it.
 
 ### Zerion support
 
-**Goal:** add wallet analysis and future agent support without entering the primary settlement path.
+**Goal:** add wallet analysis and CLI-driven agent support that strengthens the product story without entering the primary settlement path.
 
 **Near-term scope:**
 
 - Wallet analysis for insufficient-funds guidance
 - Optional reminder / suggestion layer
-- Stretch agent prototype for the Zerion track
+- Zerion CLI agent prototype for the track
 
 **Explicitly not required in the MVP path:**
 
