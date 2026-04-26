@@ -125,7 +125,7 @@ export function CrossChainBridgeModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Bridge USDC To Solana</DialogTitle>
           <DialogDescription>
@@ -177,7 +177,7 @@ export function CrossChainBridgeModal({
           {/* Source Chain Selection */}
           <div className="space-y-2">
             <Label>Bridge From</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {sourceChains.map((chain) => (
                 <Button
                   key={chain.chainId}
@@ -198,7 +198,7 @@ export function CrossChainBridgeModal({
           {/* Amount */}
           <div className="space-y-2">
             <Label>Amount (USDC)</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 type="number"
                 step="0.01"
@@ -211,6 +211,7 @@ export function CrossChainBridgeModal({
               />
               <Button
                 variant="outline"
+                className="sm:min-w-24"
                 onClick={handleGetQuote}
                 disabled={!lifiSupported || !amount || !evmWallet || isQuoting}
               >
@@ -227,7 +228,7 @@ export function CrossChainBridgeModal({
                 <Badge variant="secondary">{quote.tool}</Badge>
               </div>
 
-              <div className="flex items-center gap-3 justify-center py-2">
+              <div className="flex flex-col items-center justify-center gap-3 py-2 text-center sm:flex-row">
                 <div className="text-center">
                   <p className="font-semibold">{quote.fromAmount} USDC</p>
                   <p className="text-xs text-muted-foreground">{CHAIN_NAMES[quote.fromChain]}</p>
@@ -262,7 +263,7 @@ export function CrossChainBridgeModal({
               bridgeStatus.status === "error" ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" :
               "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
             }`}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 {bridgeStatus.status === "done" && <CheckCircle2 className="h-5 w-5 text-green-600" />}
                 {bridgeStatus.status === "error" && <AlertCircle className="h-5 w-5 text-red-600" />}
                 {(bridgeStatus.status === "executing" || bridgeStatus.status === "signing") && (
@@ -275,7 +276,7 @@ export function CrossChainBridgeModal({
                       href={bridgeStatus.txLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-accent hover:underline flex items-center gap-1 mt-1"
+                      className="mt-1 inline-flex items-center gap-1 text-xs text-accent hover:underline"
                     >
                       View on explorer <ExternalLink className="h-3 w-3" />
                     </a>
