@@ -14,9 +14,9 @@ export default function Home() {
       <main>
         <HeroSection />
         <ModesSection />
-        <div className="h-px bg-brand-border-c mx-6 lg:mx-[max(24px,calc(50%-660px))]" />
+        <div className="mx-4 h-px bg-brand-border-c sm:mx-6 lg:mx-[max(24px,calc(50%-660px))]" />
         <HowItWorksSection />
-        <div className="h-px bg-brand-border-c mx-6 lg:mx-[max(24px,calc(50%-660px))]" />
+        <div className="mx-4 h-px bg-brand-border-c sm:mx-6 lg:mx-[max(24px,calc(50%-660px))]" />
         <FeaturesSection />
         <TechStrip />
         <CtaSection />
