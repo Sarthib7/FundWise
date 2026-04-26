@@ -98,7 +98,7 @@ export default function SettlementReceiptPage() {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center px-4">
-          <Card className="w-full max-w-lg p-8 text-center">
+          <Card className="w-full max-w-lg p-6 text-center sm:p-8">
             <Receipt className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <h1 className="text-2xl font-semibold">Settlement Receipt Unavailable</h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -122,20 +122,20 @@ export default function SettlementReceiptPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 px-4 py-10">
+      <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
           <Button asChild variant="ghost" className="w-fit px-0 text-muted-foreground hover:text-foreground">
             <Link href={`/groups/${groupId}`}>Back To Group</Link>
           </Button>
 
           <Card className="overflow-hidden border-accent/20">
-            <div className="border-b bg-gradient-to-br from-accent/10 via-accent/5 to-transparent px-6 py-8">
+            <div className="border-b bg-gradient-to-br from-accent/10 via-accent/5 to-transparent px-5 py-7 sm:px-6 sm:py-8">
               <Badge className="mb-4 bg-accent/10 text-accent border-accent/20">
                 Settlement Receipt
               </Badge>
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h1 className="text-3xl font-semibold">{group.name}</h1>
+                  <h1 className="text-2xl font-semibold sm:text-3xl">{group.name}</h1>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Confirmed on {new Date(settlement.confirmed_at).toLocaleString()}
                   </p>
@@ -144,8 +144,8 @@ export default function SettlementReceiptPage() {
               </div>
             </div>
 
-            <div className="space-y-6 px-6 py-6">
-              <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-6 px-5 py-6 sm:px-6">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <Card className="p-4 shadow-none">
                   <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Amount</p>
                   <p className="mt-2 text-2xl font-semibold">
@@ -182,14 +182,14 @@ export default function SettlementReceiptPage() {
                   <p className="mt-2 break-all font-mono text-sm">{settlement.tx_sig}</p>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Button asChild className="bg-accent hover:bg-accent/90">
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <Button asChild className="w-full bg-accent hover:bg-accent/90 sm:w-auto">
                     <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
                       View On Explorer
                       <ExternalLink className="ml-2 h-4 w-4" />
                     </a>
                   </Button>
-                  <Button asChild variant="outline">
+                  <Button asChild variant="outline" className="w-full sm:w-auto">
                     <Link href={`/groups/${groupId}`}>Return To Group</Link>
                   </Button>
                 </div>
