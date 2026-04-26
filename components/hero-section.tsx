@@ -1,10 +1,20 @@
 "use client"
 
+import {
+  BriefcaseBusiness,
+  CarTaxiFront,
+  Gift,
+  Home,
+  Hotel,
+  Palmtree,
+  UtensilsCrossed,
+} from "lucide-react"
+
 export function HeroSection() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-24 text-center sm:px-6 md:pb-24 md:pt-28 lg:px-[max(24px,calc(50%-660px))]">
+      <section className="relative overflow-hidden px-4 pb-20 pt-20 text-center sm:px-6 sm:pt-24 md:pb-24 md:pt-28 lg:px-[max(24px,calc(50%-660px))]">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -24,14 +34,14 @@ export function HeroSection() {
           <em className="not-italic text-brand-grad font-serif">settled simply.</em>
         </h1>
 
-        <p className="mx-auto mb-11 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:text-lg">
-          Stop chasing friends for money. Split costs, track who owes whom, and settle up instantly — no IOUs, no awkward conversations.
+        <p className="mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
+          Track shared costs, see who owes what, and settle up in seconds.
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-3.5">
+        <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <a
             href="/groups"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
             Start splitting
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
@@ -40,7 +50,7 @@ export function HeroSection() {
           </a>
           <a
             href="/#modes"
-            className="inline-flex w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
             Pool a fund
           </a>
@@ -58,7 +68,7 @@ export function HeroSection() {
               <div className="w-[11px] h-[11px] rounded-full bg-[#28c840]" />
             </div>
 
-            <div className="grid md:grid-cols-[220px_1fr] min-h-[320px]">
+            <div className="grid min-h-[320px] md:grid-cols-[220px_1fr]">
               {/* Sidebar */}
               <div className="hidden md:block border-r border-brand-border-c py-[18px] bg-brand-surface">
                 <div className="px-[14px] pb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-brand-text-3">
@@ -66,8 +76,8 @@ export function HeroSection() {
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2.5 px-[14px] py-2.5 bg-brand-surface-2 cursor-pointer">
-                    <div className="w-[34px] h-[34px] rounded-[9px] flex items-center justify-center text-[15px] bg-brand-pale">
-                      🏖️
+                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-brand-pale text-brand-deep">
+                      <Palmtree className="h-4 w-4" />
                     </div>
                     <div>
                       <div className="text-[13px] font-semibold text-foreground leading-tight">Lisbon Trip</div>
@@ -75,8 +85,8 @@ export function HeroSection() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 px-[14px] py-2.5 hover:bg-brand-surface-2 transition-colors cursor-pointer">
-                    <div className="w-[34px] h-[34px] rounded-[9px] flex items-center justify-center text-[15px] bg-brand-fund-blue-bg">
-                      🎁
+                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-brand-fund-blue-bg text-brand-fund-blue">
+                      <Gift className="h-4 w-4" />
                     </div>
                     <div>
                       <div className="text-[13px] font-semibold text-foreground leading-tight">Priya&apos;s Gift</div>
@@ -84,8 +94,8 @@ export function HeroSection() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 px-[14px] py-2.5 hover:bg-brand-surface-2 transition-colors cursor-pointer">
-                    <div className="w-[34px] h-[34px] rounded-[9px] flex items-center justify-center text-[15px] bg-brand-pale">
-                      🏠
+                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-brand-pale text-brand-deep">
+                      <Home className="h-4 w-4" />
                     </div>
                     <div>
                       <div className="text-[13px] font-semibold text-foreground leading-tight">Flatmates</div>
@@ -93,8 +103,8 @@ export function HeroSection() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2.5 px-[14px] py-2.5 hover:bg-brand-surface-2 transition-colors cursor-pointer">
-                    <div className="w-[34px] h-[34px] rounded-[9px] flex items-center justify-center text-[15px] bg-brand-fund-blue-bg">
-                      🧳
+                    <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-brand-fund-blue-bg text-brand-fund-blue">
+                      <BriefcaseBusiness className="h-4 w-4" />
                     </div>
                     <div>
                       <div className="text-[13px] font-semibold text-foreground leading-tight">Berlin Conf</div>
@@ -106,9 +116,24 @@ export function HeroSection() {
 
               {/* Main content */}
               <div className="p-4 sm:p-[22px]">
+                <div className="mb-4 flex flex-wrap gap-2 md:hidden">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border-c bg-brand-surface px-3 py-1 text-[11px] font-medium text-brand-text-2">
+                    <Palmtree className="h-3.5 w-3.5" />
+                    Lisbon Trip
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border-c bg-brand-surface px-3 py-1 text-[11px] font-medium text-brand-text-2">
+                    <Gift className="h-3.5 w-3.5" />
+                    Priya&apos;s Gift
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-border-c bg-brand-surface px-3 py-1 text-[11px] font-medium text-brand-text-2">
+                    <Home className="h-3.5 w-3.5" />
+                    Flatmates
+                  </span>
+                </div>
+
                 <div className="mb-3 flex flex-col gap-3 sm:mb-1 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="font-serif text-lg tracking-tight text-foreground">Lisbon Trip 🏖️</div>
+                    <div className="font-serif text-lg tracking-tight text-foreground">Lisbon Trip</div>
                     <div className="text-[11px] text-brand-text-2 mt-0.5">4 friends · Split expenses</div>
                   </div>
                   <span className="text-[9px] font-bold uppercase tracking-[0.04em] px-[7px] py-0.5 rounded-full bg-brand-pale text-brand-deep border border-brand-border-2">
@@ -137,49 +162,49 @@ export function HeroSection() {
                   Recent expenses
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center justify-between py-2.5 border-b border-brand-border-c">
+                  <div className="flex flex-col gap-2 py-2.5 border-b border-brand-border-c sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-[30px] h-[30px] rounded-[7px] bg-brand-surface-2 flex items-center justify-center text-[13px]">
-                        🍷
+                      <div className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] bg-brand-surface-2 text-brand-deep">
+                        <UtensilsCrossed className="h-3.5 w-3.5" />
                       </div>
                       <div>
                         <div className="text-[13px] font-medium text-foreground">Wine dinner</div>
                         <div className="text-[10px] text-brand-text-2">Paid by Asha</div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <div className="text-[13px] font-bold text-foreground">$120.00</div>
                       <div className="text-[10px] text-red-500">you owe $30</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between py-2.5 border-b border-brand-border-c">
+                  <div className="flex flex-col gap-2 py-2.5 border-b border-brand-border-c sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-[30px] h-[30px] rounded-[7px] bg-brand-surface-2 flex items-center justify-center text-[13px]">
-                        🚕
+                      <div className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] bg-brand-surface-2 text-brand-deep">
+                        <CarTaxiFront className="h-3.5 w-3.5" />
                       </div>
                       <div>
                         <div className="text-[13px] font-medium text-foreground">Airport taxi</div>
                         <div className="text-[10px] text-brand-text-2">Paid by you</div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <div className="text-[13px] font-bold text-foreground">$48.00</div>
                       <div className="text-[10px] text-brand-mid">you get $36</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between py-2.5">
+                  <div className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-[30px] h-[30px] rounded-[7px] bg-brand-surface-2 flex items-center justify-center text-[13px]">
-                        🏨
+                      <div className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] bg-brand-surface-2 text-brand-deep">
+                        <Hotel className="h-3.5 w-3.5" />
                       </div>
                       <div>
                         <div className="text-[13px] font-medium text-foreground">Hotel (2 nights)</div>
                         <div className="text-[10px] text-brand-text-2">Paid by Kiran</div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <div className="text-[13px] font-bold text-foreground">$320.00</div>
                       <div className="text-[10px] text-red-500">you owe $80</div>
                     </div>
