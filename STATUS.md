@@ -67,6 +67,7 @@ The product direction is now sharper:
 - Each suggested edge in the simplified settlement graph maps to one debtor-to-creditor transfer.
 - Mainnet-beta is the product target; devnet is for testing and rehearsals.
 - USDC is the only stablecoin in the MVP.
+- Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
 - LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
 
@@ -74,6 +75,7 @@ The product direction is now sharper:
 
 ## Still pending for the primary MVP
 
+- Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Global profile display-name UX and polish
 - Final empty-state and copy polish across Group screens
@@ -114,11 +116,13 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-2. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
-3. Add global profile display-name polish plus the final empty-state and copy pass.
-4. Add Group total settled volume display.
-5. Return to Fund Mode proposals only after the Split Mode demo path is polished.
+1. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
+2. Add RPC verification before persisting Settlement and Contribution receipts.
+3. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+4. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
+5. Add global profile display-name polish plus the final empty-state and copy pass.
+6. Add Group total settled volume display.
+7. Return to Fund Mode proposals only after the Split Mode demo path is polished.
 
 ---
 
