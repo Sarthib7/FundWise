@@ -24,6 +24,7 @@ Quick links:
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
 - [DECISIONS.md](./DECISIONS.md) - ADR index
+- [audit.md](./audit.md) - current security findings and mainnet blockers
 
 ## Current Product Shape
 
