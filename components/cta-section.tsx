@@ -1,6 +1,6 @@
 export function CtaSection() {
   return (
-    <section className="relative text-center py-28 px-6 lg:px-[max(24px,calc(50%-660px))] overflow-hidden">
+    <section className="relative overflow-hidden px-4 py-24 text-center sm:px-6 sm:py-28 lg:px-[max(24px,calc(50%-660px))]">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -14,10 +14,10 @@ export function CtaSection() {
       <p className="text-[17px] text-brand-text-2 mb-11">
         Create your first group in under a minute.
       </p>
-      <div className="flex items-center justify-center gap-3.5 flex-wrap">
+      <div className="flex flex-wrap items-center justify-center gap-3.5">
         <a
           href="/groups"
-          className="inline-flex items-center gap-2 px-7 py-3.5 rounded-[10px] text-base font-bold text-white bg-brand-grad hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] transition-all"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
         >
           Connect Wallet
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
@@ -26,7 +26,7 @@ export function CtaSection() {
         </a>
         <a
           href="https://github.com"
-          className="inline-flex items-center px-7 py-3.5 rounded-[10px] text-base font-bold text-foreground border-[1.5px] border-brand-border-2 bg-background hover:bg-brand-surface hover:-translate-y-0.5 transition-all"
+          className="inline-flex w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
         >
           Read the docs
         </a>
