@@ -45,6 +45,7 @@ create table public.expenses (
   id uuid primary key default uuid_generate_v4(),
   group_id uuid not null references public.groups(id) on delete cascade,
   payer text not null, -- wallet address
+  created_by text not null, -- wallet address that owns edit/delete
   amount bigint not null, -- in smallest token unit
   mint text not null,
   memo text,

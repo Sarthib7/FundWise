@@ -193,6 +193,15 @@ export default function GroupDashboard() {
       .map((item) => new Date(item.data.confirmed_at).getTime())
   }, [activity])
 
+  const memberNameByWallet = useMemo(() => {
+    return new Map(
+      members.map((member) => [
+        member.wallet,
+        member.display_name || shortWallet(member.wallet),
+      ])
+    )
+  }, [members])
+
   const canDeleteExpense = useCallback(
     (expense: ActivityExpense) => {
       const expenseTimestamp = new Date(expense.edited_at || expense.created_at).getTime()
@@ -242,6 +251,7 @@ export default function GroupDashboard() {
       await dbAddExpense({
         groupId,
         payer: walletAddress,
+        createdBy: walletAddress,
         amount,
         mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
         memo: expenseMemo,
@@ -308,8 +318,8 @@ export default function GroupDashboard() {
   }
 
   const handleDeleteExpense = async (expense: ActivityExpense, tokenName: string) => {
-    if (expense.payer !== walletAddress) {
-      toast.error("Only the payer can delete this Expense")
+    if (expense.created_by !== walletAddress) {
+      toast.error("Only the Expense creator can delete this Expense")
       return
     }
 
@@ -329,7 +339,7 @@ export default function GroupDashboard() {
     setDeletingExpenseId(expense.id)
 
     try {
-      await dbDeleteExpense(expense.id)
+      await dbDeleteExpense(expense.id, walletAddress)
       toast.success("Expense deleted")
       loadData()
     } catch (error) {
@@ -665,7 +675,11 @@ export default function GroupDashboard() {
                       if (item.type === "expense") {
                         const expense = item.data
                         const expenseCanBeDeleted = canDeleteExpense(expense)
-                        const isExpenseOwnedByWallet = expense.payer === walletAddress
+                        const isExpenseOwnedByWallet = expense.created_by === walletAddress
+                        const payerLabel =
+                          memberNameByWallet.get(expense.payer) || shortWallet(expense.payer)
+                        const creatorLabel =
+                          memberNameByWallet.get(expense.created_by) || shortWallet(expense.created_by)
 
                         return (
                           <div
@@ -679,7 +693,8 @@ export default function GroupDashboard() {
                               <div>
                                 <p className="font-medium text-sm">{expense.memo || expense.category}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {shortWallet(expense.payer)} paid ·{" "}
+                                  {payerLabel} paid
+                                  {expense.created_by !== expense.payer ? ` · ${creatorLabel} logged` : ""} ·{" "}
                                   {new Date(expense.created_at).toLocaleDateString()}
                                 </p>
                               </div>

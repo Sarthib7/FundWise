@@ -164,6 +164,7 @@ export async function isMember(groupId: string, wallet: string): Promise<boolean
 export async function addExpense(data: {
   groupId: string
   payer: string
+  createdBy: string
   amount: number
   mint: string
   memo?: string
@@ -177,6 +178,7 @@ export async function addExpense(data: {
     .insert({
       group_id: data.groupId,
       payer: data.payer,
+      created_by: data.createdBy,
       amount: data.amount,
       mint: data.mint,
       memo: data.memo || null,
@@ -234,10 +236,10 @@ export async function getAllSplitsForGroup(groupId: string) {
   return data
 }
 
-export async function deleteExpense(expenseId: string) {
+export async function deleteExpense(expenseId: string, actorWallet: string) {
   const { data: expense, error: expenseError } = await supabase
     .from("expenses")
-    .select("id, group_id, created_at, edited_at, deleted_at")
+    .select("id, group_id, created_at, edited_at, deleted_at, created_by")
     .eq("id", expenseId)
     .maybeSingle()
 
@@ -247,6 +249,10 @@ export async function deleteExpense(expenseId: string) {
 
   if (!expense || expense.deleted_at) {
     throw new Error("Expense not found")
+  }
+
+  if (expense.created_by !== actorWallet) {
+    throw new Error("Only the Expense creator can delete this Expense")
   }
 
   // Conservative guard: once a later settlement exists in the group, deleting

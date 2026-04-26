@@ -78,6 +78,7 @@ export interface Database {
           id: string
           group_id: string
           payer: string
+          created_by: string
           amount: number
           mint: string
           memo: string | null
@@ -91,6 +92,7 @@ export interface Database {
           id?: string
           group_id: string
           payer: string
+          created_by: string
           amount: number
           mint: string
           memo?: string | null
@@ -104,6 +106,7 @@ export interface Database {
           id?: string
           group_id?: string
           payer?: string
+          created_by?: string
           amount?: number
           mint?: string
           memo?: string | null
