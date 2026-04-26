@@ -143,7 +143,6 @@ Low fit for the current product direction.
 ### April 26 to early May
 
 - Finish Split Mode polish
-- Complete shareable Settlement Request Link flow
 - Harden mainnet USDC settlement behavior
 
 ### Early May
