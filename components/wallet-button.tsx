@@ -31,14 +31,15 @@ export function WalletButton() {
     const shortAddress = `${address.slice(0, 4)}...${address.slice(-4)}`
 
     return (
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
         <Button
           asChild
           size="sm"
-          className="min-h-10 bg-brand-grad font-bold tracking-tight text-white transition-all hover:-translate-y-px hover:brightness-110 hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)]"
+          className="min-h-10 px-3 sm:px-4 bg-brand-grad font-bold tracking-tight text-white transition-all hover:-translate-y-px hover:brightness-110 hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)]"
         >
           <Link href="/groups">
-            Launch app
+            <span className="sm:hidden">Open</span>
+            <span className="hidden sm:inline">Launch app</span>
             <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
           </Link>
         </Button>
@@ -46,7 +47,7 @@ export function WalletButton() {
           <DropdownMenuTrigger asChild>
             <Button
               size="sm"
-              className="min-h-10 bg-brand-grad font-bold text-white transition-all hover:brightness-110"
+              className="min-h-10 px-3 sm:px-4 bg-brand-grad font-bold text-white transition-all hover:brightness-110"
             >
               {shortAddress}
             </Button>
@@ -63,7 +64,7 @@ export function WalletButton() {
   }
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2">
       <Button
         type="button"
         variant="outline"
@@ -75,11 +76,12 @@ export function WalletButton() {
       </Button>
       <Button
         size="sm"
-        className="min-h-10 bg-brand-grad font-bold tracking-tight text-white transition-all hover:-translate-y-px hover:brightness-110 hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)]"
+        className="min-h-10 px-3 sm:px-4 bg-brand-grad font-bold tracking-tight text-white transition-all hover:-translate-y-px hover:brightness-110 hover:shadow-[0_8px_24px_rgba(13,107,58,0.25)]"
         onClick={() => setVisible(true)}
       >
         <Wallet className="h-4 w-4 mr-1.5" />
-        Launch app
+        <span className="sm:hidden">Connect</span>
+        <span className="hidden sm:inline">Launch app</span>
       </Button>
     </div>
   )
