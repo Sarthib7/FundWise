@@ -58,18 +58,23 @@ The product direction is now sharper:
 - Responsive behavior, spacing density, empty states, and copy consistency still need one dedicated pass before backend and sponsor work resumes
 
 ## Current work in progress
-The frontend responsiveness pass has been completed across all key surfaces:
+Frontend responsiveness pass complete across all key surfaces:
   landing, header/footer/wallet chrome, hero, CTA, groups list, group detail,
   receipt, balance card, settlement request card, activity feed, join card,
   and the bridge modal.
 
-New UX improvements in this branch:
+New UX improvements shipped:
 - Group total settled volume displayed in header (Split Mode only)
 - Global profile display name editing via modal (pencil icon on own balance)
-- Empty-state copy improvements (No Expenses, No Groups, No Contributions)
+- QR scanner dialog and expense dialog validated across breakpoints (already responsive)
 
-Next up: Backend trust hardening — authenticated server-side ledger mutations,
-member-scoped RLS, and RPC verification for Settlement/Contribution receipts.
+Backend trust hardening infrastructure added (non-breaking):
+- Audit log table + RLS member-scoped policies
+- Supabase Edge Functions for all future server-side mutations
+- RPC receipt verification for Settlement and Contribution
+- Design doc: docs/BACKEND_TRUST_HARDENING.md
+
+Next: Deploy Edge Functions, integrate Supabase Auth, then migrate client mutations to use server-side APIs.
 
 ## Product decisions locked on 2026-04-26
 
@@ -98,9 +103,10 @@ member-scoped RLS, and RPC verification for Settlement/Contribution receipts.
 ---
 
 ## Still pending for the primary MVP
-- Frontend final validation across mobile/tablet/desktop breakpoints (visual pass)
-- Empty-state and copy polish across Group screens (copy review)
-- Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
+- Empty-state and copy polish across Group screens (copy review) — partially done, more may be needed
+- Deploy and test Edge Functions (requires Supabase service role key + Solana RPC URL)
+- Integrate Supabase Auth to activate member-scoped RLS
+- Migrate client mutations to call Edge Functions
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
 
@@ -136,15 +142,14 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Finish and validate the current frontend responsiveness pass:
-   rebuild, review mobile breakpoints, then complete any remaining empty-state and copy polish plus Group total settled volume
-2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
-3. Add RPC verification before persisting Settlement and Contribution receipts.
-4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-5. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
-6. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
+1. Frontend responsiveness pass is complete; run a final visual QA across breakpoints and finish any remaining empty-state copy polish.
+2. Backend trust hardening infrastructure is in place (Edge Functions + migrations). Next: Deploy EF, set env vars, then integrate Supabase Auth.
+3. Migrate client mutations (addExpense, deleteExpense, addSettlement, addContribution, updateMemberDisplayName) to call Edge Functions instead of direct table ops.
+4. Verify RPC receipt verification for Settlement and Contribution transactions on-chain.
+5. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+6. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
 7. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
-8. Return to Fund Mode proposals only after the Split Mode demo path is polished.
+8. Return to Fund Mode proposals only after the Split Mode demo path is fully polished.
 
 ---
 
