@@ -124,7 +124,11 @@ export default function SettlementReceiptPage() {
       <Header />
       <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-          <Button asChild variant="ghost" className="w-fit px-0 text-muted-foreground hover:text-foreground">
+          <Button
+            asChild
+            variant="ghost"
+            className="min-h-11 w-fit px-0 text-muted-foreground hover:text-foreground"
+          >
             <Link href={`/groups/${groupId}`}>Back To Group</Link>
           </Button>
 
@@ -145,7 +149,7 @@ export default function SettlementReceiptPage() {
             </div>
 
             <div className="space-y-6 px-5 py-6 sm:px-6">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Card className="p-4 shadow-none">
                   <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Amount</p>
                   <p className="mt-2 text-2xl font-semibold">
@@ -183,13 +187,13 @@ export default function SettlementReceiptPage() {
                 </div>
 
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Button asChild className="w-full bg-accent hover:bg-accent/90 sm:w-auto">
+                  <Button asChild className="min-h-11 w-full bg-accent hover:bg-accent/90 sm:w-auto">
                     <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
                       View On Explorer
                       <ExternalLink className="ml-2 h-4 w-4" />
                     </a>
                   </Button>
-                  <Button asChild variant="outline" className="w-full sm:w-auto">
+                  <Button asChild variant="outline" className="min-h-11 w-full sm:w-auto">
                     <Link href={`/groups/${groupId}`}>Return To Group</Link>
                   </Button>
                 </div>
