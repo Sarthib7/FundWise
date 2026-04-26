@@ -4,6 +4,7 @@ import type { Database } from "./database.types"
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
@@ -114,15 +115,55 @@ export async function getGroupsForWallet(wallet: string) {
 // MEMBERS
 // =============================================
 
+async function getProfile(wallet: string): Promise<ProfileRow | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("wallet", wallet)
+    .maybeSingle()
+
+  if (error) {
+    console.warn("[FundWise] Failed to load profile:", error.message)
+    return null
+  }
+
+  return data
+}
+
+async function getProfileDisplayNames(wallets: string[]) {
+  if (wallets.length === 0) {
+    return new Map<string, string>()
+  }
+
+  const uniqueWallets = Array.from(new Set(wallets))
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("wallet, display_name")
+    .in("wallet", uniqueWallets)
+
+  if (error) {
+    console.warn("[FundWise] Failed to load profile display names:", error.message)
+    return new Map<string, string>()
+  }
+
+  return new Map(
+    (data || [])
+      .filter((profile) => Boolean(profile.display_name))
+      .map((profile) => [profile.wallet, profile.display_name as string])
+  )
+}
+
 export async function addMember(
   groupId: string,
   wallet: string,
   displayName?: string
 ) {
+  const profile = displayName ? null : await getProfile(wallet)
+
   const { error } = await supabase.from("members").insert({
     group_id: groupId,
     wallet,
-    display_name: displayName || null,
+    display_name: displayName || profile?.display_name || null,
   })
 
   if (error) {
@@ -140,7 +181,13 @@ export async function getMembers(groupId: string) {
     .order("joined_at", { ascending: true })
 
   if (error) throw new Error(`Failed to get members: ${error.message}`)
-  return data
+
+  const profileDisplayNames = await getProfileDisplayNames(data.map((member) => member.wallet))
+
+  return data.map((member) => ({
+    ...member,
+    display_name: profileDisplayNames.get(member.wallet) || member.display_name,
+  }))
 }
 
 export async function isMember(groupId: string, wallet: string): Promise<boolean> {
@@ -155,6 +202,32 @@ export async function isMember(groupId: string, wallet: string): Promise<boolean
     throw new Error(`Failed to check membership: ${error.message}`)
   }
   return !!data
+}
+
+export async function updateProfileDisplayName(wallet: string, displayName: string) {
+  const trimmedDisplayName = displayName.trim()
+
+  const { error: profileError } = await supabase.from("profiles").upsert(
+    {
+      wallet,
+      display_name: trimmedDisplayName,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "wallet" }
+  )
+
+  if (profileError) {
+    console.warn("[FundWise] Failed to persist global profile display name:", profileError.message)
+  }
+
+  const { error: memberError } = await supabase
+    .from("members")
+    .update({ display_name: trimmedDisplayName })
+    .eq("wallet", wallet)
+
+  if (memberError) {
+    throw new Error(`Failed to sync display name across Groups: ${memberError.message}`)
+  }
 }
 
 // =============================================
