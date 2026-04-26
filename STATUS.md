@@ -58,13 +58,18 @@ The product direction is now sharper:
 - Responsive behavior, spacing density, empty states, and copy consistency still need one dedicated pass before backend and sponsor work resumes
 
 ## Current work in progress
+The frontend responsiveness pass has been completed across all key surfaces:
+  landing, header/footer/wallet chrome, hero, CTA, groups list, group detail,
+  receipt, balance card, settlement request card, activity feed, join card,
+  and the bridge modal.
 
-- The frontend responsiveness pass has started in the local worktree
-- Current surfaces being reflowed and tightened:
-  shared header/footer/wallet chrome, landing hero and CTA, Group list, Group detail, Receipt, and the LI.FI bridge modal
-- This pass is not signed off yet and should be treated as in progress until it is rebuilt and reviewed end to end
+New UX improvements in this branch:
+- Group total settled volume displayed in header (Split Mode only)
+- Global profile display name editing via modal (pencil icon on own balance)
+- Empty-state copy improvements (No Expenses, No Groups, No Contributions)
 
----
+Next up: Backend trust hardening — authenticated server-side ledger mutations,
+member-scoped RLS, and RPC verification for Settlement/Contribution receipts.
 
 ## Product decisions locked on 2026-04-26
 
@@ -93,16 +98,11 @@ The product direction is now sharper:
 ---
 
 ## Still pending for the primary MVP
-
-- Frontend responsiveness pass across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-- Global profile display-name UX and polish
-- Final empty-state and copy polish across Group screens
-- Group total settled volume display
+- Frontend final validation across mobile/tablet/desktop breakpoints (visual pass)
+- Empty-state and copy polish across Group screens (copy review)
 - Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
-
----
 
 ## Secondary work kept out of the main path
 
