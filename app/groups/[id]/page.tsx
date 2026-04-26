@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { PublicKey } from "@solana/web3.js"
 import { Header } from "@/components/header"
@@ -102,6 +102,14 @@ const PERCENTAGE_BASIS_POINTS = 10_000
 
 function shortWallet(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+function isRequestedTransfer(
+  transfer: SettlementTransfer,
+  requestedFromWallet: string,
+  requestedToWallet: string
+) {
+  return transfer.from === requestedFromWallet && transfer.to === requestedToWallet
 }
 
 function formatEditableTokenAmount(amount: number, decimals: number = 6) {
@@ -220,6 +228,7 @@ function buildCustomSplitInputValues(params: {
 export default function GroupDashboard() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { publicKey, connected, wallet } = useWallet()
 
   const walletAddress = publicKey?.toString() || ""
@@ -257,6 +266,7 @@ export default function GroupDashboard() {
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
+  const [sharingTransferKey, setSharingTransferKey] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     if (!groupId) {
@@ -340,6 +350,17 @@ export default function GroupDashboard() {
       ])
     )
   }, [members])
+
+  const requestedFromWallet = searchParams.get("settleFrom") || ""
+  const requestedToWallet = searchParams.get("settleTo") || ""
+  const hasSettlementRequest = Boolean(requestedFromWallet && requestedToWallet)
+  const requestedTransfer = useMemo(
+    () =>
+      transfers.find((transfer) =>
+        isRequestedTransfer(transfer, requestedFromWallet, requestedToWallet)
+      ) || null,
+    [requestedFromWallet, requestedToWallet, transfers]
+  )
 
   const expenseDialogParticipantWallets = useMemo(() => {
     return editingExpense
@@ -758,6 +779,63 @@ export default function GroupDashboard() {
   const fundingProgress = group.funding_goal
     ? Math.min(100, Math.round((contributionTotal / group.funding_goal) * 100))
     : 0
+  const requestedDebtorLabel =
+    memberNameByWallet.get(requestedFromWallet) || (requestedFromWallet ? shortWallet(requestedFromWallet) : "")
+  const requestedCreditorLabel =
+    memberNameByWallet.get(requestedToWallet) || (requestedToWallet ? shortWallet(requestedToWallet) : "")
+
+  const clearSettlementRequest = () => {
+    router.replace(`/groups/${groupId}`, { scroll: false })
+  }
+
+  const handleShareSettlementRequest = async (transfer: SettlementTransfer) => {
+    const transferKey = `${transfer.from}:${transfer.to}`
+    const settlementRequestUrl = new URL(`/groups/${groupId}`, window.location.origin)
+    settlementRequestUrl.searchParams.set("settleFrom", transfer.from)
+    settlementRequestUrl.searchParams.set("settleTo", transfer.to)
+
+    const debtorLabel = transfer.fromName || shortWallet(transfer.from)
+    const creditorLabel = transfer.toName || shortWallet(transfer.to)
+    const shareText = `${debtorLabel} owes ${creditorLabel} ${formatTokenAmount(transfer.amount)} ${tokenName} in ${group.name}.`
+
+    setSharingTransferKey(transferKey)
+
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({
+          title: `${group.name} Settlement Request`,
+          text: shareText,
+          url: settlementRequestUrl.toString(),
+        })
+        toast.success("Settlement Request Link shared")
+        return
+      }
+
+      if (!navigator.clipboard) {
+        throw new Error("Clipboard unavailable")
+      }
+
+      await navigator.clipboard.writeText(settlementRequestUrl.toString())
+      toast.success("Settlement Request Link copied")
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return
+      }
+
+      try {
+        if (!navigator.clipboard) {
+          throw new Error("Clipboard unavailable")
+        }
+
+        await navigator.clipboard.writeText(settlementRequestUrl.toString())
+        toast.success("Settlement Request Link copied")
+      } catch {
+        toast.error("Failed to share Settlement Request Link")
+      }
+    } finally {
+      setSharingTransferKey(null)
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -840,6 +918,92 @@ export default function GroupDashboard() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            {!isFundMode && hasSettlementRequest && (
+              <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-accent/10 text-accent border-accent/20">
+                        Settlement Request Link
+                      </Badge>
+                      <Badge variant="outline">Live Balance</Badge>
+                    </div>
+                    {!connected ? (
+                      <>
+                        <h2 className="text-lg font-semibold">Connect your wallet to open this request</h2>
+                        <p className="text-sm text-muted-foreground">
+                          This link resolves against the Group&apos;s current live Balance state, not a fixed amount.
+                        </p>
+                      </>
+                    ) : !isMember ? (
+                      <>
+                        <h2 className="text-lg font-semibold">Join this Group to view the live settlement state</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Once you join, FundWise will show whether this debtor still owes this creditor and the current settleable amount.
+                        </p>
+                      </>
+                    ) : requestedTransfer ? (
+                      <>
+                        <h2 className="text-lg font-semibold">
+                          {requestedDebtorLabel} currently owes {requestedCreditorLabel}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          The request resolves from the live simplified settlement graph for this Group.
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {formatTokenAmount(requestedTransfer.amount)} {tokenName}
+                        </p>
+                        {walletAddress !== requestedTransfer.from && (
+                          <p className="text-xs text-muted-foreground">
+                            Only the debtor can sign this Settlement. Other Members can still share the request link.
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-lg font-semibold">This Settlement Request Link is no longer active</h2>
+                        <p className="text-sm text-muted-foreground">
+                          The live Group Balance no longer contains this exact debtor-to-creditor transfer edge.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={clearSettlementRequest}>
+                    Dismiss
+                  </Button>
+                </div>
+
+                {connected && isMember && requestedTransfer && (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleShareSettlementRequest(requestedTransfer)}
+                      disabled={sharingTransferKey === `${requestedTransfer.from}:${requestedTransfer.to}`}
+                    >
+                      {sharingTransferKey === `${requestedTransfer.from}:${requestedTransfer.to}` ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Share2 className="h-4 w-4 mr-2" />
+                      )}
+                      Share Link
+                    </Button>
+                    {walletAddress === requestedTransfer.from && (
+                      <Button
+                        className="bg-accent hover:bg-accent/90"
+                        disabled={isSettling}
+                        onClick={() => handleSettle(requestedTransfer)}
+                      >
+                        {isSettling && settlingTransfer === requestedTransfer ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
+                        Settle Now
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
+
             {!isFundMode && isMember && balances.length > 0 && (
               <Card className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Balances</h2>
@@ -877,37 +1041,61 @@ export default function GroupDashboard() {
                       Suggested Settlements
                     </h3>
                     <div className="space-y-2">
-                      {transfers.map((transfer, index) => (
-                        <div
-                          key={`${transfer.from}-${transfer.to}-${index}`}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                        >
-                          <div className="flex items-center gap-2 text-sm">
-                            <span>{transfer.fromName || shortWallet(transfer.from)}</span>
-                            <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                            <span>{transfer.toName || shortWallet(transfer.to)}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold">
-                              {formatTokenAmount(transfer.amount)} {tokenName}
-                            </span>
-                            {transfer.from === walletAddress && (
+                      {transfers.map((transfer, index) => {
+                        const isRequested = isRequestedTransfer(
+                          transfer,
+                          requestedFromWallet,
+                          requestedToWallet
+                        )
+                        const transferKey = `${transfer.from}:${transfer.to}`
+
+                        return (
+                          <div
+                            key={`${transfer.from}-${transfer.to}-${index}`}
+                            className={`flex items-center justify-between p-3 rounded-lg ${
+                              isRequested ? "border border-accent/40 bg-accent/5" : "bg-muted/50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 text-sm">
+                              <span>{transfer.fromName || shortWallet(transfer.from)}</span>
+                              <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                              <span>{transfer.toName || shortWallet(transfer.to)}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
                               <Button
+                                variant="ghost"
                                 size="sm"
-                                className="bg-accent hover:bg-accent/90"
-                                disabled={isSettling}
-                                onClick={() => handleSettle(transfer)}
+                                className="text-muted-foreground hover:text-foreground"
+                                disabled={sharingTransferKey === transferKey}
+                                onClick={() => handleShareSettlementRequest(transfer)}
                               >
-                                {isSettling && settlingTransfer === transfer ? (
+                                {sharingTransferKey === transferKey ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  "Settle"
+                                  <Share2 className="h-4 w-4" />
                                 )}
                               </Button>
-                            )}
+                              <span className="font-semibold">
+                                {formatTokenAmount(transfer.amount)} {tokenName}
+                              </span>
+                              {transfer.from === walletAddress && (
+                                <Button
+                                  size="sm"
+                                  className="bg-accent hover:bg-accent/90"
+                                  disabled={isSettling}
+                                  onClick={() => handleSettle(transfer)}
+                                >
+                                  {isSettling && settlingTransfer === transfer ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    "Settle"
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}
