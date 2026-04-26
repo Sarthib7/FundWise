@@ -1,109 +1,137 @@
-# FundWise — Product Requirements Document
+# FundWise - Product Requirements Document
 
 **Owner:** Sarthi
-**Status:** Draft v0.1 (pivot from Fund Flow prediction-market hackathon project)
-**Last updated:** 2026-04-21
+**Status:** Draft v0.2
+**Last updated:** 2026-04-26
 
----
+## Problem Statement
 
-## 1. Vision
+Shared-expense apps solve the bookkeeping problem, but not the settlement problem. Friends can see who owes whom, yet they still have to chase each other across messaging apps and payment rails to actually get paid. Crypto users face an extra layer of friction: balances may sit on the wrong chain, wallet UX is confusing for newcomers, and a settlement flow becomes fragile if it asks users to choose assets, chains, or custom amounts at the moment of payment.
 
-**FundWise is Splitwise on Solana.**
+FundWise should make shared expenses feel like Splitwise, but with actual settlement finality. The MVP needs to make one thing work extremely well: a private Group where Members log Expenses, see live Balances, and settle exact USDC amounts on Solana with a clean Receipt.
 
-Friends split expenses and settle up in stablecoins on Solana — no IOUs, no "I'll Venmo you later," no chasing people. Pay once, settled forever, on-chain.
+## Solution
 
-A second mode, **Fund Mode**, flips the model: friends pool money into a shared treasury up front (a "reverse Splitwise") and spend from it collaboratively via proposals — great for trips, birthdays, group gifts, recurring shared costs.
+FundWise is a web app with wallet-native identity and two product modes:
 
-## 2. Non-goals (explicit)
+- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with Splitwise-style split methods, compute live net Balances, and settle with on-chain USDC transfers on Solana.
+- Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. This remains part of the product direction, but it is not the primary hackathon demo path.
 
-- **Not** a prediction market. All prediction / Kalshi / challenge-market code is removed.
-- **Not** a yield product. No Meteora / Raydium / LP integrations.
-- **Not** a DAO platform. Fund Mode proposals are small-group only, not governance.
-- **Not** an L1-agnostic app. Solana-only.
-- **Not** a custodial product. Users hold their own keys (wallet adapter).
+For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI can later help top up a debtor's Solana wallet with USDC when they cannot settle. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
 
-## 3. Target users
+`Group -> Expense -> Balance -> Settlement -> Receipt`
 
-- Friend groups (2–15 people) who travel, eat out, share rent, or split recurring costs.
-- Crypto-comfortable users who already have a Solana wallet (Phantom, Solflare, Backpack) or are willing to get one.
-- Secondary: group-trip organizers, roommates, couples who want shared budgets.
+## Product Principles
 
-## 4. Core modes
+- Web app first. Telegram, wallet mini dapp, and other distribution surfaces come later.
+- Wallet-native identity first. The connected Solana wallet is the Member identity key.
+- One settlement asset. USDC is the only stablecoin in the MVP.
+- Off-chain metadata, on-chain money. Expenses and Group state live off-chain; Settlements and Contributions move money on-chain.
+- Current state over stale links. Settlement links resolve against the debtor's current Balance when opened.
+- Exact settlement over flexible settlement. The primary flow is settle the exact owed amount in one go.
+- Activity feed, not chat. The Group timeline should explain the ledger without becoming a messaging product.
+- Sponsor integrations must support the main flow, not redefine it.
 
-### Mode 1 — **Split Mode** (priority / MVP)
+## User Stories
 
-*"Splitwise on Solana."*
+1. As a group organizer, I want to create a private Group in Split Mode, so that my friends and I can track shared expenses in one place.
+2. As a new Member, I want to join a Group from an invite link or QR after connecting my wallet, so that joining is fast and does not require manual wallet entry by someone else.
+3. As a Member, I want one profile display name reused across Groups, so that other people can recognize me without changing wallet-native identity.
+4. As a Member, I want to edit my global profile display name later, so that I can fix or improve how I appear in the app.
+5. As a Member, I want to log an Expense for a Group, so that the Group ledger reflects what happened.
+6. As a Member, I want to mark any Group Member as the payer on an Expense, so that the ledger matches reality even if someone else is entering the record.
+7. As a Member, I want to choose the same split methods people expect from Splitwise, so that the app feels familiar and flexible.
+8. As a Member, I want to split an Expense equally, so that common cases are fast.
+9. As a Member, I want to split an Expense by exact amounts, so that uneven bills can be recorded precisely.
+10. As a Member, I want to split an Expense by percentage, so that proportional splits are supported.
+11. As a Member, I want to split an Expense by shares, so that non-equal participation can still be entered naturally.
+12. As a Member, I want to see my live Balance in the Group, so that I know whether I owe USDC or am owed USDC.
+13. As a Member, I want to see who owes whom across the Group, so that the current state of the ledger is obvious.
+14. As a debtor Member, I want to settle my current net Balance in one action, so that I can clear what I owe without thinking about individual Expenses.
+15. As a creditor Member, I want to receive a clear Receipt when someone pays me, so that I can trust the settlement happened.
+16. As any Member, I want to share a Settlement Request Link that deep-links into the Group, so that the debtor can open the Group in the correct settlement state.
+17. As a debtor Member, I want the Settlement screen to use my current live Balance, so that I do not overpay or underpay from a stale link.
+18. As a debtor Member, I want to pay in USDC on Solana with a normal wallet confirmation, so that the main flow stays simple and reliable.
+19. As a debtor Member, I want the app to auto-create the creditor's USDC token account when needed, so that my settlement does not fail on first receipt.
+20. As a debtor Member, I want the app to tell me clearly if I lack USDC or SOL, so that I understand why settlement cannot proceed.
+21. As a debtor Member, I want a secondary path to top up my Solana wallet with USDC later, so that I can recover from insufficient funds without changing the main settlement model.
+22. As a Member, I want the Group Activity Feed to show Expenses, edit markers, Settlements, and Receipts, so that the ledger stays understandable without a full chat product.
+23. As an Expense creator, I want to edit or delete my own Expense before later Settlements make that unsafe, so that I can fix mistakes without corrupting the ledger.
+24. As a Member, I want to leave a Group only when my Balance is zero, so that the Group ledger does not end up with orphaned debts.
+25. As a group organizer, I want the product to work on mobile web, so that people can join and settle from their phones during real shared-spending moments.
+26. As a hackathon judge, I want to understand the main demo path in one pass, so that the product story feels coherent and not overloaded with sponsor features.
+27. As a future user with funds on another chain, I want LI.FI to help me arrive at Solana USDC, so that cross-chain funds do not block settlement.
+28. As a future user, I want sponsor integrations to reduce friction around funding and discovery, so that the app becomes easier to use without changing its core ledger model.
+29. As a Fund Mode organizer, I want to create a Treasury-based Group later, so that a shared budget can be pooled before spending.
+30. As a Fund Mode Member, I want to make Contributions and approve Proposals later, so that pooled spending stays collaborative and auditable.
 
-**Job:** Track who paid for what in a group, compute who owes whom, and let people settle in one click with stablecoins.
+## Implementation Decisions
 
-**Key flows:**
-1. **Create a group** — name, members (by wallet address, ENS-style handle, or share-link/QR).
-2. **Add an expense** — payer, amount (USDC / USDT / PYUSD / any SPL stablecoin), participants, optional category + memo, split method (equal / shares / exact amounts / percentage).
-3. **View balances** — per-member net balance and simplified settlement graph (minimum transactions to zero out debts).
-4. **Settle up** — one-click SPL token transfer from debtor → creditor. Transaction signature is stored on the expense as proof.
-5. **Activity feed** — chronological log of expenses, edits, settlements.
+- The product has two modes, but the immediate MVP path is Split Mode.
+- The web app is the only required first-class surface for the MVP.
+- Identity is wallet-native only in the MVP. No email/password and no social login.
+- A Member is keyed by wallet address and labeled with a global profile display name.
+- Group join is self-serve through invite link or QR.
+- Creator approval, Group roles, and membership workflows beyond simple join/leave are out of the MVP.
+- The MVP settlement asset is USDC only.
+- Mainnet-beta is the product target. Devnet is the test and rehearsal environment.
+- SOL remains necessary for gas in the MVP.
+- Expenses are off-chain records stored in the app data layer.
+- Settlements are on-chain Solana USDC transfers.
+- The Group ledger is netted at the Group level, not at the individual Expense level.
+- Members settle current net Balance, not a custom amount and not an Expense-by-Expense bill.
+- Only debtor Members can sign their own Settlements.
+- Any Member can prompt a settlement or share a deep link, but no Member can authorize payment for someone else.
+- Settlement links must resolve live state when opened.
+- The simplified settlement graph is the source for suggested transfer edges.
+- Each suggested edge maps to one debtor-to-creditor transfer and one Receipt.
+- The primary flow settles the exact owed amount in one go.
+- Any Member can create an Expense, and the payer can be any Member in the Group.
+- Only the Expense creator can edit or delete the Expense.
+- Expense edits update in place with a lightweight "edited" signal in the Activity Feed.
+- Expense changes are blocked when later Settlements would make the ledger unsafe.
+- The Group timeline is an Activity Feed, not a chat system.
+- The core modules to deepen are profile identity and join flow, Group and membership ledger, Expense entry and split validation, balance computation and simplified settlement graph, settlement orchestration and receipt generation, and sponsor integration adapters for LI.FI and Zerion.
+- LI.FI is a secondary recovery adapter for topping up the debtor's Solana wallet with USDC.
+- Direct cross-chain creditor settlement is out of scope for the MVP.
+- Zerion is a secondary intelligence adapter for future analysis, routing guidance, and agent workflows.
+- Fund Mode keeps Treasury, Contribution, and Proposal concepts separate from Split Mode Settlement concepts.
 
-**Edge cases in scope for MVP:**
-- Edit / delete an expense (if unsettled).
-- Uneven splits (rounding — designate a "rounding taker").
-- Partial settlements.
-- A non-wallet friend (placeholder handle) whose balance can be claimed when they join.
+## Testing Decisions
 
-### Mode 2 — **Fund Mode** (phase 2)
+- Good tests should validate observable behavior, not implementation details.
+- The highest-value tests are the ones that prove the ledger stays correct when users do normal and error-prone actions.
+- Priority unit tests should cover split validation, balance computation, rounding behavior, and simplified settlement graph outputs.
+- Priority integration tests should cover Expense create/edit/delete guards, Settlement orchestration, Receipt generation, and leave-Group zero-balance enforcement.
+- Sponsor integration tests should mock LI.FI and Zerion boundaries and assert the app's decisions, not vendor SDK internals.
+- Wallet and token transfer tests should cover insufficient-USDC, insufficient-SOL, and recipient token-account creation decisions.
+- Mobile-focused smoke tests should cover join-from-link, settle-from-link, and receipt rendering on common narrow viewports.
+- The current codebase has limited formal test coverage, so post-hackathon work should start by extracting pure modules and testing those first.
 
-*"Reverse Splitwise — shared treasury with proposal-based spending."*
+## Out of Scope
 
-**Job:** Pool money up front into a group-owned treasury and spend it via lightweight proposals.
+- Telegram bot as a first-class product surface
+- Telegram mini app as a first-class product surface
+- Wallet-embedded mini dapp as a first-class product surface
+- Real-time Group chat
+- AI bill parsing
+- Natural-language Expense entry
+- Social login
+- Embedded wallets in the MVP
+- Gasless settlement in the MVP
+- Gas abstraction in the MVP
+- Multi-stablecoin settlement in the MVP
+- Direct cross-chain Settlement to the creditor in the MVP
+- Partial settlements
+- Installment or escrow-based settlements
+- Rewards, loyalty systems, or NFT reputation
+- Creator approval for Group joins
+- Advanced Group roles and permissions
+- Public Groups or Group discovery
 
-**Key flows:**
-1. **Create a fund** — name, members, target amount, contribution rule (equal / custom), stablecoin mint.
-2. **Contribute** — members deposit into the treasury (a Squads multisig or a program-owned vault PDA).
-3. **Propose a spend** — proposer specifies recipient, amount, memo, optional attachment (e.g. receipt image hash).
-4. **Vote / approve** — threshold-based approval (configurable: majority / all / N-of-M). Approved proposals execute the transfer automatically.
-5. **Close / distribute** — when the trip/event ends, remaining funds refund proportionally to contributors (or roll forward).
+## Further Notes
 
-**MVP simplifications:**
-- Treasury = Squads multisig (reuse existing `@sqds/multisig` integration).
-- Approval = N-of-M multisig threshold, picked at fund creation.
-- No recurring contributions in v1 (just lump-sum).
-
-## 5. Product principles
-
-1. **On-chain settlement, off-chain UX.** Group metadata lives off-chain (fast, editable). Money movement is always on-chain.
-2. **Stablecoins, not SOL.** All balances and settlements denominated in stablecoins. SOL is only used for gas.
-3. **Any Solana stablecoin.** USDC is primary, but the app is mint-agnostic — user picks the group's stablecoin at creation.
-4. **One-click to pay.** A settlement should never take more than 2 taps + wallet sign.
-5. **Private by default.** Groups are private/invite-only; no public discovery feed in v1.
-
-## 6. Key non-functional requirements
-
-- **Performance:** Settlement tx should confirm in ≤3s on mainnet; UI optimistic update.
-- **Cost:** Gas per settlement should be <$0.01 (Solana baseline is fine — no compression needed for MVP).
-- **Auth:** Wallet signature for identity. No email/password, no Firebase Auth.
-- **Storage:** Group/expense metadata in Firebase Realtime DB (already wired) or a hosted Postgres — TBD in DECISIONS.md.
-- **Mobile:** Must work on mobile Safari/Chrome. Native app deferred.
-
-## 7. Success metrics (directional, not for MVP judging)
-
-- **Activation:** % of group creators who log ≥1 expense within 24h.
-- **Core loop:** median # of expenses per group per week.
-- **Settlement ratio:** % of owed balances that get settled on-chain (vs. ignored).
-- **Retention:** % of groups with activity in week 4.
-
-## 8. Out of scope (parking lot)
-
-- Fiat on/off-ramps (point users to Coinbase/Circle link).
-- Multi-chain (EVM, etc).
-- Push notifications (web-push comes later).
-- Recurring / scheduled payments.
-- Group discovery / public groups.
-- Tax exports.
-- ZK-compressed state (defer — reconsider if users hit real cost walls).
-- Mobile native app.
-
-## 9. Open questions
-
-- Do we require every member to have a wallet at group-creation time, or support "pending" members identified by handle until they connect?
-- For Fund Mode, is Squads multisig the right primitive, or does a custom Anchor vault program give better UX (and lower friction for non-technical users)?
-- Debt-simplification algorithm: show *all* pairwise debts, or auto-minimize to fewest transfers (Splitwise-style)?
-- Stablecoin list per-group: hardcode (USDC/USDT/PYUSD) or allow arbitrary SPL mint?
+- The main hackathon story should stay simple: private Group creation, structured Expense entry, live Balance view, one-click USDC settlement, and a clear Receipt.
+- Sponsor integrations should be framed as supporting layers. LI.FI helps when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
+- Fund Mode is still part of the long-term product and should remain documented as Treasury plus Proposal functionality, but it should not displace Split Mode as the MVP story.
+- Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, and broader distribution surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.
