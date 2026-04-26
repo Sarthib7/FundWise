@@ -1,6 +1,8 @@
+import { Landmark, ReceiptText } from "lucide-react"
+
 export function ModesSection() {
   return (
-    <section id="modes" className="pt-28 pb-24 px-6 lg:px-[max(24px,calc(50%-660px))]">
+    <section id="modes" className="px-4 pb-24 pt-24 sm:px-6 sm:pt-28 lg:px-[max(24px,calc(50%-660px))]">
       <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-mid mb-3">
         Two modes, one app
       </div>
@@ -11,14 +13,15 @@ export function ModesSection() {
         Whether you&apos;re splitting the restaurant bill or pooling funds for a group trip, FundWise has the right primitive.
       </p>
 
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid gap-5 md:grid-cols-2">
         {/* Split Mode Card */}
-        <div className="group rounded-[22px] p-10 border-[1.5px] border-brand-border-c bg-brand-surface relative overflow-hidden hover:-translate-y-1 hover:border-brand-border-2 hover:shadow-[0_16px_48px_rgba(13,107,58,0.1)] transition-all">
+        <div className="group relative overflow-hidden rounded-[22px] border-[1.5px] border-brand-border-c bg-brand-surface p-6 transition-all hover:-translate-y-1 hover:border-brand-border-2 hover:shadow-[0_16px_48px_rgba(13,107,58,0.1)] sm:p-8 lg:p-10">
           <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(45,184,112,0.12) 0%, transparent 70%)" }} aria-hidden="true" />
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.04em] mb-5 bg-brand-pale text-brand-deep border border-brand-border-2">
-            ⚡ Split Mode
+          <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-brand-border-2 bg-brand-pale px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.04em] text-brand-deep">
+            <ReceiptText className="h-3.5 w-3.5" />
+            Split Mode
           </div>
-          <h3 className="font-serif text-[26px] tracking-tight leading-[1.2] mb-3 text-foreground">
+          <h3 className="mb-3 font-serif text-[24px] leading-[1.2] tracking-tight text-foreground sm:text-[26px]">
             Splitwise,
             <br />
             on Solana.
@@ -59,12 +62,13 @@ export function ModesSection() {
         </div>
 
         {/* Fund Mode Card */}
-        <div className="group rounded-[22px] p-10 border-[1.5px] border-brand-border-c bg-brand-surface relative overflow-hidden hover:-translate-y-1 hover:border-brand-fund-blue-border hover:shadow-[0_16px_48px_rgba(42,79,168,0.1)] transition-all">
+        <div className="group relative overflow-hidden rounded-[22px] border-[1.5px] border-brand-border-c bg-brand-surface p-6 transition-all hover:-translate-y-1 hover:border-brand-fund-blue-border hover:shadow-[0_16px_48px_rgba(42,79,168,0.1)] sm:p-8 lg:p-10">
           <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(42,79,168,0.08) 0%, transparent 70%)" }} aria-hidden="true" />
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.04em] mb-5 bg-brand-fund-blue-bg text-brand-fund-blue border border-brand-fund-blue-border">
-            🏦 Fund Mode
+          <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-brand-fund-blue-border bg-brand-fund-blue-bg px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.04em] text-brand-fund-blue">
+            <Landmark className="h-3.5 w-3.5" />
+            Fund Mode
           </div>
-          <h3 className="font-serif text-[26px] tracking-tight leading-[1.2] mb-3 text-foreground">
+          <h3 className="mb-3 font-serif text-[24px] leading-[1.2] tracking-tight text-foreground sm:text-[26px]">
             Reverse Splitwise —
             <br />
             pool first, spend after.
