@@ -342,6 +342,14 @@ export default function GroupDashboard() {
       .map((item) => new Date(item.data.confirmed_at).getTime())
   }, [activity])
 
+  const totalSettledVolume = useMemo(() => {
+    return activity
+      .filter(
+        (item): item is Extract<ActivityItem, { type: "settlement" }> => item.type === "settlement"
+      )
+      .reduce((sum, item) => sum + item.data.amount, 0)
+  }, [activity])
+
   const memberNameByWallet = useMemo(() => {
     return new Map(
       members.map((member) => [
@@ -864,6 +872,15 @@ export default function GroupDashboard() {
               <span>
                 {members.length} Member{members.length !== 1 ? "s" : ""}
               </span>
+              {!isFundMode && totalSettledVolume > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Receipt className="h-3.5 w-3.5" />
+                    {formatTokenAmount(totalSettledVolume)} {tokenName} settled
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

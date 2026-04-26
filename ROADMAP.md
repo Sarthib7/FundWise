@@ -36,12 +36,12 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Activity Feed
 - Creator-owned Expense edit/delete flow with later-Settlement guard
 - Shareable Settlement Request Link flow from the Group page
+- Group total settled volume display on the Group page
 
 **Still to finish before calling the Split Mode path polished:**
 
 - Frontend responsiveness pass across the landing page, Group list, Group page, join flow, dialogs, and Receipt
 - Global profile display-name polish
-- Group total settled volume display
 - Final empty states and copy pass
 
 **Current local work in progress:**

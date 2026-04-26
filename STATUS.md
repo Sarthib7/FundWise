@@ -97,7 +97,6 @@ The product direction is now sharper:
 - Frontend responsiveness pass across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 - Global profile display-name UX and polish
 - Final empty-state and copy polish across Group screens
-- Group total settled volume display
 - Authenticated server-side ledger writes, member-scoped data access, and verified Settlement / Contribution receipts before any mainnet-beta rehearsal
 - Mainnet USDC hardening with clear insufficient-USDC and insufficient-SOL states, recipient token-account auto-creation inside settlement flow, and explicit SOL-for-gas guidance
 - Mainnet deployment checklist and supported USDC mint wiring
@@ -137,7 +136,7 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 ## Resume point for the next session
 
 1. Finish and validate the current frontend responsiveness pass:
-   rebuild, review mobile breakpoints, then complete any remaining empty-state and copy polish plus Group total settled volume
+   rebuild, review mobile breakpoints, then complete any remaining empty-state and copy polish
 2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
 3. Add RPC verification before persisting Settlement and Contribution receipts.
 4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
