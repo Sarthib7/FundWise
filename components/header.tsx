@@ -21,8 +21,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-brand-border-c bg-background/92 backdrop-blur-xl">
-      <div className="flex items-center justify-between h-16 px-6 lg:px-[max(24px,calc(50%-660px))]">
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+      <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 md:flex-nowrap md:py-0 lg:px-[max(24px,calc(50%-660px))]">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
           <svg width="26" height="26" viewBox="0 0 80 80" fill="none" aria-hidden="true">
             <rect width="80" height="80" rx="22" fill="url(#nav-grad)" />
             <path d="M18 28 L28 52 L40 34 L52 52 L62 28" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -61,7 +64,7 @@ export function Header() {
           </a>
         </nav>
 
-        <div className="flex items-center gap-2.5">
+        <div className="ml-auto flex items-center gap-2.5 md:ml-0">
           <WalletButton />
         </div>
       </div>
