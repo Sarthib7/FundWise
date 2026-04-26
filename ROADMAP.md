@@ -35,10 +35,10 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Settlement receipt route
 - Activity Feed
 - Creator-owned Expense edit/delete flow with later-Settlement guard
+- Shareable Settlement Request Link flow from the Group page
 
 **Still to finish before calling the Split Mode path polished:**
 
-- Shareable Settlement Request Link flow from the Group page
 - Global profile display-name polish
 - Group total settled volume display
 - Final empty states and copy pass
