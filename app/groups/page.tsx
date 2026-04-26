@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useWallet } from "@solana/wallet-adapter-react"
+import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
 import { getGroupsForWallet } from "@/lib/db"
 import { STABLECOIN_MINTS } from "@/lib/expense-engine"
-import { Users, Plus, ArrowRight, Loader2, AlertCircle } from "lucide-react"
+import { Users, Plus, ArrowRight, Loader2, AlertCircle, Wallet } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 
@@ -17,6 +18,7 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 
 export default function GroupsPage() {
   const { publicKey, connected } = useWallet()
+  const { setVisible } = useWalletModal()
   const [groups, setGroups] = useState<GroupRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,8 +66,12 @@ export default function GroupsPage() {
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
             <p className="text-muted-foreground">
-              Connect your Solana wallet to view and manage your groups.
+              Your Groups will appear here as soon as you connect the Solana wallet you use with FundWise.
             </p>
+            <Button className="mt-6 min-h-11 bg-accent hover:bg-accent/90" onClick={() => setVisible(true)}>
+              <Wallet className="mr-2 h-4 w-4" />
+              Connect Wallet
+            </Button>
           </Card>
         </main>
         <Footer />
@@ -124,7 +130,7 @@ export default function GroupsPage() {
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No Groups Yet</h3>
               <p className="text-muted-foreground mb-6">
-                Create a group to start splitting expenses with friends.
+                Start a trip, dinner tab, or house fund, then invite Members with one code.
               </p>
               <Button asChild className="min-h-11 bg-accent hover:bg-accent/90">
                 <Link href="/?create=true">
