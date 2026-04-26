@@ -1,162 +1,187 @@
-# FundWise — Roadmap
+# FundWise - Roadmap
 
-Phased plan from pivot cleanup to Fund Mode launch. Each phase has a clear exit criterion before moving on. Timelines are compressed for the **Colosseum Frontier hackathon** (deadline: May 11, 2026).
-
-See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for track-specific strategy.
+Phased plan from pivot cleanup through hackathon submission and post-hackathon expansion. See [STATUS.md](./STATUS.md) for the current checkpoint, [PRD.md](./PRD.md) for the locked MVP shape, and [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for track-specific framing.
 
 ---
 
-## Phase 0 — Pivot cleanup (April 25–26) ✅
+## Phase 0 - Pivot cleanup (April 25-26) ✅
 
-**Goal:** Strip all prediction-market / Kalshi / ZK / LP-yield code. Rebuild landing page around Splitwise-on-Solana narrative.
+**Goal:** remove prediction-market baggage and reframe the product as Splitwise on Solana.
 
-**Work items:**
-- [x] Delete files listed in STATUS.md §Still needs cleanup.
-- [x] Drop unused deps from `package.json` (Kalshi, Light Protocol, Privy, Abstract, permissionless).
-- [x] Rewrite `README.md` for the new product.
-- [x] Rewrite `app/page.tsx`, `components/hero-section.tsx`, `components/how-it-works-section.tsx` for Split Mode framing.
-- [x] Rename "circles" → "groups" across UI + routes.
-- [x] Update `components/header.tsx` nav (remove prediction links).
-- [x] Verify `pnpm build` passes with zero references to removed modules.
+**Completed:**
 
-**Exit criterion:** `pnpm build` green, landing page says "Splitwise on Solana," no prediction-market UI reachable.
+- Removed prediction-market, Kalshi, ZK-compression, LP-yield, and related dependencies
+- Rewrote the landing page around FundWise
+- Renamed `circles` to `groups`
+- Moved off the inherited Firebase path and into the current Supabase-backed model
+- Verified `pnpm build`
 
----
-
-## Phase 1 — Split Mode MVP (April 27 – May 4) ✅ Core complete
-
-**Goal:** A user can create a group, add expenses, see balances, and settle on-chain with USDC. This is the core submission for the **Visa Frontier track**.
-
-**Data model (off-chain, Supabase/Postgres):**
-```
-groups/{groupId} = {
-  name, stablecoinMint, createdBy, createdAt, mode: "split",
-  members: [{ wallet, displayName, joinedAt }]
-}
-groups/{groupId}/expenses/{expenseId} = {
-  payer, amount, mint, memo, category,
-  splits: [{ wallet, share }],   // shares sum to amount
-  createdAt, editedAt
-}
-groups/{groupId}/settlements/{settlementId} = {
-  from, to, amount, mint, txSig, confirmedAt
-}
-```
-
-**Work items:**
-- [x] Group CRUD UI (`/groups`, `/groups/[id]`, invite-link + QR).
-- [x] Expense entry modal: payer, amount, participants, split method (equal / exact / shares / %).
-- [x] Balance computation + simplified settlement graph (minimize # of transfers).
-- [x] Settle-up flow: pick debt → sign SPL transfer → write `txSig` back.
-- [x] Activity feed (expenses + settlements, chronological).
-- [~] Edit / delete expense (delete guard shipped; edit still pending).
-- [~] Empty-state + onboarding copy (mostly done; minor polish left).
-- [x] Payment receipt view (tx signature, amounts, who paid whom).
-
-**Hackathon-specific polish (Visa track):**
-- [ ] PYUSD stablecoin support (PayPal stablecoin — Visa-relevant).
-- [~] Smooth one-click settlement UX (post-settlement receipt flow shipped; more polish still needed).
-- [ ] Group total settled volume display.
-- [ ] QuickNode RPC for production.
-
-**Exit criterion:** Two real wallets in a group, add 3 expenses with different splits, settle all debts on devnet, verify on-chain tx sigs resolve to correct transfers.
+**Exit criterion:** the repo and UI clearly describe FundWise instead of the old hackathon project.
 
 ---
 
-## Phase 1.5 — LI.FI Integration (May 2–4) ▶ Next
+## Phase 1 - Split Mode MVP (core shipped, hardening active)
 
-**Goal:** Enable cross-chain stablecoin contributions for Fund Mode. This is the core submission for the **Build with LI.FI track**.
+**Goal:** a user can create a private Group, add Expenses, see live Balances, and settle exact USDC amounts on Solana.
 
-**Work items:**
-- [x] Install `@lifi/sdk` and configure integrator ID.
-- [~] Cross-chain contribution modal: wallet top-up flow + Fund Mode contribution handoff shipped; one-click Treasury deposit still pending.
-- [x] LI.FI route discovery (`getQuote()`) and execution (`executeRoute()`).
-- [x] Support at least 2 chains (Ethereum/Base → Solana wallet flow).
-- [~] UI: bridge-to-wallet flow shipped; Fund Mode treasury contribution copy now shipped; one-click Treasury path still pending.
+**Shipped:**
 
-**Exit criterion:** A user with USDC on Base can bridge to Solana and deposit into a Fund Mode treasury via LI.FI in a single click.
+- Group CRUD UI
+- Invite link and QR join flow
+- Expense entry with Splitwise-style split methods:
+  equal, exact amounts, percentage, and shares
+- Balance computation
+- Simplified settlement graph
+- Settlement receipt route
+- Activity Feed
+- Delete guard for Expenses when later Settlements exist
 
----
+**Still to finish before calling the Split Mode path polished:**
 
-## Phase 2 — Fund Mode MVP (May 5–8)
+- Expense edit flow with the same safety model as delete
+- Shareable Settlement Request Link flow from the Group page
+- Global profile display-name polish
+- Group total settled volume display
+- Final empty states and copy pass
 
-**Goal:** A group can pool USDC into a Squads multisig and approve proposal-based spending.
+**Mainnet-beta hardening inside Phase 1:**
 
-**Work items:**
-- [x] "Fund" concept alongside Group in data model (or as a group flag `mode: "fund"`).
-- [~] Create fund → spawn Squads multisig, register members as signers, set threshold.
-- [~] Contribute flow (SPL transfer → multisig vault) + LI.FI cross-chain option.
-- [ ] Proposal creation modal (recipient, amount, memo, optional receipt-hash).
-- [ ] Approval UI (sign on proposal until threshold hit; auto-execute).
-- [ ] Close fund: remaining balance → proportional refund to contributors.
-- [ ] Treasury dashboard (balance, contributions-by-member, proposal history).
+- Supported mainnet USDC mint wiring
+- Clear insufficient-USDC and insufficient-SOL states
+- Recipient USDC token-account auto-creation inside settlement flow
+- Production RPC wiring
+- Mobile-web polish for join and settle flows
 
-**Exit criterion:** 3 wallets create a fund, each contributes, propose + approve a withdrawal, receive funds at destination wallet. All on devnet with verified tx sigs.
-
----
-
-## Phase 2.5 — Zerion Agent + Sponsor Integrations (May 7–9, if time)
-
-**Goal:** Build an autonomous agent using Zerion CLI for the **Zerion track** + deepen sponsor integrations for the **Eitherway track**.
-
-**Work items:**
-- [ ] Install Zerion CLI (`npm install -g zerion-cli`).
-- [ ] Build FundWise Agent: wallet monitoring + settlement suggestions.
-- [ ] Agent uses `zerion-cli wallet analyze` to check member balances before settlement.
-- [ ] Telegram bot or in-app notifications for treasury events.
-- [ ] Solflare deep integration (wallet features, mobile).
-- [ ] (Stretch) Kamino vault integration for idle treasury yield.
-- [ ] Deploy on Eitherway platform.
-
-**Exit criterion:** Agent runs autonomously, provides actionable insights, uses Zerion CLI for wallet data.
+**Exit criterion:** a real user can open the web app on mobile or desktop, join a Group, log Expenses, settle their current net Balance in USDC, and land on a usable Receipt flow that is structurally ready for mainnet-beta.
 
 ---
 
-## Phase 3 — Polish + Submission (May 9–11)
+## Phase 1.5 - Sponsor support layers
 
-**Goal:** Submit to all target tracks with polished demos.
+This phase supports the MVP. It does not redefine it.
 
-**Work items:**
-- [~] **Marketing homepage (`/`)** — layout + brand theme shipped (2026-04-26). **Consumer-only copy** pass still in progress: see [STATUS.md](./STATUS.md) § Landing page (modes, how-it-works, features, tech strip, CTA, footer). Stack/sponsor details belong in README or judge docs, not primary customer copy.
-- [ ] Record demo videos (3-min each, one per track).
-- [ ] Write submission copy for each track.
-- [ ] Final end-to-end testing on devnet.
-- [ ] Submit to Colosseum Frontier main track.
-- [ ] Submit to LI.FI side track.
-- [ ] Submit to Visa side track.
-- [ ] Submit to Zerion side track (if agent ready).
-- [ ] Deploy on Eitherway (if pursuing Track 5).
-- [ ] Mobile polish (QR scanning, wallet-deep-links).
+### LI.FI support
+
+**Goal:** help a debtor arrive at Solana USDC when they do not already have enough funds on Solana.
+
+**Shipped groundwork:**
+
+- LI.FI SDK installed
+- Route discovery and execution plumbing
+- Cross-chain UI groundwork
+
+**Still to finish:**
+
+- Recovery/top-up branch when a debtor lacks USDC on Solana
+- Clean handoff back into the normal Group Settlement flow
+- Mainnet-safe copy and error states
+
+**Exit criterion:** a user with funds on another chain can top up into Solana USDC and then perform the normal Group Settlement flow.
+
+### Zerion support
+
+**Goal:** add wallet analysis and future agent support without entering the primary settlement path.
+
+**Near-term scope:**
+
+- Wallet analysis for insufficient-funds guidance
+- Optional reminder / suggestion layer
+- Stretch agent prototype for the Zerion track
+
+**Explicitly not required in the MVP path:**
+
+- Social login
+- Embedded wallet auth
+- Replacing wallet-native identity
 
 ---
 
-## Phase 4 — Post-hackathon (May 12+)
+## Phase 2 - Fund Mode MVP
 
-Post-hackathon development. Prioritized after Demo Day feedback.
+**Goal:** support pooled USDC Treasury flows without polluting the Split Mode product.
 
-**Immediate:**
-- [ ] Mainnet-beta switch (env-flag RPC + mints).
-- [ ] Real stablecoin picker UI (curated: USDC, USDT, PYUSD + "paste mint" option).
-- [ ] Share-card generator for expenses.
-- [ ] Basic analytics (Vercel Analytics → track activation + settlement ratio).
+**Already present in the repo:**
 
-**Parking lot (user-driven):**
-- Recurring contributions / auto-split (rent, subscriptions).
-- CSV / tax export.
-- Push notifications (web-push or Telegram bot).
-- Native mobile (Solana Mobile Stack / Expo).
-- Custom Anchor vault program (replace Squads if UX demands it).
-- Fund Mode treasury yield (Kamino, MarginFi, Solend).
-- Group discovery / public groups.
-- ZK-compressed state (if cost becomes a real problem).
-- Fiat on/off-ramp (Coinbase Onramp or similar).
+- Group creation supports Fund Mode
+- Treasury initialization exists
+- Contribution history and on-chain Treasury balance are surfaced
+- Multisig and vault addresses are both stored
+
+**Still to build:**
+
+- Proposal creation UI
+- Approval UI
+- Execution flow
+- Signer-management rules after Treasury initialization
+- Better Contribution UX
+
+**Exit criterion:** a Fund Mode Group can initialize a Treasury, accept Contributions, create a Proposal, approve it, and execute it through the stored Squads identities.
 
 ---
 
-## Skills / tools reserved for implementation
+## Phase 3 - Submission polish (through May 11, 2026)
 
-- `solana-dev` skill — when writing Anchor programs (Phase 4 custom vault, if needed).
-- `review-and-iterate` skill — before each phase exit.
-- `frontend-design-guidelines` / `brand-design` — during Phase 0 rebrand + Phase 3 polish.
-- `deploy-to-mainnet` — at Phase 4 transition.
-- `roast-my-product` / `product-review` — right before submission.
+**Goal:** submit a coherent consumer product story instead of a pile of sponsor demos.
+
+**Must-have narrative:**
+
+- Web app first
+- Private Group creation
+- Fast Expense entry
+- Live Group Balances
+- One-click USDC Settlement
+- Clear Receipt
+
+**Submission work:**
+
+- Demo videos
+- Submission copy
+- End-to-end rehearsals
+- Judge-oriented screenshots and notes
+- Mainnet-beta readiness review or clearly explained mainnet-beta target with devnet rehearsal evidence
+
+**Track priorities:**
+
+1. Visa Frontier
+2. LI.FI
+3. Zerion
+4. Eitherway, if time allows
+
+---
+
+## Phase 4 - Post-hackathon expansion
+
+Only pursue these after the core Group ledger and USDC settlement flow are reliable.
+
+**Product expansion:**
+
+- Multi-stablecoin support
+- Cross-chain direct flows beyond top-up
+- Embedded wallets
+- Social login
+- Gas abstraction / gasless settlement
+- Telegram bot and Telegram mini app
+- Wallet mini dapp distribution
+- AI bill parsing and natural-language Expense entry
+
+**Fund Mode expansion:**
+
+- Better treasury UX
+- Refund / closeout flow
+- Yield integrations if user demand justifies them
+- Custom Anchor vault if Squads UX becomes the bottleneck
+
+**Operations and analytics:**
+
+- Activation and settlement analytics
+- Better production monitoring
+- Mainnet support tooling
+
+---
+
+## Implementation skills
+
+- `review-and-iterate` before each phase exit
+- `frontend-design-guidelines` and `brand-design` for user-facing polish
+- `openai-docs` or `find-docs` when vendor docs are needed
+- `deploy-to-mainnet` once the core path is actually production-ready
