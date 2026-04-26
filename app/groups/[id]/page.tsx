@@ -1191,13 +1191,24 @@ export default function GroupDashboard() {
                 {activity.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No Expenses yet</p>
-                    {isMember && (
-                      <Button variant="outline" className="mt-3" onClick={openCreateExpenseDialog}>
+                    <p className="font-medium text-foreground">No Expenses yet</p>
+                    <p className="mt-1 text-xs">
+                      {isMember
+                        ? "Log the first Expense to generate live Balances and suggested Settlements."
+                        : connected
+                          ? "Join this Group to start tracking Expenses and Settlements with the other Members."
+                          : "Connect your wallet to join this Group and start tracking shared Expenses."}
+                    </p>
+                    {isMember ? (
+                      <Button variant="outline" className="mt-4 min-h-11" onClick={openCreateExpenseDialog}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add the first Expense
                       </Button>
-                    )}
+                    ) : connected ? (
+                      <Button className="mt-4 min-h-11 bg-accent hover:bg-accent/90" onClick={handleJoin}>
+                        Join Group
+                      </Button>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1245,7 +1256,7 @@ export default function GroupDashboard() {
                                       variant="ghost"
                                       size="icon"
                                       aria-label={`Edit ${expense.memo || expense.category}`}
-                                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                      className="h-10 w-10 text-muted-foreground hover:text-foreground"
                                       disabled={isSubmitting}
                                       onClick={() => openEditExpenseDialog(expense)}
                                     >
@@ -1255,7 +1266,7 @@ export default function GroupDashboard() {
                                       variant="ghost"
                                       size="icon"
                                       aria-label={`Delete ${expense.memo || expense.category}`}
-                                      className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                                      className="h-10 w-10 text-muted-foreground hover:text-red-600"
                                       disabled={deletingExpenseId === expense.id}
                                       onClick={() => handleDeleteExpense(expense, tokenName)}
                                     >
@@ -1426,11 +1437,13 @@ export default function GroupDashboard() {
                     {isMember ? (
                       <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1 space-y-2">
-                          <Label>Contribution Amount ({tokenName})</Label>
+                          <Label htmlFor="contribution-amount">Contribution Amount ({tokenName})</Label>
                           <Input
+                            id="contribution-amount"
                             type="number"
                             min="0"
                             step="0.01"
+                            inputMode="decimal"
                             placeholder="25.00"
                             value={contributionAmount}
                             onChange={(event) => setContributionAmount(event.target.value)}
@@ -1451,7 +1464,10 @@ export default function GroupDashboard() {
                       </div>
                     ) : (
                       <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                        Join this Group first to make a Contribution.
+                        <p>Join this Group first to make a Contribution.</p>
+                        <p className="mt-1 text-xs">
+                          Once you join, you can move stablecoins into the Group Treasury from your connected Solana wallet.
+                        </p>
                       </div>
                     )}
                   </Card>
@@ -1473,10 +1489,33 @@ export default function GroupDashboard() {
                   {contributions.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p>No Contributions yet</p>
+                      <p className="font-medium text-foreground">No Contributions yet</p>
                       <p className="mt-1 text-xs">
-                        Bridge into Solana or contribute directly once the Treasury is live.
+                        {!group.treasury_address
+                          ? "Initialize the Treasury above before this Group can start recording Contributions."
+                          : isMember
+                            ? "Make the first Contribution to seed this Treasury, or top up your Solana wallet first if you need more USDC."
+                            : connected
+                              ? "Join this Group to make the first Contribution once you are ready."
+                              : "Connect your wallet to join this Group and contribute to the Treasury."}
                       </p>
+                      {group.treasury_address && isMember ? (
+                        <Button
+                          variant="outline"
+                          className="mt-4 min-h-11"
+                          onClick={() => {
+                            const input = document.getElementById("contribution-amount")
+                            input?.scrollIntoView({ behavior: "smooth", block: "center" })
+                            input?.focus()
+                          }}
+                        >
+                          Make the first Contribution
+                        </Button>
+                      ) : group.treasury_address && connected ? (
+                        <Button className="mt-4 min-h-11 bg-accent hover:bg-accent/90" onClick={handleJoin}>
+                          Join Group
+                        </Button>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -1570,7 +1609,7 @@ export default function GroupDashboard() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          className="h-10 w-10 text-muted-foreground hover:text-foreground"
                           onClick={openProfileDialog}
                           aria-label="Edit your global profile display name"
                         >
