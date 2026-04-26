@@ -13,6 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { WalletAvatar } from "@/components/avatar"
 import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
 import {
@@ -32,6 +39,7 @@ import {
   getMembers,
   isMember as checkIsMember,
   type ActivityItem,
+  updateExpense as dbUpdateExpense,
   updateGroupTreasury,
 } from "@/lib/db"
 import {
@@ -62,6 +70,7 @@ import {
   Landmark,
   Loader2,
   Minus,
+  Pencil,
   Plus,
   Receipt,
   Share2,
@@ -76,9 +85,136 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
+type SplitMethod = Database["public"]["Enums"]["split_method"]
+type ExpenseCustomSplitValues = Record<string, string>
+
+const EXPENSE_CATEGORIES = [
+  "general",
+  "food",
+  "transport",
+  "shopping",
+  "accommodation",
+  "entertainment",
+] as const
+
+const EXPENSE_SPLIT_METHODS: SplitMethod[] = ["equal", "exact", "shares", "percentage"]
+const PERCENTAGE_BASIS_POINTS = 10_000
 
 function shortWallet(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+function formatEditableTokenAmount(amount: number, decimals: number = 6) {
+  const formatted = (amount / Math.pow(10, decimals)).toFixed(decimals)
+  return formatted.replace(/\.?0+$/, "") || "0"
+}
+
+function formatEditableNumber(value: number, decimals: number = 4) {
+  const formatted = value.toFixed(decimals)
+  return formatted.replace(/\.?0+$/, "") || "0"
+}
+
+function buildEqualExactSplitInputs(
+  totalAmount: number,
+  participantWallets: string[]
+): ExpenseCustomSplitValues {
+  if (participantWallets.length === 0) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    calculateSplits(totalAmount, participantWallets, "equal").map((split) => [
+      split.wallet,
+      formatEditableTokenAmount(split.share),
+    ])
+  )
+}
+
+function buildEqualPercentageSplitInputs(participantWallets: string[]): ExpenseCustomSplitValues {
+  if (participantWallets.length === 0) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    calculateSplits(PERCENTAGE_BASIS_POINTS, participantWallets, "equal").map((split) => [
+      split.wallet,
+      formatEditableNumber(split.share / 100, 2),
+    ])
+  )
+}
+
+function buildShareSplitInputsFromExpense(expense: ActivityExpense): ExpenseCustomSplitValues {
+  const positiveShares = expense.splits.filter((split) => split.share > 0).map((split) => split.share)
+  const smallestPositiveShare = positiveShares.length > 0 ? Math.min(...positiveShares) : 1
+
+  return Object.fromEntries(
+    expense.splits.map((split) => [
+      split.wallet,
+      split.share === 0 ? "0" : formatEditableNumber(split.share / smallestPositiveShare),
+    ])
+  )
+}
+
+function buildCustomSplitInputValues(params: {
+  participantWallets: string[]
+  splitMethod: SplitMethod
+  totalAmount: number
+  expense?: ActivityExpense | null
+}): ExpenseCustomSplitValues {
+  const { participantWallets, splitMethod, totalAmount, expense } = params
+
+  if (splitMethod === "equal") {
+    return {}
+  }
+
+  if (expense) {
+    const splitByWallet = new Map(expense.splits.map((split) => [split.wallet, split.share]))
+
+    if (splitMethod === "exact") {
+      return Object.fromEntries(
+        participantWallets.map((wallet) => [
+          wallet,
+          formatEditableTokenAmount(splitByWallet.get(wallet) || 0),
+        ])
+      )
+    }
+
+    if (splitMethod === "percentage") {
+      let allocatedPercentage = 0
+
+      return Object.fromEntries(
+        participantWallets.map((wallet, index) => {
+          const share = splitByWallet.get(wallet) || 0
+          const percentage =
+            expense.amount <= 0
+              ? 0
+              : index === participantWallets.length - 1
+                ? Math.max(0, 100 - allocatedPercentage)
+                : (share / expense.amount) * 100
+
+          allocatedPercentage += index === participantWallets.length - 1 ? 0 : percentage
+
+          return [wallet, formatEditableNumber(percentage, 2)]
+        })
+      )
+    }
+
+    if (splitMethod === "shares") {
+      return buildShareSplitInputsFromExpense(expense)
+    }
+  }
+
+  if (splitMethod === "exact") {
+    return totalAmount > 0
+      ? buildEqualExactSplitInputs(totalAmount, participantWallets)
+      : Object.fromEntries(participantWallets.map((wallet) => [wallet, "0"]))
+  }
+
+  if (splitMethod === "percentage") {
+    return buildEqualPercentageSplitInputs(participantWallets)
+  }
+
+  return Object.fromEntries(participantWallets.map((wallet) => [wallet, "1"]))
 }
 
 export default function GroupDashboard() {
@@ -101,14 +237,17 @@ export default function GroupDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isMember, setIsMember] = useState(false)
 
-  const [showAddExpense, setShowAddExpense] = useState(false)
+  const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const [expenseAmount, setExpenseAmount] = useState("")
   const [expenseMemo, setExpenseMemo] = useState("")
   const [expenseCategory, setExpenseCategory] = useState("general")
-  const [splitMethod, setSplitMethod] = useState<"equal" | "exact" | "shares" | "percentage">("equal")
+  const [expensePayer, setExpensePayer] = useState("")
+  const [splitMethod, setSplitMethod] = useState<SplitMethod>("equal")
+  const [customSplitValues, setCustomSplitValues] = useState<ExpenseCustomSplitValues>({})
+  const [editingExpense, setEditingExpense] = useState<ActivityExpense | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [contributionAmount, setContributionAmount] = useState("")
@@ -202,6 +341,12 @@ export default function GroupDashboard() {
     )
   }, [members])
 
+  const expenseDialogParticipantWallets = useMemo(() => {
+    return editingExpense
+      ? editingExpense.splits.map((split) => split.wallet)
+      : members.map((member) => member.wallet)
+  }, [editingExpense, members])
+
   const canDeleteExpense = useCallback(
     (expense: ActivityExpense) => {
       const expenseTimestamp = new Date(expense.edited_at || expense.created_at).getTime()
@@ -209,6 +354,71 @@ export default function GroupDashboard() {
     },
     [settlementTimestamps]
   )
+
+  const resetExpenseForm = useCallback(() => {
+    setEditingExpense(null)
+    setExpenseAmount("")
+    setExpenseMemo("")
+    setExpenseCategory("general")
+    setExpensePayer(walletAddress)
+    setSplitMethod("equal")
+    setCustomSplitValues({})
+  }, [walletAddress])
+
+  const openCreateExpenseDialog = useCallback(() => {
+    setEditingExpense(null)
+    setExpenseAmount("")
+    setExpenseMemo("")
+    setExpenseCategory("general")
+    setExpensePayer(walletAddress)
+    setSplitMethod("equal")
+    setCustomSplitValues({})
+    setShowExpenseDialog(true)
+  }, [walletAddress])
+
+  const openEditExpenseDialog = useCallback((expense: ActivityExpense) => {
+    const participantWallets = expense.splits.map((split) => split.wallet)
+
+    setEditingExpense(expense)
+    setExpenseAmount(formatEditableTokenAmount(expense.amount))
+    setExpenseMemo(expense.memo || "")
+    setExpenseCategory(expense.category || "general")
+    setExpensePayer(expense.payer)
+    setSplitMethod(expense.split_method)
+    setCustomSplitValues(
+      buildCustomSplitInputValues({
+        participantWallets,
+        splitMethod: expense.split_method,
+        totalAmount: expense.amount,
+        expense,
+      })
+    )
+    setShowExpenseDialog(true)
+  }, [])
+
+  const handleExpenseDialogOpenChange = useCallback((open: boolean) => {
+    setShowExpenseDialog(open)
+
+    if (!open) {
+      resetExpenseForm()
+    }
+  }, [resetExpenseForm])
+
+  const handleSplitMethodChange = useCallback((nextMethod: SplitMethod) => {
+    const parsedAmount = Number(expenseAmount)
+    const totalAmount =
+      Number.isFinite(parsedAmount) && parsedAmount > 0 ? parseTokenAmount(expenseAmount) : 0
+
+    setSplitMethod(nextMethod)
+    setCustomSplitValues(
+      buildCustomSplitInputValues({
+        participantWallets: expenseDialogParticipantWallets,
+        splitMethod: nextMethod,
+        totalAmount,
+        expense: editingExpense,
+      })
+    )
+  }, [editingExpense, expenseAmount, expenseDialogParticipantWallets])
 
   const handleCopyCode = () => {
     if (!group) {
@@ -236,7 +446,7 @@ export default function GroupDashboard() {
     }
   }
 
-  const handleAddExpense = async () => {
+  const handleSubmitExpense = async () => {
     if (!connected || !walletAddress || !expenseAmount || group?.mode !== "split") {
       return
     }
@@ -244,29 +454,78 @@ export default function GroupDashboard() {
     setIsSubmitting(true)
 
     try {
-      const amount = parseTokenAmount(expenseAmount)
-      const participantWallets = members.map((member) => member.wallet)
-      const splits = calculateSplits(amount, participantWallets, splitMethod)
+      const parsedAmount = Number(expenseAmount)
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        throw new Error("Enter a valid Expense amount")
+      }
 
-      await dbAddExpense({
-        groupId,
-        payer: walletAddress,
-        createdBy: walletAddress,
+      if (!expensePayer) {
+        throw new Error("Choose who paid this Expense")
+      }
+
+      const amount = parseTokenAmount(expenseAmount)
+      const customValues =
+        splitMethod === "equal"
+          ? undefined
+          : Object.fromEntries(
+              expenseDialogParticipantWallets.map((participantWallet) => {
+                const rawValue = customSplitValues[participantWallet]?.trim() || "0"
+                const parsedValue = Number(rawValue)
+
+                if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+                  throw new Error(
+                    splitMethod === "exact"
+                      ? "Enter valid exact amounts for every Member"
+                      : splitMethod === "percentage"
+                        ? "Enter valid percentages for every Member"
+                        : "Enter valid share values for every Member"
+                  )
+                }
+
+                return [
+                  participantWallet,
+                  splitMethod === "exact" ? parseTokenAmount(rawValue) : parsedValue,
+                ]
+              })
+            )
+      const splits = calculateSplits(
+        amount,
+        expenseDialogParticipantWallets,
+        splitMethod,
+        customValues
+      )
+      const expensePayload = {
+        payer: expensePayer,
         amount,
         mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
         memo: expenseMemo,
         category: expenseCategory,
         splitMethod,
         splits,
-      })
+      }
 
-      toast.success(`Expense of ${expenseAmount} added!`)
-      setShowAddExpense(false)
-      setExpenseAmount("")
-      setExpenseMemo("")
-      loadData()
+      if (editingExpense) {
+        await dbUpdateExpense({
+          expenseId: editingExpense.id,
+          actorWallet: walletAddress,
+          ...expensePayload,
+        })
+
+        toast.success("Expense updated")
+      } else {
+        await dbAddExpense({
+          groupId,
+          createdBy: walletAddress,
+          ...expensePayload,
+        })
+
+        toast.success(`Expense of ${expenseAmount} added!`)
+      }
+
+      handleExpenseDialogOpenChange(false)
+      await loadData()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add expense")
+      toast.error(error instanceof Error ? error.message : "Failed to save Expense")
     } finally {
       setIsSubmitting(false)
     }
@@ -536,7 +795,7 @@ export default function GroupDashboard() {
               Invite
             </Button>
             {!isFundMode && isMember && (
-              <Button size="sm" className="bg-accent hover:bg-accent/90" onClick={() => setShowAddExpense(true)}>
+              <Button size="sm" className="bg-accent hover:bg-accent/90" onClick={openCreateExpenseDialog}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Expense
               </Button>
@@ -663,7 +922,7 @@ export default function GroupDashboard() {
                     <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>No Expenses yet</p>
                     {isMember && (
-                      <Button variant="outline" className="mt-3" onClick={() => setShowAddExpense(true)}>
+                      <Button variant="outline" className="mt-3" onClick={openCreateExpenseDialog}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add the first Expense
                       </Button>
@@ -700,24 +959,40 @@ export default function GroupDashboard() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              {expense.edited_at && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Edited
+                                </Badge>
+                              )}
                               <span className="font-semibold">
                                 {formatTokenAmount(expense.amount)} {tokenName}
                               </span>
                               {isExpenseOwnedByWallet &&
                                 (expenseCanBeDeleted ? (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-red-600"
-                                    disabled={deletingExpenseId === expense.id}
-                                    onClick={() => handleDeleteExpense(expense, tokenName)}
-                                  >
-                                    {deletingExpenseId === expense.id ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Trash2 className="h-4 w-4" />
-                                    )}
-                                  </Button>
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                      disabled={isSubmitting}
+                                      onClick={() => openEditExpenseDialog(expense)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                                      disabled={deletingExpenseId === expense.id}
+                                      onClick={() => handleDeleteExpense(expense, tokenName)}
+                                    >
+                                      {deletingExpenseId === expense.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </>
                                 ) : (
                                   <Badge variant="outline" className="text-[10px]">
                                     Locked After Settlement
@@ -1019,21 +1294,39 @@ export default function GroupDashboard() {
       </main>
 
       {!isFundMode && (
-        <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
-          <DialogContent className="sm:max-w-md">
+        <Dialog open={showExpenseDialog} onOpenChange={handleExpenseDialogOpenChange}>
+          <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>Add Expense</DialogTitle>
+              <DialogTitle>{editingExpense ? "Edit Expense" : "Add Expense"}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Amount ({tokenName})</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={expenseAmount}
-                  onChange={(event) => setExpenseAmount(event.target.value)}
-                />
+            <div className="space-y-5 py-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Amount ({tokenName})</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={expenseAmount}
+                    onChange={(event) => setExpenseAmount(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Paid By</Label>
+                  <Select value={expensePayer} onValueChange={setExpensePayer}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select the payer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={member.wallet}>
+                          {member.display_name || shortWallet(member.wallet)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Description</Label>
@@ -1046,12 +1339,12 @@ export default function GroupDashboard() {
               <div className="space-y-2">
                 <Label>Split Method</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {(["equal", "exact", "shares", "percentage"] as const).map((method) => (
+                  {EXPENSE_SPLIT_METHODS.map((method) => (
                     <Button
                       key={method}
                       variant={splitMethod === method ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSplitMethod(method)}
+                      onClick={() => handleSplitMethodChange(method)}
                       className={splitMethod === method ? "bg-accent hover:bg-accent/90" : ""}
                     >
                       {method.charAt(0).toUpperCase() + method.slice(1)}
@@ -1059,10 +1352,51 @@ export default function GroupDashboard() {
                   ))}
                 </div>
               </div>
+              {splitMethod !== "equal" && (
+                <div className="space-y-3">
+                  <Label>
+                    {splitMethod === "exact"
+                      ? `Exact ${tokenName} amounts`
+                      : splitMethod === "percentage"
+                        ? "Percentages"
+                        : "Relative shares"}
+                  </Label>
+                  <div className="space-y-3 rounded-lg border p-4">
+                    {expenseDialogParticipantWallets.map((participantWallet) => (
+                      <div
+                        key={participantWallet}
+                        className="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {memberNameByWallet.get(participantWallet) || shortWallet(participantWallet)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {participantWallet === expensePayer ? "Selected as payer" : "Included in this Expense"}
+                          </p>
+                        </div>
+                        <Input
+                          type="number"
+                          min="0"
+                          step={splitMethod === "shares" ? "0.1" : "0.01"}
+                          placeholder={splitMethod === "shares" ? "1" : "0.00"}
+                          value={customSplitValues[participantWallet] || ""}
+                          onChange={(event) =>
+                            setCustomSplitValues((current) => ({
+                              ...current,
+                              [participantWallet]: event.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Category</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  {["general", "food", "transport", "shopping", "accommodation", "entertainment"].map((category) => (
+                  {EXPENSE_CATEGORIES.map((category) => (
                     <Button
                       key={category}
                       variant={expenseCategory === category ? "default" : "outline"}
@@ -1076,15 +1410,17 @@ export default function GroupDashboard() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Split equally among {members.length} Member{members.length !== 1 ? "s" : ""}
+                {splitMethod === "equal"
+                  ? `Split equally among ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}`
+                  : `This Expense currently includes ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}.`}
               </p>
               <Button
                 className="w-full bg-accent hover:bg-accent/90"
-                onClick={handleAddExpense}
-                disabled={isSubmitting || !expenseAmount}
+                onClick={handleSubmitExpense}
+                disabled={isSubmitting || !expenseAmount || !expensePayer}
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Add Expense
+                {editingExpense ? "Save Changes" : "Add Expense"}
               </Button>
             </div>
           </DialogContent>
