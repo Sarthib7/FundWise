@@ -117,6 +117,7 @@ groups/{groupId}/settlements/{settlementId} = {
 **Goal:** Submit to all target tracks with polished demos.
 
 **Work items:**
+- [~] **Marketing homepage (`/`)** — layout + brand theme shipped (2026-04-26). **Consumer-only copy** pass still in progress: see [STATUS.md](./STATUS.md) § Landing page (modes, how-it-works, features, tech strip, CTA, footer). Stack/sponsor details belong in README or judge docs, not primary customer copy.
 - [ ] Record demo videos (3-min each, one per track).
 - [ ] Write submission copy for each track.
 - [ ] Final end-to-end testing on devnet.
