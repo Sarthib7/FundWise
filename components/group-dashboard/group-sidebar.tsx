@@ -1,0 +1,171 @@
+"use client"
+
+import { WalletAvatar } from "@/components/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import type { Database } from "@/lib/database.types"
+import { ArrowRightLeft, Pencil, Share2, Users } from "lucide-react"
+
+type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+
+type GroupSidebarProps = {
+  isFundMode: boolean
+  isMember: boolean
+  walletAddress: string
+  lifiSupported: boolean
+  clusterLabel: string
+  members: MemberRow[]
+  groupCreatorWallet: string
+  onOpenBridge: () => void
+  onInvite: () => void
+  onEditProfile: () => void
+}
+
+function shortWallet(address: string) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+export function GroupSidebar({
+  isFundMode,
+  isMember,
+  walletAddress,
+  lifiSupported,
+  clusterLabel,
+  members,
+  groupCreatorWallet,
+  onOpenBridge,
+  onInvite,
+  onEditProfile,
+}: GroupSidebarProps) {
+  return (
+    <div className="space-y-6">
+      {isMember && (
+        <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
+          <h3 className="text-lg font-semibold mb-2">
+            {isFundMode ? "Bridge USDC To Contribute" : "Bridge USDC To Solana"}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {isFundMode
+              ? "Top up your Solana wallet from Base, Ethereum, or another EVM chain before making a Contribution to this Group Treasury."
+              : "Top up your Solana wallet from Base, Ethereum, or another EVM chain before settling in this Group."}
+          </p>
+          {!lifiSupported && (
+            <p className="mb-4 text-xs text-muted-foreground">
+              LI.FI only routes into Solana mainnet. FundWise is currently using {clusterLabel}, so this bridge stays disabled until the app moves to mainnet.
+            </p>
+          )}
+          <Button
+            type="button"
+            className="min-h-11 w-full bg-accent hover:bg-accent/90"
+            onClick={onOpenBridge}
+            disabled={!lifiSupported}
+          >
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
+            Bridge To My Wallet
+          </Button>
+        </Card>
+      )}
+
+      <Card className="p-6">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Members</h2>
+            <p className="text-sm text-muted-foreground">
+              {members.length === 0
+                ? "Invite the first Member to start using this Group together."
+                : `${members.length} Member${members.length === 1 ? "" : "s"} in this Group.`}
+            </p>
+          </div>
+          <Badge variant="outline">
+            {members.length}
+          </Badge>
+        </div>
+
+        {members.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
+            <Users className="mx-auto mb-3 h-8 w-8 opacity-50" />
+            <p className="font-medium text-foreground">No Members yet</p>
+            <p className="mt-1 text-xs">
+              Share the invite code so the first Member can join and start logging Expenses or Contributions.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 min-h-11"
+              onClick={onInvite}
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Invite Members
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {members.map((member) => {
+              const isCreator = member.wallet === groupCreatorWallet
+              const isViewer = member.wallet === walletAddress
+
+              return (
+                <div
+                  key={member.id}
+                  className="flex items-center gap-3 rounded-lg border p-3"
+                >
+                  <WalletAvatar address={member.wallet} size={32} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {member.display_name || shortWallet(member.wallet)}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span className="font-mono">{shortWallet(member.wallet)}</span>
+                      {isCreator ? (
+                        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                          Creator
+                        </Badge>
+                      ) : null}
+                      {isViewer ? (
+                        <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                          You
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                  {isViewer ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-muted-foreground hover:text-foreground"
+                      onClick={onEditProfile}
+                      aria-label="Edit your global profile display name"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {isMember && walletAddress ? (
+          <>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Your profile display name follows your wallet across every Group.
+            </p>
+            {members.length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 min-h-11 w-full"
+                onClick={onInvite}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Invite Members
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+      </Card>
+    </div>
+  )
+}
