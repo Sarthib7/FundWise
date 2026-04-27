@@ -36,8 +36,12 @@ The current MVP path is:
 
 - Web app first
 - `/groups` uses a wallet-first entry state so disconnected users can connect immediately and continue into their Group list
+- After wallet connect, the app should restore the exact intent the user came for: invite-linked Group, Settlement Request Link, or first Group creation
+- Plain `/groups` with no existing Groups should open Group creation immediately; returning users with existing Groups should stay on the Group list
+- Group creation defaults to Split Mode; Fund Mode remains a per-Group choice inside the create flow, not a global app mode switch
 - Wallet-native auth (`@solana/wallet-adapter-*`); optional Phantom Connect may layer on later (see ADR-0014)
-- Invite link or QR join flow
+- Invite link or QR join flow with an explicit `Join {GroupName}` confirmation after connect
+- Settlement Request Links open the live settleable state and context, but never auto-send a Settlement
 - USDC-only settlement asset
 - Activity Feed, not chat
 - Current net Group Balance settlement, not per-Expense settlement
