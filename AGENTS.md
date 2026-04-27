@@ -40,7 +40,7 @@ If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the lates
 - **No destructive file operations without confirmation.** Ask before deleting files, even if they're listed for removal in STATUS.md.
 - **No guessing secrets.** If you need an RPC URL, API key, mint address, or Supabase config, ask the owner. Never hardcode or invent values.
 - **No prediction-market, Kalshi, ZK-compression, or LP-yield code.** That era is over. See ADR-0001 and ADR-0004.
-- **No email/password auth.** Identity = Solana wallet only. See ADR-0006.
+- **No email/password auth.** Identity = Solana public key. Optional Phantom Connect (ADR-0014) may add Google/Apple onboarding without replacing wallet-adapter or other wallets. See ADR-0006 and CONTEXT.md.
 
 ### Always do these
 
