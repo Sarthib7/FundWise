@@ -5,12 +5,22 @@ import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
 import { getGroupsForWallet } from "@/lib/db"
 import { STABLECOIN_MINTS } from "@/lib/expense-engine"
-import { Users, Plus, ArrowRight, Loader2, AlertCircle, Wallet } from "lucide-react"
+import {
+  Users,
+  Plus,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  Wallet,
+  Receipt,
+  ArrowRightLeft,
+} from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 
@@ -61,18 +71,72 @@ export default function GroupsPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
-          <Card className="max-w-md p-6 text-center sm:p-8">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
-            <p className="text-muted-foreground">
-              Your Groups will appear here as soon as you connect the Solana wallet you use with FundWise.
-            </p>
-            <Button className="mt-6 min-h-11 bg-accent hover:bg-accent/90" onClick={() => setVisible(true)}>
-              <Wallet className="mr-2 h-4 w-4" />
-              Connect Wallet
-            </Button>
-          </Card>
+        <main className="flex flex-1 items-center px-4 py-10 sm:px-6">
+          <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center">
+            <div className="space-y-5">
+              <Badge className="bg-accent/10 text-accent border-accent/20">Wallet required</Badge>
+              <div className="space-y-3">
+                <h1 className="max-w-xl text-4xl font-bold tracking-tight sm:text-5xl">
+                  Open your Groups with one wallet connect
+                </h1>
+                <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+                  No email setup, no hidden account layer. Connect the Solana wallet you use with FundWise, then jump straight into shared Expenses, live Balances, and exact Settlements.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10" onClick={() => setVisible(true)}>
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Connect Wallet
+                </Button>
+                <Button asChild variant="outline" className="min-h-11 sm:min-h-10">
+                  <Link href="/#how">See how it works</Link>
+                </Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Card className="p-4">
+                  <Users className="h-5 w-5 text-accent" />
+                  <p className="mt-3 text-sm font-medium">Private Groups</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Join by invite code and see only the Groups tied to your wallet.</p>
+                </Card>
+                <Card className="p-4">
+                  <Receipt className="h-5 w-5 text-accent" />
+                  <p className="mt-3 text-sm font-medium">Shared Expenses</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Log dinners, trips, and house costs with clean split inputs.</p>
+                </Card>
+                <Card className="p-4">
+                  <ArrowRightLeft className="h-5 w-5 text-accent" />
+                  <p className="mt-3 text-sm font-medium">Exact Settlements</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Pay the live net amount in USDC instead of reconciling by hand.</p>
+                </Card>
+              </div>
+            </div>
+
+            <Card className="border-accent/20 bg-gradient-to-br from-accent/6 via-background to-background p-6 sm:p-7">
+              <div className="space-y-4">
+                <Badge variant="outline">What happens next</Badge>
+                <div className="space-y-3">
+                  <div className="rounded-lg border p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      1. Connect
+                    </p>
+                    <p className="mt-2 text-sm text-foreground">Use your Solana wallet to unlock the Groups tied to that address.</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      2. Join or create
+                    </p>
+                    <p className="mt-2 text-sm text-foreground">Enter with an invite code or start a new Group for a trip, tab, or house fund.</p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      3. Settle cleanly
+                    </p>
+                    <p className="mt-2 text-sm text-foreground">FundWise computes the live Balance graph so each Member sees the simplest next payment.</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
         </main>
         <Footer />
       </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -429,15 +430,29 @@ export default function GroupDashboard() {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="p-8 max-w-md text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Group Not Found</h2>
-            <p className="text-muted-foreground mb-4">
-              This Group doesn&apos;t exist or has been removed.
+          <Card className="max-w-lg p-8 text-center sm:p-10">
+            <Badge variant="outline" className="mb-4">
+              Group link issue
+            </Badge>
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
+            <h1 className="text-3xl font-bold tracking-tight">Group Not Found</h1>
+            <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+              This Group link may be old, the invite may belong to a different wallet, or the Group may have been removed.
             </p>
-            <Button onClick={viewGroups} className="bg-accent hover:bg-accent/90">
-              View Groups
-            </Button>
+            <div className="mt-6 rounded-xl border border-dashed p-4 text-left">
+              <p className="text-sm font-medium">Try this next</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Open your Groups list to check whether you already joined with this wallet, or go back home and enter a fresh invite code.
+              </p>
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button onClick={viewGroups} className="bg-accent hover:bg-accent/90">
+                View Groups
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/">Back Home</Link>
+              </Button>
+            </div>
           </Card>
         </div>
         <Footer />
