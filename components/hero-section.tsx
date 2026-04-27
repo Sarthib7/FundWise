@@ -49,10 +49,10 @@ export function HeroSection() {
             </svg>
           </a>
           <a
-            href="/#modes"
+            href="/#how"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
-            Pool a fund
+            See how it works
           </a>
         </div>
       </section>
