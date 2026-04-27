@@ -35,7 +35,7 @@ The current MVP path is:
 `Group -> Expense -> Balance -> Settlement -> Receipt`
 
 - Web app first
-- Wallet-native auth only
+- Wallet-native auth (`@solana/wallet-adapter-*`); optional Phantom Connect may layer on later (see ADR-0014)
 - Invite link or QR join flow
 - USDC-only settlement asset
 - Activity Feed, not chat
@@ -59,7 +59,7 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 ## Tech Stack
 
 - Frontend: Next.js 15, React 19, Tailwind v4, Radix / shadcn UI
-- Wallets: `@solana/wallet-adapter-*`
+- Wallets: `@solana/wallet-adapter-*` (primary); optional `@phantom/react-sdk` when Portal is configured
 - Chain: Solana
 - Settlement asset: USDC
 - Off-chain state: Supabase / Postgres
