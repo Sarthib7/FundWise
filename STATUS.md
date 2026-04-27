@@ -1,6 +1,6 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-04-27
+**Snapshot date:** 2026-04-27 (docs refreshed same day)
 **Phase:** Split Mode MVP hardening for mainnet-beta target
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 
@@ -17,11 +17,11 @@ The product direction is now sharper:
 
 - The primary hackathon demo is Split Mode, not Fund Mode.
 - The web app is the source of truth for the MVP.
-- The frontend pass is shipped; backend trust hardening is now the next engineering slice.
+- Core UI for landing, Groups, Group detail, and receipts is in place; **targeted frontend polish and refactors** (navigation, CTAs, component extraction) continue in parallel with backend trust work.
 - Mainnet-beta is the product target; devnet remains the test environment.
-- Wallet-native auth stays in place.
+- **Identity:** Solana pubkey via `@solana/wallet-adapter-*` is the default. Optional **Phantom Connect** may be added alongside it (Portal App ID required); see ADR-0014 and [CONTEXT.md](./CONTEXT.md).
 - USDC is the only settlement asset in the MVP.
-- LI.FI and Zerion CLI are active sponsor tracks, but neither should displace the main Split Mode user path.
+- LI.FI and Zerion CLI are active sponsor tracks, but neither should displace the main Split Mode user path. **Zerion** is CLI/analysis, not a replacement for Solana wallet connect.
 
 ---
 
@@ -59,7 +59,14 @@ The product direction is now sharper:
 - The core web app flows exist and build successfully:
   landing, Group list, Group detail, Expense dialog, Settlement flow, and Receipt
 - The responsive cleanup pass is in place across the main consumer surfaces
-- Remaining UI risk is now manual breakpoint QA and edge-case review, not large pending layout work
+- **In progress (session decisions, April 2026):**
+  - **Context-aware header:** landing section nav (Modes / How it works / Features) on `/` only; interior routes get an app-style header without that marketing nav.
+  - **Landing hero:** (shipped) secondary CTA points to `/#how` with copy “See how it works”; primary remains “Start splitting” → `/groups`.
+  - **CTA section:** “Connect Wallet” should open the real wallet connect flow (adapter modal) before or with navigation to `/groups`, not a dead link.
+  - **Group dashboard:** split `app/groups/[id]/page.tsx` into focused components (Expense dialog, balances/settlements, Fund Mode blocks, etc.) without behavior changes.
+  - **Cleanup:** remove unused `group-showcase-section` (dead code).
+  - **Phantom Connect:** optional SDK integration after owner supplies Phantom Portal **App ID** and allowlisted callback URL; must not break existing adapter-based Settlements.
+- Remaining UI risk is manual breakpoint QA and edge-case review. Large file splits are for maintainability, not cosmetic rewrites.
 
 ## Next active work
 
@@ -93,6 +100,12 @@ The product direction is now sharper:
 - The next delivery sequence is locked:
   backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion support -> isolated audits -> full rewiring -> end-to-end devnet testing
 
+### UX / frontend (locked with CONTEXT.md, April 2026)
+
+- Landing marketing anchors belong on `/` only; do not repeat that section nav on Group routes.
+- Zerion track = **CLI / analysis**, not an in-app “Zerion wallet connect” replacement.
+- Optional Phantom Connect is **additive** to wallet-adapter, with Portal configuration supplied by the owner.
+
 ---
 
 ## Still pending for the primary MVP
@@ -110,7 +123,7 @@ The product direction is now sharper:
 - Telegram bot and Telegram mini app
 - Wallet-embedded mini dapp distribution
 - AI bill parsing or natural-language expense entry
-- Embedded wallets and social login
+- **FundWise-native** email/password or social identity as the primary account system (optional Phantom Connect for wallet onboarding is a separate, additive path; see ADR-0014)
 - Gas abstraction / gasless settlement
 - Multi-stablecoin or multi-chain primary settlement
 
@@ -136,14 +149,15 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
-2. Add RPC verification before persisting Settlement and Contribution receipts.
-3. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-4. Run manual breakpoint QA across landing, Group list, Group detail, Receipt, join flow, and modal surfaces while the trust-hardening slice lands.
-5. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
-6. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
-7. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
-8. Return to Fund Mode proposals only after the Split Mode demo path is polished.
+1. **Frontend (parallel):** ship context-aware header, wallet-modal CTA on landing, delete `group-showcase-section`, extract Group dashboard subcomponents; then optional Phantom Connect wiring once Portal App ID is available.
+2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
+3. Add RPC verification before persisting Settlement and Contribution receipts.
+4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
+5. Run manual breakpoint QA across landing, Group list, Group detail, Receipt, join flow, and modal surfaces while the trust-hardening slice lands.
+6. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
+7. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
+8. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
+9. Return to Fund Mode proposals only after the Split Mode demo path is polished.
 
 ---
 
