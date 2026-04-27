@@ -46,6 +46,7 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 - Backend trust and data-hardening pass
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
+- Intent-preserving post-connect UX across plain `/groups`, invite-linked Group joins, and Settlement Request Links
 - Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
@@ -72,6 +73,7 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - If custom contract work is needed later, prefer it in Fund Mode or isolated sponsor / treasury surfaces instead of the core Split Mode flow
 
 **Exit criterion:** a real user can open the web app on mobile or desktop, join a Group, log Expenses, settle their current net Balance in USDC, and land on a usable Receipt flow that is structurally ready for mainnet-beta.
+Wallet connect should not break that path; it must restore the user's original intent instead of forcing re-navigation.
 
 ---
 
