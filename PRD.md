@@ -2,7 +2,7 @@
 
 **Owner:** Sarthi
 **Status:** Draft v0.2
-**Last updated:** 2026-04-26
+**Last updated:** 2026-04-27
 
 ## Problem Statement
 
@@ -69,8 +69,9 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 - The product has two modes, but the immediate MVP path is Split Mode.
 - The web app is the only required first-class surface for the MVP.
-- Identity is wallet-native only in the MVP. No email/password and no social login.
+- Identity is **Solana wallet address** in the MVP. No FundWise email/password and no separate “app account” tied to email as the primary key.
 - A Member is keyed by wallet address and labeled with a global profile display name.
+- **Optional:** Phantom Connect (Google/Apple + embedded or extension via Phantom) may be offered **in addition to** `@solana/wallet-adapter-*`, with Phantom Portal configuration. It does not replace the adapter for users who use Solflare, Backpack, or other wallets. See [CONTEXT.md](./CONTEXT.md) and [docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md).
 - Group join is self-serve through invite link or QR.
 - Creator approval, Group roles, and membership workflows beyond simple join/leave are out of the MVP.
 - The MVP settlement asset is USDC only.
@@ -94,7 +95,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - The core modules to deepen are profile identity and join flow, Group and membership ledger, Expense entry and split validation, balance computation and simplified settlement graph, settlement orchestration and receipt generation, and sponsor integration adapters for LI.FI and Zerion.
 - LI.FI is a secondary recovery adapter for topping up the debtor's Solana wallet with USDC.
 - Direct cross-chain creditor settlement is out of scope for the MVP.
-- Zerion is a secondary intelligence adapter for future analysis, routing guidance, and agent workflows.
+- Zerion is a secondary intelligence layer via **Zerion CLI** and related analysis, not a user-facing “connect with Zerion” wallet SDK for the core app.
 - Fund Mode keeps Treasury, Contribution, and Proposal concepts separate from Split Mode Settlement concepts.
 
 ## Testing Decisions
@@ -116,8 +117,8 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Real-time Group chat
 - AI bill parsing
 - Natural-language Expense entry
-- Social login
-- Embedded wallets in the MVP
+- Email-centric or non-wallet identity as the primary onboarding path
+- Mandatory embedded-only wallets (all users must use a single vendor embedded wallet) in the MVP
 - Gasless settlement in the MVP
 - Gas abstraction in the MVP
 - Multi-stablecoin settlement in the MVP
