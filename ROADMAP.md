@@ -46,6 +46,7 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 - Backend trust and data-hardening pass
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
+- Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
 
