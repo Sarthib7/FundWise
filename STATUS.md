@@ -48,6 +48,7 @@ The product direction is now sharper:
 - Final empty-state and copy polish across Group screens
 - Responsive pass across landing, Group list, Group detail, Receipt, and modal surfaces
 - Consumer landing rewrite with product-first messaging, tighter CTAs, and consistent iconography
+- Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
 - Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
@@ -63,7 +64,7 @@ The product direction is now sharper:
   - **Context-aware header:** landing section nav (Modes / How it works / Features) on `/` only; interior routes get an app-style header without that marketing nav.
   - **Landing hero:** (shipped) secondary CTA points to `/#how` with copy “See how it works”; primary remains “Start splitting” → `/groups`.
   - **CTA section:** “Connect Wallet” should open the real wallet connect flow (adapter modal) before or with navigation to `/groups`, not a dead link.
-  - **Group dashboard:** split `app/groups/[id]/page.tsx` into focused components (Expense dialog, balances/settlements, Fund Mode blocks, etc.) without behavior changes.
+  - **Group dashboard:** component extraction is shipped; next frontend work is breakpoint QA and interaction review across the extracted Split Mode, Fund Mode, sidebar, and dialog surfaces.
   - **Cleanup:** remove unused `group-showcase-section` (dead code).
   - **Phantom Connect:** optional SDK integration after owner supplies Phantom Portal **App ID** and allowlisted callback URL; must not break existing adapter-based Settlements.
 - Remaining UI risk is manual breakpoint QA and edge-case review. Large file splits are for maintainability, not cosmetic rewrites.
@@ -149,7 +150,7 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. **Frontend (parallel):** ship context-aware header, wallet-modal CTA on landing, delete `group-showcase-section`, extract Group dashboard subcomponents; then optional Phantom Connect wiring once Portal App ID is available.
+1. **Frontend (parallel):** finish manual breakpoint QA on the extracted Group dashboard surfaces, delete `group-showcase-section`, then optional Phantom Connect wiring once Portal App ID is available.
 2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
 3. Add RPC verification before persisting Settlement and Contribution receipts.
 4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
