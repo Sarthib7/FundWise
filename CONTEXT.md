@@ -100,16 +100,23 @@ Avoid: Optimized debts, minimum transfers
 - In Fund Mode, a Group has one Treasury, many Contributions, and many Proposals.
 - A Proposal spends Treasury USDC only after the required approvals are collected.
 
+## Web shell: marketing vs in-app
+
+- The **landing page** (`/`) is the public marketing surface. Section anchors (`#modes`, `#how`, `#features`) and product narrative live there only.
+- **Interior routes** (`/groups`, `/groups/[id]`, settlement receipt, etc.) use an app-style shell: primary navigation is Group-centric, not the landing-page section menu. (Land here to work with Groups; return home via the logo or explicit links.)
+- The footer may still link to marketing anchors; the sticky header should not repeat landing-only nav when the user is inside the app.
+
 ## Product invariants
 
 - The web app is the source of truth for the MVP.
-- Wallet-native auth only. No email/password and no social login in the MVP.
+- **Identity is Solana pubkey–based.** The default connection path is `@solana/wallet-adapter-*` (Phantom, Solflare, Backpack, and other standard wallets). No FundWise email/password and no first-class “sign in with email” as the identity system.
+- **Optional additive path:** Phantom Connect SDK (`@phantom/react-sdk`) may be integrated for Google/Apple and embedded wallets alongside the adapter, subject to a Phantom Portal App ID and allowlisted domains. It does not replace wallet-adapter; signing and settlement must remain correct for both paths. See `docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md`.
 - USDC is the only settlement asset in the MVP.
 - SOL is required for gas on Solana mainnet-beta.
 - Split Mode is the primary product path for the hackathon MVP.
 - Fund Mode remains separate from Split Mode and uses Treasury plus Proposal concepts, not direct Settlements.
 - LI.FI is a secondary recovery path for topping up a Member's Solana wallet with USDC when they cannot settle.
-- Zerion is a secondary intelligence layer in the MVP, not the primary auth or settlement layer.
+- **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 
 ## Example dialogue
@@ -138,4 +145,4 @@ Resolved: the MVP has an Activity Feed only, not a real-time Group chat.
 Resolved: the MVP settles on Solana in USDC. LI.FI may help a debtor top up their Solana wallet, but the Settlement itself remains a Solana USDC transfer.
 
 - "Embedded wallet" and "social login" were proposed as onboarding improvements.
-Resolved: they stay on the roadmap, but wallet-native auth remains the MVP identity model.
+Resolved: wallet-adapter + Solana extension wallets stay the default. Optional Phantom Connect (Google/Apple + embedded) is an additive integration when Portal is configured; Member identity remains wallet pubkey–based, not email accounts owned by FundWise.
