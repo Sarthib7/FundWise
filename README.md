@@ -35,6 +35,7 @@ The current MVP path is:
 `Group -> Expense -> Balance -> Settlement -> Receipt`
 
 - Web app first
+- `/groups` uses a wallet-first entry state so disconnected users can connect immediately and continue into their Group list
 - Wallet-native auth (`@solana/wallet-adapter-*`); optional Phantom Connect may layer on later (see ADR-0014)
 - Invite link or QR join flow
 - USDC-only settlement asset
