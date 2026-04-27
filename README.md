@@ -86,7 +86,14 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 │           ├── page.tsx
 │           └── settlements/[settlementId]/page.tsx
 ├── components/
+│   └── group-dashboard/
+│       ├── expense-dialog.tsx
+│       ├── fund-mode-dashboard.tsx
+│       ├── group-sidebar.tsx
+│       ├── profile-name-dialog.tsx
+│       └── split-mode-dashboard.tsx
 ├── hooks/
+│   └── use-group-dashboard.ts
 ├── lib/
 │   ├── db.ts
 │   ├── expense-engine.ts
@@ -97,6 +104,14 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 └── supabase/
     └── schema.sql
 ```
+
+## Group Dashboard Structure
+
+The main Group route is no longer a single giant page component.
+
+- `app/groups/[id]/page.tsx` is the route shell and UI wiring layer.
+- `hooks/use-group-dashboard.ts` owns Group loading, membership checks, shareable Settlement Request Links, Settlement execution, Treasury initialization, Contribution persistence, and profile-name persistence.
+- `components/group-dashboard/` holds the Split Mode dashboard, Fund Mode dashboard, sidebar, Expense dialog, and profile dialog as focused UI modules.
 
 ## Getting Started
 
