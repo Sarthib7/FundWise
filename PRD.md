@@ -25,6 +25,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 - Web app first. Telegram, wallet mini dapp, and other distribution surfaces come later.
 - Wallet-native identity first. The connected Solana wallet is the Member identity key.
+- Preserve intent after wallet connect. Connect should return the user to the exact Group, Settlement Request, or create flow they came for.
 - One settlement asset. USDC is the only stablecoin in the MVP.
 - Off-chain metadata, on-chain money. Expenses and Group state live off-chain; Settlements and Contributions move money on-chain.
 - Current state over stale links. Settlement links resolve against the debtor's current Balance when opened.
@@ -64,6 +65,11 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 28. As a future user, I want sponsor integrations to reduce friction around funding and discovery, so that the app becomes easier to use without changing its core ledger model.
 29. As a Fund Mode organizer, I want to create a Treasury-based Group later, so that a shared budget can be pooled before spending.
 30. As a Fund Mode Member, I want to make Contributions and approve Proposals later, so that pooled spending stays collaborative and auditable.
+31. As a disconnected visitor on `/groups`, I want one obvious wallet connect action, so that I can unlock the app without reading through extra marketing copy.
+32. As a visitor who connected from an invite link, I want to return to that exact Group with a clear `Join {GroupName}` action, so that I can confirm membership without navigating again.
+33. As a debtor who connected from a Settlement Request Link, I want to land directly in the live settlement-ready state with the current amount, ledger context, and history, so that I can review before signing.
+34. As a first-time connected user with no existing Groups, I want Group creation to open immediately with Split Mode preselected, so that I can start quickly without an extra tap.
+35. As a Group creator, I want to switch the create flow from Split Mode to Fund Mode per Group, so that I can choose the right Group type without changing the whole app.
 
 ## Implementation Decisions
 
@@ -72,7 +78,12 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Identity is **Solana wallet address** in the MVP. No FundWise email/password and no separate “app account” tied to email as the primary key.
 - A Member is keyed by wallet address and labeled with a global profile display name.
 - **Optional:** Phantom Connect (Google/Apple + embedded or extension via Phantom) may be offered **in addition to** `@solana/wallet-adapter-*`, with Phantom Portal configuration. It does not replace the adapter for users who use Solflare, Backpack, or other wallets. See [CONTEXT.md](./CONTEXT.md) and [docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md).
+- `/groups` is the wallet-first app entry. Its primary job for disconnected users is to get them connected, then restore their intended next action.
+- If a disconnected user connects from plain `/groups` and has no existing Groups, Group creation should open immediately.
+- If a disconnected user connects from plain `/groups` and already has existing Groups, the app should keep them on the Group list.
+- Group creation defaults to Split Mode; Fund Mode stays selectable inside the create flow as a per-Group choice, not a global app-wide mode switch.
 - Group join is self-serve through invite link or QR.
+- Invite links should restore the exact Group context after connect and present an explicit `Join {GroupName}` action; the app should not silently join on wallet connect.
 - Creator approval, Group roles, and membership workflows beyond simple join/leave are out of the MVP.
 - The MVP settlement asset is USDC only.
 - Mainnet-beta is the product target. Devnet is the test and rehearsal environment.
@@ -84,6 +95,8 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Only debtor Members can sign their own Settlements.
 - Any Member can prompt a settlement or share a deep link, but no Member can authorize payment for someone else.
 - Settlement links must resolve live state when opened.
+- Settlement Request Links should restore the debtor directly into the live settlement-ready state after connect, including relevant ledger context and the current amount due.
+- Settlement Request Links must never auto-send the transaction after connect.
 - The simplified settlement graph is the source for suggested transfer edges.
 - Each suggested edge maps to one debtor-to-creditor transfer and one Receipt.
 - The primary flow settles the exact owed amount in one go.
@@ -106,7 +119,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Priority integration tests should cover Expense create/edit/delete guards, Settlement orchestration, Receipt generation, and leave-Group zero-balance enforcement.
 - Sponsor integration tests should mock LI.FI and Zerion boundaries and assert the app's decisions, not vendor SDK internals.
 - Wallet and token transfer tests should cover insufficient-USDC, insufficient-SOL, and recipient token-account creation decisions.
-- Mobile-focused smoke tests should cover join-from-link, settle-from-link, and receipt rendering on common narrow viewports.
+- Mobile-focused smoke tests should cover join-from-link, settle-from-link, post-connect intent restoration, zero-state create flow, and receipt rendering on common narrow viewports.
 - The current codebase has limited formal test coverage, so post-hackathon work should start by extracting pure modules and testing those first.
 
 ## Out of Scope
