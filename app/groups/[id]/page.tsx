@@ -259,17 +259,17 @@ export default function GroupDashboard() {
   }, [viewerDisplayName])
 
   const handleSaveProfileDialog = useCallback(async () => {
-    try {
-      await saveProfileName(profileName)
+    const saved = await saveProfileName(profileName)
+    if (saved) {
       setShowProfileDialog(false)
-    } catch {
-      // The hook already surfaces the failure to the user.
     }
   }, [profileName, saveProfileName])
 
   const handleContribute = useCallback(async () => {
-    await contribute(contributionAmount)
-    setContributionAmount("")
+    const contributed = await contribute(contributionAmount)
+    if (contributed) {
+      setContributionAmount("")
+    }
   }, [contribute, contributionAmount])
 
   const openCreateExpenseDialog = useCallback(() => {

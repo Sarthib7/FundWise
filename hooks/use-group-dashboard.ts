@@ -263,17 +263,17 @@ export function useGroupDashboard() {
 
     if (!walletAddress) {
       toast.error("Connect your wallet first")
-      return
+      return false
     }
 
     if (!trimmedDisplayName) {
       toast.error("Enter a profile display name")
-      return
+      return false
     }
 
     if (trimmedDisplayName.length > PROFILE_DISPLAY_NAME_MAX_LENGTH) {
       toast.error(`Display name must be ${PROFILE_DISPLAY_NAME_MAX_LENGTH} characters or fewer`)
-      return
+      return false
     }
 
     setIsSavingProfileName(true)
@@ -297,9 +297,10 @@ export function useGroupDashboard() {
       )
 
       toast.success("Profile display name updated")
+      return true
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update profile display name")
-      throw error
+      return false
     } finally {
       setIsSavingProfileName(false)
     }
