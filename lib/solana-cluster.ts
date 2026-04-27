@@ -54,3 +54,20 @@ export function getSolanaExplorerTxUrl(
 
   return `https://explorer.solana.com/tx/${signature}?cluster=custom`
 }
+
+export function getSolanaExplorerAddressUrl(
+  address: string,
+  rpcUrl: string = getSolanaRpcUrl()
+) {
+  const cluster = getFundWiseClusterName(rpcUrl)
+
+  if (cluster === "mainnet-beta") {
+    return `https://explorer.solana.com/address/${address}`
+  }
+
+  if (cluster === "devnet") {
+    return `https://explorer.solana.com/address/${address}?cluster=devnet`
+  }
+
+  return `https://explorer.solana.com/address/${address}?cluster=custom`
+}
