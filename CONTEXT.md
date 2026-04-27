@@ -28,7 +28,7 @@ An on-chain USDC transfer from a debtor Member to a creditor Member that reduces
 Avoid: Payment
 
 **Settlement Request Link**:
-A shareable deep link back into the Group that opens the debtor's current settleable state. The amount is resolved from the live Group Balance when the link is opened.
+A shareable deep link back into the Group that opens the debtor's current settleable state, including the live pending amount and related ledger context. The amount is resolved from the live Group Balance when the link is opened, but the Settlement is never auto-sent.
 Avoid: Invoice, static payment link
 
 **Contribution**:
@@ -83,7 +83,7 @@ Avoid: Optimized debts, minimum transfers
 
 - A Group has exactly one mode: Split Mode or Fund Mode.
 - A Group has many Members.
-- A Member joins a Group by invite link or QR after connecting a Solana wallet.
+- A Member joins a Group by invite link or QR after connecting a Solana wallet and explicitly confirming the Join action in the Group context.
 - A Member has one wallet identity and one global profile display name in the MVP.
 - In Split Mode, a Group has many Expenses and many Settlements.
 - An Expense belongs to one Group, has one payer Member, and can be created by any Member in the Group.
@@ -95,6 +95,7 @@ Avoid: Optimized debts, minimum transfers
 - Only a debtor Member can authorize and sign their own Settlement.
 - Any Member can prompt or share a Settlement Request Link, but they cannot sign on behalf of another Member.
 - A Settlement resolves against the debtor's current net Balance when opened, not a stale amount captured earlier.
+- If wallet connect interrupts a join, settlement, or create flow, the app should return the Member to that exact context after connect instead of dropping them into a generic screen.
 - A Settlement is one on-chain USDC transfer from one debtor to one creditor.
 - A creditor does not receive a payment prompt; they receive the updated Balance state and Receipt.
 - In Fund Mode, a Group has one Treasury, many Contributions, and many Proposals.
@@ -104,6 +105,7 @@ Avoid: Optimized debts, minimum transfers
 
 - The **landing page** (`/`) is the public marketing surface. Section anchors (`#modes`, `#how`, `#features`) and product narrative live there only.
 - **Interior routes** (`/groups`, `/groups/[id]`, settlement receipt, etc.) use an app-style shell: primary navigation is Group-centric, not the landing-page section menu. (Land here to work with Groups; return home via the logo or explicit links.)
+- For disconnected visitors, `/groups` is the wallet-first app entry. Its first job is to get the user connected, then restore the exact action they came to complete.
 - The footer may still link to marketing anchors; the sticky header should not repeat landing-only nav when the user is inside the app.
 
 ## Product invariants
@@ -111,6 +113,11 @@ Avoid: Optimized debts, minimum transfers
 - The web app is the source of truth for the MVP.
 - **Identity is Solana pubkey–based.** The default connection path is `@solana/wallet-adapter-*` (Phantom, Solflare, Backpack, and other standard wallets). No FundWise email/password and no first-class “sign in with email” as the identity system.
 - **Optional additive path:** Phantom Connect SDK (`@phantom/react-sdk`) may be integrated for Google/Apple and embedded wallets alongside the adapter, subject to a Phantom Portal App ID and allowlisted domains. It does not replace wallet-adapter; signing and settlement must remain correct for both paths. See `docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md`.
+- Wallet connect is a gate, not a detour. After connect, the app should restore the user's exact intent: invite-linked Group, Settlement Request Link, or first Group creation.
+- Plain `/groups` with no existing Groups should open Group creation immediately after connect.
+- Plain `/groups` with existing Groups should remain a Group list after connect.
+- Group creation defaults to Split Mode, while Fund Mode stays selectable per Group inside the create flow.
+- Group mode choice is per Group only, never a global app-wide mode switch.
 - USDC is the only settlement asset in the MVP.
 - SOL is required for gas on Solana mainnet-beta.
 - Split Mode is the primary product path for the hackathon MVP.
@@ -123,6 +130,12 @@ Avoid: Optimized debts, minimum transfers
 
 > Dev: "If I open a Settlement Request Link that was shared yesterday, do I pay the old amount or the current amount?"
 > Domain expert: "The current settleable amount from the live Group Balance. The link deep-links into the Group state; it is not a static invoice."
+
+> Dev: "If I connect from an invite link, should the app silently join me to that Group?"
+> Domain expert: "No. Connect should restore the exact Group context, then show one obvious Join action like `Join Weekend Trip`."
+
+> Dev: "What should happen if I connect from plain `/groups` and I don't have any Groups yet?"
+> Domain expert: "Open Group creation immediately with Split Mode preselected. Fund Mode stays available as a per-Group switch inside create."
 
 > Dev: "If Alice is owed money, should she get a wallet prompt to settle?"
 > Domain expert: "No. Only debtor Members with negative Balances see the Settle action. Creditors receive Receipts and updated balances."
