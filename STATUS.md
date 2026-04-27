@@ -64,6 +64,9 @@ The product direction is now sharper:
   - **Context-aware header:** landing section nav (Modes / How it works / Features) on `/` only; interior routes get an app-style header without that marketing nav.
   - **Landing hero:** (shipped) secondary CTA points to `/#how` with copy “See how it works”; primary remains “Start splitting” → `/groups`.
   - **Wallet-first CTAs:** shipped. Landing and `/groups` now open the real wallet connect flow instead of acting like dead links, and the disconnected `/groups` entry keeps the primary connect action above the fold on mobile.
+  - **Post-connect flow decisions:** locked from product grilling, but not fully implemented yet. After connect, FundWise should restore exact intent: invite-linked Group, Settlement Request Link, or first Group creation. Plain `/groups` with no existing Groups should open create immediately with Split Mode preselected; users with existing Groups should stay on the Group list.
+  - **Mode choice:** locked. Group creation defaults to Split Mode, with Fund Mode selectable per Group inside create. There is no global app-wide Split/Fund switch.
+  - **Invite and settlement deep links:** locked. Invite links should restore Group context and show an explicit `Join {GroupName}` action after connect; Settlement Request Links should open the live settlement-ready state with current amount and ledger context, but never auto-send.
   - **Frontend QA:** disconnected `/groups` and Group-not-found recovery states are manually checked at `375`, `768`, and `1280`; remaining frontend QA is on the extracted Split Mode, Fund Mode, sidebar, dialog, join, and Receipt surfaces.
   - **Cleanup:** remove unused `group-showcase-section` (dead code).
   - **Phantom Connect:** optional SDK integration after owner supplies Phantom Portal **App ID** and allowlisted callback URL; must not break existing adapter-based Settlements.
@@ -83,7 +86,12 @@ The product direction is now sharper:
 - The Group page owns the full flow:
   Group -> Expense -> Balance -> Settlement -> Receipt
 - Members join by invite link or QR after connecting a wallet.
+- Wallet connect should restore the exact intent the user came for instead of dropping them into a generic screen.
+- Plain `/groups` with no existing Groups should open Group creation immediately after connect.
+- Plain `/groups` with existing Groups should stay on the Group list after connect.
+- Group creation defaults to Split Mode; Fund Mode is selectable per Group inside create, not via a global app-wide toggle.
 - Join is invite-based and does not require creator approval in the MVP.
+- Invite links restore the exact Group context and present an explicit `Join {GroupName}` action after connect; they do not silently join on wallet connect.
 - Member identity is wallet-native with one global profile display name reused across Groups.
 - Expenses are off-chain records; Settlements are on-chain USDC transfers.
 - Any Member can log an Expense, and the payer can be any Member in the Group.
@@ -92,6 +100,7 @@ The product direction is now sharper:
 - Only Members with a negative Balance see the Settle action.
 - Settlements resolve against the debtor's current net Balance, not a stale linked amount.
 - The primary settlement action is exact-amount settlement in one go.
+- Settlement Request Links should reopen the live settlement-ready state with the current amount and ledger context after connect, but they must never auto-send the transaction.
 - Each suggested edge in the simplified settlement graph maps to one debtor-to-creditor transfer.
 - Mainnet-beta is the product target; devnet is for testing and rehearsals.
 - USDC is the only stablecoin in the MVP.
@@ -150,7 +159,7 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. **Frontend (parallel):** finish manual breakpoint QA on the extracted Group dashboard surfaces plus join and Receipt routes, delete `group-showcase-section`, then optional Phantom Connect wiring once Portal App ID is available.
+1. **Frontend (parallel):** implement the locked post-connect intent restoration flow across `/groups`, invite-linked Group joins, and Settlement Request Links; then finish manual breakpoint QA on join and Receipt routes and delete `group-showcase-section`.
 2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
 3. Add RPC verification before persisting Settlement and Contribution receipts.
 4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
