@@ -63,11 +63,11 @@ The product direction is now sharper:
 - **In progress (session decisions, April 2026):**
   - **Context-aware header:** landing section nav (Modes / How it works / Features) on `/` only; interior routes get an app-style header without that marketing nav.
   - **Landing hero:** (shipped) secondary CTA points to `/#how` with copy “See how it works”; primary remains “Start splitting” → `/groups`.
-  - **CTA section:** “Connect Wallet” should open the real wallet connect flow (adapter modal) before or with navigation to `/groups`, not a dead link.
-  - **Group dashboard:** component extraction is shipped; next frontend work is breakpoint QA and interaction review across the extracted Split Mode, Fund Mode, sidebar, and dialog surfaces.
+  - **Wallet-first CTAs:** shipped. Landing and `/groups` now open the real wallet connect flow instead of acting like dead links, and the disconnected `/groups` entry keeps the primary connect action above the fold on mobile.
+  - **Frontend QA:** disconnected `/groups` and Group-not-found recovery states are manually checked at `375`, `768`, and `1280`; remaining frontend QA is on the extracted Split Mode, Fund Mode, sidebar, dialog, join, and Receipt surfaces.
   - **Cleanup:** remove unused `group-showcase-section` (dead code).
   - **Phantom Connect:** optional SDK integration after owner supplies Phantom Portal **App ID** and allowlisted callback URL; must not break existing adapter-based Settlements.
-- Remaining UI risk is manual breakpoint QA and edge-case review. Large file splits are for maintainability, not cosmetic rewrites.
+- Remaining UI risk is the deeper Group dashboard interaction review plus join and Receipt edge cases. Large file splits are for maintainability, not cosmetic rewrites.
 
 ## Next active work
 
@@ -150,11 +150,11 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 
 ## Resume point for the next session
 
-1. **Frontend (parallel):** finish manual breakpoint QA on the extracted Group dashboard surfaces, delete `group-showcase-section`, then optional Phantom Connect wiring once Portal App ID is available.
+1. **Frontend (parallel):** finish manual breakpoint QA on the extracted Group dashboard surfaces plus join and Receipt routes, delete `group-showcase-section`, then optional Phantom Connect wiring once Portal App ID is available.
 2. Replace public Supabase ledger writes with authenticated server-side mutations and member-scoped read access.
 3. Add RPC verification before persisting Settlement and Contribution receipts.
 4. Harden the mainnet USDC settlement flow around token-account creation, insufficient-funds handling, and SOL gas guidance.
-5. Run manual breakpoint QA across landing, Group list, Group detail, Receipt, join flow, and modal surfaces while the trust-hardening slice lands.
+5. If `next dev` falls into missing `.next/server` chunk errors during browser QA again, clear `.next` and restart `pnpm dev` before debugging app code.
 6. Tighten the on-chain integration layer and devnet rehearsal path before adding sponsor branches.
 7. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
 8. Audit the contract / on-chain surface, then rewire the full stack and run end-to-end devnet testing.
