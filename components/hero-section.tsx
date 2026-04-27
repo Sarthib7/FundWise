@@ -9,6 +9,7 @@ import {
   Palmtree,
   UtensilsCrossed,
 } from "lucide-react"
+import { AppEntryButton } from "@/components/app-entry-button"
 
 export function HeroSection() {
   return (
@@ -39,18 +40,15 @@ export function HeroSection() {
         </p>
 
         <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <a
-            href="/groups"
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-brand-grad px-7 py-3.5 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_12px_36px_rgba(13,107,58,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
-          >
-            Start splitting
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </a>
+          <AppEntryButton
+            disconnectedLabel="Start splitting"
+            connectedLabel="Open your Groups"
+            navigateAfterConnect
+            className="w-full sm:min-h-11 sm:w-auto"
+          />
           <a
             href="/#how"
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
             See how it works
           </a>
