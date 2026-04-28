@@ -40,6 +40,7 @@ The current MVP path is:
 - Plain `/groups` with no existing Groups should open Group creation immediately; returning users with existing Groups should stay on the Group list
 - Group creation defaults to Split Mode; Fund Mode remains a per-Group choice inside the create flow, not a global app mode switch
 - Wallet-native auth (`@solana/wallet-adapter-*`); optional Phantom Connect may layer on later (see ADR-0014)
+- Wallet-signed browser-session verification gates protected Group ledger reads and Receipts
 - Invite link or QR join flow with an explicit `Join {GroupName}` confirmation after connect
 - Settlement Request Links open the live settleable state and context, but never auto-send a Settlement
 - USDC-only settlement asset
@@ -65,7 +66,7 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 
 - Frontend: Next.js 15, React 19, Tailwind v4, Radix / shadcn UI
 - Wallets: `@solana/wallet-adapter-*` (primary); optional `@phantom/react-sdk` when Portal is configured
-- Chain: Solana
+- Chain: Solana devnet for now
 - Settlement asset: USDC
 - Off-chain state: Supabase / Postgres
 - Fund Mode Treasury: Squads (`@sqds/multisig`)
@@ -143,6 +144,8 @@ Required keys used by the app:
 - `NEXT_PUBLIC_SOLANA_RPC_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `FUNDWISE_SESSION_SECRET`
 
 Fallback compatibility is present for:
 
@@ -158,11 +161,11 @@ pnpm lint
 
 ## MVP Notes
 
-- Mainnet-beta is the product target.
-- Devnet is still the test and rehearsal environment.
+- Solana devnet is the active execution environment for now.
+- Mainnet-beta comes later, after the devnet hardening and rehearsal path is finished.
 - Members need SOL for gas even though Settlements use USDC.
 - The current execution order is:
-  backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion integration -> audit and full-flow devnet rehearsal
+  devnet settlement hardening -> manual QA -> sponsor-layer integration -> full-flow devnet rehearsal -> later mainnet readiness
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
 
 ## License

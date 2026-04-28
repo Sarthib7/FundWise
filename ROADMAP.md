@@ -27,6 +27,7 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 **Shipped:**
 
 - Group CRUD UI
+- Zero-state Group creation with Split Mode preselected
 - Invite link and QR join flow
 - Expense entry with Splitwise-style split methods:
   equal, exact amounts, percentage, and shares
@@ -41,24 +42,27 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 - Final empty-state and copy pass across Group screens
 - Responsive pass across the landing page, Group list, Group page, Receipt, and modal surfaces
 - Consumer landing polish with product-first messaging, cleaner partner branding, and consistent iconography
+- Wallet-signed session cookies for protected FundWise actions
+- Authenticated server-side ledger writes for Groups, Members, Expenses, Settlements, Contributions, and profile updates
+- Session-aware Group and Receipt reads instead of public browser Supabase ledger reads
+- RPC verification before persisting Settlement and Contribution receipts
 
-**Still to finish before mainnet-beta rehearsal:**
+**Still to finish before the next full devnet rehearsal:**
 
-- Backend trust and data-hardening pass
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
-- Intent-preserving post-connect UX across plain `/groups`, invite-linked Group joins, and Settlement Request Links
+- Devnet settlement UX hardening around insufficient-USDC states, insufficient-SOL states, and clearer ATA-creation messaging
 - Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
 
-1. Backend trust and data-hardening pass
-2. On-chain settlement hardening plus devnet wiring
+1. On-chain settlement hardening plus devnet wiring
+2. Manual QA and devnet rehearsal
 3. Sponsor-layer integrations
-4. Isolated audits and integration testing
+4. Isolated audits and later mainnet readiness
 
 **Backend trust and mainnet-beta hardening inside Phase 1:**
 
-- Authenticated wallet-bound server-side ledger writes with member-scoped RLS
+- Authenticated wallet-bound server-side ledger writes with protected Group / Receipt reads
 - RPC verification before persisting Settlement and Contribution receipts
 - Supported mainnet USDC mint wiring
 - Clear insufficient-USDC and insufficient-SOL states
