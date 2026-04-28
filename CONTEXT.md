@@ -36,7 +36,7 @@ A deposit of USDC into a Fund Mode Treasury by a Member.
 Avoid: Deposit, payment
 
 **Proposal**:
-A request to spend from a Fund Mode Treasury. It includes recipient, amount, and memo, and requires approval before execution.
+A request to spend from a Fund Mode Treasury. In the first Fund Mode shape, this is a reimbursement request filed by a Member who already paid out of pocket, and the Treasury reimburses a Member wallet after approval. It includes recipient, amount, memo, and may include lightweight proof such as one uploaded image or PDF plus an optional external link. It requires approval before execution.
 Avoid: Vote, request, withdrawal
 
 **Member**:
@@ -68,7 +68,7 @@ A Member with a positive Balance who is owed USDC and receives Settlements and R
 Avoid: Receiver, beneficiary
 
 **Activity Feed**:
-The Group timeline showing Expenses, lightweight Expense edit markers, Settlements, and Receipts. It is not a general-purpose chat.
+The Group timeline showing Expenses, lightweight Expense edit markers, Settlements, and Receipts. It is not a general-purpose Group chat. Fund Mode Proposals may later include scoped comments and proof attachments without turning the whole Group into a chat room.
 Avoid: Chat, thread
 
 **Receipt**:
@@ -100,6 +100,18 @@ Avoid: Optimized debts, minimum transfers
 - A creditor does not receive a payment prompt; they receive the updated Balance state and Receipt.
 - In Fund Mode, a Group has one Treasury, many Contributions, and many Proposals.
 - A Proposal spends Treasury USDC only after the required approvals are collected.
+- The first Fund Mode Proposal shape is reimbursement-first: a Member fronts an expense, files a reimbursement Proposal, and the Treasury reimburses a Member wallet only.
+- The Member who creates a reimbursement Proposal cannot approve or vote on that same Proposal.
+- External recipient payouts are a later expansion; in the first Fund Mode shape, a reimbursed Member can forward funds onward from their own wallet if needed.
+- Fund Mode may support Proposal-scoped comments and lightweight proof attachments, but not a full Group-wide chat product in the MVP shape.
+- Proposal proof should support both one lightweight uploaded file and an optional external link.
+- A reimbursement Proposal may be edited only before the first non-proposer approval is recorded.
+- Proposal edits must remain visible in history so reviewers can see what changed instead of relying on silent mutation.
+- Proposal review supports both approval and rejection.
+- If a Member rejects a Proposal, the rejection should be visible in the Proposal discussion history instead of disappearing into off-product coordination.
+- A rejected reimbursement Proposal is closed. If the claimant wants to try again, they must create a new Proposal instead of reviving the rejected one.
+- Reaching the approval threshold does not auto-send funds. A reimbursement Proposal still requires a separate explicit execution step before Treasury USDC moves.
+- Once the approval threshold is met, any Member may execute the fixed approved Proposal so reimbursements do not stall waiting on one specific actor.
 
 ## Web shell: marketing vs in-app
 
@@ -114,6 +126,10 @@ Avoid: Optimized debts, minimum transfers
 - **Identity is Solana pubkey–based.** The default connection path is `@solana/wallet-adapter-*` (Phantom, Solflare, Backpack, and other standard wallets). No FundWise email/password and no first-class “sign in with email” as the identity system.
 - **Optional additive path:** Phantom Connect SDK (`@phantom/react-sdk`) may be integrated for Google/Apple and embedded wallets alongside the adapter, subject to a Phantom Portal App ID and allowlisted domains. It does not replace wallet-adapter; signing and settlement must remain correct for both paths. See `docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md`.
 - Wallet connect is a gate, not a detour. After connect, the app should restore the user's exact intent: invite-linked Group, Settlement Request Link, or first Group creation.
+- Telegram is a distribution surface, not a signing surface. It may support read-only views, draft-safe actions, comments, and history, but approvals, executions, and money-moving actions must return the Member to the app for wallet confirmation.
+- If Telegram linking is added later, one Telegram account maps to one active wallet at a time.
+- If Telegram group-chat integration is added later, one Telegram chat maps to one FundWise Group at a time. Multi-Group switching inside one chat is a later expansion.
+- Any Member may attach the FundWise bot to a Telegram chat, but each person must authenticate privately with the bot in DM against their own wallet before the bot acts for them in the group.
 - Plain `/groups` with no existing Groups should open Group creation immediately after connect.
 - Plain `/groups` with existing Groups should remain a Group list after connect.
 - Group creation defaults to Split Mode, while Fund Mode stays selectable per Group inside the create flow.
@@ -152,7 +168,7 @@ Resolved: use Settlement for Split Mode and Contribution for Fund Mode.
 Resolved: the MVP relies on shareable Settlement Request Links first. Push delivery can be added later.
 
 - "Chat" was drifting into scope.
-Resolved: the MVP has an Activity Feed only, not a real-time Group chat.
+Resolved: the MVP does not have a real-time Group-wide chat. If discussion is needed, keep it scoped to Fund Mode Proposals via comments and proof attachments.
 
 - "Multi-chain" was being used to describe both recovery and primary settlement.
 Resolved: the MVP settles on Solana in USDC. LI.FI may help a debtor top up their Solana wallet, but the Settlement itself remains a Solana USDC transfer.
