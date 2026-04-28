@@ -11,6 +11,7 @@ export function Header() {
   const pathname = usePathname()
   const clusterLabel = getFundWiseClusterLabel()
   const isMarketingRoute = pathname === "/"
+  const isGroupsIndexRoute = pathname === "/groups"
   const navItems = [
     { href: "/#modes", label: "Modes", sectionId: "modes" },
     { href: "/#how", label: "How it works", sectionId: "how" },
@@ -79,7 +80,7 @@ export function Header() {
               ))}
             </nav>
           ) : (
-            <nav className="hidden items-center gap-2 md:flex">
+            <nav className="hidden items-center gap-2 lg:flex">
               {appNavItems.map((item) => {
                 const Icon = item.icon
 
@@ -99,13 +100,15 @@ export function Header() {
                   </Link>
                 )
               })}
-              <span className="inline-flex min-h-10 items-center rounded-full border border-brand-border-c bg-brand-surface px-3 text-xs font-semibold uppercase tracking-[0.14em] text-brand-text-2">
-                Solana {clusterLabel}
-              </span>
             </nav>
           )}
 
-          <div className="ml-auto flex items-center gap-2.5 md:ml-0">
+          <div className="ml-auto flex items-center gap-2 md:ml-0">
+            {!isMarketingRoute ? (
+              <span className="inline-flex min-h-9 items-center rounded-full border border-brand-border-c bg-brand-surface px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-text-3 sm:px-3 sm:text-[11px]">
+                {clusterLabel}
+              </span>
+            ) : null}
             <WalletButton />
           </div>
         </div>
@@ -124,30 +127,20 @@ export function Header() {
             ))}
           </nav>
         ) : (
-          <nav className="mt-3 flex flex-wrap items-center gap-2 md:hidden">
-            {appNavItems.map((item) => {
-              const Icon = item.icon
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "inline-flex min-h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-[border-color,background-color,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    item.active
-                      ? "border-accent/20 bg-accent/10 text-accent"
-                      : "border-brand-border-c bg-background/80 text-brand-text-2 hover:bg-brand-surface hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {item.label}
-                </Link>
-              )
-            })}
-            <span className="inline-flex min-h-10 items-center rounded-full border border-brand-border-c bg-brand-surface px-3 text-xs font-semibold uppercase tracking-[0.14em] text-brand-text-2">
-              Solana {clusterLabel}
-            </span>
-          </nav>
+          <div className="mt-3 flex items-center gap-3 lg:hidden">
+            <Link
+              href="/groups"
+              className={cn(
+                "inline-flex min-h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-[border-color,background-color,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isGroupsIndexRoute
+                  ? "border-accent/20 bg-accent/10 text-accent"
+                  : "border-brand-border-c bg-background/80 text-brand-text-2 hover:bg-brand-surface hover:text-foreground"
+              )}
+            >
+              <Wallet className="h-3.5 w-3.5" />
+              Groups
+            </Link>
+          </div>
         )}
       </div>
     </header>

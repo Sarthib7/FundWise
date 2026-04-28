@@ -298,7 +298,9 @@ export function FundModeDashboard({
                         shortWallet(contribution.member_wallet)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(contribution.created_at).toLocaleDateString()}
+                      {memberNameByWallet.get(contribution.member_wallet)
+                        ? `${shortWallet(contribution.member_wallet)} · ${new Date(contribution.created_at).toLocaleDateString()}`
+                        : `Contribution recorded · ${new Date(contribution.created_at).toLocaleDateString()}`}
                     </p>
                   </div>
                 </div>
