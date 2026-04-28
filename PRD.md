@@ -23,15 +23,17 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 ## Product Principles
 
-- Web app first. Telegram, wallet mini dapp, and other distribution surfaces come later.
+- Web app first. Telegram, wallet mini dapp, native mobile, and other distribution surfaces come later as clients of the same core product engine.
 - Wallet-native identity first. The connected Solana wallet is the Member identity key.
 - Preserve intent after wallet connect. Connect should return the user to the exact Group, Settlement Request, or create flow they came for.
 - One settlement asset. USDC is the only stablecoin in the MVP.
 - Off-chain metadata, on-chain money. Expenses and Group state live off-chain; Settlements and Contributions move money on-chain.
 - Current state over stale links. Settlement links resolve against the debtor's current Balance when opened.
 - Exact settlement over flexible settlement. The primary flow is settle the exact owed amount in one go.
-- Activity feed, not chat. The Group timeline should explain the ledger without becoming a messaging product.
+- Activity feed, not chat. The Group timeline should explain the ledger without becoming a general messaging product. If Fund Mode needs discussion later, prefer Proposal-scoped comments over full Group chat.
 - Sponsor integrations must support the main flow, not redefine it.
+- Distribution expansion should reuse the same wallet-native ledger model across web, Telegram, agent, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
+- The long-range end state is a stablecoin-first product where gas, fees, and bridging are abstracted away as much as possible for the end user, while the core ledger still stays wallet-verifiable underneath.
 
 ## User Stories
 
@@ -75,7 +77,15 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 - The product has two modes, but the immediate MVP path is Split Mode.
 - The web app is the only required first-class surface for the MVP.
+- Post-MVP distribution should expand in layers: web app first, then Telegram bot / mini app and agent surfaces, then wallet mini dapp, and finally a native mobile app.
 - Identity is **Solana wallet address** in the MVP. No FundWise email/password and no separate “app account” tied to email as the primary key.
+- Telegram auth, if added later, should be a convenience and routing layer around existing groups, not a replacement for wallet-native Member identity.
+- Telegram surfaces may handle read-only, draft-safe, comment, and history actions, but all approvals, executions, and money-moving actions must bounce back into the app for wallet confirmation.
+- One Telegram account should map to one active wallet at a time. If relinking is allowed later, it should be an explicit flow, not an implicit multi-wallet identity model.
+- One Telegram group chat should map to one FundWise Group at a time. If multi-Group switching is allowed later, it should be an explicit chat-level flow rather than the default.
+- Any Group Member may add the bot to a Telegram chat, but each person must authenticate one-on-one with the bot in DM before the bot reads or drafts on their behalf.
+- Agent access should not rely on broad raw API keys. Later agent surfaces should use scoped capabilities tied to the Member wallet, Group, and action type.
+- Later onboarding work should help web2 users reach stablecoin balances with far less friction, potentially through fiat rails, bank-transfer-style funding, and card or account layers, but only after the crypto-native core flow is reliable.
 - A Member is keyed by wallet address and labeled with a global profile display name.
 - **Optional:** Phantom Connect (Google/Apple + embedded or extension via Phantom) may be offered **in addition to** `@solana/wallet-adapter-*`, with Phantom Portal configuration. It does not replace the adapter for users who use Solflare, Backpack, or other wallets. See [CONTEXT.md](./CONTEXT.md) and [docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md).
 - `/groups` is the wallet-first app entry. Its primary job for disconnected users is to get them connected, then restore their intended next action.
@@ -105,6 +115,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Expense edits update in place with a lightweight "edited" signal in the Activity Feed.
 - Expense changes are blocked when later Settlements would make the ledger unsafe.
 - The Group timeline is an Activity Feed, not a chat system.
+- Fund Mode may add Proposal-scoped comments plus lightweight proof attachments later, but not a general Group-wide chat system in the MVP shape.
 - The core modules to deepen are profile identity and join flow, Group and membership ledger, Expense entry and split validation, balance computation and simplified settlement graph, settlement orchestration and receipt generation, and sponsor integration adapters for LI.FI and Zerion.
 - LI.FI is a secondary recovery adapter for topping up the debtor's Solana wallet with USDC.
 - Direct cross-chain creditor settlement is out of scope for the MVP.
@@ -124,10 +135,11 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 ## Out of Scope
 
-- Telegram bot as a first-class product surface
-- Telegram mini app as a first-class product surface
-- Wallet-embedded mini dapp as a first-class product surface
-- Real-time Group chat
+- Telegram bot as a first-class product surface in the MVP
+- Telegram mini app as a first-class product surface in the MVP
+- Wallet-embedded mini dapp as a first-class product surface in the MVP
+- Native mobile app as a first-class product surface in the MVP
+- Real-time Group-wide chat
 - AI bill parsing
 - Natural-language Expense entry
 - Email-centric or non-wallet identity as the primary onboarding path
