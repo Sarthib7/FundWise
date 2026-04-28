@@ -148,7 +148,8 @@ export function WalletButton() {
           onClick={() => setVisible(true)}
         >
           <Wallet className="h-4 w-4" />
-          Connect wallet
+          <span className="sm:hidden">Connect</span>
+          <span className="hidden sm:inline">Connect wallet</span>
         </Button>
       ) : (
         <AppEntryButton
