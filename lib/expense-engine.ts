@@ -6,9 +6,8 @@ import {
   getAccount,
 } from "@solana/spl-token"
 import type { Database } from "./database.types"
-import { getExpenses, getAllSplitsForGroup, getSettlements, getMembers } from "./db"
+import { getGroupDashboardSnapshot, type ActivityItem } from "./db"
 
-type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
@@ -55,35 +54,41 @@ export interface SettlementTransfer {
 
 /**
  * Compute net balances for all members from expenses and settlements.
- * Pulls data from Supabase via the db module.
+ * Pulls data from the authenticated Group dashboard snapshot.
  */
 export async function computeGroupBalances(groupId: string): Promise<Balance[]> {
-  const [expenses, allSplits, settlements, members] = await Promise.all([
-    getExpenses(groupId),
-    getAllSplitsForGroup(groupId),
-    getSettlements(groupId),
-    getMembers(groupId),
-  ])
+  const snapshot = await getGroupDashboardSnapshot(groupId)
 
+  if (!snapshot.isMember) {
+    return []
+  }
+
+  return computeBalancesFromActivity(snapshot.members, snapshot.activity)
+}
+
+export function computeBalancesFromActivity(
+  members: MemberRow[],
+  activity: ActivityItem[]
+): Balance[] {
   const balances: Record<string, number> = {}
+
   for (const member of members) {
     balances[member.wallet] = 0
   }
 
-  // Process expenses: payer gets +amount, each participant gets -theirShare
-  for (const expense of expenses) {
-    balances[expense.payer] = (balances[expense.payer] || 0) + expense.amount
-  }
+  for (const item of activity) {
+    if (item.type === "expense") {
+      balances[item.data.payer] = (balances[item.data.payer] || 0) + item.data.amount
 
-  // Process splits: each participant's share is subtracted
-  for (const split of allSplits) {
-    balances[split.wallet] = (balances[split.wallet] || 0) - split.share
-  }
+      for (const split of item.data.splits) {
+        balances[split.wallet] = (balances[split.wallet] || 0) - split.share
+      }
 
-  // Process settlements: from_wallet gets +amount (reduces their debt)
-  for (const settlement of settlements) {
-    balances[settlement.from_wallet] = (balances[settlement.from_wallet] || 0) + settlement.amount
-    balances[settlement.to_wallet] = (balances[settlement.to_wallet] || 0) - settlement.amount
+      continue
+    }
+
+    balances[item.data.from_wallet] = (balances[item.data.from_wallet] || 0) + item.data.amount
+    balances[item.data.to_wallet] = (balances[item.data.to_wallet] || 0) - item.data.amount
   }
 
   return members.map((member) => ({

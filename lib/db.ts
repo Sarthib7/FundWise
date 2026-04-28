@@ -8,6 +8,47 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
+type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
+
+export type ActivityItem =
+  | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
+  | { type: "settlement"; data: SettlementRow }
+
+export type GroupDashboardSnapshot = {
+  authenticated: boolean
+  isMember: boolean
+  memberCount: number
+  group: GroupRow | null
+  members: MemberRow[]
+  activity: ActivityItem[]
+  contributions: ContributionRow[]
+}
+
+export type SettlementReceiptView = {
+  group: GroupRow
+  members: MemberRow[]
+  settlement: SettlementRow
+}
+
+async function requestJson<T>(input: string, init: RequestInit = {}) {
+  const response = await fetch(input, {
+    cache: init.cache ?? "no-store",
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+  })
+
+  const text = await response.text()
+  const body = text ? (JSON.parse(text) as { error?: string } & T) : null
+
+  if (!response.ok) {
+    throw new Error(body?.error || `Request failed with status ${response.status}`)
+  }
+
+  return body as T
+}
 
 // =============================================
 // GROUPS
@@ -21,27 +62,10 @@ export async function createGroup(data: {
   fundingGoal?: number
   approvalThreshold?: number
 }): Promise<{ id: string; code: string }> {
-  const insert: GroupInsert = {
-    name: data.name,
-    mode: data.mode,
-    stablecoin_mint: data.stablecoinMint,
-    created_by: data.createdBy,
-    funding_goal: data.fundingGoal ?? null,
-    approval_threshold: data.approvalThreshold ?? null,
-  }
-
-  const { data: group, error } = await supabase
-    .from("groups")
-    .insert(insert)
-    .select("id, code")
-    .single()
-
-  if (error) throw new Error(`Failed to create group: ${error.message}`)
-
-  // Add creator as first member
-  await addMember(group.id, data.createdBy)
-
-  return { id: group.id, code: group.code }
+  return requestJson<{ id: string; code: string }>("/api/groups", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
 }
 
 export async function updateGroupTreasury(data: {
@@ -50,65 +74,33 @@ export async function updateGroupTreasury(data: {
   multisigAddress: string
   treasuryAddress: string
 }) {
-  const { data: updatedGroup, error } = await supabase
-    .from("groups")
-    .update({
-      multisig_address: data.multisigAddress,
-      treasury_address: data.treasuryAddress,
-    })
-    .eq("id", data.groupId)
-    .eq("created_by", data.creatorWallet)
-    .select("id")
-    .maybeSingle()
-
-  if (error) throw new Error(`Failed to update treasury addresses: ${error.message}`)
-  if (!updatedGroup) {
-    throw new Error("Only the group creator can initialize the Treasury")
-  }
+  await requestJson<{ ok: true }>(`/api/groups/${data.groupId}/treasury`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  })
 }
 
-export async function getGroup(groupId: string) {
-  const { data, error } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("id", groupId)
-    .single()
+export async function getGroup(groupId: string, wallet?: string) {
+  const snapshot = await getGroupDashboardSnapshot(groupId, wallet)
 
-  if (error) throw new Error(`Failed to get group: ${error.message}`)
-  return data
+  if (!snapshot.group) {
+    throw new Error("Group not found")
+  }
+
+  return snapshot.group
 }
 
 export async function getGroupByCode(code: string) {
-  const { data, error } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("code", code.toUpperCase())
-    .single()
-
-  if (error) return null
-  return data
+  return requestJson<GroupRow | null>(`/api/groups?code=${encodeURIComponent(code.toUpperCase())}`)
 }
 
 export async function getGroupsForWallet(wallet: string) {
-  // Get all group IDs where the wallet is a member
-  const { data: memberships, error: memberError } = await supabase
-    .from("members")
-    .select("group_id")
-    .eq("wallet", wallet)
+  return requestJson<GroupRow[]>(`/api/groups?wallet=${encodeURIComponent(wallet)}`)
+}
 
-  if (memberError) throw new Error(`Failed to get memberships: ${memberError.message}`)
-  if (!memberships || memberships.length === 0) return []
-
-  const groupIds = memberships.map((m) => m.group_id)
-
-  const { data: groups, error } = await supabase
-    .from("groups")
-    .select("*")
-    .in("id", groupIds)
-    .order("created_at", { ascending: false })
-
-  if (error) throw new Error(`Failed to get groups: ${error.message}`)
-  return groups
+export async function getGroupDashboardSnapshot(groupId: string, wallet?: string) {
+  const search = wallet ? `?wallet=${encodeURIComponent(wallet)}` : ""
+  return requestJson<GroupDashboardSnapshot>(`/api/groups/${groupId}${search}`)
 }
 
 // =============================================
@@ -147,7 +139,7 @@ async function getProfileDisplayNames(wallets: string[]) {
   }
 
   return new Map(
-    (data || [])
+    ((data || []) as Pick<ProfileRow, "wallet" | "display_name">[])
       .filter((profile) => Boolean(profile.display_name))
       .map((profile) => [profile.wallet, profile.display_name as string])
   )
@@ -158,76 +150,33 @@ export async function addMember(
   wallet: string,
   displayName?: string
 ) {
-  const profile = displayName ? null : await getProfile(wallet)
-
-  const { error } = await supabase.from("members").insert({
-    group_id: groupId,
-    wallet,
-    display_name: displayName || profile?.display_name || null,
+  await requestJson<{ ok: true }>(`/api/groups/${groupId}/members`, {
+    method: "POST",
+    body: JSON.stringify({
+      wallet,
+      displayName,
+    }),
   })
-
-  if (error) {
-    // Ignore duplicate key errors (already a member)
-    if (error.code === "23505") return
-    throw new Error(`Failed to add member: ${error.message}`)
-  }
 }
 
 export async function getMembers(groupId: string) {
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .eq("group_id", groupId)
-    .order("joined_at", { ascending: true })
-
-  if (error) throw new Error(`Failed to get members: ${error.message}`)
-
-  const profileDisplayNames = await getProfileDisplayNames(data.map((member) => member.wallet))
-
-  return data.map((member) => ({
-    ...member,
-    display_name: profileDisplayNames.get(member.wallet) || member.display_name,
-  }))
+  const snapshot = await getGroupDashboardSnapshot(groupId)
+  return snapshot.members
 }
 
 export async function isMember(groupId: string, wallet: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("members")
-    .select("id")
-    .eq("group_id", groupId)
-    .eq("wallet", wallet)
-    .single()
-
-  if (error && error.code !== "PGRST116") {
-    throw new Error(`Failed to check membership: ${error.message}`)
-  }
-  return !!data
+  const snapshot = await getGroupDashboardSnapshot(groupId)
+  return Boolean(wallet) && snapshot.authenticated && snapshot.isMember
 }
 
 export async function updateProfileDisplayName(wallet: string, displayName: string) {
-  const trimmedDisplayName = displayName.trim()
-
-  const { error: profileError } = await supabase.from("profiles").upsert(
-    {
+  await requestJson<{ ok: true }>("/api/profile/display-name", {
+    method: "POST",
+    body: JSON.stringify({
       wallet,
-      display_name: trimmedDisplayName,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "wallet" }
-  )
-
-  if (profileError) {
-    console.warn("[FundWise] Failed to persist global profile display name:", profileError.message)
-  }
-
-  const { error: memberError } = await supabase
-    .from("members")
-    .update({ display_name: trimmedDisplayName })
-    .eq("wallet", wallet)
-
-  if (memberError) {
-    throw new Error(`Failed to sync display name across Groups: ${memberError.message}`)
-  }
+      displayName,
+    }),
+  })
 }
 
 // =============================================
@@ -245,36 +194,10 @@ export async function addExpense(data: {
   splitMethod: "equal" | "exact" | "shares" | "percentage"
   splits: { wallet: string; share: number }[]
 }) {
-  // Insert expense
-  const { data: expense, error: expenseError } = await supabase
-    .from("expenses")
-    .insert({
-      group_id: data.groupId,
-      payer: data.payer,
-      created_by: data.createdBy,
-      amount: data.amount,
-      mint: data.mint,
-      memo: data.memo || null,
-      category: data.category || "general",
-      split_method: data.splitMethod,
-    })
-    .select("id")
-    .single()
-
-  if (expenseError) throw new Error(`Failed to add expense: ${expenseError.message}`)
-
-  // Insert splits
-  const splits = data.splits.map((s) => ({
-    expense_id: expense.id,
-    wallet: s.wallet,
-    share: s.share,
-  }))
-
-  const { error: splitsError } = await supabase.from("expense_splits").insert(splits)
-
-  if (splitsError) throw new Error(`Failed to add splits: ${splitsError.message}`)
-
-  return expense
+  return requestJson<{ id: string }>("/api/expenses", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
 }
 
 export async function getExpenses(groupId: string) {
@@ -310,52 +233,10 @@ export async function getAllSplitsForGroup(groupId: string) {
 }
 
 export async function deleteExpense(expenseId: string, actorWallet: string) {
-  const { data: expense, error: expenseError } = await supabase
-    .from("expenses")
-    .select("id, group_id, created_at, edited_at, deleted_at, created_by")
-    .eq("id", expenseId)
-    .maybeSingle()
-
-  if (expenseError) {
-    throw new Error(`Failed to load expense before delete: ${expenseError.message}`)
-  }
-
-  if (!expense || expense.deleted_at) {
-    throw new Error("Expense not found")
-  }
-
-  if (expense.created_by !== actorWallet) {
-    throw new Error("Only the Expense creator can delete this Expense")
-  }
-
-  // Conservative guard: once a later settlement exists in the group, deleting
-  // this expense would rewrite the balance history that settlement relied on.
-  const expenseLockTimestamp = expense.edited_at || expense.created_at
-
-  const { data: laterSettlement, error: settlementError } = await supabase
-    .from("settlements")
-    .select("id")
-    .eq("group_id", expense.group_id)
-    .gt("confirmed_at", expenseLockTimestamp)
-    .limit(1)
-    .maybeSingle()
-
-  if (settlementError) {
-    throw new Error(`Failed to validate expense delete guard: ${settlementError.message}`)
-  }
-
-  if (laterSettlement) {
-    throw new Error(
-      "This expense is locked because a later settlement has already been recorded in the group"
-    )
-  }
-
-  const { error } = await supabase
-    .from("expenses")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", expenseId)
-
-  if (error) throw new Error(`Failed to delete expense: ${error.message}`)
+  await requestJson<{ ok: true }>(`/api/expenses/${expenseId}`, {
+    method: "DELETE",
+    body: JSON.stringify({ actorWallet }),
+  })
 }
 
 export async function updateExpense(data: {
@@ -369,19 +250,10 @@ export async function updateExpense(data: {
   splitMethod: "equal" | "exact" | "shares" | "percentage"
   splits: { wallet: string; share: number }[]
 }) {
-  const { error } = await supabase.rpc("update_expense_with_splits", {
-    p_expense_id: data.expenseId,
-    p_actor_wallet: data.actorWallet,
-    p_payer: data.payer,
-    p_amount: data.amount,
-    p_mint: data.mint,
-    p_memo: data.memo || null,
-    p_category: data.category || null,
-    p_split_method: data.splitMethod,
-    p_splits: data.splits,
+  await requestJson<{ ok: true }>(`/api/expenses/${data.expenseId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
   })
-
-  if (error) throw new Error(`Failed to update expense: ${error.message}`)
 }
 
 // =============================================
@@ -396,21 +268,10 @@ export async function addSettlement(data: {
   mint: string
   txSig: string
 }) {
-  const { data: settlement, error } = await supabase
-    .from("settlements")
-    .insert({
-      group_id: data.groupId,
-      from_wallet: data.fromWallet,
-      to_wallet: data.toWallet,
-      amount: data.amount,
-      mint: data.mint,
-      tx_sig: data.txSig,
-    })
-    .select("id")
-    .single()
-
-  if (error) throw new Error(`Failed to add settlement: ${error.message}`)
-  return settlement
+  return requestJson<{ id: string }>("/api/settlements", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
 }
 
 export async function getSettlements(groupId: string) {
@@ -431,84 +292,31 @@ export async function addContribution(data: {
   mint: string
   txSig: string
 }) {
-  const { data: contribution, error } = await supabase
-    .from("contributions")
-    .insert({
-      group_id: data.groupId,
-      member_wallet: data.memberWallet,
-      amount: data.amount,
-      mint: data.mint,
-      tx_sig: data.txSig,
-    })
-    .select("id")
-    .single()
-
-  if (error) throw new Error(`Failed to add contribution: ${error.message}`)
-  return contribution
+  return requestJson<{ id: string }>("/api/contributions", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
 }
 
 export async function getContributions(groupId: string) {
-  const { data, error } = await supabase
-    .from("contributions")
-    .select("*")
-    .eq("group_id", groupId)
-    .order("created_at", { ascending: false })
-
-  if (error) throw new Error(`Failed to get contributions: ${error.message}`)
-  return data
+  const snapshot = await getGroupDashboardSnapshot(groupId)
+  return snapshot.contributions
 }
 
 export async function getSettlementById(settlementId: string) {
-  const { data, error } = await supabase
-    .from("settlements")
-    .select("*")
-    .eq("id", settlementId)
-    .single()
+  const receipt = await getSettlementReceiptView(settlementId)
+  return receipt.settlement
+}
 
-  if (error) throw new Error(`Failed to get settlement: ${error.message}`)
-  return data
+export async function getSettlementReceiptView(settlementId: string) {
+  return requestJson<SettlementReceiptView>(`/api/settlements/${settlementId}`)
 }
 
 // =============================================
 // ACTIVITY FEED
 // =============================================
 
-export type ActivityItem =
-  | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
-  | { type: "settlement"; data: SettlementRow }
-
 export async function getActivityFeed(groupId: string): Promise<ActivityItem[]> {
-  const [expenses, expenseSplitsData, settlements] = await Promise.all([
-    getExpenses(groupId),
-    getAllSplitsForGroup(groupId),
-    getSettlements(groupId),
-  ])
-
-  // Group splits by expense_id
-  const splitsByExpense: Record<string, ExpenseSplitRow[]> = {}
-  for (const split of expenseSplitsData) {
-    const eid = split.expense_id
-    if (!splitsByExpense[eid]) splitsByExpense[eid] = []
-    splitsByExpense[eid].push(split)
-  }
-
-  const items: ActivityItem[] = [
-    ...expenses.map((e) => ({
-      type: "expense" as const,
-      data: { ...e, splits: splitsByExpense[e.id] || [] },
-    })),
-    ...settlements.map((s) => ({
-      type: "settlement" as const,
-      data: s,
-    })),
-  ]
-
-  // Sort by created_at / confirmed_at descending
-  items.sort((a, b) => {
-    const dateA = a.type === "expense" ? a.data.created_at : a.data.confirmed_at
-    const dateB = b.type === "expense" ? b.data.created_at : b.data.confirmed_at
-    return new Date(dateB).getTime() - new Date(dateA).getTime()
-  })
-
-  return items
+  const snapshot = await getGroupDashboardSnapshot(groupId)
+  return snapshot.activity
 }
