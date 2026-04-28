@@ -5,7 +5,15 @@
  * the Squads multisig PDA.
  */
 
-import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL, TransactionInstruction } from "@solana/web3.js"
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+  Keypair,
+} from "@solana/web3.js"
 import {
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
@@ -36,12 +44,12 @@ export async function createSquadsMultisig(
     console.log("[Squads] Creator:", creator.toString())
     console.log("[Squads] Initial members:", members.length)
 
-    // Generate unique multisig seed
-    const createKey = PublicKey.unique()
+    // Squads requires createKey to sign the creation transaction.
+    const createKey = Keypair.generate()
 
     // Derive multisig PDA
     const [multisigPda] = multisig.getMultisigPda({
-      createKey,
+      createKey: createKey.publicKey,
     })
 
     console.log("[Squads] Multisig PDA:", multisigPda.toString())
@@ -82,7 +90,7 @@ export async function createSquadsMultisig(
       console.log("[Squads] Creating multisig on-chain...")
 
       const createMultisigIx = multisig.instructions.multisigCreate({
-        createKey,
+        createKey: createKey.publicKey,
         creator,
         multisigPda,
         configAuthority: null,
@@ -102,8 +110,11 @@ export async function createSquadsMultisig(
       let signature: string
 
       if (wallet.sendTransaction) {
-        signature = await wallet.sendTransaction(tx, connection)
+        signature = await wallet.sendTransaction(tx, connection, {
+          signers: [createKey],
+        })
       } else {
+        tx.partialSign(createKey)
         const signedTx = await wallet.signTransaction(tx)
         signature = await connection.sendRawTransaction(signedTx.serialize(), {
           skipPreflight: false,
