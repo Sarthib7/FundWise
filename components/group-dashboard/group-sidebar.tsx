@@ -118,6 +118,8 @@ export function GroupSidebar({
             {members.map((member) => {
               const isCreator = member.wallet === groupCreatorWallet
               const isViewer = member.wallet === walletAddress
+              const primaryLabel = member.display_name || shortWallet(member.wallet)
+              const showSecondaryWallet = Boolean(member.display_name)
 
               return (
                 <div
@@ -127,10 +129,12 @@ export function GroupSidebar({
                   <WalletAvatar address={member.wallet} size={32} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
-                      {member.display_name || shortWallet(member.wallet)}
+                      {primaryLabel}
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-mono">{shortWallet(member.wallet)}</span>
+                      {showSecondaryWallet ? (
+                        <span className="font-mono">{shortWallet(member.wallet)}</span>
+                      ) : null}
                       {isCreator ? (
                         <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
                           Creator

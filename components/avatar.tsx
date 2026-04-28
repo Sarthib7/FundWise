@@ -38,16 +38,14 @@ export function GroupAvatar({ name, size = 40, className }: AvatarProps) {
 }
 
 export function WalletAvatar({ address, size = 40, className }: { address: string; size?: number; className?: string }) {
-  const short = `${address.slice(0, 4)}...${address.slice(-4)}`
   return (
-    <div
-      className={cn(
-        "rounded-full bg-accent/20 flex items-center justify-center text-xs font-mono text-accent font-semibold",
-        className
-      )}
-      style={{ width: size, height: size }}
-    >
-      {short}
+    <div className={cn("overflow-hidden rounded-full ring-1 ring-brand-border-c/70", className)}>
+      <BoringAvatar
+        size={size}
+        name={address}
+        variant="beam"
+        colors={GROUP_COLORS}
+      />
     </div>
   )
 }
