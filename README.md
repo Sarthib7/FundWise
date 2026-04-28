@@ -159,6 +159,16 @@ pnpm build
 pnpm lint
 ```
 
+### Database Bootstrap
+
+The base FundWise tables now live in `supabase/migrations/`, not only in `supabase/schema.sql`.
+
+If a remote Supabase project was linked before that bootstrap migration existed, backfill it with:
+
+```bash
+supabase db push --include-all
+```
+
 ## MVP Notes
 
 - Solana devnet is the active execution environment for now.
