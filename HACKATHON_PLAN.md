@@ -187,6 +187,13 @@ Avoid these claims in the main pitch unless they are actually shipped:
 - Telegram-first product surface
 - AI-native expense entry
 
+For future expansion after the core demo path is solid:
+
+- Telegram is a strong distribution layer because the real groups already exist there, but it should call into the same FundWise wallet-bound engine rather than becoming a separate ledger product.
+- Agent skills and personal-agent access are promising only if they operate through scoped capabilities instead of broad raw API keys.
+- Wallet mini apps and native mobile should come after the shared engine is stable enough to support multiple clients cleanly.
+- Stablecoin-only UX with fee abstraction, smoother on/off ramps, and web2-friendly funding rails is a strong long-range direction, but it should stay out of the core hackathon pitch until the main crypto-native path is solid.
+
 ---
 
 ## Risk management
