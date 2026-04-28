@@ -3,8 +3,6 @@ import { deleteExpenseMutation, updateExpenseMutation } from "@/lib/server/fundw
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
-export const runtime = "edge"
-
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ expenseId: string }> }

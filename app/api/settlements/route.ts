@@ -3,8 +3,6 @@ import { addSettlementMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
-export const runtime = "edge"
-
 export async function POST(request: Request) {
   try {
     const session = await requireAuthenticatedWallet()
