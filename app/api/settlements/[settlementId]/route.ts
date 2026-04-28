@@ -3,6 +3,8 @@ import { getErrorDetails } from "@/lib/server/fundwise-error"
 import { getSettlementReceiptView } from "@/lib/server/fundwise-reads"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
+export const runtime = "edge"
+
 export async function GET(
   _request: Request,
   context: { params: Promise<{ settlementId: string }> }

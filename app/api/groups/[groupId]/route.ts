@@ -3,6 +3,8 @@ import { getErrorDetails } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import { readWalletSession } from "@/lib/server/wallet-session"
 
+export const runtime = "edge"
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ groupId: string }> }

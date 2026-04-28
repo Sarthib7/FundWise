@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { readWalletSession } from "@/lib/server/wallet-session"
 
+export const runtime = "edge"
+
 export async function GET() {
   const session = await readWalletSession()
 
