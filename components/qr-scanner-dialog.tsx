@@ -44,18 +44,7 @@ export function QrScannerDialog({ open, onOpenChange, onScan }: QrScannerDialogP
         },
         (decodedText) => {
           console.log("[FundWise] QR Code scanned:", decodedText)
-
-          let groupCode = decodedText
-          try {
-            const url = new URL(decodedText)
-            const pathParts = url.pathname.split("/")
-            const groupIndex = pathParts.indexOf("group")
-            if (groupIndex !== -1 && pathParts[groupIndex + 1]) {
-              groupCode = pathParts[groupIndex + 1]
-            }
-          } catch {}
-
-          onScan(groupCode)
+          onScan(decodedText)
           stopScanning()
           onOpenChange(false)
         },

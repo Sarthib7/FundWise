@@ -10,18 +10,14 @@ import {
   addMember,
   addSettlement as dbAddSettlement,
   deleteExpense as dbDeleteExpense,
-  getActivityFeed,
-  getContributions,
-  getGroup,
-  getMembers,
-  isMember as checkIsMember,
+  getGroupDashboardSnapshot,
   type ActivityItem,
   updateGroupTreasury,
   updateProfileDisplayName,
 } from "@/lib/db"
 import type { Database } from "@/lib/database.types"
 import {
-  computeGroupBalances,
+  computeBalancesFromActivity,
   DEFAULT_STABLECOIN,
   executeSettlement,
   formatTokenAmount,
@@ -39,6 +35,7 @@ import {
   getTreasuryStablecoinBalance,
 } from "@/lib/squads-multisig"
 import { toast } from "sonner"
+import { ensureWalletSession } from "@/lib/wallet-session-client"
 
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
@@ -83,7 +80,9 @@ export function useGroupDashboard() {
   const [contributions, setContributions] = useState<ContributionRow[]>([])
   const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [memberCount, setMemberCount] = useState(0)
   const [isMember, setIsMember] = useState(false)
+  const [isWalletVerified, setIsWalletVerified] = useState(false)
   const [copied, setCopied] = useState(false)
   const [isSavingProfileName, setIsSavingProfileName] = useState(false)
   const [isCreatingTreasury, setIsCreatingTreasury] = useState(false)
@@ -101,24 +100,45 @@ export function useGroupDashboard() {
     setIsLoading(true)
 
     try {
-      const [groupData, memberData] = await Promise.all([getGroup(groupId), getMembers(groupId)])
+      if (connected && walletAddress) {
+        try {
+          await ensureWalletSession({
+            walletAddress,
+            walletAdapter: wallet?.adapter,
+          })
+        } catch (sessionError) {
+          console.warn("[FundWise] Wallet verification was skipped while loading Group data:", sessionError)
+        }
+      }
+
+      const snapshot = await getGroupDashboardSnapshot(
+        groupId,
+        connected ? walletAddress : undefined
+      )
+      const groupData = snapshot.group
 
       setGroup(groupData)
-      setMembers(memberData)
+      setMemberCount(snapshot.memberCount)
+      setMembers(snapshot.members)
+      setIsMember(snapshot.isMember)
+      setIsWalletVerified(snapshot.authenticated)
 
-      const memberCheck = walletAddress ? await checkIsMember(groupId, walletAddress) : false
-      setIsMember(memberCheck)
+      if (!groupData) {
+        setBalances([])
+        setTransfers([])
+        setActivity([])
+        setContributions([])
+        setTreasuryBalance(0)
+        return
+      }
 
       if (groupData.mode === "split") {
         setContributions([])
         setTreasuryBalance(0)
 
-        if (memberCheck) {
-          const [nextBalances, nextActivity] = await Promise.all([
-            computeGroupBalances(groupId),
-            getActivityFeed(groupId),
-          ])
-
+        if (snapshot.isMember) {
+          const nextActivity = snapshot.activity
+          const nextBalances = computeBalancesFromActivity(snapshot.members, nextActivity)
           setBalances(nextBalances)
           setTransfers(simplifySettlements(nextBalances))
           setActivity(nextActivity)
@@ -135,22 +155,25 @@ export function useGroupDashboard() {
       setTransfers([])
       setActivity([])
 
-      const [nextContributions, nextTreasuryBalance] = await Promise.all([
-        getContributions(groupId),
-        groupData.treasury_address
-          ? getTreasuryStablecoinBalance(groupData.treasury_address, groupData.stablecoin_mint)
-          : Promise.resolve(0),
-      ])
+      if (!snapshot.isMember) {
+        setContributions([])
+        setTreasuryBalance(0)
+        return
+      }
 
-      setContributions(nextContributions)
+      const nextTreasuryBalance = groupData.treasury_address
+        ? await getTreasuryStablecoinBalance(groupData.treasury_address, groupData.stablecoin_mint)
+        : 0
+
+      setContributions(snapshot.contributions)
       setTreasuryBalance(nextTreasuryBalance)
     } catch (error) {
       console.error("[FundWise] Failed to load group:", error)
-      toast.error("Failed to load group")
+      toast.error(error instanceof Error ? error.message : "Failed to load group")
     } finally {
       setIsLoading(false)
     }
-  }, [groupId, walletAddress])
+  }, [connected, groupId, wallet?.adapter, walletAddress])
 
   useEffect(() => {
     void loadData()
@@ -180,6 +203,7 @@ export function useGroupDashboard() {
 
   const requestedFromWallet = searchParams.get("settleFrom") || ""
   const requestedToWallet = searchParams.get("settleTo") || ""
+  const isInviteLink = searchParams.get("invite") === "true"
   const requestedTransfer = useMemo(
     () =>
       transfers.find((transfer) =>
@@ -205,7 +229,7 @@ export function useGroupDashboard() {
   const isFundMode = group?.mode === "fund"
   const isGroupCreator = group?.created_by === walletAddress
   const approvalThreshold = group?.approval_threshold ?? 1
-  const missingMembersForTreasury = Math.max(0, approvalThreshold - members.length)
+  const missingMembersForTreasury = Math.max(0, approvalThreshold - memberCount)
   const contributionTotal = contributions.reduce((sum, contribution) => sum + contribution.amount, 0)
   const contributorCount = new Set(contributions.map((contribution) => contribution.member_wallet)).size
   const fundingProgress =
@@ -227,6 +251,28 @@ export function useGroupDashboard() {
   const connectWallet = useCallback(() => {
     setWalletModalVisible(true)
   }, [setWalletModalVisible])
+
+  const ensureWalletWriteAccess = useCallback(async () => {
+    if (!walletAddress) {
+      throw new Error("Connect your wallet first")
+    }
+
+    await ensureWalletSession({
+      walletAddress,
+      walletAdapter: wallet?.adapter,
+    })
+  }, [wallet?.adapter, walletAddress])
+
+  const verifyWalletAccess = useCallback(async () => {
+    try {
+      await ensureWalletWriteAccess()
+      await loadData()
+      return true
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to verify wallet")
+      return false
+    }
+  }, [ensureWalletWriteAccess, loadData])
 
   const viewGroups = useCallback(() => {
     router.push("/groups")
@@ -250,13 +296,14 @@ export function useGroupDashboard() {
     }
 
     try {
+      await ensureWalletWriteAccess()
       await addMember(groupId, walletAddress)
       toast.success(group?.mode === "fund" ? "Joined Fund Mode group!" : "Joined group!")
       await loadData()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to join group")
     }
-  }, [connected, group?.mode, groupId, loadData, walletAddress])
+  }, [connected, ensureWalletWriteAccess, group?.mode, groupId, loadData, walletAddress])
 
   const saveProfileName = useCallback(async (profileName: string) => {
     const trimmedDisplayName = profileName.trim()
@@ -279,6 +326,7 @@ export function useGroupDashboard() {
     setIsSavingProfileName(true)
 
     try {
+      await ensureWalletWriteAccess()
       await updateProfileDisplayName(walletAddress, trimmedDisplayName)
 
       setMembers((currentMembers) =>
@@ -304,7 +352,7 @@ export function useGroupDashboard() {
     } finally {
       setIsSavingProfileName(false)
     }
-  }, [walletAddress])
+  }, [ensureWalletWriteAccess, walletAddress])
 
   const handleSettle = useCallback(async (transfer: SettlementTransfer) => {
     if (!connected || !walletAddress || group?.mode !== "split") {
@@ -315,6 +363,7 @@ export function useGroupDashboard() {
     setSettlingTransfer(transfer)
 
     try {
+      await ensureWalletWriteAccess()
       const signingWallet = getSigningWallet(wallet?.adapter)
 
       if (!signingWallet) {
@@ -349,7 +398,7 @@ export function useGroupDashboard() {
       setIsSettling(false)
       setSettlingTransfer(null)
     }
-  }, [connected, group, groupId, router, wallet?.adapter, walletAddress])
+  }, [connected, ensureWalletWriteAccess, group, groupId, router, wallet?.adapter, walletAddress])
 
   const handleDeleteExpense = useCallback(async (expense: ActivityExpense) => {
     if (expense.created_by !== walletAddress) {
@@ -365,6 +414,7 @@ export function useGroupDashboard() {
     setDeletingExpenseId(expense.id)
 
     try {
+      await ensureWalletWriteAccess()
       await dbDeleteExpense(expense.id, walletAddress)
       toast.success("Expense deleted")
       await loadData()
@@ -375,7 +425,7 @@ export function useGroupDashboard() {
     } finally {
       setDeletingExpenseId(null)
     }
-  }, [canDeleteExpense, loadData, walletAddress])
+  }, [canDeleteExpense, ensureWalletWriteAccess, loadData, walletAddress])
 
   const handleCreateTreasury = useCallback(async () => {
     if (!group || group.mode !== "fund" || !connected || !publicKey || !walletAddress) {
@@ -401,6 +451,7 @@ export function useGroupDashboard() {
     setIsCreatingTreasury(true)
 
     try {
+      await ensureWalletWriteAccess()
       const memberKeys = members.map((member) => new PublicKey(member.wallet))
       const result = await createSquadsMultisig(
         publicKey,
@@ -424,7 +475,7 @@ export function useGroupDashboard() {
     } finally {
       setIsCreatingTreasury(false)
     }
-  }, [approvalThreshold, connected, group, groupId, loadData, members, publicKey, wallet?.adapter, walletAddress])
+  }, [approvalThreshold, connected, ensureWalletWriteAccess, group, groupId, loadData, members, publicKey, wallet?.adapter, walletAddress])
 
   const handleContribute = useCallback(async (contributionAmount: string) => {
     if (!group || group.mode !== "fund" || !connected || !walletAddress || !contributionAmount) {
@@ -450,6 +501,7 @@ export function useGroupDashboard() {
     setIsContributing(true)
 
     try {
+      await ensureWalletWriteAccess()
       const parsedAmount = Number(contributionAmount)
       if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
         throw new Error("Enter a valid Contribution amount")
@@ -481,7 +533,7 @@ export function useGroupDashboard() {
     } finally {
       setIsContributing(false)
     }
-  }, [connected, group, groupId, isMember, loadData, wallet?.adapter, walletAddress])
+  }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, wallet?.adapter, walletAddress])
 
   const clearSettlementRequest = useCallback(() => {
     router.replace(`/groups/${groupId}`, { scroll: false })
@@ -548,6 +600,7 @@ export function useGroupDashboard() {
     walletAddress,
     group,
     members,
+    memberCount,
     balances,
     transfers,
     activity,
@@ -555,6 +608,7 @@ export function useGroupDashboard() {
     treasuryBalance,
     isLoading,
     isMember,
+    isWalletVerified,
     copied,
     isSavingProfileName,
     isCreatingTreasury,
@@ -575,6 +629,7 @@ export function useGroupDashboard() {
     memberNameByWallet,
     requestedFromWallet,
     requestedToWallet,
+    isInviteLink,
     requestedTransfer,
     requestedDebtorLabel,
     requestedCreditorLabel,
@@ -583,6 +638,8 @@ export function useGroupDashboard() {
     viewerIncomingTransfers,
     viewerDisplayName,
     connectWallet,
+    verifyWalletAccess,
+    ensureWalletWriteAccess,
     viewGroups,
     refresh: loadData,
     copyGroupCode: handleCopyCode,

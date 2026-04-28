@@ -1,18 +1,21 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
-import { CheckCircle2, ExternalLink, Loader2, Receipt, ArrowLeftRight } from "lucide-react"
+import { useWallet } from "@solana/wallet-adapter-react"
+import { useWalletModal } from "@solana/wallet-adapter-react-ui"
+import { CheckCircle2, ExternalLink, Loader2, Receipt, ArrowLeftRight, Wallet } from "lucide-react"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { getGroup, getMembers, getSettlementById } from "@/lib/db"
+import { getSettlementReceiptView } from "@/lib/db"
 import type { Database } from "@/lib/database.types"
 import { STABLECOIN_MINTS, formatTokenAmount } from "@/lib/expense-engine"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
+import { ensureWalletSession } from "@/lib/wallet-session-client"
 
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
@@ -24,43 +27,55 @@ function formatWallet(address: string) {
 
 export default function SettlementReceiptPage() {
   const params = useParams()
+  const { publicKey, connected, wallet } = useWallet()
+  const { setVisible: setWalletModalVisible } = useWalletModal()
   const groupId = params.id as string
   const settlementId = params.settlementId as string
+  const walletAddress = publicKey?.toString() || ""
 
   const [group, setGroup] = useState<GroupRow | null>(null)
   const [members, setMembers] = useState<MemberRow[]>([])
   const [settlement, setSettlement] = useState<SettlementRow | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isWalletVerified, setIsWalletVerified] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const loadReceipt = useCallback(async () => {
     if (!groupId || !settlementId) {
       return
     }
 
-    const loadReceipt = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const [groupData, memberData, settlementData] = await Promise.all([
-          getGroup(groupId),
-          getMembers(groupId),
-          getSettlementById(settlementId),
-        ])
-
-        setGroup(groupData)
-        setMembers(memberData)
-        setSettlement(settlementData)
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Failed to load the settlement receipt")
-      } finally {
-        setIsLoading(false)
-      }
+    if (!connected || !walletAddress) {
+      setIsWalletVerified(false)
+      setIsLoading(false)
+      return
     }
 
-    loadReceipt()
-  }, [groupId, settlementId])
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await ensureWalletSession({
+        walletAddress,
+        walletAdapter: wallet?.adapter,
+      })
+
+      const receipt = await getSettlementReceiptView(settlementId)
+      setGroup(receipt.group)
+      setMembers(receipt.members)
+      setSettlement(receipt.settlement)
+      setIsWalletVerified(true)
+    } catch (loadError) {
+      setIsWalletVerified(false)
+      setError(loadError instanceof Error ? loadError.message : "Failed to load the settlement receipt")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [connected, groupId, settlementId, wallet?.adapter, walletAddress])
+
+  useEffect(() => {
+    void loadReceipt()
+  }, [loadReceipt])
 
   const memberNames = useMemo(() => {
     return new Map(
@@ -80,6 +95,7 @@ export default function SettlementReceiptPage() {
       (stablecoin) => stablecoin.mint === group.stablecoin_mint
     )
   }, [group])
+  const groupHref = group ? `/groups/${group.id}` : `/groups/${groupId}`
 
   if (isLoading) {
     return (
@@ -87,6 +103,53 @@ export default function SettlementReceiptPage() {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!connected) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <Card className="w-full max-w-lg p-6 text-center sm:p-8">
+            <Badge className="mb-4 bg-accent/10 text-accent border-accent/20">Wallet required</Badge>
+            <Wallet className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h1 className="text-2xl font-semibold">Connect your wallet to view this receipt</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Settlement receipts are private to verified Group Members.
+            </p>
+            <Button className="mt-6 bg-accent hover:bg-accent/90" onClick={() => setWalletModalVisible(true)}>
+              Connect Wallet
+            </Button>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!isWalletVerified) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <Card className="w-full max-w-lg p-6 text-center sm:p-8">
+            <Badge variant="outline" className="mb-4">Wallet verification</Badge>
+            <Receipt className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h1 className="text-2xl font-semibold">Verify your wallet to view this receipt</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              FundWise needs one signed message to confirm this browser session before it reveals Member-only receipts.
+            </p>
+            {error ? (
+              <p className="mt-4 text-sm text-destructive">{error}</p>
+            ) : null}
+            <Button className="mt-6 bg-accent hover:bg-accent/90" onClick={() => void loadReceipt()}>
+              Verify Wallet
+            </Button>
+          </Card>
         </main>
         <Footer />
       </div>
@@ -105,7 +168,7 @@ export default function SettlementReceiptPage() {
               {error || "This settlement could not be loaded."}
             </p>
             <Button asChild className="mt-6 bg-accent hover:bg-accent/90">
-              <Link href={`/groups/${groupId}`}>Back To Group</Link>
+              <Link href={groupHref}>Back To Group</Link>
             </Button>
           </Card>
         </main>
@@ -129,7 +192,7 @@ export default function SettlementReceiptPage() {
             variant="ghost"
             className="min-h-11 w-fit px-0 text-muted-foreground hover:text-foreground"
           >
-            <Link href={`/groups/${groupId}`}>Back To Group</Link>
+            <Link href={groupHref}>Back To Group</Link>
           </Button>
 
           <Card className="overflow-hidden border-accent/20">
@@ -194,7 +257,7 @@ export default function SettlementReceiptPage() {
                     </a>
                   </Button>
                   <Button asChild variant="outline" className="min-h-11 w-full sm:w-auto">
-                    <Link href={`/groups/${groupId}`}>Return To Group</Link>
+                    <Link href={groupHref}>Return To Group</Link>
                   </Button>
                 </div>
               </Card>

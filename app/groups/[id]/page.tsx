@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
+import { InviteGroupDialog } from "@/components/invite-group-dialog"
 import { useGroupDashboard, PROFILE_DISPLAY_NAME_MAX_LENGTH } from "@/hooks/use-group-dashboard"
 import { addExpense as dbAddExpense, type ActivityItem, updateExpense as dbUpdateExpense } from "@/lib/db"
 import {
@@ -174,6 +175,7 @@ export default function GroupDashboard() {
     walletAddress,
     group,
     members,
+    memberCount,
     balances,
     transfers,
     activity,
@@ -181,6 +183,7 @@ export default function GroupDashboard() {
     treasuryBalance,
     isLoading,
     isMember,
+    isWalletVerified,
     copied,
     isSavingProfileName,
     isCreatingTreasury,
@@ -201,6 +204,7 @@ export default function GroupDashboard() {
     memberNameByWallet,
     requestedFromWallet,
     requestedToWallet,
+    isInviteLink,
     requestedTransfer,
     requestedDebtorLabel,
     requestedCreditorLabel,
@@ -209,6 +213,8 @@ export default function GroupDashboard() {
     viewerIncomingTransfers,
     viewerDisplayName,
     connectWallet,
+    verifyWalletAccess,
+    ensureWalletWriteAccess,
     viewGroups,
     refresh,
     copyGroupCode,
@@ -224,6 +230,7 @@ export default function GroupDashboard() {
   } = dashboard
   const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [profileName, setProfileName] = useState("")
 
@@ -336,6 +343,7 @@ export default function GroupDashboard() {
     setIsSubmitting(true)
 
     try {
+      await ensureWalletWriteAccess()
       const parsedAmount = Number(expenseAmount)
       if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
         throw new Error("Enter a valid Expense amount")
@@ -485,7 +493,7 @@ export default function GroupDashboard() {
               <span>{tokenName}</span>
               <span>·</span>
               <span>
-                {members.length} Member{members.length !== 1 ? "s" : ""}
+                {memberCount} Member{memberCount !== 1 ? "s" : ""}
               </span>
               {!isFundMode && totalSettledVolume > 0 && (
                 <>
@@ -500,7 +508,12 @@ export default function GroupDashboard() {
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
-            <Button variant="outline" size="sm" className="min-h-11 sm:min-h-10" onClick={copyGroupCode}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-11 sm:min-h-10"
+              onClick={() => setShowInviteDialog(true)}
+            >
               <Share2 className="h-4 w-4 mr-2" />
               Invite
             </Button>
@@ -532,21 +545,51 @@ export default function GroupDashboard() {
           </div>
         </div>
 
-        {!isMember && connected && (
+        {connected && !isWalletVerified && (
           <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
+                <Badge variant="outline" className="mb-2">
+                  Wallet verification
+                </Badge>
                 <h3 className="font-semibold mb-1">
-                  {isFundMode ? "Join this Fund Mode Group" : "Join this Group"}
+                  {isInviteLink ? `Verify your wallet for ${group.name}` : "Verify your wallet to open this Group"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  FundWise reveals Group ledgers only to wallets that verify this browser session. Sign one short message to load the live Balance, Treasury, and Member state.
+                </p>
+              </div>
+              <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto" onClick={() => void verifyWalletAccess()}>
+                Verify Wallet
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {!isMember && connected && isWalletVerified && (
+          <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                {isInviteLink ? (
+                  <Badge variant="outline" className="mb-2">
+                    Invite link
+                  </Badge>
+                ) : null}
+                <h3 className="font-semibold mb-1">
+                  {`Join ${group.name}`}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {isFundMode
-                    ? "Join to make Contributions and participate in this Group Treasury."
-                    : "Join to start tracking Expenses and Settlements in this Group."}
+                    ? isInviteLink
+                      ? "This invite returns you to the Group Treasury context after wallet connect. Join to start making Contributions."
+                      : "Join to make Contributions and participate in this Group Treasury."
+                    : isInviteLink
+                      ? "This invite returns you to the exact Group context after wallet connect. Join to start tracking Expenses and Settlements."
+                      : "Join to start tracking Expenses and Settlements in this Group."}
                 </p>
               </div>
               <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto" onClick={() => void joinGroup()}>
-                Join Group
+                Join {group.name}
               </Button>
             </div>
           </Card>
@@ -556,10 +599,16 @@ export default function GroupDashboard() {
           <Card className="mb-6 overflow-hidden border-accent/20 bg-gradient-to-br from-accent/8 via-background to-background">
             <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-2">
-                <Badge className="bg-accent/10 text-accent border-accent/20">Wallet required</Badge>
-                <h2 className="text-xl font-semibold">Connect your wallet to open this Group</h2>
+                <Badge className="bg-accent/10 text-accent border-accent/20">
+                  {isInviteLink ? "Invite link" : "Wallet required"}
+                </Badge>
+                <h2 className="text-xl font-semibold">
+                  {isInviteLink ? "Connect your wallet to open this invite" : "Connect your wallet to open this Group"}
+                </h2>
                 <p className="max-w-2xl text-sm text-muted-foreground">
-                  FundWise is wallet-native. Connect first, then join this Group, view the live Balance state, and settle exact USDC amounts from the same screen.
+                  {isInviteLink
+                    ? `FundWise is wallet-native. Connect first, then return to ${group.name} and choose Join ${group.name} from this exact Group context.`
+                    : "FundWise is wallet-native. Connect first, then join this Group, view the live Balance state, and settle exact USDC amounts from the same screen."}
                 </p>
               </div>
               <Button
@@ -579,6 +628,7 @@ export default function GroupDashboard() {
             {!isFundMode && (
               <SplitModeDashboard
                 connected={connected}
+                isWalletVerified={isWalletVerified}
                 isMember={isMember}
                 walletAddress={walletAddress}
                 groupName={group.name}
@@ -608,7 +658,7 @@ export default function GroupDashboard() {
                 onOpenCreateExpenseDialog={openCreateExpenseDialog}
                 onOpenEditExpenseDialog={openEditExpenseDialog}
                 onDeleteExpense={deleteExpense}
-                onInvite={copyGroupCode}
+                onInvite={() => setShowInviteDialog(true)}
                 canDeleteExpense={canDeleteExpense}
               />
             )}
@@ -623,7 +673,7 @@ export default function GroupDashboard() {
                 contributionTotal={contributionTotal}
                 fundingProgress={fundingProgress}
                 approvalThreshold={approvalThreshold}
-                membersCount={members.length}
+                membersCount={memberCount}
                 contributorCount={contributorCount}
                 missingMembersForTreasury={missingMembersForTreasury}
                 contributions={contributions}
@@ -631,6 +681,7 @@ export default function GroupDashboard() {
                 isGroupCreator={isGroupCreator}
                 isMember={isMember}
                 connected={connected}
+                isWalletVerified={isWalletVerified}
                 isCreatingTreasury={isCreatingTreasury}
                 isContributing={isContributing}
                 contributionAmount={contributionAmount}
@@ -648,10 +699,11 @@ export default function GroupDashboard() {
             walletAddress={walletAddress}
             lifiSupported={lifiSupported}
             clusterLabel={clusterLabel}
+            memberCount={memberCount}
             members={members}
             groupCreatorWallet={group.created_by}
             onOpenBridge={() => setShowBridge(true)}
-            onInvite={copyGroupCode}
+            onInvite={() => setShowInviteDialog(true)}
             onEditProfile={openProfileDialog}
           />
         </div>
@@ -715,6 +767,14 @@ export default function GroupDashboard() {
         isSaving={isSavingProfileName}
         onProfileNameChange={setProfileName}
         onSave={handleSaveProfileDialog}
+      />
+
+      <InviteGroupDialog
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
+        groupId={groupId}
+        groupName={group.name}
+        groupCode={group.code}
       />
 
       <Footer />

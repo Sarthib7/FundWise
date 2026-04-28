@@ -1,19 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { startTransition, useCallback, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { CreateGroupDialog } from "@/components/create-group-dialog"
+import { JoinGroupDialog } from "@/components/join-group-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
-import { getGroupsForWallet } from "@/lib/db"
-import { STABLECOIN_MINTS } from "@/lib/expense-engine"
+import { createGroup, getGroupByCode, getGroupsForWallet } from "@/lib/db"
+import { DEFAULT_STABLECOIN, STABLECOIN_MINTS } from "@/lib/expense-engine"
 import {
   Users,
   Plus,
+  LogIn,
   ArrowRight,
   Loader2,
   AlertCircle,
@@ -22,15 +26,26 @@ import {
   ArrowRightLeft,
 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 import type { Database } from "@/lib/database.types"
+import { ensureWalletSession } from "@/lib/wallet-session-client"
 
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 
 export default function GroupsPage() {
-  const { publicKey, connected } = useWallet()
+  const router = useRouter()
+  const { publicKey, connected, wallet } = useWallet()
   const { setVisible } = useWalletModal()
   const [groups, setGroups] = useState<GroupRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false)
+  const [isJoiningGroup, setIsJoiningGroup] = useState(false)
+  const [isWalletVerified, setIsWalletVerified] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
+  const [hasAutoOpenedZeroStateCreate, setHasAutoOpenedZeroStateCreate] = useState(false)
+  const [hasCreateIntent, setHasCreateIntent] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const walletAddress = publicKey?.toString() || ""
@@ -39,6 +54,7 @@ export default function GroupsPage() {
     if (!connected || !walletAddress) {
       setGroups([])
       setError(null)
+      setIsWalletVerified(false)
       setIsLoading(false)
       return
     }
@@ -46,10 +62,18 @@ export default function GroupsPage() {
     setIsLoading(true)
     setError(null)
     try {
+      await ensureWalletSession({
+        walletAddress,
+        walletAdapter: wallet?.adapter,
+      })
+
+      setIsWalletVerified(true)
       const userGroups = await getGroupsForWallet(walletAddress)
       setGroups(userGroups)
     } catch (error) {
       console.error("[FundWise] Failed to load groups:", error)
+      setIsWalletVerified(false)
+      setGroups([])
       setError(error instanceof Error ? error.message : "Failed to load your Groups.")
     } finally {
       setIsLoading(false)
@@ -59,6 +83,172 @@ export default function GroupsPage() {
   useEffect(() => {
     loadGroups()
   }, [connected, walletAddress])
+
+  useEffect(() => {
+    setHasAutoOpenedZeroStateCreate(false)
+  }, [walletAddress])
+
+  useEffect(() => {
+    const syncCreateIntentFromUrl = () => {
+      const nextCreateIntent = new URLSearchParams(window.location.search).get("create") === "true"
+      setHasCreateIntent(nextCreateIntent)
+    }
+
+    syncCreateIntentFromUrl()
+    window.addEventListener("popstate", syncCreateIntentFromUrl)
+
+    return () => window.removeEventListener("popstate", syncCreateIntentFromUrl)
+  }, [])
+
+  const replaceCreateIntent = useCallback(
+    (enabled: boolean) => {
+      setHasCreateIntent(enabled)
+      router.replace(enabled ? "/groups?create=true" : "/groups", { scroll: false })
+    },
+    [router]
+  )
+
+  useEffect(() => {
+    if (!connected || isLoading || !isWalletVerified) {
+      return
+    }
+
+    if (hasCreateIntent) {
+      setIsCreateDialogOpen(true)
+      return
+    }
+
+    if (groups.length === 0 && !hasAutoOpenedZeroStateCreate) {
+      setIsCreateDialogOpen(true)
+      setHasAutoOpenedZeroStateCreate(true)
+    }
+  }, [connected, groups.length, hasAutoOpenedZeroStateCreate, hasCreateIntent, isLoading, isWalletVerified])
+
+  const handleCreateDialogChange = useCallback(
+    (open: boolean) => {
+      setIsCreateDialogOpen(open)
+
+      if (!open && hasCreateIntent) {
+        replaceCreateIntent(false)
+      }
+    },
+    [hasCreateIntent, replaceCreateIntent]
+  )
+
+  const handleJoinDialogChange = useCallback((open: boolean) => {
+    setIsJoinDialogOpen(open)
+    if (!open) {
+      setJoinError(null)
+    }
+  }, [])
+
+  const openCreateDialog = useCallback(() => {
+    setHasAutoOpenedZeroStateCreate(true)
+    setIsCreateDialogOpen(true)
+    replaceCreateIntent(true)
+  }, [replaceCreateIntent])
+
+  const openJoinDialog = useCallback(() => {
+    setJoinError(null)
+    setIsJoinDialogOpen(true)
+  }, [])
+
+  const handleCreateGroup = useCallback(
+    async (values: {
+      name: string
+      mode: "split" | "fund"
+      fundingGoal?: number
+      approvalThreshold?: number
+    }) => {
+      if (!walletAddress) {
+        return
+      }
+
+      setIsCreatingGroup(true)
+
+      try {
+        await ensureWalletSession({
+          walletAddress,
+          walletAdapter: wallet?.adapter,
+        })
+
+        const createdGroup = await createGroup({
+          name: values.name,
+          mode: values.mode,
+          stablecoinMint: DEFAULT_STABLECOIN.mint,
+          createdBy: walletAddress,
+          fundingGoal: values.fundingGoal,
+          approvalThreshold: values.approvalThreshold,
+        })
+
+        setIsCreateDialogOpen(false)
+        replaceCreateIntent(false)
+        toast.success(values.mode === "fund" ? "Fund Mode Group created" : "Group created")
+        startTransition(() => {
+          router.push(`/groups/${createdGroup.id}`)
+        })
+      } catch (error) {
+        console.error("[FundWise] Failed to create group:", error)
+        toast.error(error instanceof Error ? error.message : "Failed to create your Group.")
+      } finally {
+        setIsCreatingGroup(false)
+      }
+    },
+    [replaceCreateIntent, router, wallet?.adapter, walletAddress]
+  )
+
+  const handleJoinGroup = useCallback(
+    async (inviteValue: string) => {
+      const trimmedInviteValue = inviteValue.trim()
+
+      if (!trimmedInviteValue) {
+        setJoinError("Enter an invite link or Group code.")
+        return
+      }
+
+      setIsJoiningGroup(true)
+      setJoinError(null)
+
+      try {
+        const buildInviteRoute = (pathname: string, search: string = "") => {
+          const nextSearchParams = new URLSearchParams(search)
+          nextSearchParams.set("invite", "true")
+          const nextQuery = nextSearchParams.toString()
+          return nextQuery ? `${pathname}?${nextQuery}` : pathname
+        }
+
+        if (trimmedInviteValue.startsWith("/groups/")) {
+          setIsJoinDialogOpen(false)
+          router.push(buildInviteRoute(trimmedInviteValue.split("?")[0], trimmedInviteValue.split("?")[1] || ""))
+          return
+        }
+
+        try {
+          const inviteUrl = new URL(trimmedInviteValue)
+
+          if (inviteUrl.pathname.startsWith("/groups/")) {
+            setIsJoinDialogOpen(false)
+            router.push(buildInviteRoute(inviteUrl.pathname, inviteUrl.search))
+            return
+          }
+        } catch {}
+
+        const group = await getGroupByCode(trimmedInviteValue.toUpperCase())
+
+        if (!group) {
+          throw new Error("We couldn’t find a Group for that invite code.")
+        }
+
+        setIsJoinDialogOpen(false)
+        router.push(`/groups/${group.id}?invite=true`)
+      } catch (error) {
+        setJoinError(error instanceof Error ? error.message : "Failed to open that invite.")
+      } finally {
+        setIsJoiningGroup(false)
+      }
+    },
+    [router]
+  )
 
   const getMintName = (mint: string) => {
     for (const [, data] of Object.entries(STABLECOIN_MINTS)) {
@@ -152,15 +342,21 @@ export default function GroupsPage() {
             <div>
               <h1 className="text-3xl font-bold">Your Groups</h1>
               <p className="text-muted-foreground mt-1">
-                {groups.length} group{groups.length !== 1 ? "s" : ""}
+                {isWalletVerified
+                  ? `${groups.length} group${groups.length !== 1 ? "s" : ""}`
+                  : "Verify your wallet to load your Groups"}
               </p>
             </div>
-            <Button asChild className="min-h-11 bg-accent hover:bg-accent/90">
-              <Link href="/?create=true">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" className="min-h-11" onClick={openJoinDialog}>
+                <LogIn className="h-4 w-4 mr-2" />
+                Join Group
+              </Button>
+              <Button className="min-h-11 bg-accent hover:bg-accent/90" onClick={openCreateDialog}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Group
-              </Link>
-            </Button>
+              </Button>
+            </div>
           </div>
 
           {isLoading ? (
@@ -181,12 +377,14 @@ export default function GroupsPage() {
           ) : error ? (
             <Card className="p-8 text-center">
               <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
-              <h3 className="text-xl font-semibold">Couldn&apos;t load your Groups</h3>
+              <h3 className="text-xl font-semibold">
+                {isWalletVerified ? "Couldn&apos;t load your Groups" : "Verify your wallet"}
+              </h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 {error}
               </p>
               <Button variant="outline" className="mt-6 min-h-11" onClick={loadGroups}>
-                Try Again
+                {isWalletVerified ? "Try Again" : "Verify Wallet"}
               </Button>
             </Card>
           ) : groups.length === 0 ? (
@@ -196,12 +394,16 @@ export default function GroupsPage() {
               <p className="text-muted-foreground mb-6">
                 Start a trip, dinner tab, or house fund, then invite Members with one code.
               </p>
-              <Button asChild className="min-h-11 bg-accent hover:bg-accent/90">
-                <Link href="/?create=true">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <Button variant="outline" className="min-h-11" onClick={openJoinDialog}>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Join a Group
+                </Button>
+                <Button className="min-h-11 bg-accent hover:bg-accent/90" onClick={openCreateDialog}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Your First Group
-                </Link>
-              </Button>
+                </Button>
+              </div>
             </Card>
           ) : (
             <div className="grid gap-4">
@@ -233,6 +435,19 @@ export default function GroupsPage() {
           )}
         </div>
       </main>
+      <CreateGroupDialog
+        open={isCreateDialogOpen}
+        onOpenChange={handleCreateDialogChange}
+        isSubmitting={isCreatingGroup}
+        onSubmit={handleCreateGroup}
+      />
+      <JoinGroupDialog
+        open={isJoinDialogOpen}
+        onOpenChange={handleJoinDialogChange}
+        isSubmitting={isJoiningGroup}
+        errorMessage={joinError}
+        onSubmit={handleJoinGroup}
+      />
       <Footer />
     </div>
   )

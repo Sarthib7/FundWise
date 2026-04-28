@@ -15,6 +15,7 @@ type GroupSidebarProps = {
   walletAddress: string
   lifiSupported: boolean
   clusterLabel: string
+  memberCount: number
   members: MemberRow[]
   groupCreatorWallet: string
   onOpenBridge: () => void
@@ -32,12 +33,15 @@ export function GroupSidebar({
   walletAddress,
   lifiSupported,
   clusterLabel,
+  memberCount,
   members,
   groupCreatorWallet,
   onOpenBridge,
   onInvite,
   onEditProfile,
 }: GroupSidebarProps) {
+  const visibleMemberCount = isMember ? members.length : memberCount
+
   return (
     <div className="space-y-6">
       {isMember && (
@@ -72,22 +76,32 @@ export function GroupSidebar({
           <div>
             <h2 className="text-lg font-semibold">Members</h2>
             <p className="text-sm text-muted-foreground">
-              {members.length === 0
-                ? "Invite the first Member to start using this Group together."
-                : `${members.length} Member${members.length === 1 ? "" : "s"} in this Group.`}
+              {isMember
+                ? members.length === 0
+                  ? "Invite the first Member to start using this Group together."
+                  : `${members.length} Member${members.length === 1 ? "" : "s"} in this Group.`
+                : `${visibleMemberCount} Member${visibleMemberCount === 1 ? "" : "s"} in this Group. Join to view the full Member list.`}
             </p>
           </div>
           <Badge variant="outline">
-            {members.length}
+            {visibleMemberCount}
           </Badge>
         </div>
 
-        {members.length === 0 ? (
+        {!isMember ? (
+          <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
+            <Users className="mx-auto mb-3 h-8 w-8 opacity-50" />
+            <p className="font-medium text-foreground">Member list hidden until you join</p>
+            <p className="mt-1 text-xs">
+              Join this Group to view wallet labels, creator status, and your shared profile display names.
+            </p>
+          </div>
+        ) : members.length === 0 ? (
           <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
             <Users className="mx-auto mb-3 h-8 w-8 opacity-50" />
             <p className="font-medium text-foreground">No Members yet</p>
             <p className="mt-1 text-xs">
-              Share the invite code so the first Member can join and start logging Expenses or Contributions.
+              Share the invite link or QR so the first Member can join and start logging Expenses or Contributions.
             </p>
             <Button
               type="button"

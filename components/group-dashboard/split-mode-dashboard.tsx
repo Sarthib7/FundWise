@@ -39,6 +39,7 @@ type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 
 type SplitModeDashboardProps = {
   connected: boolean
+  isWalletVerified: boolean
   isMember: boolean
   walletAddress: string
   groupName: string
@@ -86,6 +87,7 @@ function isRequestedTransfer(
 
 export function SplitModeDashboard({
   connected,
+  isWalletVerified,
   isMember,
   walletAddress,
   groupName,
@@ -167,9 +169,16 @@ export function SplitModeDashboard({
                     Connect Wallet
                   </Button>
                 </>
+              ) : !isWalletVerified ? (
+                <>
+                  <h2 className="text-lg font-semibold">Verify your wallet to open this request</h2>
+                  <p className="text-sm text-muted-foreground">
+                    FundWise only reveals the live settlement state after your connected wallet is verified for this browser session.
+                  </p>
+                </>
               ) : !isMember ? (
                 <>
-                  <h2 className="text-lg font-semibold">Join this Group to view the live settlement state</h2>
+                  <h2 className="text-lg font-semibold">Join {groupName} to view the live settlement state</h2>
                   <p className="text-sm text-muted-foreground">
                     Once you join, FundWise will show whether this debtor still owes this creditor and the current settleable amount.
                   </p>
@@ -444,20 +453,22 @@ export function SplitModeDashboard({
             <p className="mt-1 text-xs">
               {isMember
                 ? "Log the first Expense to generate live Balances and suggested Settlements."
-                : connected
+                : connected && isWalletVerified
                   ? "Join this Group to start tracking Expenses and Settlements with the other Members."
-                  : "Connect your wallet to join this Group and start tracking shared Expenses."}
+                  : connected
+                    ? "Verify your wallet to reveal the live Group ledger and join state."
+                    : "Connect your wallet to join this Group and start tracking shared Expenses."}
             </p>
             {isMember ? (
               <Button variant="outline" className="mt-4 min-h-11" onClick={onOpenCreateExpenseDialog}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add the first Expense
               </Button>
-            ) : connected ? (
+            ) : connected && isWalletVerified ? (
               <Button className="mt-4 min-h-11 bg-accent hover:bg-accent/90" onClick={() => void onJoin()}>
-                Join Group
+                Join {groupName}
               </Button>
-            ) : (
+            ) : !connected ? (
               <Button
                 type="button"
                 className="mt-4 min-h-11 bg-accent hover:bg-accent/90"
@@ -466,7 +477,7 @@ export function SplitModeDashboard({
                 <Wallet className="h-4 w-4 mr-2" />
                 Connect Wallet
               </Button>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="space-y-4">

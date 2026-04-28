@@ -40,6 +40,7 @@ type FundModeDashboardProps = {
   isGroupCreator: boolean
   isMember: boolean
   connected: boolean
+  isWalletVerified: boolean
   isCreatingTreasury: boolean
   isContributing: boolean
   contributionAmount: string
@@ -70,6 +71,7 @@ export function FundModeDashboard({
   isGroupCreator,
   isMember,
   connected,
+  isWalletVerified,
   isCreatingTreasury,
   isContributing,
   contributionAmount,
@@ -257,8 +259,10 @@ export function FundModeDashboard({
                 ? "Initialize the Treasury above before this Group can start recording Contributions."
                 : isMember
                   ? "Make the first Contribution to seed this Treasury, or top up your Solana wallet first if you need more USDC."
-                  : connected
+                  : connected && isWalletVerified
                     ? "Join this Group to make the first Contribution once you are ready."
+                    : connected
+                      ? "Verify your wallet to reveal the live Treasury membership state."
                     : "Connect your wallet to join this Group and contribute to the Treasury."}
             </p>
             {treasuryAddress && isMember ? (
@@ -273,7 +277,7 @@ export function FundModeDashboard({
               >
                 Make the first Contribution
               </Button>
-            ) : treasuryAddress && connected ? (
+            ) : treasuryAddress && connected && isWalletVerified ? (
               <Button className="mt-4 min-h-11 bg-accent hover:bg-accent/90" onClick={() => void onJoin()}>
                 Join Group
               </Button>
