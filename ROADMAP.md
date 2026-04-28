@@ -139,7 +139,16 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 - Proposal creation UI
 - Approval UI
 - Execution flow
+- Reimbursement-first proposal flow where Treasury payouts go to Member wallets only
+- Proposal-scoped comments and lightweight proof attachments, without expanding to Group-wide chat
+- Proposal evidence model: one lightweight uploaded file plus optional external link
+- Proposal edit history and pre-approval-only editing
+- Proposal review states with approve and reject
+- Proposal closure model where rejection ends the current Proposal and retries require a new one
+- Separate proposal execution step after approvals reach threshold
+- Approved proposal execution can be triggered by any Member
 - Signer-management rules after Treasury initialization
+- Treasury policy design: keep MVP on strict proposal-based spending, then evaluate Squads permissions / spending limits for trusted low-value withdrawals
 - Better Contribution UX
 
 **Exit criterion:** a Fund Mode Group can initialize a Treasury, accept Contributions, create a Proposal, approve it, and execute it through the stored Squads identities.
@@ -188,9 +197,28 @@ Only pursue these after the core Group ledger and USDC settlement flow are relia
 - Embedded wallets
 - Social login
 - Gas abstraction / gasless settlement
-- Telegram bot and Telegram mini app
+- Stablecoin-only user experience where fees and bridging are abstracted away from the end user
+- Easier web2 onboarding and offboarding:
+  bank-transfer style funding, fiat-to-stablecoin ramps, and later card or account-style interfaces for non-crypto users
+- Telegram auth, Telegram bot, and Telegram mini app as distribution for existing group chats
+- Agent skill plus scoped agent access so personal agents can create requests, read proposals, and operate within wallet-bound permissions
 - Wallet mini dapp distribution
+- Native mobile app once the shared engine and secondary surfaces are stable
 - AI bill parsing and natural-language Expense entry
+
+**Channel strategy:**
+
+- Keep one core product engine: wallet-bound ledger APIs, proposal rules, and settlement logic must be shared across every surface
+- Expand surfaces in this order:
+  web app -> Telegram bot / Telegram mini app -> agent skill / agent access -> wallet mini dapp -> native mobile app
+- Telegram should reuse the existing Group model rather than redefining it; group-chat commands should call the same FundWise backend capabilities
+- Telegram should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement must bounce to the app for wallet confirmation
+- Telegram identity should use one active wallet per Telegram account, with relinking as an explicit later flow rather than multi-wallet ambiguity
+- Telegram chat mapping should start as one chat -> one FundWise Group, with switch-group behavior deferred until the simpler model is proven
+- Any Member may add the bot, but every participant must authenticate one-on-one in DM before the bot acts for them in the group chat
+- The shared backend likely needs new schema for Telegram links, Proposal comments, proof attachments / links, Proposal edit history, and later agent capability grants before those channels are built
+- Agent access should use scoped capabilities, not broad permanent API keys
+- For long-range onboarding and fee abstraction research, Bridge is the more direct infrastructure candidate today; Altitude is better treated as UX and operating-model inspiration unless its consumer surface changes materially
 
 **Fund Mode expansion:**
 
