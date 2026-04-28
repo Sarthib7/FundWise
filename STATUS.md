@@ -86,6 +86,19 @@ The product direction is now sharper:
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, join, modal, and Receipt flows
 - Remove unused `group-showcase-section` after owner confirmation
 
+## Foundation-first delivery order
+
+1. Finish backend trust hardening and verify every protected write / protected read path on devnet.
+2. Heavily test the core web product on devnet:
+   create, invite, join, Expense, Balance, Settlement, Receipt, Treasury init, and Contribution.
+3. Finish Fund Mode core behavior inside the app:
+   reimbursement-first Proposals, approvals, rejection, execution, proof, comments, and history.
+4. Add the missing Supabase data model for post-MVP Fund Mode and channel expansion:
+   Telegram-to-wallet links, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
+5. Only after the shared wallet-bound engine is stable, add secondary surfaces in order:
+   Telegram auth + bot + mini app -> agent skill / agent access -> wallet mini app -> native mobile app.
+6. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
+
 ---
 
 ## Product decisions locked on 2026-04-27
@@ -104,7 +117,7 @@ The product direction is now sharper:
 - Expenses are off-chain records; Settlements are on-chain USDC transfers.
 - Any Member can log an Expense, and the payer can be any Member in the Group.
 - Only the Expense creator can edit or delete it.
-- The Activity Feed is the only in-Group timeline surface for now; there is no chat.
+- The Activity Feed is the primary in-Group timeline surface; no Group-wide chat is planned for the MVP, though Fund Mode may later add Proposal-scoped comments and proof attachments.
 - Only Members with a negative Balance see the Settle action.
 - Settlements resolve against the debtor's current net Balance, not a stale linked amount.
 - The primary settlement action is exact-amount settlement in one go.
@@ -115,6 +128,11 @@ The product direction is now sharper:
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
 - LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
+- Future expansion should keep one shared engine across surfaces: web first, then Telegram, agent, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
+- Telegram scope should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement remain app-and-wallet confirmed.
+- Telegram identity should stay simple: one Telegram account links to one active wallet at a time, with an explicit relink flow later if needed.
+- Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
+- Telegram bot attachment may be initiated by any Member, but each person must authenticate privately in DM before the bot acts for them in the shared chat.
 - The next delivery sequence is locked:
   backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion support -> isolated audits -> full rewiring -> end-to-end devnet testing
 
@@ -134,13 +152,27 @@ The product direction is now sharper:
 - Later mainnet checklist work:
   supported mainnet USDC mint wiring, production RPC choice, and final mainnet-beta readiness review
 
+## Likely Supabase / DB follow-up
+
+- Tighten the production schema and migrations around Fund Mode before mainnet-beta:
+  Proposal comments, Proposal proof attachments / links, Proposal edit-history records, and execution-state metadata.
+- Add Telegram identity-link tables with a one-Telegram-account-to-one-active-wallet rule.
+- Add later scoped agent-access records instead of broad permanent API keys.
+- Keep all of that behind the same server-side wallet-bound authorization model rather than exposing new public-client mutation paths.
+
 ---
 
 ## Secondary work kept out of the main path
 
 - LI.FI recovery/top-up branch when a debtor lacks USDC on Solana
-- Telegram bot and Telegram mini app
+- Telegram auth, Telegram bot, and Telegram mini app for existing group chats
+- Agent skill and scoped agent access for autonomous or assistant-driven FundWise actions
 - Wallet-embedded mini dapp distribution
+- Native mobile app
+- Long-range stablecoin-only UX:
+  gas / fee abstraction, automatic bridging and top-up paths, and easier web2 onboarding / offboarding into stablecoin balances
+- Long-range fiat bridge research:
+  evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; treat Altitude as inspiration for stablecoin account UX rather than the first direct consumer integration target
 - AI bill parsing or natural-language expense entry
 - **FundWise-native** email/password or social identity as the primary account system (optional Phantom Connect for wallet onboarding is a separate, additive path; see ADR-0014)
 - Gas abstraction / gasless settlement
@@ -161,7 +193,17 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 **Still pending:**
 
 - Proposal creation, approval, and execution UI
+- Reimbursement-first Proposal rules: Member files reimbursement request, Treasury reimburses Member wallet only, external vendor payouts later
+- Proposal approval guard: proposer cannot approve their own reimbursement Proposal
+- Proposal discussion scope: allow comments and lightweight proof attachments on a Proposal later, but do not expand this into full Group chat during the MVP
+- Proposal proof model: support one lightweight uploaded file plus an optional external link
+- Proposal edit rule: editable only before the first outside approval, with visible edit history
+- Proposal review actions: support both approve and reject, with rejection visible in Proposal discussion
+- Proposal rejection rule: once rejected, the Proposal is closed and any retry must be a new Proposal
+- Proposal execution rule: meeting the threshold unlocks a separate explicit execute step instead of auto-payout
+- Proposal execution actor: once approved, any Member may execute the reimbursement
 - Clear signer-management rules after Treasury initialization
+- Fund Mode treasury policy follow-up: keep MVP spending strict and proposal-first; revisit optional Squads roles / spending limits later for trusted low-value trip spending
 - One-click LI.FI into Treasury Contribution flow
 
 ---
@@ -174,6 +216,7 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 4. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
 5. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
 6. Return to Fund Mode proposals only after the Split Mode demo path is polished.
+7. After the shared web product is stable, design the Supabase schema changes for Telegram links, Proposal comments / proof, and later scoped agent access before building those surfaces.
 
 ---
 
