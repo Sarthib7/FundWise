@@ -74,7 +74,14 @@ jspm_packages/
 
 # Next.js build output
 .next
+.open-next
+.vercel
+.wrangler
 out
+
+# Cloudflare/OpenNext local files
+.dev.vars
+cloudflare-env.d.ts
 
 # Nuxt.js build / generate output
 .nuxt
