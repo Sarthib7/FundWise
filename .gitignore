@@ -166,3 +166,4 @@ temp/
 *CLAUDE*.md
 *claude*.md
 supabase/env.local
+supabase/.temp/
