@@ -30,9 +30,9 @@ That is the primary demo path.
 
 Everything else is a supporting layer:
 
-- `LI.FI` helps a debtor arrive at Solana USDC if their funds are on another chain.
+- `LI.FI` helps an EVM-first debtor arrive at Solana USDC if their funds are on another chain, ideally through a simple `Add funds` / `Top up to settle` experience.
 - `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
-- `Fund Mode` broadens the product story, but it is not the primary hackathon demo path.
+- `Fund Mode` broadens the product story, but it is incomplete and should not be presented as the current mainline product path.
 
 ---
 
@@ -78,6 +78,7 @@ The strongest LI.FI story is not "FundWise is a generic multichain app." The str
 **Preferred MVP scope:**
 
 - Show that LI.FI can route value from another chain into Solana USDC
+- Present that path as `Add funds` / `Top up to settle` instead of teaching users the underlying route mechanics
 - Return the user to the normal FundWise Group Settlement path
 - Keep the Receipt and ledger model unchanged
 
@@ -128,7 +129,7 @@ Low fit for the current product direction.
 ### LI.FI build framing
 
 - Detect insufficient Solana USDC
-- Offer cross-chain top-up path
+- Offer cross-chain top-up path with app-owned language like `Add funds` or `Top up to settle`
 - Land back in the same Group flow
 
 ### Zerion build framing
@@ -156,6 +157,7 @@ Low fit for the current product direction.
 - Tighten on-chain settlement behavior and devnet wiring
 - Add LI.FI top-up branch
 - Add Zerion CLI support around wallet readiness and guidance
+- Keep Fund Mode in maintenance-only status unless the core Split Mode plus LI.FI path is already coherent
 - Prepare judge-friendly demo script
 
 ### Final stretch before May 11, 2026
@@ -225,10 +227,11 @@ Do the work in this order:
 1. Frontend responsiveness and UX sign-off
 2. Backend trust hardening and verified receipts
 3. On-chain settlement / devnet hardening
-4. LI.FI and Zerion support layers
-5. Contract audit
-6. Full-stack rewiring
-7. End-to-end devnet testing
+4. LI.FI support layer
+5. Zerion support layer
+6. Contract audit
+7. Full-stack rewiring
+8. End-to-end devnet testing
 
 This keeps the MVP narrow while still leaving room for sponsor-track demos.
 
