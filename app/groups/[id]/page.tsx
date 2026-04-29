@@ -478,7 +478,7 @@ export default function GroupDashboard() {
             <div className="mb-2 flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
               <Badge className="bg-accent/10 text-accent border-accent/20">
-                {isFundMode ? "Fund Mode" : "Split Mode"}
+                {isFundMode ? "Fund Mode · Invite only" : "Split Mode"}
               </Badge>
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">

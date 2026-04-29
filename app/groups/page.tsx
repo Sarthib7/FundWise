@@ -315,7 +315,7 @@ export default function GroupsPage() {
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                       2. Join or create
                     </p>
-                    <p className="mt-2 text-sm text-foreground">Enter with an invite code or start a new Group for a trip, tab, or house fund.</p>
+                    <p className="mt-2 text-sm text-foreground">Enter with an invite code or start a new Split Mode Group for a trip, tab, or shared expense run.</p>
                   </div>
                   <div className="rounded-lg border p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -392,7 +392,7 @@ export default function GroupsPage() {
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No Groups Yet</h3>
               <p className="text-muted-foreground mb-6">
-                Start a trip, dinner tab, or house fund, then invite Members with one code.
+                Start a trip, dinner tab, or shared expense Group, then invite Members with one code.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Button variant="outline" className="min-h-11" onClick={openJoinDialog}>
@@ -420,7 +420,7 @@ export default function GroupsPage() {
                         <h3 className="font-semibold text-lg truncate">{group.name}</h3>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
-                            {group.mode === "split" ? "Split Mode" : "Fund Mode"}
+                            {group.mode === "split" ? "Split Mode" : "Fund Mode · Invite only"}
                           </span>
                           <span>{getMintName(group.stablecoin_mint)}</span>
                           <span>Code: {group.code}</span>
