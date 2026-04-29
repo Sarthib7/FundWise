@@ -51,6 +51,8 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
 - Devnet settlement UX hardening around insufficient-USDC states, insufficient-SOL states, and clearer ATA-creation messaging
+- Multi-currency Expense entry planning: Source Currency capture, current exchange-rate quote, Exchange Rate Snapshot storage, and USD/USDC ledger conversion without changing the USDC settlement asset
+- Expense Proof planning: optional merchant receipt photo / PDF upload tied to Expense records
 - Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
@@ -65,6 +67,8 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 - Authenticated wallet-bound server-side ledger writes with protected Group / Receipt reads
 - RPC verification before persisting Settlement and Contribution receipts
+- Exchange-rate provider boundary plus stored Exchange Rate Snapshots for any Expense entered in a Source Currency other than the ledger value
+- Off-chain storage path and access rules for Expense Proof uploads
 - Supported mainnet USDC mint wiring
 - Clear insufficient-USDC and insufficient-SOL states
 - Recipient USDC token-account auto-creation inside settlement flow
@@ -165,6 +169,8 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 - Web app first
 - Private Group creation
 - Fast Expense entry
+- Optional receipt photo upload
+- Currency conversion into a stable USD/USDC ledger value
 - Live Group Balances
 - One-click USDC Settlement
 - Clear Receipt
@@ -195,6 +201,7 @@ Only pursue these after the core Group ledger and USDC settlement flow are relia
 **Product expansion:**
 
 - Multi-stablecoin support
+- Broader Source Currency support for Expense entry, including exchange-rate provider redundancy and better display of original amount vs converted ledger amount
 - Cross-chain direct flows beyond top-up
 - Embedded wallets
 - Social login
@@ -202,23 +209,24 @@ Only pursue these after the core Group ledger and USDC settlement flow are relia
 - Stablecoin-only user experience where fees and bridging are abstracted away from the end user
 - Easier web2 onboarding and offboarding:
   bank-transfer style funding, fiat-to-stablecoin ramps, and later card or account-style interfaces for non-crypto users
-- Telegram auth, Telegram bot, and Telegram mini app as distribution for existing group chats
-- Agent skill plus scoped agent access so personal agents can create requests, read proposals, and operate within wallet-bound permissions
+- FundWise Agent as the umbrella assistant layer for drafting Expenses, attaching proof, reminders, Group summaries, and Proposal support
+- Telegram auth, Telegram bot, and Telegram mini app as FundWise Agent distribution for existing group chats
+- Agent skill plus scoped agent access so personal agents can create requests, read Proposals, and operate within wallet-bound permissions
 - Wallet mini dapp distribution
 - Native mobile app once the shared engine and secondary surfaces are stable
-- AI bill parsing and natural-language Expense entry
+- AI bill parsing beyond basic receipt-photo upload and natural-language Expense entry beyond draft-safe FundWise Agent flows
 
 **Channel strategy:**
 
 - Keep one core product engine: wallet-bound ledger APIs, proposal rules, and settlement logic must be shared across every surface
 - Expand surfaces in this order:
-  web app -> Telegram bot / Telegram mini app -> agent skill / agent access -> wallet mini dapp -> native mobile app
-- Telegram should reuse the existing Group model rather than redefining it; group-chat commands should call the same FundWise backend capabilities
+  web app -> FundWise Agent on Telegram bot / Telegram mini app -> agent skill / agent access -> wallet mini dapp -> native mobile app
+- Telegram should reuse the existing Group model rather than redefining it; group-chat commands should call the same FundWise Agent and backend capabilities
 - Telegram should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement must bounce to the app for wallet confirmation
 - Telegram identity should use one active wallet per Telegram account, with relinking as an explicit later flow rather than multi-wallet ambiguity
 - Telegram chat mapping should start as one chat -> one FundWise Group, with switch-group behavior deferred until the simpler model is proven
 - Any Member may add the bot, but every participant must authenticate one-on-one in DM before the bot acts for them in the group chat
-- The shared backend likely needs new schema for Telegram links, Proposal comments, proof attachments / links, Proposal edit history, and later agent capability grants before those channels are built
+- The shared backend likely needs new schema for Telegram links, Expense Proof attachments, Proposal comments, proof attachments / links, Proposal edit history, and later agent capability grants before those channels are built
 - Agent access should use scoped capabilities, not broad permanent API keys
 - For long-range onboarding and fee abstraction research, Bridge is the more direct infrastructure candidate today; Altitude is better treated as UX and operating-model inspiration unless its consumer surface changes materially
 
