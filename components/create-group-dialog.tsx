@@ -123,7 +123,7 @@ export function CreateGroupDialog({
         <DialogHeader>
           <DialogTitle>Create a Group</DialogTitle>
           <DialogDescription>
-            Start in Split Mode for shared Expenses and Settlements, or choose Fund Mode for a shared Treasury.
+            Start in Split Mode for shared Expenses and Settlements. Fund Mode stays visible here as an invite-only beta while treasury Proposal flows are still being finished.
           </DialogDescription>
         </DialogHeader>
 
@@ -186,24 +186,41 @@ export function CreateGroupDialog({
 
               <button
                 type="button"
+                disabled
+                aria-disabled="true"
                 className={cn(
-                  "flex min-h-32 flex-col rounded-xl border p-4 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  mode === "fund"
-                    ? "border-accent/30 bg-accent/10 shadow-sm"
-                    : "border-border bg-card hover:border-accent/20 hover:bg-accent/5"
+                  "flex min-h-32 cursor-not-allowed flex-col rounded-xl border border-border/80 bg-muted/40 p-4 text-left opacity-100",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 )}
-                onClick={() => setMode("fund")}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-accent">
-                  <Landmark className="h-4 w-4" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-accent">
+                    <Landmark className="h-4 w-4" />
+                  </div>
+                  <Badge variant="outline">Invite only</Badge>
                 </div>
                 <p className="mt-4 text-base font-semibold">Fund Mode</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Pool Contributions into a Treasury now, then add Proposal flows later.
+                  Treasury beta for controlled testing while Proposal creation, approvals, and execution are still being finished.
+                </p>
+                <p className="mt-3 text-xs font-medium text-foreground/70">
+                  Soon: pooled Contributions, reimbursement Proposals, and explicit treasury execution.
                 </p>
               </button>
             </div>
           </fieldset>
+
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">Fund Mode beta</Badge>
+              <p className="text-sm font-medium">
+                Public Group creation is Split Mode first while Fund Mode stays invite-only.
+              </p>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              The main hackathon path is shared Expenses, live Balances, Settlements, and later LI.FI top-ups. Treasury workflows remain in controlled testing until the Proposal lifecycle is ready.
+            </p>
+          </div>
 
           <div className="rounded-xl border border-dashed border-accent/25 bg-accent/5 p-4">
             <div className="flex flex-wrap items-center gap-2">

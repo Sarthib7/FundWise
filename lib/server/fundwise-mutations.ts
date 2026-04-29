@@ -21,6 +21,15 @@ function getAdmin() {
   return getSupabaseAdmin()
 }
 
+function isFundModeInviteWallet(wallet: string) {
+  const inviteWallets = (process.env.FUNDWISE_FUND_MODE_INVITE_WALLETS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0)
+
+  return inviteWallets.includes(wallet)
+}
+
 async function getGroupOrThrow(groupId: string) {
   const { data, error } = await getAdmin()
     .from("groups")
@@ -132,6 +141,12 @@ export async function createGroupMutation(data: {
   fundingGoal?: number
   approvalThreshold?: number
 }) {
+  if (data.mode === "fund" && !isFundModeInviteWallet(data.createdBy)) {
+    throw new FundWiseError(
+      "Fund Mode is currently invite-only while the treasury Proposal lifecycle is being finished."
+    )
+  }
+
   const insert: GroupInsert = {
     name: data.name,
     mode: data.mode,

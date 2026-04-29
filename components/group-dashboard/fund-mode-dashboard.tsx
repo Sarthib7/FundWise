@@ -82,6 +82,13 @@ export function FundModeDashboard({
 }: FundModeDashboardProps) {
   return (
     <>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Badge variant="outline">Invite-only beta</Badge>
+        <p className="text-sm text-muted-foreground">
+          Fund Mode treasury screens stay in controlled testing while the Proposal lifecycle is completed.
+        </p>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
