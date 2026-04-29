@@ -132,13 +132,13 @@ Avoid: Optimized debts, minimum transfers
 - Any Member may attach the FundWise bot to a Telegram chat, but each person must authenticate privately with the bot in DM against their own wallet before the bot acts for them in the group.
 - Plain `/groups` with no existing Groups should open Group creation immediately after connect.
 - Plain `/groups` with existing Groups should remain a Group list after connect.
-- Group creation defaults to Split Mode, while Fund Mode stays selectable per Group inside the create flow.
+- Group creation defaults to Split Mode, while the public create flow keeps Fund Mode visible as an invite-only beta until the Proposal lifecycle is ready.
 - Group mode choice is per Group only, never a global app-wide mode switch.
 - USDC is the only settlement asset in the MVP.
 - SOL is required for gas on Solana mainnet-beta.
 - Split Mode is the primary product path for the hackathon MVP.
 - Fund Mode remains separate from Split Mode and uses Treasury plus Proposal concepts, not direct Settlements.
-- LI.FI is a secondary recovery path for topping up a Member's Solana wallet with USDC when they cannot settle.
+- LI.FI is the primary sponsor support path for topping up a Member's Solana wallet with USDC when they cannot settle. The user-facing language should be `Add funds` or `Top up to settle`, not bridge jargon.
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 
@@ -151,7 +151,7 @@ Avoid: Optimized debts, minimum transfers
 > Domain expert: "No. Connect should restore the exact Group context, then show one obvious Join action like `Join Weekend Trip`."
 
 > Dev: "What should happen if I connect from plain `/groups` and I don't have any Groups yet?"
-> Domain expert: "Open Group creation immediately with Split Mode preselected. Fund Mode stays available as a per-Group switch inside create."
+> Domain expert: "Open Group creation immediately with Split Mode preselected. Keep Fund Mode visible as invite-only beta until treasury Proposal flows are complete."
 
 > Dev: "If Alice is owed money, should she get a wallet prompt to settle?"
 > Domain expert: "No. Only debtor Members with negative Balances see the Settle action. Creditors receive Receipts and updated balances."
