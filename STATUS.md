@@ -21,7 +21,9 @@ The product direction is now sharper:
 - Solana devnet is the active execution environment for now. Mainnet-beta remains a later target after devnet hardening and rehearsal.
 - **Identity:** Solana pubkey via `@solana/wallet-adapter-*` is the default. Optional **Phantom Connect** may be added alongside it (Portal App ID required); see ADR-0014 and [CONTEXT.md](./CONTEXT.md).
 - USDC is the only settlement asset in the MVP.
-- LI.FI and Zerion CLI are active sponsor tracks, but neither should displace the main Split Mode user path. **Zerion** is CLI/analysis, not a replacement for Solana wallet connect.
+- `LI.FI` is now the highest-priority sponsor support layer after Split Mode hardening. The intended user-facing language is `Add funds` or `Top up to settle`, not bridge jargon.
+- **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
+- Fund Mode is still incomplete. Treasury initialization and Contributions exist, but Proposal flows are not yet ready to be presented as fully shipped product behavior.
 
 ---
 
@@ -43,7 +45,7 @@ The product direction is now sharper:
 - `/groups` and `/groups/[id]` routes
 - Settlement receipt route at `/groups/[id]/settlements/[settlementId]`
 - Creator-owned Expense edit and delete flow with later-Settlement safety guard plus working equal, exact, percentage, and shares split inputs
-- Plain `/groups` zero-state Group creation flow with Split Mode preselected and Fund Mode available inside create
+- Plain `/groups` zero-state Group creation flow with Split Mode preselected and Fund Mode shown as invite-only beta inside create
 - Invite link, copy-link, native share, and QR join flow for Groups, plus QR scanning on `/groups`
 - Shareable Settlement Request Links that deep-link back into the Group and resolve debtor-to-creditor amounts from the live simplified settlement graph
 - Global profile display-name editing with reuse across Groups
@@ -51,7 +53,7 @@ The product direction is now sharper:
 - Responsive pass across landing, Group list, Group detail, Receipt, and modal surfaces
 - Consumer landing rewrite with product-first messaging, tighter CTAs, and consistent iconography
 - Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
-- Fund Mode vertical slice with Split Mode or Fund Mode Group creation, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
+- Fund Mode vertical slice with invite-only creation support, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
 - Wallet-signed session cookies for protected FundWise actions and browser-session verification
@@ -65,13 +67,14 @@ The product direction is now sharper:
 
 - The core web app flows exist and build successfully:
   landing, Group list, Group detail, Expense dialog, Settlement flow, and Receipt
+- `next build` is not yet a trustworthy readiness gate by itself because the repo currently ignores TypeScript and ESLint failures during build. Raw type-check and a working lint path still need to be restored before Split Mode should be called devnet-ready.
 - The responsive cleanup pass is in place across the main consumer surfaces
 - **In progress (session decisions, April 2026):**
   - **Context-aware header:** landing section nav (Modes / How it works / Features) on `/` only; interior routes get an app-style header without that marketing nav.
   - **Landing hero:** (shipped) secondary CTA points to `/#how` with copy “See how it works”; primary remains “Start splitting” → `/groups`.
   - **Wallet-first CTAs:** shipped. Landing and `/groups` now open the real wallet connect flow instead of acting like dead links, and the disconnected `/groups` entry keeps the primary connect action above the fold on mobile.
   - **Post-connect flow:** shipped for plain `/groups`, invite-linked Group entry, Settlement Request Links, and Receipt recovery. Wallet connect restores the Group or Receipt context first, then the app asks for the minimum next step: verify wallet, join Group, or settle.
-  - **Mode choice:** locked. Group creation defaults to Split Mode, with Fund Mode selectable per Group inside create. There is no global app-wide Split/Fund switch.
+  - **Mode choice:** locked. Group creation defaults to Split Mode, while Fund Mode stays visible as an invite-only beta inside create. There is no global app-wide Split/Fund switch.
   - **Invite and settlement deep links:** shipped. Invite links restore Group context and show an explicit `Join {GroupName}` action after connect and wallet verification; Settlement Request Links open the live settlement-ready state with current amount and ledger context, but never auto-send.
   - **Protected reads:** shipped. Connected wallets must verify the browser session before FundWise reveals private Group ledger state or Receipts.
   - **Frontend QA:** disconnected `/groups` and Group-not-found recovery states are manually checked at `375`, `768`, and `1280`; remaining frontend QA is on the extracted Split Mode, Fund Mode, sidebar, dialog, join, and Receipt surfaces.
@@ -81,23 +84,28 @@ The product direction is now sharper:
 
 ## Next active work
 
+- Restore real quality gates for Split Mode hardening:
+  make raw `tsc --noEmit` pass, restore working lint tooling, and remove the current habit of treating `next build` alone as proof of readiness
 - Devnet settlement UX hardening:
   insufficient-USDC states, insufficient-SOL-for-gas states, and clearer ATA-creation messaging during Settlement and Contribution flows
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, join, modal, and Receipt flows
+- LI.FI top-up / add-funds polish for EVM-first users:
+  tighten copy, handoff, and post-bridge return into the normal Settlement flow
 - Remove unused `group-showcase-section` after owner confirmation
 
 ## Foundation-first delivery order
 
-1. Finish backend trust hardening and verify every protected write / protected read path on devnet.
+1. Restore real quality gates and finish backend trust hardening for Split Mode on devnet.
 2. Heavily test the core web product on devnet:
    create, invite, join, Expense, Balance, Settlement, Receipt, Treasury init, and Contribution.
-3. Finish Fund Mode core behavior inside the app:
-   reimbursement-first Proposals, approvals, rejection, execution, proof, comments, and history.
-4. Add the missing Supabase data model for post-MVP Fund Mode and channel expansion:
+3. Finish the LI.FI support layer for EVM-first users:
+   `Add funds` / `Top up to settle`, route execution, and clean return into the same Group Settlement flow.
+4. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
+   wallet analysis, reminders, Telegram auth + bot + mini app, and later scoped agent access.
+5. Add the missing Supabase data model for later Fund Mode and channel expansion:
    Telegram-to-wallet links, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
-5. Only after the shared wallet-bound engine is stable, add secondary surfaces in order:
-   Telegram auth + bot + mini app -> agent skill / agent access -> wallet mini app -> native mobile app.
-6. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
+6. Return to Fund Mode proposals only after the Split Mode plus LI.FI story is coherent under devnet rehearsal.
+7. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
 
 ---
 
@@ -110,7 +118,7 @@ The product direction is now sharper:
 - Wallet connect should restore the exact intent the user came for instead of dropping them into a generic screen.
 - Plain `/groups` with no existing Groups should open Group creation immediately after connect.
 - Plain `/groups` with existing Groups should stay on the Group list after connect.
-- Group creation defaults to Split Mode; Fund Mode is selectable per Group inside create, not via a global app-wide toggle.
+- Group creation defaults to Split Mode; the public create flow keeps Fund Mode invite-only instead of broadly available, and there is no global app-wide toggle.
 - Join is invite-based and does not require creator approval in the MVP.
 - Invite links restore the exact Group context and present an explicit `Join {GroupName}` action after connect; they do not silently join on wallet connect.
 - Member identity is wallet-native with one global profile display name reused across Groups.
@@ -126,7 +134,8 @@ The product direction is now sharper:
 - Devnet is the active execution environment for now; mainnet-beta comes after devnet hardening and rehearsal evidence.
 - USDC is the only stablecoin in the MVP.
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
-- LI.FI is a secondary top-up path into the debtor's Solana wallet, not a direct cross-chain creditor settlement path.
+- LI.FI is the primary sponsor support layer after Split Mode hardening. It should be presented as `Add funds` / `Top up to settle`, not as a user-managed bridge workflow.
+- LI.FI still tops up the debtor's Solana wallet rather than paying the creditor directly across chains.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
 - Future expansion should keep one shared engine across surfaces: web first, then Telegram, agent, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
 - Telegram scope should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement remain app-and-wallet confirmed.
@@ -134,7 +143,7 @@ The product direction is now sharper:
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
 - Telegram bot attachment may be initiated by any Member, but each person must authenticate privately in DM before the bot acts for them in the shared chat.
 - The next delivery sequence is locked:
-  backend trust hardening -> on-chain / devnet hardening -> LI.FI and Zerion support -> isolated audits -> full rewiring -> end-to-end devnet testing
+  quality-gate restoration -> backend trust hardening -> on-chain / devnet hardening -> LI.FI support -> Zerion / Telegram support -> isolated audits -> full rewiring -> end-to-end devnet testing
 
 ### UX / frontend (locked with CONTEXT.md, April 2026)
 
@@ -146,6 +155,8 @@ The product direction is now sharper:
 
 ## Still pending for the primary MVP
 
+- Real quality gates for the devnet story:
+  raw TypeScript must pass, lint must be runnable again, and build success must stop depending on ignored TS / ESLint failures
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 - Devnet settlement and Contribution UX hardening with clear insufficient-USDC and insufficient-SOL states plus explicit token-account creation messaging
 - End-to-end devnet rehearsal of the protected write and protected read flow with real wallet signatures and receipts
@@ -164,7 +175,6 @@ The product direction is now sharper:
 
 ## Secondary work kept out of the main path
 
-- LI.FI recovery/top-up branch when a debtor lacks USDC on Solana
 - Telegram auth, Telegram bot, and Telegram mini app for existing group chats
 - Agent skill and scoped agent access for autonomous or assistant-driven FundWise actions
 - Wallet-embedded mini dapp distribution
@@ -182,11 +192,11 @@ The product direction is now sharper:
 
 ## Fund Mode status
 
-Fund Mode remains a real product mode, but it is no longer the primary demo path before the Split Mode MVP is polished.
+Fund Mode remains a real product mode, but it is no longer part of the devnet-ready definition for the hackathon story. The first requirement is a polished Split Mode web app, then a coherent LI.FI top-up path, then later support layers.
 
 **Already present:**
 
-- Group creation supports Fund Mode
+- Public Group creation keeps Fund Mode invite-only; internal testing can be re-enabled by listing wallets in `FUNDWISE_FUND_MODE_INVITE_WALLETS`
 - Treasury initialization exists
 - Contribution history and on-chain Treasury balance are surfaced
 
@@ -211,12 +221,12 @@ Fund Mode remains a real product mode, but it is no longer the primary demo path
 ## Resume point for the next session
 
 1. Harden devnet Settlement and Contribution UX around insufficient funds, SOL-for-gas guidance, and recipient / Treasury token-account creation messaging.
-2. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
-3. If `next dev` falls into missing `.next/server` chunk errors during browser QA again, clear `.next` and restart `pnpm dev` before debugging app code.
-4. Keep LI.FI top-up and Zerion CLI support aligned to the core Split Mode path without bloating the main settlement UX.
-5. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
-6. Return to Fund Mode proposals only after the Split Mode demo path is polished.
-7. After the shared web product is stable, design the Supabase schema changes for Telegram links, Proposal comments / proof, and later scoped agent access before building those surfaces.
+2. Restore raw TypeScript checking and working lint so `next build` is no longer hiding readiness issues.
+3. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
+4. If `next dev` falls into missing `.next/server` chunk errors during browser QA again, clear `.next` and restart `pnpm dev` before debugging app code.
+5. Turn the LI.FI top-up flow into a user-facing `Add funds` / `Top up to settle` path for EVM-first users without bloating the main settlement UX.
+6. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
+7. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
 
 ---
 
