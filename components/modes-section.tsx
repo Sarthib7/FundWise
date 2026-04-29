@@ -66,7 +66,7 @@ export function ModesSection() {
           <div className="absolute -top-[60px] -right-[60px] w-[200px] h-[200px] rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(42,79,168,0.08) 0%, transparent 70%)" }} aria-hidden="true" />
           <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-brand-fund-blue-border bg-brand-fund-blue-bg px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.04em] text-brand-fund-blue">
             <Landmark className="h-3.5 w-3.5" />
-            Fund Mode
+            Invite-only beta
           </div>
           <h3 className="mb-3 font-serif text-[24px] leading-[1.2] tracking-tight text-foreground sm:text-[26px]">
             Reverse Splitwise —
@@ -74,7 +74,7 @@ export function ModesSection() {
             pool first, spend after.
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed mb-7">
-            Everyone contributes upfront to a shared treasury. Spending requires a proposal and threshold approval — great for group trips, shared gifts, or recurring costs.
+            Everyone contributes upfront to a shared treasury. Treasury setup and Contributions exist today, but the public flow stays invite-only until proposal creation, approvals, and execution are ready for broader use.
           </p>
           <ul className="flex flex-col gap-2.5">
             <li className="flex items-center gap-2.5 text-[13px] text-brand-text-2">
@@ -89,14 +89,14 @@ export function ModesSection() {
                 <circle cx="9" cy="9" r="9" fill="#e8f0fb" />
                 <path d="M5.5 9l2.5 2.5 5-5" stroke="#2a4fa8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Proposal + threshold vote
+              Proposal flow still pending
             </li>
             <li className="flex items-center gap-2.5 text-[13px] text-brand-text-2">
               <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                 <circle cx="9" cy="9" r="9" fill="#e8f0fb" />
                 <path d="M5.5 9l2.5 2.5 5-5" stroke="#2a4fa8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Cross-chain contributions via LI.FI
+              LI.FI contribution path later
             </li>
             <li className="flex items-center gap-2.5 text-[13px] text-brand-text-2">
               <svg className="w-[18px] h-[18px] shrink-0" viewBox="0 0 18 18" fill="none" aria-hidden="true">
