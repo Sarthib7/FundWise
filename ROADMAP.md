@@ -49,16 +49,19 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 **Still to finish before the next full devnet rehearsal:**
 
+- Restore real quality gates:
+  make raw TypeScript pass, restore a working lint path, and stop treating `next build` alone as proof of readiness
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
 - Devnet settlement UX hardening around insufficient-USDC states, insufficient-SOL states, and clearer ATA-creation messaging
 - Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
 
-1. On-chain settlement hardening plus devnet wiring
+1. Restore quality gates plus on-chain settlement hardening and devnet wiring
 2. Manual QA and devnet rehearsal
-3. Sponsor-layer integrations
-4. Isolated audits and later mainnet readiness
+3. LI.FI support layer
+4. Zerion support layer
+5. Isolated audits and later mainnet readiness
 
 **Backend trust and mainnet-beta hardening inside Phase 1:**
 
@@ -89,7 +92,7 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 
 ### LI.FI support
 
-**Goal:** help a debtor arrive at Solana USDC when they do not already have enough funds on Solana.
+**Goal:** help an EVM-first debtor arrive at Solana USDC without needing to think in bridge jargon or manually reason about route details.
 
 **Shipped groundwork:**
 
@@ -99,11 +102,11 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 
 **Still to finish:**
 
-- Recovery/top-up branch when a debtor lacks USDC on Solana
+- `Add funds` / `Top up to settle` entry point when a debtor lacks USDC on Solana
 - Clean handoff back into the normal Group Settlement flow
 - Mainnet-safe copy and error states
 
-**Exit criterion:** a user with funds on another chain can top up into Solana USDC and then perform the normal Group Settlement flow.
+**Exit criterion:** a user with funds on another chain can connect their existing EVM wallet, top up into Solana USDC, and then complete the normal Group Settlement flow without learning the underlying route mechanics.
 
 ### Zerion support
 
@@ -125,7 +128,7 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 
 ## Phase 2 - Fund Mode MVP
 
-**Goal:** support pooled USDC Treasury flows without polluting the Split Mode product.
+**Goal:** support pooled USDC Treasury flows without polluting the Split Mode plus LI.FI hackathon story.
 
 **Already present in the repo:**
 
@@ -183,6 +186,7 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 2. LI.FI
 3. Zerion
 4. Eitherway, if time allows
+5. Fund Mode only as future-direction evidence unless the Proposal lifecycle is genuinely complete
 
 ---
 
