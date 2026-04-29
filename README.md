@@ -160,6 +160,12 @@ pnpm build
 pnpm lint
 ```
 
+Current verification state:
+
+- `pnpm exec tsc --noEmit` passes
+- `pnpm lint` passes
+- `pnpm build` passes
+
 ### Database Bootstrap
 
 The base FundWise tables now live in `supabase/migrations/`, not only in `supabase/schema.sql`.

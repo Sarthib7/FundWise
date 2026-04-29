@@ -49,15 +49,13 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 **Still to finish before the next full devnet rehearsal:**
 
-- Restore real quality gates:
-  make raw TypeScript pass, restore a working lint path, and stop treating `next build` alone as proof of readiness
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
 - Devnet settlement UX hardening around insufficient-USDC states, insufficient-SOL states, and clearer ATA-creation messaging
 - Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
 
-1. Restore quality gates plus on-chain settlement hardening and devnet wiring
+1. Keep quality gates green while finishing on-chain settlement hardening and devnet wiring
 2. Manual QA and devnet rehearsal
 3. LI.FI support layer
 4. Zerion support layer

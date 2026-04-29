@@ -149,7 +149,7 @@ Low fit for the current product direction.
 - Sign off responsive behavior across desktop and mobile
 - Tighten Receipt, join flow, and Group-page UX before backend and sponsor branches
 - Lock and implement post-connect behavior: invite links return to the same Group with a clear Join action, Settlement Request Links reopen the live settlement state, and plain `/groups` opens create immediately for zero-state users
-- The frontend pass is currently in progress locally and still needs validation before it is called done
+- The frontend pass is largely in place; remaining work is manual QA plus devnet settlement and receipt hardening
 
 ### Early May
 

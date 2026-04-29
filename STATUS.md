@@ -67,7 +67,7 @@ The product direction is now sharper:
 
 - The core web app flows exist and build successfully:
   landing, Group list, Group detail, Expense dialog, Settlement flow, and Receipt
-- `next build` is not yet a trustworthy readiness gate by itself because the repo currently ignores TypeScript and ESLint failures during build. Raw type-check and a working lint path still need to be restored before Split Mode should be called devnet-ready.
+- `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build` now pass again. The repo no longer needs to hide TypeScript or ESLint failures during build.
 - The responsive cleanup pass is in place across the main consumer surfaces
 - **In progress (session decisions, April 2026):**
   - **Context-aware header:** landing section nav (Modes / How it works / Features) on `/` only; interior routes get an app-style header without that marketing nav.
@@ -84,8 +84,6 @@ The product direction is now sharper:
 
 ## Next active work
 
-- Restore real quality gates for Split Mode hardening:
-  make raw `tsc --noEmit` pass, restore working lint tooling, and remove the current habit of treating `next build` alone as proof of readiness
 - Devnet settlement UX hardening:
   insufficient-USDC states, insufficient-SOL-for-gas states, and clearer ATA-creation messaging during Settlement and Contribution flows
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, join, modal, and Receipt flows
@@ -95,7 +93,7 @@ The product direction is now sharper:
 
 ## Foundation-first delivery order
 
-1. Restore real quality gates and finish backend trust hardening for Split Mode on devnet.
+1. Finish backend trust hardening and devnet UX hardening for Split Mode.
 2. Heavily test the core web product on devnet:
    create, invite, join, Expense, Balance, Settlement, Receipt, Treasury init, and Contribution.
 3. Finish the LI.FI support layer for EVM-first users:
@@ -143,7 +141,7 @@ The product direction is now sharper:
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
 - Telegram bot attachment may be initiated by any Member, but each person must authenticate privately in DM before the bot acts for them in the shared chat.
 - The next delivery sequence is locked:
-  quality-gate restoration -> backend trust hardening -> on-chain / devnet hardening -> LI.FI support -> Zerion / Telegram support -> isolated audits -> full rewiring -> end-to-end devnet testing
+  backend trust hardening -> on-chain / devnet hardening -> LI.FI support -> Zerion / Telegram support -> isolated audits -> full rewiring -> end-to-end devnet testing
 
 ### UX / frontend (locked with CONTEXT.md, April 2026)
 
@@ -155,8 +153,8 @@ The product direction is now sharper:
 
 ## Still pending for the primary MVP
 
-- Real quality gates for the devnet story:
-  raw TypeScript must pass, lint must be runnable again, and build success must stop depending on ignored TS / ESLint failures
+- Keep the devnet quality gates green:
+  `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
 - Devnet settlement and Contribution UX hardening with clear insufficient-USDC and insufficient-SOL states plus explicit token-account creation messaging
 - End-to-end devnet rehearsal of the protected write and protected read flow with real wallet signatures and receipts
