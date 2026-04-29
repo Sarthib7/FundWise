@@ -1,12 +1,8 @@
-import { Connection, PublicKey, Transaction } from "@solana/web3.js"
-import {
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction,
-  getAccount,
-} from "@solana/spl-token"
+import { Connection, PublicKey } from "@solana/web3.js"
+import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token"
 import type { Database } from "./database.types"
 import { getGroupDashboardSnapshot, type ActivityItem } from "./db"
+import { executeStablecoinTransfer } from "./stablecoin-transfer"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 
@@ -234,45 +230,12 @@ export async function executeSettlement(
   amount: number,
   mintAddress: string
 ): Promise<{ signature: string }> {
-  const mint = new PublicKey(mintAddress)
-  const fromPubkey = new PublicKey(fromAddress)
-  const toPubkey = new PublicKey(toAddress)
-
-  const fromAta = await getAssociatedTokenAddress(mint, fromPubkey)
-  const toAta = await getAssociatedTokenAddress(mint, toPubkey)
-
-  const transaction = new Transaction()
-
-  try {
-    await getAccount(connection, toAta)
-  } catch {
-    transaction.add(
-      createAssociatedTokenAccountInstruction(fromPubkey, toAta, toPubkey, mint)
-    )
-  }
-
-  transaction.add(
-    createTransferInstruction(fromAta, toAta, fromPubkey, BigInt(amount))
-  )
-
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-  transaction.recentBlockhash = blockhash
-  transaction.feePayer = fromPubkey
-
-  let signature: string
-  if (fromWallet.signAndSendTransaction) {
-    signature = await fromWallet.signAndSendTransaction(transaction)
-  } else if (fromWallet.signTransaction) {
-    const signed = await fromWallet.signTransaction(transaction)
-    signature = await connection.sendRawTransaction(signed.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: "confirmed",
-    })
-  } else {
-    throw new Error("Wallet does not support transaction signing")
-  }
-
-  await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed")
+  const { signature } = await executeStablecoinTransfer(fromWallet, {
+    fromAddress,
+    toAddress,
+    amount,
+    mintAddress,
+  })
   return { signature }
 }
 

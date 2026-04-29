@@ -22,6 +22,7 @@ import {
   getAssociatedTokenAddress,
 } from "@solana/spl-token"
 import * as multisig from "@sqds/multisig"
+import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
 
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
 
@@ -263,72 +264,15 @@ export async function contributeStablecoinToTreasury(
   mintAddress: string,
   amount: number
 ): Promise<{ signature: string }> {
-  try {
-    const contributorPubkey = new PublicKey(contributorAddress)
-    const treasuryPubkey = new PublicKey(treasuryAddress)
-    const mintPubkey = new PublicKey(mintAddress)
+  const { signature } = await executeStablecoinTransfer(wallet, {
+    fromAddress: contributorAddress,
+    toAddress: treasuryAddress,
+    mintAddress,
+    amount,
+    recipientOwnerOffCurve: true,
+  })
 
-    const contributorAta = await getAssociatedTokenAddress(mintPubkey, contributorPubkey)
-    const treasuryAta = await getAssociatedTokenAddress(mintPubkey, treasuryPubkey, true)
-
-    const transaction = new Transaction()
-
-    try {
-      await getAccount(connection, treasuryAta)
-    } catch {
-      transaction.add(
-        createAssociatedTokenAccountInstruction(
-          contributorPubkey,
-          treasuryAta,
-          treasuryPubkey,
-          mintPubkey
-        )
-      )
-    }
-
-    transaction.add(
-      createTransferInstruction(
-        contributorAta,
-        treasuryAta,
-        contributorPubkey,
-        BigInt(amount)
-      )
-    )
-
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-    transaction.recentBlockhash = blockhash
-    transaction.feePayer = contributorPubkey
-
-    let signature: string
-
-    if (wallet.sendTransaction) {
-      signature = await wallet.sendTransaction(transaction, connection)
-    } else if (wallet.signTransaction) {
-      const signedTransaction = await wallet.signTransaction(transaction)
-      signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
-      })
-    } else {
-      throw new Error("Wallet does not support token transfer signing")
-    }
-
-    const confirmation = await connection.confirmTransaction(
-      { signature, blockhash, lastValidBlockHeight },
-      "confirmed"
-    )
-
-    if (confirmation.value.err) {
-      throw new Error("Contribution failed: " + JSON.stringify(confirmation.value.err))
-    }
-
-    return { signature }
-  } catch (error) {
-    throw new Error(
-      "Failed to contribute stablecoins to treasury: " +
-        (error instanceof Error ? error.message : String(error))
-    )
-  }
+  return { signature }
 }
 
 export async function getTreasuryStablecoinBalance(

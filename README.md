@@ -181,6 +181,7 @@ supabase db push --include-all
 - Solana devnet is the active execution environment for now.
 - Mainnet-beta comes later, after the devnet hardening and rehearsal path is finished.
 - Members need SOL for gas even though Settlements use USDC.
+- FundWise now preflights stablecoin transfers before the wallet prompt so users see insufficient-USDC, insufficient-SOL, and token-account-creation guidance earlier.
 - The current execution order is:
   devnet settlement hardening -> manual QA -> LI.FI top-up / add-funds flow -> Zerion and Telegram support layers -> later Fund Mode proposals
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.

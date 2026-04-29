@@ -27,6 +27,11 @@ import {
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
+import {
+  formatSolAmountFromLamports,
+  previewStablecoinTransfer,
+  type StablecoinTransferPreview,
+} from "@/lib/stablecoin-transfer"
 import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
 import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
 import {
@@ -248,6 +253,73 @@ export function useGroupDashboard() {
   const viewerDisplayName =
     members.find((member) => member.wallet === walletAddress)?.display_name || ""
 
+  const describeStablecoinFundingGap = useCallback(
+    ({
+      amount,
+      preview,
+      actionLabel,
+    }: {
+      amount: number
+      preview: StablecoinTransferPreview
+      actionLabel: string
+    }) => {
+      const shortfall = Math.max(0, amount - preview.sourceTokenBalance)
+
+      if (preview.sourceTokenAccountExists) {
+        if (lifiSupported) {
+          return `You need ${formatTokenAmount(shortfall)} more ${tokenName} in your Solana wallet before this ${actionLabel}. Use "Bridge To My Wallet" in the sidebar, then try again.`
+        }
+
+        return `You need ${formatTokenAmount(shortfall)} more ${tokenName} in this Solana wallet before this ${actionLabel}.`
+      }
+
+      if (lifiSupported) {
+        return `This wallet does not hold ${tokenName} on Solana yet. Use "Bridge To My Wallet" in the sidebar first, then retry the ${actionLabel}.`
+      }
+
+      return `This wallet does not hold ${tokenName} on ${clusterLabel}. Add ${tokenName} to this Solana wallet first, then retry the ${actionLabel}.`
+    },
+    [clusterLabel, lifiSupported, tokenName]
+  )
+
+  const describeSolFeeGap = useCallback(
+    ({
+      preview,
+      destinationLabel,
+    }: {
+      preview: StablecoinTransferPreview
+      destinationLabel: string
+    }) => {
+      const currentSol = formatSolAmountFromLamports(preview.walletSolBalanceLamports)
+      const requiredSol = formatSolAmountFromLamports(preview.estimatedTotalSolLamports)
+      const ataMessage = preview.requiresDestinationAtaCreation
+        ? ` This transaction also needs to create ${destinationLabel}'s ${tokenName} token account once.`
+        : ""
+
+      return `You have about ${currentSol} SOL available, but this transaction needs about ${requiredSol} SOL for fees.${ataMessage}`
+    },
+    [tokenName]
+  )
+
+  const maybeExplainAtaCreation = useCallback(
+    ({
+      preview,
+      destinationLabel,
+    }: {
+      preview: StablecoinTransferPreview
+      destinationLabel: string
+    }) => {
+      if (!preview.requiresDestinationAtaCreation) {
+        return
+      }
+
+      toast.info(`FundWise will create ${destinationLabel}'s ${tokenName} token account in this transaction.`, {
+        description: `Expect about ${formatSolAmountFromLamports(preview.estimatedTotalSolLamports)} SOL total for rent and network fees.`,
+      })
+    },
+    [tokenName]
+  )
+
   const connectWallet = useCallback(() => {
     setWalletModalVisible(true)
   }, [setWalletModalVisible])
@@ -370,6 +442,39 @@ export function useGroupDashboard() {
         throw new Error("No wallet found")
       }
 
+      const preview = await previewStablecoinTransfer({
+        fromAddress: walletAddress,
+        toAddress: transfer.to,
+        amount: transfer.amount,
+        mintAddress: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
+      })
+
+      if (!preview.sourceTokenAccountExists || preview.sourceTokenBalance < transfer.amount) {
+        throw new Error(
+          describeStablecoinFundingGap({
+            amount: transfer.amount,
+            preview,
+            actionLabel: "Settlement",
+          })
+        )
+      }
+
+      if (preview.walletSolBalanceLamports < preview.estimatedTotalSolLamports) {
+        throw new Error(
+          describeSolFeeGap({
+            preview,
+            destinationLabel:
+              memberNameByWallet.get(transfer.to) || shortWallet(transfer.to),
+          })
+        )
+      }
+
+      maybeExplainAtaCreation({
+        preview,
+        destinationLabel:
+          memberNameByWallet.get(transfer.to) || shortWallet(transfer.to),
+      })
+
       const { signature } = await executeSettlement(
         signingWallet,
         walletAddress,
@@ -398,7 +503,19 @@ export function useGroupDashboard() {
       setIsSettling(false)
       setSettlingTransfer(null)
     }
-  }, [connected, ensureWalletWriteAccess, group, groupId, router, wallet?.adapter, walletAddress])
+  }, [
+    connected,
+    describeSolFeeGap,
+    describeStablecoinFundingGap,
+    ensureWalletWriteAccess,
+    group,
+    groupId,
+    maybeExplainAtaCreation,
+    memberNameByWallet,
+    router,
+    wallet?.adapter,
+    walletAddress,
+  ])
 
   const handleDeleteExpense = useCallback(async (expense: ActivityExpense) => {
     if (expense.created_by !== walletAddress) {
@@ -508,6 +625,39 @@ export function useGroupDashboard() {
       }
 
       const tokenAmount = parseTokenAmount(contributionAmount)
+
+      const preview = await previewStablecoinTransfer({
+        fromAddress: walletAddress,
+        toAddress: group.treasury_address,
+        amount: tokenAmount,
+        mintAddress: group.stablecoin_mint,
+        recipientOwnerOffCurve: true,
+      })
+
+      if (!preview.sourceTokenAccountExists || preview.sourceTokenBalance < tokenAmount) {
+        throw new Error(
+          describeStablecoinFundingGap({
+            amount: tokenAmount,
+            preview,
+            actionLabel: "Contribution",
+          })
+        )
+      }
+
+      if (preview.walletSolBalanceLamports < preview.estimatedTotalSolLamports) {
+        throw new Error(
+          describeSolFeeGap({
+            preview,
+            destinationLabel: "the Treasury",
+          })
+        )
+      }
+
+      maybeExplainAtaCreation({
+        preview,
+        destinationLabel: "the Treasury",
+      })
+
       const { signature } = await contributeStablecoinToTreasury(
         signingWallet,
         walletAddress,
@@ -528,12 +678,28 @@ export function useGroupDashboard() {
       await loadData()
       return true
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to contribute")
+      if (error instanceof Error && error.message === "TRANSACTION_CANCELLED") {
+        toast.info("Transaction cancelled")
+      } else {
+        toast.error(error instanceof Error ? error.message : "Failed to contribute")
+      }
       return false
     } finally {
       setIsContributing(false)
     }
-  }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, wallet?.adapter, walletAddress])
+  }, [
+    connected,
+    describeSolFeeGap,
+    describeStablecoinFundingGap,
+    ensureWalletWriteAccess,
+    group,
+    groupId,
+    isMember,
+    loadData,
+    maybeExplainAtaCreation,
+    wallet?.adapter,
+    walletAddress,
+  ])
 
   const clearSettlementRequest = useCallback(() => {
     router.replace(`/groups/${groupId}`, { scroll: false })

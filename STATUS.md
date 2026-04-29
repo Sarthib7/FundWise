@@ -55,6 +55,7 @@ The product direction is now sharper:
 - Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
 - Fund Mode vertical slice with invite-only creation support, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
+- Stablecoin transfer preflight for Settlements and Contributions: balance checks before wallet prompt, explicit SOL-for-gas guidance, and one-time token-account creation messaging
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
 - Wallet-signed session cookies for protected FundWise actions and browser-session verification
 - Authenticated server-side ledger mutations for Groups, Members, Expenses, Settlements, Contributions, profile updates, and Treasury persistence
@@ -156,7 +157,8 @@ The product direction is now sharper:
 - Keep the devnet quality gates green:
   `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-- Devnet settlement and Contribution UX hardening with clear insufficient-USDC and insufficient-SOL states plus explicit token-account creation messaging
+- Devnet settlement and Contribution rehearsal on real wallets after the new preflight checks:
+  verify insufficient-USDC, insufficient-SOL, and recipient / Treasury token-account creation messaging against actual wallet prompts
 - End-to-end devnet rehearsal of the protected write and protected read flow with real wallet signatures and receipts
 - Later mainnet checklist work:
   supported mainnet USDC mint wiring, production RPC choice, and final mainnet-beta readiness review
