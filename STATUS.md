@@ -1,6 +1,6 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-04-28
+**Snapshot date:** 2026-04-29
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 
@@ -21,8 +21,11 @@ The product direction is now sharper:
 - Solana devnet is the active execution environment for now. Mainnet-beta remains a later target after devnet hardening and rehearsal.
 - **Identity:** Solana pubkey via `@solana/wallet-adapter-*` is the default. Optional **Phantom Connect** may be added alongside it (Portal App ID required); see ADR-0014 and [CONTEXT.md](./CONTEXT.md).
 - USDC is the only settlement asset in the MVP.
+- Expenses may later be entered in other Source Currencies, but they must convert into a stored USD/USDC ledger value using an Exchange Rate Snapshot before Balance and Settlement math runs.
+- Receipt-photo upload belongs in the product plan as Expense Proof, stored off-chain as Expense metadata.
 - `LI.FI` is now the highest-priority sponsor support layer after Split Mode hardening. The intended user-facing language is `Add funds` or `Top up to settle`, not bridge jargon.
 - **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
+- The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
 - Fund Mode is still incomplete. Treasury initialization and Contributions exist, but Proposal flows are not yet ready to be presented as fully shipped product behavior.
 
 ---
@@ -100,9 +103,9 @@ The product direction is now sharper:
 3. Finish the LI.FI support layer for EVM-first users:
    `Add funds` / `Top up to settle`, route execution, and clean return into the same Group Settlement flow.
 4. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
-   wallet analysis, reminders, Telegram auth + bot + mini app, and later scoped agent access.
+   wallet analysis, reminders, FundWise Agent, Telegram auth + bot + mini app, and later scoped agent access.
 5. Add the missing Supabase data model for later Fund Mode and channel expansion:
-   Telegram-to-wallet links, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
+   Telegram-to-wallet links, Expense Proof attachments, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
 6. Return to Fund Mode proposals only after the Split Mode plus LI.FI story is coherent under devnet rehearsal.
 7. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
 
@@ -132,11 +135,15 @@ The product direction is now sharper:
 - Each suggested edge in the simplified settlement graph maps to one debtor-to-creditor transfer.
 - Devnet is the active execution environment for now; mainnet-beta comes after devnet hardening and rehearsal evidence.
 - USDC is the only stablecoin in the MVP.
+- Multi-currency Expense entry is allowed as a planned feature only if every Expense stores the Source Currency, original amount, converted USD/USDC ledger amount, and Exchange Rate Snapshot used at create or edit time.
+- Historical Balances should not float with live exchange-rate changes. Live exchange values are for quoting at entry/edit time, not for silently repricing old Expenses.
+- Expense Proof should support one lightweight receipt photo / PDF upload or proof link per Expense.
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
 - LI.FI is the primary sponsor support layer after Split Mode hardening. It should be presented as `Add funds` / `Top up to settle`, not as a user-managed bridge workflow.
 - LI.FI still tops up the debtor's Solana wallet rather than paying the creditor directly across chains.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
-- Future expansion should keep one shared engine across surfaces: web first, then Telegram, agent, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
+- Future expansion should keep one shared engine across surfaces: web first, then FundWise Agent, Telegram, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
+- The FundWise Agent name should cover Telegram bot / mini app, scoped agent access, reminders, draft Expense creation, proof upload, and wallet-aware suggestions.
 - Telegram scope should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement remain app-and-wallet confirmed.
 - Telegram identity should stay simple: one Telegram account links to one active wallet at a time, with an explicit relink flow later if needed.
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
@@ -157,6 +164,10 @@ The product direction is now sharper:
 - Keep the devnet quality gates green:
   `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
+- Product/design pass for multi-currency Expense entry:
+  Source Currency selector, current exchange-rate quote, visible converted USD/USDC amount, stored Exchange Rate Snapshot, and edit behavior
+- Product/design pass for Expense Proof upload:
+  receipt photo / PDF upload, preview, storage limits, and access rules
 - Devnet settlement and Contribution rehearsal on real wallets after the new preflight checks:
   verify insufficient-USDC, insufficient-SOL, and recipient / Treasury token-account creation messaging against actual wallet prompts
 - End-to-end devnet rehearsal of the protected write and protected read flow with real wallet signatures and receipts
@@ -176,6 +187,7 @@ The product direction is now sharper:
 ## Secondary work kept out of the main path
 
 - Telegram auth, Telegram bot, and Telegram mini app for existing group chats
+- FundWise Agent for Telegram, reminders, draft Expenses, proof upload, wallet analysis, and scoped assistant-driven FundWise actions
 - Agent skill and scoped agent access for autonomous or assistant-driven FundWise actions
 - Wallet-embedded mini dapp distribution
 - Native mobile app
@@ -183,7 +195,7 @@ The product direction is now sharper:
   gas / fee abstraction, automatic bridging and top-up paths, and easier web2 onboarding / offboarding into stablecoin balances
 - Long-range fiat bridge research:
   evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; treat Altitude as inspiration for stablecoin account UX rather than the first direct consumer integration target
-- AI bill parsing or natural-language expense entry
+- AI bill parsing beyond basic receipt-photo upload, or natural-language expense entry beyond draft-safe FundWise Agent flows
 - **FundWise-native** email/password or social identity as the primary account system (optional Phantom Connect for wallet onboarding is a separate, additive path; see ADR-0014)
 - Gas abstraction / gasless settlement
 - Multi-stablecoin or multi-chain primary settlement

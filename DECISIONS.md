@@ -28,3 +28,6 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-012 → [0012-require-authenticated-and-verified-ledger-writes-before-mainnet.md](./docs/adr/0012-require-authenticated-and-verified-ledger-writes-before-mainnet.md)
 - ADR-013 → [0013-store-global-profile-display-names-separately.md](./docs/adr/0013-store-global-profile-display-names-separately.md)
 - ADR-014 → [0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md)
+- ADR-015 → [0015-wallet-signed-session-cookies-for-server-mutations.md](./docs/adr/0015-wallet-signed-session-cookies-for-server-mutations.md)
+- ADR-016 → [0016-prioritize-split-mode-and-hide-cross-chain-routing.md](./docs/adr/0016-prioritize-split-mode-and-hide-cross-chain-routing.md)
+- ADR-017 → [0017-snapshot-source-currency-expenses-into-usdc-ledger.md](./docs/adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md)

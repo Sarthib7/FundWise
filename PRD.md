@@ -2,19 +2,19 @@
 
 **Owner:** Sarthi
 **Status:** Draft v0.2
-**Last updated:** 2026-04-27
+**Last updated:** 2026-04-29
 
 ## Problem Statement
 
 Shared-expense apps solve the bookkeeping problem, but not the settlement problem. Friends can see who owes whom, yet they still have to chase each other across messaging apps and payment rails to actually get paid. Crypto users face an extra layer of friction: balances may sit on the wrong chain, wallet UX is confusing for newcomers, and a settlement flow becomes fragile if it asks users to choose assets, chains, or custom amounts at the moment of payment.
 
-FundWise should make shared expenses feel like Splitwise, but with actual settlement finality. The MVP needs to make one thing work extremely well: a private Group where Members log Expenses, see live Balances, and settle exact USDC amounts on Solana with a clean Receipt.
+FundWise should make shared expenses feel like Splitwise, but with actual settlement finality. The MVP needs to make one thing work extremely well: a private Group where Members log Expenses, see live Balances, and settle exact USDC amounts on Solana with a clean Receipt. Members should be able to enter an Expense in the currency that was actually paid, while FundWise converts it into a stable USD/USDC ledger value before Balance and Settlement math runs.
 
 ## Solution
 
 FundWise is a web app with wallet-native identity and two product modes:
 
-- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with Splitwise-style split methods, compute live net Balances, and settle with on-chain USDC transfers on Solana.
+- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with Splitwise-style split methods, attach optional Expense Proof, compute live net Balances, and settle with on-chain USDC transfers on Solana.
 - Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. This remains part of the product direction, but it is not the primary hackathon demo path.
 
 For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users top up a debtor's Solana wallet with USDC through `Add funds` / `Top up to settle` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
@@ -27,13 +27,14 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Wallet-native identity first. The connected Solana wallet is the Member identity key.
 - Preserve intent after wallet connect. Connect should return the user to the exact Group, Settlement Request, or create flow they came for.
 - One settlement asset. USDC is the only stablecoin in the MVP.
+- Multi-currency Expense entry, single-currency ledger. Members may enter what was paid in another currency, but the saved Expense must include the converted USD/USDC ledger amount and exchange-rate snapshot used for Balance math.
 - Off-chain metadata, on-chain money. Expenses and Group state live off-chain; Settlements and Contributions move money on-chain.
 - Current state over stale links. Settlement links resolve against the debtor's current Balance when opened.
 - Exact settlement over flexible settlement. The primary flow is settle the exact owed amount in one go.
 - Hide routing complexity. Users should think in terms of `Add funds` or `Top up to settle`, not bridge selection and multi-step route logic.
 - Activity feed, not chat. The Group timeline should explain the ledger without becoming a general messaging product. If Fund Mode needs discussion later, prefer Proposal-scoped comments over full Group chat.
 - Sponsor integrations must support the main flow, not redefine it.
-- Distribution expansion should reuse the same wallet-native ledger model across web, Telegram, agent, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
+- Distribution expansion should reuse the same wallet-native ledger model across web, FundWise Agent, Telegram, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
 - The long-range end state is a stablecoin-first product where gas, fees, and bridging are abstracted away as much as possible for the end user, while the core ledger still stays wallet-verifiable underneath.
 
 ## User Stories
@@ -73,15 +74,20 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 33. As a debtor who connected from a Settlement Request Link, I want to land directly in the live settlement-ready state with the current amount, ledger context, and history, so that I can review before signing.
 34. As a first-time connected user with no existing Groups, I want Group creation to open immediately with Split Mode preselected, so that I can start quickly without an extra tap.
 35. As a Group creator, I want to switch the create flow from Split Mode to Fund Mode per Group, so that I can choose the right Group type without changing the whole app.
+36. As a Member, I want to enter an Expense in the currency that was actually paid, so that I do not have to manually convert real-world spending before logging it.
+37. As a Member, I want FundWise to convert that Expense into the USD/USDC ledger value using a current exchange-rate quote, so that Balances and Settlements stay comparable across currencies.
+38. As a Member, I want the exchange rate used for an Expense to be saved with the Expense, so that historical Balances do not change unexpectedly when market rates move later.
+39. As a Member, I want to upload a receipt photo or proof file when I create an Expense, so that other Members can verify what was paid.
+40. As a Member, I want the later FundWise Agent to work from Telegram and other assistant surfaces, so that I can draft Expenses, attach proof, get reminders, and review Group state without creating a separate ledger.
 
 ## Implementation Decisions
 
 - The product has two modes, but the immediate MVP path is Split Mode.
 - The web app is the only required first-class surface for the MVP.
-- Post-MVP distribution should expand in layers: web app first, then Telegram bot / mini app and agent surfaces, then wallet mini dapp, and finally a native mobile app.
+- Post-MVP distribution should expand in layers: web app first, then FundWise Agent surfaces such as Telegram bot / mini app, then wallet mini dapp, and finally a native mobile app.
 - Identity is **Solana wallet address** in the MVP. No FundWise email/password and no separate “app account” tied to email as the primary key.
-- Telegram auth, if added later, should be a convenience and routing layer around existing groups, not a replacement for wallet-native Member identity.
-- Telegram surfaces may handle read-only, draft-safe, comment, and history actions, but all approvals, executions, and money-moving actions must bounce back into the app for wallet confirmation.
+- Telegram auth, if added later, should be a convenience and routing layer around existing Groups, not a replacement for wallet-native Member identity.
+- Telegram surfaces should be described as FundWise Agent channels. They may handle read-only, draft-safe, comment, proof upload, reminder, and history actions, but all approvals, executions, and money-moving actions must bounce back into the app for wallet confirmation.
 - One Telegram account should map to one active wallet at a time. If relinking is allowed later, it should be an explicit flow, not an implicit multi-wallet identity model.
 - One Telegram group chat should map to one FundWise Group at a time. If multi-Group switching is allowed later, it should be an explicit chat-level flow rather than the default.
 - Any Group Member may add the bot to a Telegram chat, but each person must authenticate one-on-one with the bot in DM before the bot reads or drafts on their behalf.
@@ -97,9 +103,12 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Invite links should restore the exact Group context after connect and present an explicit `Join {GroupName}` action; the app should not silently join on wallet connect.
 - Creator approval, Group roles, and membership workflows beyond simple join/leave are out of the MVP.
 - The MVP settlement asset is USDC only.
+- Expense entry may support multiple Source Currencies, but this does not change the settlement asset. Every saved Expense must have a USD/USDC ledger amount.
+- Exchange-rate conversion should use a current quote at Expense create or edit time, then store an Exchange Rate Snapshot. Historical Balance math must use the stored snapshot instead of continuously repricing old Expenses. See [docs/adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md](./docs/adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md).
 - Mainnet-beta is the product target. Devnet is the test and rehearsal environment.
 - SOL remains necessary for gas in the MVP.
 - Expenses are off-chain records stored in the app data layer.
+- Expense Proof uploads are off-chain metadata attached to Expenses. They may be images, PDFs, or external proof links, and should not be confused with Settlement Receipts.
 - Settlements are on-chain Solana USDC transfers.
 - The Group ledger is netted at the Group level, not at the individual Expense level.
 - Members settle current net Balance, not a custom amount and not an Expense-by-Expense bill.
@@ -117,7 +126,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Expense changes are blocked when later Settlements would make the ledger unsafe.
 - The Group timeline is an Activity Feed, not a chat system.
 - Fund Mode may add Proposal-scoped comments plus lightweight proof attachments later, but not a general Group-wide chat system in the MVP shape.
-- The core modules to deepen are profile identity and join flow, Group and membership ledger, Expense entry and split validation, balance computation and simplified settlement graph, settlement orchestration and receipt generation, and sponsor integration adapters for LI.FI and Zerion.
+- The core modules to deepen are profile identity and join flow, Group and membership ledger, Expense entry and split validation, Source Currency conversion and Exchange Rate Snapshots, Expense Proof storage, balance computation and simplified settlement graph, settlement orchestration and receipt generation, and sponsor integration adapters for LI.FI and Zerion.
 - LI.FI is the primary sponsor support adapter after Split Mode hardening, focused on topping up the debtor's Solana wallet with USDC through hidden-route `Add funds` / `Top up to settle` UX.
 - Direct cross-chain creditor settlement is out of scope for the MVP.
 - Zerion is a secondary intelligence layer via **Zerion CLI** and related analysis, not a user-facing “connect with Zerion” wallet SDK for the core app.
@@ -128,6 +137,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Good tests should validate observable behavior, not implementation details.
 - The highest-value tests are the ones that prove the ledger stays correct when users do normal and error-prone actions.
 - Priority unit tests should cover split validation, balance computation, rounding behavior, and simplified settlement graph outputs.
+- Priority conversion tests should cover Source Currency conversion, Exchange Rate Snapshot persistence, rounding, and the rule that historical Expenses do not reprice automatically.
 - Priority integration tests should cover Expense create/edit/delete guards, Settlement orchestration, Receipt generation, and leave-Group zero-balance enforcement.
 - Sponsor integration tests should mock LI.FI and Zerion boundaries and assert the app's decisions, not vendor SDK internals.
 - Wallet and token transfer tests should cover insufficient-USDC, insufficient-SOL, and recipient token-account creation decisions.
@@ -141,8 +151,8 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Wallet-embedded mini dapp as a first-class product surface in the MVP
 - Native mobile app as a first-class product surface in the MVP
 - Real-time Group-wide chat
-- AI bill parsing
-- Natural-language Expense entry
+- AI bill parsing beyond basic receipt-photo upload
+- Natural-language Expense entry beyond draft-safe FundWise Agent flows
 - Email-centric or non-wallet identity as the primary onboarding path
 - Mandatory embedded-only wallets (all users must use a single vendor embedded wallet) in the MVP
 - Gasless settlement in the MVP
@@ -158,7 +168,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 ## Further Notes
 
-- The main hackathon story should stay simple: private Group creation, structured Expense entry, live Balance view, one-click USDC settlement, and a clear Receipt.
+- The main hackathon story should stay simple: private Group creation, structured Expense entry with optional receipt photo and currency conversion, live Balance view, one-click USDC settlement, and a clear Receipt.
 - Sponsor integrations should be framed as supporting layers. LI.FI helps when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
 - Fund Mode is still part of the long-term product and should remain documented as Treasury plus Proposal functionality, but it should not displace Split Mode as the MVP story.
-- Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, and broader distribution surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.
+- Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, FundWise Agent distribution surfaces, and broader mobile surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.

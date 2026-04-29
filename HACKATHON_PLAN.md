@@ -1,7 +1,7 @@
 # FundWise - Hackathon Track Plan
 
 **Owner:** Sarthi
-**Last updated:** 2026-04-26
+**Last updated:** 2026-04-29
 **Hackathon:** Colosseum Frontier
 **Primary submission deadline:** May 11, 2026
 **Demo Day:** May 12, 2026
@@ -32,6 +32,7 @@ Everything else is a supporting layer:
 
 - `LI.FI` helps an EVM-first debtor arrive at Solana USDC if their funds are on another chain, ideally through a simple `Add funds` / `Top up to settle` experience.
 - `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
+- `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
 - `Fund Mode` broadens the product story, but it is incomplete and should not be presented as the current mainline product path.
 
 ---
@@ -51,6 +52,8 @@ Everything else is a supporting layer:
 
 - Smooth web-app UX
 - Wallet connect that preserves context instead of dropping users into a generic app state
+- Expense entry that can preserve the original Source Currency while converting into a stable USD/USDC ledger value
+- Optional receipt-photo upload as Expense Proof
 - Exact-amount Settlement
 - Clear Receipt
 - Mobile-friendly flow
@@ -138,6 +141,7 @@ Low fit for the current product direction.
 - Suggest next action
 - Keep core settlement still wallet-native and user-authorized
 - Use Zerion CLI as the implementation surface for the sponsor-track demo
+- Frame assistant behavior as FundWise Agent capability, not a Telegram-specific product
 
 ---
 
@@ -178,6 +182,9 @@ Low fit for the current product direction.
 - Say `Settlement`, not `payment`, in Split Mode
 - Say `Contribution` and `Proposal` only for Fund Mode
 - Say `USDC` clearly and often in the MVP story
+- Say `Source Currency` for what someone paid in, and `USDC` for the ledger / Settlement value
+- Say `Expense Proof` for uploaded merchant receipts; reserve `Receipt` for Settlement confirmation
+- Say `FundWise Agent`, not `Telegram agent`
 - Say `web app first`
 - Say `wallet-native`
 
@@ -193,6 +200,7 @@ For future expansion after the core demo path is solid:
 
 - Telegram is a strong distribution layer because the real groups already exist there, but it should call into the same FundWise wallet-bound engine rather than becoming a separate ledger product.
 - Agent skills and personal-agent access are promising only if they operate through scoped capabilities instead of broad raw API keys.
+- FundWise Agent can eventually support Telegram reminders, draft-safe Expense creation, proof upload, and Group summaries, but money movement still returns to app-and-wallet confirmation.
 - Wallet mini apps and native mobile should come after the shared engine is stable enough to support multiple clients cleanly.
 - Stablecoin-only UX with fee abstraction, smoother on/off ramps, and web2-friendly funding rails is a strong long-range direction, but it should stay out of the core hackathon pitch until the main crypto-native path is solid.
 

@@ -44,6 +44,8 @@ The current MVP path is:
 - Invite link or QR join flow with an explicit `Join {GroupName}` confirmation after connect
 - Settlement Request Links open the live settleable state and context, but never auto-send a Settlement
 - USDC-only settlement asset
+- Planned multi-currency Expense entry converts a Source Currency amount into a stored USD/USDC ledger value using an Exchange Rate Snapshot
+- Planned Expense Proof upload lets Members attach a merchant receipt photo, PDF, or proof link to an Expense
 - Activity Feed, not chat
 - Current net Group Balance settlement, not per-Expense settlement
 
@@ -59,7 +61,8 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 ### Sponsor layers
 
 - `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users top up into Solana USDC through an `Add funds` / `Top up to settle` flow without needing to understand the underlying route details.
-- `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future agent flows.
+- `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
+- **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.
 
@@ -183,7 +186,9 @@ supabase db push --include-all
 - Members need SOL for gas even though Settlements use USDC.
 - FundWise now preflights stablecoin transfers before the wallet prompt so users see insufficient-USDC, insufficient-SOL, and token-account-creation guidance earlier.
 - The current execution order is:
-  devnet settlement hardening -> manual QA -> LI.FI top-up / add-funds flow -> Zerion and Telegram support layers -> later Fund Mode proposals
+  devnet settlement hardening -> manual QA -> LI.FI top-up / add-funds flow -> Zerion and FundWise Agent / Telegram support layers -> later Fund Mode proposals
+- Planned Expense entry expansion: allow Source Currency input, show a current exchange-rate quote, save the Exchange Rate Snapshot, and keep Balances / Settlements in the converted USD/USDC ledger value.
+- Planned proof expansion: allow one lightweight receipt photo / PDF upload or proof link on an Expense.
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
 
 ## License
