@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Html5Qrcode } from "html5-qrcode"
@@ -18,17 +18,20 @@ export function QrScannerDialog({ open, onOpenChange, onScan }: QrScannerDialogP
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const qrCodeRegionId = "qr-reader"
 
-  useEffect(() => {
-    if (open && !isScanning) {
-      startScanning()
+  const stopScanning = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop()
+        scannerRef.current.clear()
+        scannerRef.current = null
+      } catch (err) {
+        console.error("[FundWise] Error stopping scanner:", err)
+      }
     }
+    setIsScanning(false)
+  }, [])
 
-    return () => {
-      stopScanning()
-    }
-  }, [open])
-
-  const startScanning = async () => {
+  const startScanning = useCallback(async () => {
     try {
       setError(null)
       setIsScanning(true)
@@ -48,27 +51,24 @@ export function QrScannerDialog({ open, onOpenChange, onScan }: QrScannerDialogP
           stopScanning()
           onOpenChange(false)
         },
-        (errorMessage) => {},
+        () => {},
       )
     } catch (err) {
       console.error("[FundWise] Error starting QR scanner:", err)
       setError("Failed to access camera. Please check permissions.")
       setIsScanning(false)
     }
-  }
+  }, [onOpenChange, onScan, stopScanning])
 
-  const stopScanning = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop()
-        scannerRef.current.clear()
-        scannerRef.current = null
-      } catch (err) {
-        console.error("[FundWise] Error stopping scanner:", err)
-      }
+  useEffect(() => {
+    if (open && !isScanning) {
+      void startScanning()
     }
-    setIsScanning(false)
-  }
+
+    return () => {
+      void stopScanning()
+    }
+  }, [isScanning, open, startScanning, stopScanning])
 
   const handleClose = () => {
     stopScanning()

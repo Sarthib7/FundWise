@@ -50,7 +50,7 @@ export default function GroupsPage() {
 
   const walletAddress = publicKey?.toString() || ""
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     if (!connected || !walletAddress) {
       setGroups([])
       setError(null)
@@ -78,11 +78,11 @@ export default function GroupsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [connected, wallet?.adapter, walletAddress])
 
   useEffect(() => {
     loadGroups()
-  }, [connected, walletAddress])
+  }, [loadGroups])
 
   useEffect(() => {
     setHasAutoOpenedZeroStateCreate(false)

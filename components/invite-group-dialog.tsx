@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { AlertCircle, Copy, Loader2, QrCode, Share2 } from "lucide-react"
 import { toast } from "sonner"
@@ -191,9 +192,12 @@ export function InviteGroupDialog({
                   <p className="text-xs text-muted-foreground">Generating QR code…</p>
                 </div>
               ) : qrCodeDataUrl ? (
-                <img
+                <Image
                   src={qrCodeDataUrl}
                   alt={`QR code invite for ${groupName}`}
+                  width={260}
+                  height={260}
+                  unoptimized
                   className="h-[260px] w-[260px] rounded-lg border bg-white p-2"
                 />
               ) : (

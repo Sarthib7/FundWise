@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   BriefcaseBusiness,
   CarTaxiFront,
@@ -46,12 +47,12 @@ export function HeroSection() {
             navigateAfterConnect
             className="w-full sm:min-h-11 sm:w-auto"
           />
-          <a
+          <Link
             href="/#how"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
             See how it works
-          </a>
+          </Link>
         </div>
       </section>
 
