@@ -49,6 +49,7 @@ export interface Database {
           multisig_address?: string | null
           treasury_address?: string | null
         }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -69,6 +70,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       members: {
         Row: {
@@ -92,6 +94,7 @@ export interface Database {
           display_name?: string | null
           joined_at?: string
         }
+        Relationships: []
       }
       expenses: {
         Row: {
@@ -136,6 +139,7 @@ export interface Database {
           edited_at?: string | null
           deleted_at?: string | null
         }
+        Relationships: []
       }
       expense_splits: {
         Row: {
@@ -156,6 +160,7 @@ export interface Database {
           wallet?: string
           share?: number
         }
+        Relationships: []
       }
       settlements: {
         Row: {
@@ -188,6 +193,7 @@ export interface Database {
           tx_sig?: string
           confirmed_at?: string
         }
+        Relationships: []
       }
       contributions: {
         Row: {
@@ -217,6 +223,7 @@ export interface Database {
           tx_sig?: string
           created_at?: string
         }
+        Relationships: []
       }
       proposals: {
         Row: {
@@ -258,6 +265,7 @@ export interface Database {
           created_at?: string
           executed_at?: string | null
         }
+        Relationships: []
       }
       proposal_approvals: {
         Row: {
@@ -278,6 +286,7 @@ export interface Database {
           member_wallet?: string
           approved_at?: string
         }
+        Relationships: []
       }
     }
     Views: Record<string, never>
@@ -302,5 +311,6 @@ export interface Database {
       split_method: "equal" | "exact" | "shares" | "percentage"
       proposal_status: "pending" | "approved" | "executed" | "rejected" | "cancelled"
     }
+    CompositeTypes: Record<string, never>
   }
 }
