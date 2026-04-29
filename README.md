@@ -2,7 +2,7 @@
 
 **Splitwise on Solana.** Create a private Group, log shared Expenses, see live Balances, and settle exact USDC amounts on Solana with a clear Receipt.
 
-FundWise also has a second mode, **Fund Mode**, for pooled USDC Treasuries with Proposal-based spending. That remains part of the product direction, but the current MVP is optimized around **Split Mode**.
+FundWise also has a second mode, **Fund Mode**, for pooled USDC Treasuries. That remains part of the product direction, but proposal flows are still incomplete and the current MVP is optimized around **Split Mode**.
 
 ## Documentation Map
 
@@ -38,7 +38,7 @@ The current MVP path is:
 - `/groups` uses a wallet-first entry state so disconnected users can connect immediately and continue into their Group list
 - After wallet connect, the app should restore the exact intent the user came for: invite-linked Group, Settlement Request Link, or first Group creation
 - Plain `/groups` with no existing Groups should open Group creation immediately; returning users with existing Groups should stay on the Group list
-- Group creation defaults to Split Mode; Fund Mode remains a per-Group choice inside the create flow, not a global app mode switch
+- Group creation defaults to Split Mode; Fund Mode is visible as an invite-only beta inside the create flow rather than a public default path
 - Wallet-native auth (`@solana/wallet-adapter-*`); optional Phantom Connect may layer on later (see ADR-0014)
 - Wallet-signed browser-session verification gates protected Group ledger reads and Receipts
 - Invite link or QR join flow with an explicit `Join {GroupName}` confirmation after connect
@@ -53,11 +53,12 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 
 - Group-owned Treasury using Squads primitives
 - Contributions into Treasury
-- Proposal / approval / execution flow still pending
+- Public Group creation keeps Fund Mode invite-only for now; internal testing can be re-enabled with `FUNDWISE_FUND_MODE_INVITE_WALLETS`
+- Proposal / approval / execution flow still pending and not part of the current hackathon mainline
 
 ### Sponsor layers
 
-- `LI.FI` is a secondary top-up and cross-chain recovery layer that helps a debtor arrive at Solana USDC.
+- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users top up into Solana USDC through an `Add funds` / `Top up to settle` flow without needing to understand the underlying route details.
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future agent flows.
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.
@@ -175,7 +176,7 @@ supabase db push --include-all
 - Mainnet-beta comes later, after the devnet hardening and rehearsal path is finished.
 - Members need SOL for gas even though Settlements use USDC.
 - The current execution order is:
-  devnet settlement hardening -> manual QA -> sponsor-layer integration -> full-flow devnet rehearsal -> later mainnet readiness
+  devnet settlement hardening -> manual QA -> LI.FI top-up / add-funds flow -> Zerion and Telegram support layers -> later Fund Mode proposals
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
 
 ## License
