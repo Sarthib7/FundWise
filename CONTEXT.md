@@ -23,6 +23,18 @@ Avoid: Treasury mode, pool mode, vault mode
 An off-chain record in a Split Mode Group describing who paid, how much, who participated, and how the amount is split.
 Avoid: Bill, charge, transaction
 
+**Source Currency**:
+The real-world currency a Member paid or enters for an Expense, such as EUR, USD, INR, or another supported fiat unit. FundWise may show and store this original amount, but it converts the Expense into the Group ledger's USD/USDC value for Balance and Settlement math.
+Avoid: Settlement asset
+
+**Exchange Rate Snapshot**:
+The conversion rate, quote time, and source used to convert a Source Currency amount into the Group ledger's USD/USDC value when an Expense is created or edited. Historical ledger math uses the stored snapshot, not a constantly floating live rate.
+Avoid: Live balance repricing
+
+**Expense Proof**:
+An optional uploaded merchant receipt image, PDF, or external proof link attached to an Expense so Members can verify what was paid. This is different from a FundWise Receipt, which confirms a Settlement.
+Avoid: Settlement Receipt
+
 **Settlement**:
 An on-chain USDC transfer from a debtor Member to a creditor Member that reduces the debtor's current net Balance in the Group.
 Avoid: Payment
@@ -48,8 +60,12 @@ A human-readable label attached to a Member wallet and reused across Groups in t
 Avoid: Username, handle
 
 **Stablecoin**:
-USDC in the MVP. All Split Mode Expenses, Balances, Settlements, Contributions, and Proposals are denominated in USDC.
+USDC in the MVP. Balances, Settlements, Contributions, and Proposals are denominated in USDC. Expenses may be entered in a Source Currency, but they must be converted into a stored USD/USDC ledger value before Balance math runs.
 Avoid: Token, currency, coin
+
+**FundWise Agent**:
+The umbrella name for later assistant surfaces that help Members read Group state, draft Expenses or Proposals, upload proof, create reminders, and suggest next actions through scoped wallet-bound permissions. Telegram bot and Telegram mini app are distribution channels for the FundWise Agent, not separate products.
+Avoid: Telegram agent, generic AI agent
 
 **Treasury**:
 The on-chain USDC holding account for a Fund Mode Group. In the MVP direction, this is backed by a Squads multisig and related vault addresses.
@@ -88,6 +104,9 @@ Avoid: Optimized debts, minimum transfers
 - In Split Mode, a Group has many Expenses and many Settlements.
 - An Expense belongs to one Group, has one payer Member, and can be created by any Member in the Group.
 - The payer on an Expense can be different from the Member who created the record.
+- An Expense may preserve its Source Currency and original amount, but the Group ledger must store the converted USD/USDC amount and Exchange Rate Snapshot used for Balance math.
+- Exchange rates should be fetched as close as possible to Expense creation or edit time, then snapshotted so historical Balances do not drift with later market movements.
+- An Expense may include one lightweight Expense Proof attachment or proof link.
 - Only the Member who created an Expense can edit or delete it.
 - Expense edits update the record in place and surface a simple "edited" signal in the Activity Feed.
 - Expense edits or deletes are blocked once later Settlements would make the ledger inconsistent.
@@ -127,6 +146,7 @@ Avoid: Optimized debts, minimum transfers
 - **Optional additive path:** Phantom Connect SDK (`@phantom/react-sdk`) may be integrated for Google/Apple and embedded wallets alongside the adapter, subject to a Phantom Portal App ID and allowlisted domains. It does not replace wallet-adapter; signing and settlement must remain correct for both paths. See `docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md`.
 - Wallet connect is a gate, not a detour. After connect, the app should restore the user's exact intent: invite-linked Group, Settlement Request Link, or first Group creation.
 - Telegram is a distribution surface, not a signing surface. It may support read-only views, draft-safe actions, comments, and history, but approvals, executions, and money-moving actions must return the Member to the app for wallet confirmation.
+- The later Telegram bot and Telegram mini app should be framed as FundWise Agent surfaces, not as a separate "Telegram agent" product.
 - If Telegram linking is added later, one Telegram account maps to one active wallet at a time.
 - If Telegram group-chat integration is added later, one Telegram chat maps to one FundWise Group at a time. Multi-Group switching inside one chat is a later expansion.
 - Any Member may attach the FundWise bot to a Telegram chat, but each person must authenticate privately with the bot in DM against their own wallet before the bot acts for them in the group.
@@ -135,12 +155,13 @@ Avoid: Optimized debts, minimum transfers
 - Group creation defaults to Split Mode, while the public create flow keeps Fund Mode visible as an invite-only beta until the Proposal lifecycle is ready.
 - Group mode choice is per Group only, never a global app-wide mode switch.
 - USDC is the only settlement asset in the MVP.
+- Multi-currency Expense entry does not mean multi-currency Settlement. Source Currency values convert into the USD/USDC ledger before Balance and Settlement logic.
 - SOL is required for gas on Solana mainnet-beta.
 - Split Mode is the primary product path for the hackathon MVP.
 - Fund Mode remains separate from Split Mode and uses Treasury plus Proposal concepts, not direct Settlements.
 - LI.FI is the primary sponsor support path for topping up a Member's Solana wallet with USDC when they cannot settle. The user-facing language should be `Add funds` or `Top up to settle`, not bridge jargon.
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
-- Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
+- FundWise Agent, Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 
 ## Example dialogue
 
@@ -175,3 +196,12 @@ Resolved: the MVP settles on Solana in USDC. LI.FI may help a debtor top up thei
 
 - "Embedded wallet" and "social login" were proposed as onboarding improvements.
 Resolved: wallet-adapter + Solana extension wallets stay the default. Optional Phantom Connect (Google/Apple + embedded) is an additive integration when Portal is configured; Member identity remains wallet pubkey–based, not email accounts owned by FundWise.
+
+- "Currency" could mean either the currency someone actually paid in or the asset used for Settlement.
+Resolved: use Source Currency for Expense entry, Exchange Rate Snapshot for conversion, and USDC for the Group ledger and Settlement asset.
+
+- "Receipt" could mean a merchant receipt photo or a FundWise Settlement confirmation.
+Resolved: use Expense Proof for uploaded merchant receipts and Receipt for Settlement confirmation views.
+
+- "Telegram agent" sounded like a Telegram-specific product.
+Resolved: use FundWise Agent as the assistant product name. Telegram is one channel where the FundWise Agent can operate later.
