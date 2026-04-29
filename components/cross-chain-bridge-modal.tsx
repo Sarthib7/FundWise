@@ -130,9 +130,9 @@ export function CrossChainBridgeModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Bridge USDC To Solana</DialogTitle>
+          <DialogTitle>Top Up To Settle</DialogTitle>
           <DialogDescription>
-            Bridge USDC from an EVM chain into your connected Solana wallet so you can settle balances in {groupName}.
+            FundWise uses LI.FI behind the scenes to move USDC from your EVM wallet into your connected Solana wallet so you can settle balances in {groupName}.
           </DialogDescription>
         </DialogHeader>
 
@@ -153,7 +153,7 @@ export function CrossChainBridgeModal({
 
           {lifiSupported && (
             <div className="space-y-2">
-              <Label>EVM Source Wallet</Label>
+            <Label>Wallet Holding Your USDC</Label>
               {evmWallet ? (
                 <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
@@ -187,7 +187,7 @@ export function CrossChainBridgeModal({
 
           {/* Source Chain Selection */}
           <div className="space-y-2">
-            <Label>Bridge From</Label>
+            <Label>Funds Are Currently On</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {sourceChains.map((chain) => (
                 <Button
@@ -232,11 +232,11 @@ export function CrossChainBridgeModal({
                 onClick={handleGetQuote}
                 disabled={!lifiSupported || !amount || !evmWallet || isQuoting}
               >
-                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Get Quote"}
+                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Get Top-Up Quote"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Request a route after you connect an EVM wallet and enter the exact USDC amount you want bridged.
+              Enter the USDC amount you want FundWise to top up into your Solana wallet.
             </p>
           </div>
 
@@ -249,11 +249,11 @@ export function CrossChainBridgeModal({
                     ? "Step 2: enter a USDC amount to price the route"
                     : isQuoting
                       ? "Finding the best route into Solana"
-                      : "Step 3: review the quote before you bridge"}
+                      : "Step 3: review the top-up before funds move"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {needsWalletConnection
-                  ? "FundWise uses your injected EVM wallet to source the LI.FI route and request the bridge signature."
+                  ? "FundWise uses your injected EVM wallet to source the LI.FI route and request the needed signatures."
                   : needsAmount
                     ? "We only fetch the route once you provide an amount, so the min received and estimated timing stay accurate."
                     : isQuoting
@@ -290,10 +290,10 @@ export function CrossChainBridgeModal({
 
               <div className="pt-2 border-t">
                 <p className="text-xs text-muted-foreground">
-                  Destination: {destinationAddress.slice(0, 6)}...{destinationAddress.slice(-4)}
+                  Destination wallet: {destinationAddress.slice(0, 6)}...{destinationAddress.slice(-4)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Funds land in your connected Solana wallet, not directly in a group treasury.
+                  Funds land in your connected Solana wallet first, then you continue the normal FundWise settlement flow.
                 </p>
               </div>
             </div>
@@ -348,7 +348,7 @@ export function CrossChainBridgeModal({
                 </>
               ) : (
                 <>
-                  Bridge To My Solana Wallet
+                  Add Funds To My Solana Wallet
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
