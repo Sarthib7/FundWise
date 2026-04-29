@@ -26,7 +26,7 @@ function toBase58(value: PublicKey | string) {
 
 function parseRawTokenAmount(value?: string) {
   if (!value) {
-    return 0n
+    return BigInt(0)
   }
 
   return BigInt(value)
@@ -55,8 +55,8 @@ function buildTokenBalanceMap(transaction: ParsedTransactionWithMeta) {
     }
 
     const current = tokenBalances.get(account.address) || {
-      preAmount: 0n,
-      postAmount: 0n,
+      preAmount: BigInt(0),
+      postAmount: BigInt(0),
     }
 
     tokenBalances.set(account.address, {

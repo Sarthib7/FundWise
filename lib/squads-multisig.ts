@@ -10,6 +10,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  TransactionMessage,
   LAMPORTS_PER_SOL,
   TransactionInstruction,
   Keypair,
@@ -387,27 +388,20 @@ export async function withdrawFromSquadsVault(
     console.log("[Squads Withdraw] Current transaction index:", currentTransactionIndex)
     console.log("[Squads Withdraw] New transaction index:", newTransactionIndex)
 
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+
     // Create vault transaction for withdrawal
-    const createVaultTransactionIx = await multisig.instructions.vaultTransactionCreate({
+    const createVaultTransactionIx = multisig.instructions.vaultTransactionCreate({
       multisigPda: multisigAddress,
       transactionIndex: newTransactionIndex,
       creator: new PublicKey(wallet.address),
       vaultIndex: 0, // Using default vault
       ephemeralSigners: 0,
-      transactionMessage: {
-        accountKeys: [
-          { pubkey: vaultAddress, isSigner: true, isWritable: true }, // From vault
-          { pubkey: recipientAddress, isSigner: false, isWritable: true }, // To recipient
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }, // System program
-        ],
-        instructions: [
-          {
-            programId: SystemProgram.programId,
-            accountIndexes: [0, 1],
-            data: withdrawInstruction.data,
-          },
-        ],
-      },
+      transactionMessage: new TransactionMessage({
+        payerKey: vaultAddress,
+        recentBlockhash: blockhash,
+        instructions: [withdrawInstruction],
+      }),
     })
 
     console.log("[Squads Withdraw] Step 2: Creating proposal...")
@@ -435,7 +429,6 @@ export async function withdrawFromSquadsVault(
     transaction.add(approveProposalIx)
 
     // Get recent blockhash
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
     transaction.recentBlockhash = blockhash
     transaction.feePayer = new PublicKey(wallet.address)
 
@@ -488,7 +481,8 @@ export async function withdrawFromSquadsVault(
     // If this is a 1/1 multisig (single signer), try to execute immediately
     if (multisigInfo.threshold === 1) {
       try {
-        const executeIx = await multisig.instructions.vaultTransactionExecute({
+        const { instruction: executeIx } = await multisig.instructions.vaultTransactionExecute({
+          connection,
           multisigPda: multisigAddress,
           transactionIndex: newTransactionIndex,
           member: new PublicKey(wallet.address),

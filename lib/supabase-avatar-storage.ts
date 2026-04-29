@@ -1,7 +1,7 @@
 // Avatar storage using Supabase (replaces Firebase avatar storage)
 // For MVP, avatars are generated client-side using DiceBear and stored as preferences in the members table
 
-import { createAvatar } from "@dicebear/collection"
+import { createAvatar } from "@dicebear/core"
 import { initials } from "@dicebear/collection"
 
 export interface AvatarData {

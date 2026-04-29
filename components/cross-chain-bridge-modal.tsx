@@ -337,8 +337,7 @@ export function CrossChainBridgeModal({
               disabled={
                 !lifiSupported ||
                 !evmWallet ||
-                bridgeStatus.status === "signing" ||
-                bridgeStatus.status === "executing"
+                bridgeStatus.status === "signing"
               }
             >
               {bridgeStatus.status === "signing" ? (
