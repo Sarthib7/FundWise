@@ -8,6 +8,7 @@ import {
   Home,
   Hotel,
   Palmtree,
+  Play,
   UtensilsCrossed,
 } from "lucide-react"
 import { AppEntryButton } from "@/components/app-entry-button"
@@ -47,6 +48,13 @@ export function HeroSection() {
             navigateAfterConnect
             className="w-full sm:min-h-11 sm:w-auto"
           />
+          <Link
+            href="/demo"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
+          >
+            <Play className="h-4 w-4" />
+            Try demo
+          </Link>
           <Link
             href="/#how"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
