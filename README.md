@@ -97,6 +97,8 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 ├── docs/adr/
 ├── app/
 │   ├── page.tsx
+│   ├── demo/
+│   │   └── page.tsx          ← interactive 5-step product walkthrough
 │   └── groups/
 │       ├── page.tsx
 │       └── [id]/
@@ -118,8 +120,10 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 │   ├── lifi-bridge.ts
 │   ├── squads-multisig.ts
 │   └── supabase.ts
-├── services/
-│   └── fundy/            ← planned: Telegram bot (Railway), grammy
+├── tests/
+│   └── expense-engine.test.ts   ← 32 unit tests
+├── vitest.config.ts
+├── services/                     ← planned, not yet created
 └── supabase/
     └── schema.sql
 ```
@@ -170,6 +174,7 @@ Fallback compatibility is present for:
 pnpm dev
 pnpm build
 pnpm lint
+pnpm test          # vitest — expense engine unit tests
 ```
 
 Current verification state:
@@ -177,6 +182,7 @@ Current verification state:
 - `pnpm exec tsc --noEmit` passes
 - `pnpm lint` passes
 - `pnpm build` passes
+- `pnpm test` — 32 tests passing (expense engine splits, balances, settlement graph)
 
 ### Database Bootstrap
 
