@@ -2,7 +2,7 @@
 
 **Owner:** Sarthi
 **Status:** Draft v0.2
-**Last updated:** 2026-04-29
+**Last updated:** 2026-04-30
 
 ## Problem Statement
 
@@ -79,6 +79,16 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 38. As a Member, I want the exchange rate used for an Expense to be saved with the Expense, so that historical Balances do not change unexpectedly when market rates move later.
 39. As a Member, I want to upload a receipt photo or proof file when I create an Expense, so that other Members can verify what was paid.
 40. As a Member, I want the later FundWise Agent to work from Telegram and other assistant surfaces, so that I can draft Expenses, attach proof, get reminders, and review Group state without creating a separate ledger.
+41. As a user with a personal AI agent, I want my agent to curl the FundWise Agent Skill Endpoint and discover what it can do, so that it can integrate with my FundWise data without manual configuration.
+42. As a user with a personal AI agent, I want my agent to read my Group Balances and upcoming Settlements through Scoped Agent Access, so that I can get proactive financial summaries and reminders from my existing assistant.
+43. As a user with a personal AI agent, I want money-moving actions to still require my direct wallet confirmation even when my agent initiates them, so that autonomous agents can help but not execute financial transactions on their own.
+44. As a Telegram user, I want to authenticate my Telegram account against my FundWise wallet through Fundy, so that I can interact with my Groups from Telegram without managing a separate identity.
+45. As a Telegram user, I want Fundy to show me my Group Balances, recent Expenses, and pending Settlements, so that I can stay on top of shared expenses without opening the web app.
+46. As a Telegram user, I want Fundy to draft Expenses for me in a Group, so that I can quickly log shared spending from the chat where the spending happens.
+47. As a Telegram user in a group chat, I want Fundy to be usable by multiple Members, so that everyone in the Telegram group can interact with the linked FundWise Group through the same bot.
+48. As a Telegram user, I want Fundy to run Zerion-backed `/analyze` and `/readiness`, so that I can see wallet readiness and settlement context without leaving the chat.
+49. As a Telegram user, I want Fundy to support `/verify` against on-chain history, so that I can confirm a Settlement or counterparty payment when coordinating in a group.
+50. As a user with a personal AI agent, I want to mint and revoke scoped agent tokens from my FundWise profile, so that I can control what my agent can do without sharing my browser session.
 
 ## Implementation Decisions
 
@@ -87,11 +97,19 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Post-MVP distribution should expand in layers: web app first, then FundWise Agent surfaces such as Telegram bot / mini app, then wallet mini dapp, and finally a native mobile app.
 - Identity is **Solana wallet address** in the MVP. No FundWise email/password and no separate “app account” tied to email as the primary key.
 - Telegram auth, if added later, should be a convenience and routing layer around existing Groups, not a replacement for wallet-native Member identity.
-- Telegram surfaces should be described as FundWise Agent channels. They may handle read-only, draft-safe, comment, proof upload, reminder, and history actions, but all approvals, executions, and money-moving actions must bounce back into the app for wallet confirmation.
+- Telegram surfaces should be described as FundWise Agent channels. They may handle read-only, draft-safe, comment, proof upload, reminder, and history actions. **On-chain** money movement and **on-chain** execution steps must bounce back into the app for wallet confirmation. **Database-only** Proposal approve/reject may be offered from Fundy when Fund Mode and APIs support it.
 - One Telegram account should map to one active wallet at a time. If relinking is allowed later, it should be an explicit flow, not an implicit multi-wallet identity model.
 - One Telegram group chat should map to one FundWise Group at a time. If multi-Group switching is allowed later, it should be an explicit chat-level flow rather than the default.
 - Any Group Member may add the bot to a Telegram chat, but each person must authenticate one-on-one with the bot in DM before the bot reads or drafts on their behalf.
 - Agent access should not rely on broad raw API keys. Later agent surfaces should use scoped capabilities tied to the Member wallet, Group, and action type.
+- The Agent Skill Endpoint (`/skill.md`) is a public URL at **`https://fundwise.kairen.xyz/skill.md`** that returns a machine-readable markdown document describing FundWise capabilities, supported actions, authentication flow, and explicit guardrails (what not to call). Fetching the document does not require authentication and the document must not expose private Member data.
+- Scoped Agent Access is the permission model for autonomous agents. Agents receive scoped capabilities tied to the Member wallet, specific Group, and action type. Money-moving actions (Settlement execution, Contribution execution, Proposal execution) still require direct wallet confirmation from the Member, even when an agent initiates the intent.
+- Fundy is the hosted Telegram bot that runs the FundWise Agent. It is a distribution surface, not a separate product. Users authenticate by linking their Telegram account to their FundWise wallet address via **short-lived codes** issued from the authenticated web app (`/link FW-…` in DM with Fundy).
+- Fundy v1 is **command-based** (fixed commands); the end goal is an **LLM-backed** assistant (e.g. OpenRouter) with the same underlying tools. Fundy runs on **Railway** as a separate service from the Next.js app, under **`services/fundy/`** in the **monorepo**, using **`grammy`**. It calls FundWise through the **same HTTP API** as other clients, using **`FUNDWISE_SERVICE_API_KEY`** and **`X-Fundy-Wallet`** (not ad-hoc direct Supabase access from the bot).
+- Fundy supports read-only views (Balances, Expenses, Settlements, Receipts), draft-safe actions (draft Expense, upload proof), comments, and history. **Proposal approve/reject** may run from Fundy when those updates are **database-only**; **on-chain** Settlement, Contribution, and Proposal **execution** bounce the Member to the web app with **Settlement Request Links** used for settle intents where applicable.
+- Fundy integrates **Zerion CLI** for **`/analyze`**, **`/readiness`**, and **`/verify`** (wallet + transaction history). Prefer **`ZERION_API_KEY`** (free dev tier) for v1; optional **x402** pay-per-call on Solana later.
+- Scoped Agent Access includes **user-generated agent tokens** managed from **`/profile/agents`** (rotate, delete, renew, scopes) plus optional **wallet-signed** agent authentication for agents that can sign Solana messages.
+- The Agent Skill document lives at **`https://fundwise.kairen.xyz/skill.md`** and must be detailed enough to explain purpose, allowed vs disallowed calls, auth, limits, and safety rules.
 - Later onboarding work should help web2 users reach stablecoin balances with far less friction, potentially through fiat rails, bank-transfer-style funding, and card or account layers, but only after the crypto-native core flow is reliable.
 - A Member is keyed by wallet address and labeled with a global profile display name.
 - **Optional:** Phantom Connect (Google/Apple + embedded or extension via Phantom) may be offered **in addition to** `@solana/wallet-adapter-*`, with Phantom Portal configuration. It does not replace the adapter for users who use Solflare, Backpack, or other wallets. See [CONTEXT.md](./CONTEXT.md) and [docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md).
@@ -146,6 +164,9 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 ## Out of Scope
 
+- Fundy Telegram bot as a first-class product surface in the MVP
+- Agent Skill Endpoint as a first-class product surface in the MVP
+- Scoped Agent Access API in the MVP
 - Telegram bot as a first-class product surface in the MVP
 - Telegram mini app as a first-class product surface in the MVP
 - Wallet-embedded mini dapp as a first-class product surface in the MVP

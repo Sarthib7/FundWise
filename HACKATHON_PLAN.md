@@ -1,7 +1,7 @@
 # FundWise - Hackathon Track Plan
 
 **Owner:** Sarthi
-**Last updated:** 2026-04-29
+**Last updated:** 2026-04-30
 **Hackathon:** Colosseum Frontier
 **Primary submission deadline:** May 11, 2026
 **Demo Day:** May 12, 2026
@@ -33,6 +33,8 @@ Everything else is a supporting layer:
 - `LI.FI` helps an EVM-first debtor arrive at Solana USDC if their funds are on another chain, ideally through a simple `Add funds` / `Top up to settle` experience.
 - `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
 - `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
+- `Fundy` is the hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
+- The `Agent Skill Endpoint` (`/skill.md`) will be a public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and Scoped Agent Access; it must not expose private Member data.
 - `Fund Mode` broadens the product story, but it is incomplete and should not be presented as the current mainline product path.
 
 ---
@@ -142,6 +144,7 @@ Low fit for the current product direction.
 - Keep core settlement still wallet-native and user-authorized
 - Use Zerion CLI as the implementation surface for the sponsor-track demo
 - Frame assistant behavior as FundWise Agent capability, not a Telegram-specific product
+- **Fundy (later):** Zerion CLI from the Railway bot for `/analyze`, `/readiness`, `/verify`; start with a free **`ZERION_API_KEY`**, optional **x402** on Solana for pay-per-call demos
 
 ---
 
@@ -185,6 +188,9 @@ Low fit for the current product direction.
 - Say `Source Currency` for what someone paid in, and `USDC` for the ledger / Settlement value
 - Say `Expense Proof` for uploaded merchant receipts; reserve `Receipt` for Settlement confirmation
 - Say `FundWise Agent`, not `Telegram agent`
+- Say `Fundy` for the hosted Telegram bot, not `the bot` or `FundWise Telegram`
+- Say `Agent Skill Endpoint` for the public `/skill.md` discovery URL
+- Say `Scoped Agent Access` for the agent permission model
 - Say `web app first`
 - Say `wallet-native`
 
@@ -195,10 +201,14 @@ Avoid these claims in the main pitch unless they are actually shipped:
 - Social-login-first onboarding
 - Telegram-first product surface
 - AI-native expense entry
+- Fundy as a shipped product (it is planned, not shipped)
+- Autonomous agent integration as a shipped feature (Agent Skill Endpoint and Scoped Agent Access are planned, not shipped)
 
 For future expansion after the core demo path is solid:
 
 - Telegram is a strong distribution layer because the real groups already exist there, but it should call into the same FundWise wallet-bound engine rather than becoming a separate ledger product.
+- **Fundy** is the hosted Telegram bot that will run the FundWise Agent. It is a distribution surface for the same wallet-bound engine, not a separate product.
+- The **Agent Skill Endpoint** (`/skill.md`) will let any autonomous agent curl the FundWise domain and discover what FundWise can do. Agents interact through Scoped Agent Access, not broad API keys.
 - Agent skills and personal-agent access are promising only if they operate through scoped capabilities instead of broad raw API keys.
 - FundWise Agent can eventually support Telegram reminders, draft-safe Expense creation, proof upload, and Group summaries, but money movement still returns to app-and-wallet confirmation.
 - Wallet mini apps and native mobile should come after the shared engine is stable enough to support multiple clients cleanly.

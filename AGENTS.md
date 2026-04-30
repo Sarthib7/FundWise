@@ -86,6 +86,9 @@ If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the lates
 │   ├── ui/                 ← shadcn primitives (do not hand-edit)
 │   └── *.tsx               ← App-level components
 ├── lib/                    ← Client-side business logic
+├── lib/server/             ← Server-only reads, mutations, wallet session
+├── services/
+│   └── fundy/              ← Planned: Telegram bot (Railway), grammy
 ├── supabase/               ← Current schema
 ├── hooks/                  ← React hooks
 └── public/                 ← Static assets
@@ -107,6 +110,9 @@ If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the lates
 | `app/page.tsx`                          | Landing page                                          |
 | `app/groups/[id]/page.tsx`              | Group dashboard                                       |
 | `app/groups/[id]/settlements/[settlementId]/page.tsx` | Settlement receipt view                    |
+| `app/skill.md/route.ts`                | Agent Skill Endpoint (planned) — `https://fundwise.kairen.xyz/skill.md` |
+| `services/fundy/`                     | Fundy Telegram bot (planned) — Railway, `grammy`, calls FundWise HTTP API |
+| `lib/server/` (extend)                  | Scoped Agent Access + bot auth validation (planned)   |
 
 
 ---
@@ -167,6 +173,9 @@ docs(adr): add ADR-0009 for LI.FI SDK integration
   - SPL token transfer flow
   - Supabase read/write operations
   - LI.FI route discovery and execution
+  - Scoped Agent Access capability grants, expiration, and revocation
+  - Fundy Telegram auth flow (Telegram-to-wallet linking, one-account-one-wallet rule, DM authentication before group chat actions)
+  - Agent Skill Endpoint response format and completeness
 
 ---
 
@@ -239,6 +248,30 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 - Uses `zerion-cli wallet analyze <address>` for wallet data
 - Can use x402 pay-per-call (no API key needed)
 - Docs: [https://developers.zerion.io/build-with-ai/zerion-cli](https://developers.zerion.io/build-with-ai/zerion-cli)
+
+### Fundy (Planned — Post-Hackathon)
+
+- Hosted Telegram bot that runs the FundWise Agent; **command-first v1**, **LLM** (e.g. OpenRouter) as a later layer on the same tools
+- **Railway** deployment; code in **`services/fundy/`**; library **`grammy`**
+- Calls FundWise **HTTP API routes** with **`FUNDWISE_SERVICE_API_KEY`** + **`X-Fundy-Wallet`** (same API surface as the web app; extend routes for Scoped Agent Access)
+- Users authenticate with **web-generated short-lived codes** in DM: `/link FW-…`
+- Read-only views (Balances, Expenses, Settlements, Receipts) and draft-safe actions (draft Expense, upload proof); **Proposal approve/reject** when **database-only**
+- **On-chain** Settlement, Contribution, and Proposal **execution** still require wallet confirmation in the app — deep-link; use existing **Settlement Request Links** for settle intents
+- **Zerion CLI** from the bot: `/analyze`, `/readiness`, `/verify` — prefer **`ZERION_API_KEY`**; optional **x402** on Solana later
+- One Telegram account maps to one active wallet at a time; one Telegram chat maps to one FundWise Group; DM auth before group actions
+- **Env (Fundy service):** `TELEGRAM_BOT_TOKEN`, `FUNDWISE_SERVICE_API_KEY`, `FUNDWISE_API_BASE_URL` (e.g. `https://fundwise.kairen.xyz`), `ZERION_API_KEY` (and optionally `SOLANA_PRIVATE_KEY` + `ZERION_X402`), `OPENROUTER_API_KEY` (optional, later), `NEXT_PUBLIC_SOLANA_RPC_URL` if needed for direct reads
+
+### Agent Skill Endpoint (Planned — Post-Hackathon)
+
+- Public URL: **`https://fundwise.kairen.xyz/skill.md`** — `Content-Type: text/markdown`
+- Any autonomous agent can `curl` it; document **purpose**, **what to call / what not to call**, auth (**profile agent tokens** + optional wallet-signed), rate limits, errors, safety
+- Does not require authentication to fetch the document and does not expose private Member data in the skill file itself
+- Implementation: `app/skill.md/route.ts` (planned)
+
+### Web app env (planned additions for agents + Fundy)
+
+- `FUNDWISE_SERVICE_API_KEY` — shared secret validated on API routes for bot/service calls
+- `FUNDWISE_AGENT_TOKEN_SECRET` (or equivalent) — signing secret for scoped agent tokens issued from `/profile/agents` and optional wallet-signed agent auth
 
 ### Key deadlines
 

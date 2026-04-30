@@ -210,8 +210,10 @@ Only pursue these after the core Group ledger and USDC settlement flow are relia
 - Easier web2 onboarding and offboarding:
   bank-transfer style funding, fiat-to-stablecoin ramps, and later card or account-style interfaces for non-crypto users
 - FundWise Agent as the umbrella assistant layer for drafting Expenses, attaching proof, reminders, Group summaries, and Proposal support
-- Telegram auth, Telegram bot, and Telegram mini app as FundWise Agent distribution for existing group chats
-- Agent skill plus scoped agent access so personal agents can create requests, read Proposals, and operate within wallet-bound permissions
+- **Fundy**: hosted Telegram bot on **Railway** (`grammy`), code in **`services/fundy/`** — command-first v1, LLM layer later (e.g. OpenRouter). Authenticates users with **web-generated link codes** in DM; calls FundWise **HTTP APIs** with service key + wallet header. Zerion CLI behind **`/analyze`**, **`/readiness`**, **`/verify`** (`ZERION_API_KEY` first, x402 optional). Read-only and draft-safe in Telegram; DB-only Proposal approve/reject allowed; on-chain actions deep-link to web (**Settlement Request Links** for settle).
+- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.kairen.xyz/skill.md`** — purpose, allowed vs forbidden calls, auth (profile tokens + optional wallet-signed), limits, errors; any agent can `curl` it
+- **Scoped Agent Access API**: permission model for autonomous agents — scoped capabilities tied to Member wallet, Group, and action type, not broad permanent API keys
+- Telegram mini app as an additional FundWise Agent distribution surface
 - Wallet mini dapp distribution
 - Native mobile app once the shared engine and secondary surfaces are stable
 - AI bill parsing beyond basic receipt-photo upload and natural-language Expense entry beyond draft-safe FundWise Agent flows
@@ -220,14 +222,15 @@ Only pursue these after the core Group ledger and USDC settlement flow are relia
 
 - Keep one core product engine: wallet-bound ledger APIs, proposal rules, and settlement logic must be shared across every surface
 - Expand surfaces in this order:
-  web app -> FundWise Agent on Telegram bot / Telegram mini app -> agent skill / agent access -> wallet mini dapp -> native mobile app
-- Telegram should reuse the existing Group model rather than redefining it; group-chat commands should call the same FundWise Agent and backend capabilities
-- Telegram should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement must bounce to the app for wallet confirmation
+  web app -> Fundy (hosted Telegram bot) -> Agent Skill Endpoint + Scoped Agent Access -> Telegram mini app -> wallet mini dapp -> native mobile app
+- Fundy should reuse the existing Group model rather than redefining it; Telegram group-chat commands should call the same FundWise Agent and backend capabilities
+- Fundy should stay read-only and draft-safe plus comments/history; **on-chain** approvals/execution/money movement must bounce to the app for wallet confirmation; **database-only** Proposal approve/reject may stay in Telegram when the product supports it
 - Telegram identity should use one active wallet per Telegram account, with relinking as an explicit later flow rather than multi-wallet ambiguity
 - Telegram chat mapping should start as one chat -> one FundWise Group, with switch-group behavior deferred until the simpler model is proven
-- Any Member may add the bot, but every participant must authenticate one-on-one in DM before the bot acts for them in the group chat
-- The shared backend likely needs new schema for Telegram links, Expense Proof attachments, Proposal comments, proof attachments / links, Proposal edit history, and later agent capability grants before those channels are built
-- Agent access should use scoped capabilities, not broad permanent API keys
+- Any Member may add Fundy to a Telegram chat, but every participant must authenticate one-on-one in DM before the bot acts for them in the group chat
+- The Agent Skill Endpoint should be the first thing an autonomous agent fetches when discovering FundWise. It should describe all available actions, the Scoped Agent Access auth model, and link to the API surface.
+- Scoped Agent Access should support capability grants with expiration and revocation, scoped to Member wallet, Group, and action type (read, draft, comment). Money-moving action types (settle, contribute, execute proposal) still require direct wallet confirmation.
+- The shared backend likely needs new schema for Telegram-to-wallet links, agent-access grants, Expense Proof attachments, Proposal comments, proof attachments / links, Proposal edit history, and later agent capability grants before those channels are built
 - For long-range onboarding and fee abstraction research, Bridge is the more direct infrastructure candidate today; Altitude is better treated as UX and operating-model inspiration unless its consumer surface changes materially
 
 **Fund Mode expansion:**
