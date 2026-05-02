@@ -296,6 +296,9 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 
 ## Planned, not yet built
 
+- **Dashboard + Expense UX overhaul** (ADR-0020): 7→4 sections on mobile, expense dialog simplified to 3 fields, category dropdown killed, photo button added. **Next to build.**
+- **Currency conversion** (ADR-0020): CoinGecko free tier, 5 currencies (USD/EUR/GBP/INR/AED), rate snapshot. After dashboard cleanup.
+- **Photo upload** (ADR-0020): Supabase Storage, JPEG/PNG only, client-side compress, one per expense. After currency conversion.
 - **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon. Below Fund Mode proposals, above Telegram bot.
 - **Fund Mode Proposals**: creation, approval, execution UI still pending.
 - **Fundy**: hosted Telegram bot for FundWise Agent (archived in `docs/archive/`).
