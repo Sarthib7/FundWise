@@ -353,7 +353,29 @@ export default function GroupDashboard() {
         throw new Error("Choose who paid this Expense")
       }
 
-      const amount = parseTokenAmount(expenseAmount)
+      // Currency conversion: get source currency and rate from the dialog
+      const w = typeof window !== "undefined" ? (window as any) : {} // eslint-disable-line
+      const sourceCurrency = (w.__fw_expense_currency as string | undefined) || "USD"
+      const conversionRate = w.__fw_expense_rate as number | undefined
+      const isNonUsd = sourceCurrency !== "USD"
+
+      // Convert to USDC if needed
+      let usdAmount: number
+      let exchangeRate: number
+      let exchangeRateSource: string
+
+      if (isNonUsd && conversionRate) {
+        usdAmount = parsedAmount * conversionRate
+        exchangeRate = conversionRate
+        exchangeRateSource = "coingecko"
+      } else {
+        usdAmount = parsedAmount
+        exchangeRate = 1.0
+        exchangeRateSource = "default"
+      }
+
+      const amount = parseTokenAmount(usdAmount.toFixed(6))
+      const sourceAmount = parseTokenAmount(expenseAmount)
       const customValues =
         splitMethod === "equal"
           ? undefined
@@ -392,6 +414,11 @@ export default function GroupDashboard() {
         category: expenseCategory,
         splitMethod,
         splits,
+        sourceCurrency,
+        sourceAmount,
+        exchangeRate,
+        exchangeRateSource,
+        exchangeRateAt: new Date().toISOString(),
       }
 
       if (editingExpense) {
@@ -409,7 +436,7 @@ export default function GroupDashboard() {
           ...expensePayload,
         })
 
-        toast.success(`Expense of ${expenseAmount} added!`)
+        toast.success(`Expense of ${expenseAmount} ${isNonUsd ? sourceCurrency : tokenName} added!`)
       }
 
       handleExpenseDialogOpenChange(false)

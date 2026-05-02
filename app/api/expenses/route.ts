@@ -16,6 +16,11 @@ export async function POST(request: Request) {
       category?: string
       splitMethod?: "equal" | "exact" | "shares" | "percentage"
       splits?: { wallet: string; share: number }[]
+      sourceCurrency?: string
+      sourceAmount?: number
+      exchangeRate?: number
+      exchangeRateSource?: string
+      exchangeRateAt?: string
     }
 
     if (
@@ -44,6 +49,11 @@ export async function POST(request: Request) {
       category: body.category,
       splitMethod: body.splitMethod,
       splits: body.splits,
+      sourceCurrency: body.sourceCurrency,
+      sourceAmount: body.sourceAmount,
+      exchangeRate: body.exchangeRate,
+      exchangeRateSource: body.exchangeRateSource,
+      exchangeRateAt: body.exchangeRateAt,
     })
 
     return NextResponse.json(expense)
