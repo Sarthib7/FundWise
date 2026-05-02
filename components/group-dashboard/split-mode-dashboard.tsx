@@ -21,6 +21,7 @@ import {
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
+import { SettlementPreviewDialog } from "@/components/settlement-preview-dialog"
 import {
   ArrowRightLeft,
   Copy,
@@ -121,11 +122,13 @@ export function SplitModeDashboard({
   canDeleteExpense,
 }: SplitModeDashboardProps) {
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState<ActivityExpense | null>(null)
+  const [previewTransfer, setPreviewTransfer] = useState<SettlementTransfer | null>(null)
 
   const hasSettlementRequest = Boolean(requestedFromWallet && requestedToWallet)
   const viewerOutgoingTransferCount = viewerOutgoingTransfers.length
   const viewerIncomingTransferCount = viewerIncomingTransfers.length
   const expenseCount = activity.filter((item) => item.type === "expense").length
+  const settlementCount = activity.filter((item) => item.type === "settlement").length
 
   const scrollToBalances = () => {
     document.getElementById("balances-card")?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -233,7 +236,7 @@ export function SplitModeDashboard({
                 <Button
                   className="w-full bg-accent hover:bg-accent/90 sm:w-auto"
                   disabled={isSettling}
-                  onClick={() => onSettle(requestedTransfer)}
+                  onClick={() => setPreviewTransfer(requestedTransfer)}
                 >
                   {isSettling && settlingTransfer === requestedTransfer ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -277,7 +280,7 @@ export function SplitModeDashboard({
                 <Button
                   className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
                   disabled={isSettling}
-                  onClick={() => onSettle(viewerOutgoingTransfers[0])}
+                  onClick={() => setPreviewTransfer(viewerOutgoingTransfers[0])}
                 >
                   {isSettling && settlingTransfer === viewerOutgoingTransfers[0] ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -425,7 +428,7 @@ export function SplitModeDashboard({
                             size="sm"
                             className="min-h-10 bg-accent hover:bg-accent/90 sm:min-h-9"
                             disabled={isSettling}
-                            onClick={() => onSettle(transfer)}
+                            onClick={() => setPreviewTransfer(transfer)}
                           >
                             {isSettling && settlingTransfer === transfer ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -445,7 +448,14 @@ export function SplitModeDashboard({
       )}
 
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Activity</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="text-lg font-semibold">Activity</h2>
+          {activity.length > 0 && (
+            <Badge variant="outline" className="text-[10px]">
+              {expenseCount} expense{expenseCount !== 1 ? "s" : ""} · {settlementCount} settlement{settlementCount !== 1 ? "s" : ""}
+            </Badge>
+          )}
+        </div>
         {activity.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -588,6 +598,22 @@ export function SplitModeDashboard({
           </div>
         )}
       </Card>
+
+      {previewTransfer && (
+        <SettlementPreviewDialog
+          open={Boolean(previewTransfer)}
+          onOpenChange={(isOpen) => { if (!isOpen) setPreviewTransfer(null) }}
+          transfer={previewTransfer}
+          tokenName={tokenName}
+          viewerWallet={walletAddress}
+          isSettling={isSettling}
+          onConfirm={() => {
+            const t = previewTransfer
+            setPreviewTransfer(null)
+            return onSettle(t)
+          }}
+        />
+      )}
 
       <AlertDialog
         open={Boolean(pendingDeleteExpense)}
