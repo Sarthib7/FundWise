@@ -63,7 +63,7 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 - `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users top up into Solana USDC through an `Add funds` / `Top up to settle` flow without needing to understand the underlying route details.
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
-- **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
+- **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent. Fundy Lite (hackathon) is command-based with Zerion wallet analysis. Fundy Full (post-hackathon) adds LLM via OpenRouter for natural language, personal finance features, budgets, and proactive reminders. See ADR-0018.
 - **Agent Skill Endpoint** (`/skill.md`) is the planned public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, what to call vs avoid, supported actions, and how to authenticate through Scoped Agent Access.
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.

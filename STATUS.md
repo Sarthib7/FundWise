@@ -299,11 +299,12 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 - **Dashboard + Expense UX overhaul** (ADR-0020): 7→4 sections on mobile, expense dialog simplified to 3 fields, category dropdown killed, photo button added. **Next to build.**
 - **Currency conversion** (ADR-0020): CoinGecko free tier, 5 currencies (USD/EUR/GBP/INR/AED), rate snapshot. After dashboard cleanup.
 - **Photo upload** (ADR-0020): Supabase Storage, JPEG/PNG only, client-side compress, one per expense. After currency conversion.
-- **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon. Below Fund Mode proposals, above Telegram bot.
+- **Fundy Lite** (ADR-0018): Hackathon Telegram bot. Command-based, Zerion wallet analysis, draft expenses, settlement nudges. **Parallel track — second developer.**
+- **Fundy Full** (ADR-0018): Post-hackathon. LLM via OpenRouter, personal finance manager, budgets, spending patterns, receipt parsing, proactive reminders.
+- **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon.
 - **Fund Mode Proposals**: creation, approval, execution UI still pending.
-- **Fundy**: hosted Telegram bot for FundWise Agent (archived in `docs/archive/`).
-- **Agent Skill Endpoint**: public discovery at `/skill.md` (archived in `docs/archive/`).
-- **Scoped Agent Access**: permission model for autonomous agents (archived in `docs/archive/`).
+- **Agent Skill Endpoint** (`/skill.md`): public discovery document. Post-hackathon.
+- **Scoped Agent Access**: permission model for autonomous agents. Post-hackathon.
 
 ---
 
