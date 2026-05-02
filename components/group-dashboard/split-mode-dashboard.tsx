@@ -534,6 +534,9 @@ export function SplitModeDashboard({
                       )}
                       <span className="font-semibold font-mono tabular-nums">
                         {formatTokenAmount(expense.amount)} {tokenName}
+                        {expense.source_currency && expense.source_currency !== "USD" && expense.source_amount != null && (
+                          <>{" "}({formatTokenAmount(expense.source_amount)} {expense.source_currency})</>
+                        )}
                       </span>
                       {isExpenseOwnedByWallet &&
                         (expenseCanBeDeleted ? (

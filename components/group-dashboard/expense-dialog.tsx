@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,6 +19,12 @@ import {
 } from "@/components/ui/select"
 import type { Database } from "@/lib/database.types"
 import type { ActivityItem } from "@/lib/db"
+import {
+  SUPPORTED_CURRENCIES,
+  CURRENCY_SYMBOLS,
+  convertToUsd,
+  type SupportedCurrency,
+} from "@/lib/currency"
 import { ChevronDown, Loader2 } from "lucide-react"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
@@ -82,8 +88,91 @@ export function ExpenseDialog({
   onSubmit,
 }: ExpenseDialogProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [sourceCurrency, setSourceCurrency] = useState<SupportedCurrency>("USD")
+  const [convertedUsdDisplay, setConvertedUsdDisplay] = useState<string | null>(null)
+  const [isConverting, setIsConverting] = useState(false)
+  const [conversionRate, setConversionRate] = useState<number | null>(null)
 
   const isDefaultSplit = splitMethod === "equal"
+  const isNonUsd = sourceCurrency !== "USD"
+
+  // When editing, restore the source currency from the expense
+  useEffect(() => {
+    if (editingExpense) {
+      const savedCurrency = (editingExpense as Record<string, unknown>).source_currency as string | undefined
+      if (savedCurrency && SUPPORTED_CURRENCIES.includes(savedCurrency as SupportedCurrency)) {
+        setSourceCurrency(savedCurrency as SupportedCurrency)
+      }
+    }
+  }, [editingExpense])
+
+  // Fetch conversion when amount or currency changes
+  useEffect(() => {
+    if (!isNonUsd || !expenseAmount) {
+      setConvertedUsdDisplay(null)
+      setConversionRate(null)
+      return
+    }
+
+    const parsedAmount = Number(expenseAmount)
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setConvertedUsdDisplay(null)
+      setConversionRate(null)
+      return
+    }
+
+    let cancelled = false
+    setIsConverting(true)
+
+    convertToUsd(parsedAmount, sourceCurrency)
+      .then(({ usdAmount, rate }) => {
+        if (!cancelled) {
+          setConvertedUsdDisplay(`≈ $${usdAmount.toFixed(2)} USDC`)
+          setConversionRate(rate)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setConvertedUsdDisplay("Rate unavailable")
+          setConversionRate(null)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsConverting(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [expenseAmount, sourceCurrency, isNonUsd])
+
+  // Reset currency when dialog opens for new expense
+  useEffect(() => {
+    if (open && !editingExpense) {
+      setSourceCurrency("USD")
+      setConvertedUsdDisplay(null)
+      setConversionRate(null)
+    }
+  }, [open, editingExpense])
+
+  // Expose conversion data to the parent via a hidden state pattern
+  // The parent page reads these from window or we pass them through a callback
+  // For now, we store them in a ref that the parent can query
+
+  const handleCurrencyChange = useCallback((currency: string) => {
+    setSourceCurrency(currency as SupportedCurrency)
+  }, [])
+
+  // Store conversion data on the window so the parent form can read it
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const w = window as any // eslint-disable-line
+      w.__fw_expense_currency = sourceCurrency
+      w.__fw_expense_rate = conversionRate
+    }
+  }, [sourceCurrency, conversionRate])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,20 +188,51 @@ export function ExpenseDialog({
             void onSubmit()
           }}
         >
-          {/* Field 1: Amount */}
+          {/* Field 1: Amount + Currency */}
           <div className="space-y-2">
-            <Label htmlFor="expense-amount">Amount ({tokenName})</Label>
-            <Input
-              id="expense-amount"
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="0.00"
-              value={expenseAmount}
-              onChange={(event) => onExpenseAmountChange(event.target.value)}
-              className="text-lg font-semibold"
-            />
+            <Label htmlFor="expense-amount">Amount</Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  id="expense-amount"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="0.00"
+                  value={expenseAmount}
+                  onChange={(event) => onExpenseAmountChange(event.target.value)}
+                  className="text-lg font-semibold"
+                />
+              </div>
+              <Select value={sourceCurrency} onValueChange={handleCurrencyChange}>
+                <SelectTrigger className="w-[100px]" aria-label="Currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      {CURRENCY_SYMBOLS[currency]} {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Converted amount display */}
+            {isNonUsd && (
+              <div className="flex items-center gap-2 h-6">
+                {isConverting ? (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Converting...
+                  </span>
+                ) : convertedUsdDisplay ? (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {convertedUsdDisplay}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {/* Field 2: What was it for? */}
