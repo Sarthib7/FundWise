@@ -12,10 +12,10 @@ export function CtaSection() {
         aria-hidden="true"
       />
       <h2 className="font-serif text-[clamp(1.875rem,5vw,3.375rem)] tracking-tight mb-4 text-foreground text-balance">
-        Ready to ditch the IOUs?
+        Stop chasing. Start settling.
       </h2>
       <p className="mb-9 text-[17px] text-brand-text-2 sm:mb-11">
-        Create your first group in under a minute.
+        Create a Group, log expenses, and settle in USDC — all in under a minute.
       </p>
       <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <AppEntryButton
