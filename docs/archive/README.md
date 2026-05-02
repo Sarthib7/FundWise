@@ -5,7 +5,8 @@ They are preserved for post-hackathon development. Do not act on these before Ma
 
 ## Contents
 
-- `0018-agent-skill-endpoint-and-fundy-telegram-bot.md` — Agent Skill Endpoint, Fundy Telegram bot, Scoped Agent Access. All planned, none shipped.
 - `0014-optional-phantom-connect-alongside-wallet-adapter.md` — Optional Phantom Connect SDK. Requires Portal App ID from owner.
+
+ADR-0018 (Fundy + Agent Skill) has been promoted back to `docs/adr/0018-fundy-telegram-bot.md` with updated grill session decisions.
 
 Active ADRs remain in `docs/adr/`.
