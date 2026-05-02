@@ -294,6 +294,14 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 5. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
 6. Close GitHub issues #4–#9 on the repo after verifying all fixes.
 
+## Planned, not yet built
+
+- **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon. Below Fund Mode proposals, above Telegram bot.
+- **Fund Mode Proposals**: creation, approval, execution UI still pending.
+- **Fundy**: hosted Telegram bot for FundWise Agent (archived in `docs/archive/`).
+- **Agent Skill Endpoint**: public discovery at `/skill.md` (archived in `docs/archive/`).
+- **Scoped Agent Access**: permission model for autonomous agents (archived in `docs/archive/`).
+
 ---
 
 ## Ground rules
