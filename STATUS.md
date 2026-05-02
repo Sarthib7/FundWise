@@ -267,22 +267,32 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 - Created GitHub issues #4–#9 for all remaining fixes
 
 **Remaining issues (from roast):**
-- #6 Settlement preview before wallet sign
-- #7 Archive future-planning docs
-- #8 Landing page tightening
-- #9 Post-settlement notifications
+- #6 Settlement preview before wallet sign ✅ **SHIPPED**
+- #7 Archive future-planning docs ✅ **SHIPPED**
+- #8 Landing page tightening ✅ **SHIPPED**
+- #9 Post-settlement notifications ✅ **SHIPPED**
+
+**Additional actions taken (session 2):**
+- Added `SettlementPreviewDialog` component — shows amount, recipient, fee, and steps before wallet sign
+- All settlement buttons (hero card, balances list, request link) now route through preview dialog
+- Post-settlement success toast with creditor name and "View your receipt →"
+- Activity Feed header shows expense/settlement count badge
+- Hero headline rewritten: "Splitwise, but you actually get paid."
+- CTA section rewritten: "Stop chasing. Start settling."
+- Archival of ADR-0018 (Agent Skill + Fundy) and ADR-0014 (Phantom Connect) to `docs/archive/`
+- Landing page hero badge updated to mention Solana + USDC settlement
+- Dependabot alert acknowledged: 10 transitive vulnerabilities, all from `@solana/*` wallet adapter deps. None exploitable in client-side Next.js app.
 
 ---
 
 ## Resume point for the next session
 
-1. Ship settlement preview — show exact amount, recipient, and fee before wallet sign (issue #6).
-2. Archive Fundy, Agent Skill, Scoped Agent Access docs to `docs/archive/` (issue #7).
-3. Harden devnet Settlement and Contribution UX around insufficient funds, SOL-for-gas guidance, and recipient / Treasury token-account creation messaging.
-4. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
-5. Turn the LI.FI top-up flow into a user-facing `Add funds` / `Top up to settle` path for EVM-first users.
-6. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
-7. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
+1. Harden devnet Settlement and Contribution UX around insufficient funds, SOL-for-gas guidance, and recipient / Treasury token-account creation messaging.
+2. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
+3. Turn the LI.FI top-up flow into a user-facing `Add funds` / `Top up to settle` path for EVM-first users.
+4. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
+5. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
+6. Close GitHub issues #4–#9 on the repo after verifying all fixes.
 
 ---
 

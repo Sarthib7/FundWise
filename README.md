@@ -105,6 +105,7 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 │           ├── page.tsx
 │           └── settlements/[settlementId]/page.tsx
 ├── components/
+│   ├── settlement-preview-dialog.tsx  ← settlement preview before wallet sign
 │   └── group-dashboard/
 │       ├── expense-dialog.tsx
 │       ├── fund-mode-dashboard.tsx
@@ -120,11 +121,13 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 │   ├── lifi-bridge.ts
 │   ├── squads-multisig.ts
 │   └── supabase.ts
+├── docs/
+│   ├── adr/                         ← active architecture decisions
+│   └── archive/                      ← deferred ADRs (post-hackathon)
 ├── tests/
 │   └── expense-engine.test.ts   ← 32 unit tests
 ├── vitest.config.ts
-├── services/                     ← planned, not yet created
-└── supabase/
+├── supabase/
     └── schema.sql
 ```
 

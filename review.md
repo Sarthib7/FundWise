@@ -101,8 +101,10 @@ FundWise is Splitwise for crypto people who already have USDC on Solana — a pr
 
 ## Fix These Now (Prioritized)
 
-1. **Demo mode (highest impact):** "Try Demo" button on landing page → pre-populated Group with sample expenses, balances, simulated settlement. Let people experience the product before committing their wallet. 1-2 days.
+1. **Demo mode (highest impact):** ✅ SHIPPED — `/demo` route with 5-step walkthrough.
+2. **Cut docs, add tests (easiest win):** ✅ SHIPPED — 32 tests, ADR-0018/0014 archived.
+3. **Abstract crypto or own the niche (existential fix):** Partially addressed — hero copy now leads with "Splitwise, but you actually get paid." Full resolution requires embedded wallet integration (post-hackathon).
 
-2. **Cut docs, add tests (easiest win):** Archive planning docs for Fundy, Agent Skill, Scoped Agent Access, Fund Mode proposals. Write tests for `expense-engine.ts` (balance math, settlement graph). Zero tests for financial math is the most dangerous gap. 1 day.
+## Dependabot — 2026-04-30
 
-3. **Abstract crypto or own the niche (existential fix):** Pick one direction. If consumers: add embedded wallets, hide USDC/SOL terminology, make it feel like Venmo. If crypto-native: target "expat groups, remote teams, crypto communities splitting bills across borders" and market accordingly. Being in the middle kills you.
+10 transitive vulnerabilities from `@solana/*` wallet adapter deps (protobufjs, bigint-buffer, lodash, elliptic, uuid, postcss). All are indirect deps. None exploitable in client-side Next.js app — no server-side protobuf parsing, no user-controlled template rendering, no direct crypto primitive usage. Safe to acknowledge and suppress. Patch by updating `@solana/wallet-adapter-*` when upstream releases fixes.
