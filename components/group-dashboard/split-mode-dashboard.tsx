@@ -21,8 +21,10 @@ import {
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
+import { SettlementPreviewDialog } from "@/components/settlement-preview-dialog"
 import {
   ArrowRightLeft,
+  ChevronDown,
   Copy,
   Loader2,
   Minus,
@@ -85,6 +87,8 @@ function isRequestedTransfer(
   return transfer.from === requestedFromWallet && transfer.to === requestedToWallet
 }
 
+const VISIBLE_ACTIVITY_COUNT = 5
+
 export function SplitModeDashboard({
   connected,
   isWalletVerified,
@@ -121,15 +125,17 @@ export function SplitModeDashboard({
   canDeleteExpense,
 }: SplitModeDashboardProps) {
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState<ActivityExpense | null>(null)
+  const [previewTransfer, setPreviewTransfer] = useState<SettlementTransfer | null>(null)
+  const [showAllActivity, setShowAllActivity] = useState(false)
 
   const hasSettlementRequest = Boolean(requestedFromWallet && requestedToWallet)
   const viewerOutgoingTransferCount = viewerOutgoingTransfers.length
   const viewerIncomingTransferCount = viewerIncomingTransfers.length
   const expenseCount = activity.filter((item) => item.type === "expense").length
+  const settlementCount = activity.filter((item) => item.type === "settlement").length
 
-  const scrollToBalances = () => {
-    document.getElementById("balances-card")?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
+  const visibleActivity = showAllActivity ? activity : activity.slice(0, VISIBLE_ACTIVITY_COUNT)
+  const hasMoreActivity = activity.length > VISIBLE_ACTIVITY_COUNT
 
   const handleConfirmDelete = async () => {
     if (!pendingDeleteExpense) {
@@ -144,6 +150,7 @@ export function SplitModeDashboard({
 
   return (
     <>
+      {/* Section 1: Settlement request banner (unchanged — only from deep links) */}
       {hasSettlementRequest && (
         <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -233,7 +240,7 @@ export function SplitModeDashboard({
                 <Button
                   className="w-full bg-accent hover:bg-accent/90 sm:w-auto"
                   disabled={isSettling}
-                  onClick={() => onSettle(requestedTransfer)}
+                  onClick={() => setPreviewTransfer(requestedTransfer)}
                 >
                   {isSettling && settlingTransfer === requestedTransfer ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -246,38 +253,41 @@ export function SplitModeDashboard({
         </Card>
       )}
 
+      {/* Section 2: Merged hero card — balance + stats + balances + settlements */}
       {isMember && (
         <Card className="overflow-hidden border-accent/20 bg-gradient-to-br from-accent/8 via-background to-background">
-          <div className="flex flex-col gap-4 p-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="p-6 pb-4 space-y-4">
+            {/* Balance headline */}
             <div className="space-y-2">
-              <Badge className="bg-accent/10 text-accent border-accent/20">Your next step</Badge>
               <h2 className="text-2xl font-semibold sm:text-3xl">
                 {!viewerBalance || viewerBalance.amount === 0
-                  ? "You’re all settled"
+                  ? "You're all settled"
                   : viewerBalance.amount < 0
                     ? `You owe ${formatTokenAmount(Math.abs(viewerBalance.amount))} ${tokenName}`
-                    : `You’re owed ${formatTokenAmount(viewerBalance.amount)} ${tokenName}`}
+                    : `You're owed ${formatTokenAmount(viewerBalance.amount)} ${tokenName}`}
               </h2>
-              <p className="max-w-2xl text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {!viewerBalance || viewerBalance.amount === 0
-                  ? "You can log the next Expense or invite another Member without clearing anything first."
+                  ? "Log the next Expense or invite another Member."
                   : viewerBalance.amount < 0
                     ? viewerOutgoingTransferCount === 1
-                      ? "One Settlement is ready right now. Confirm it to get your Group Balance back to zero."
-                      : `${viewerOutgoingTransferCount} Settlements are ready. Review them below and clear what you owe in the smallest number of transfers.`
+                      ? "One Settlement ready right now."
+                      : `${viewerOutgoingTransferCount} Settlements ready to clear.`
                     : viewerIncomingTransferCount === 0
-                      ? "You’re ahead in this Group. FundWise will update this card again when another Member needs to settle with you."
+                      ? "You're ahead. We'll update when another Member needs to settle."
                       : viewerIncomingTransferCount === 1
-                        ? "One Member can settle with you right now. Share the request link if you want to nudge them."
-                        : `${viewerIncomingTransferCount} Members can settle with you right now. Share request links from the suggested Settlements list.`}
+                        ? "One Member can settle with you now. Nudge them."
+                        : `${viewerIncomingTransferCount} Members can settle with you. Nudge from the list below.`}
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
+
+            {/* Primary actions */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {viewerOutgoingTransferCount === 1 ? (
                 <Button
                   className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
                   disabled={isSettling}
-                  onClick={() => onSettle(viewerOutgoingTransfers[0])}
+                  onClick={() => setPreviewTransfer(viewerOutgoingTransfers[0])}
                 >
                   {isSettling && settlingTransfer === viewerOutgoingTransfers[0] ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -285,7 +295,7 @@ export function SplitModeDashboard({
                   Settle {formatTokenAmount(viewerOutgoingTransfers[0].amount)} {tokenName}
                 </Button>
               ) : viewerOutgoingTransferCount > 1 ? (
-                <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10" onClick={scrollToBalances}>
+                <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10">
                   Review {viewerOutgoingTransferCount} Settlements
                 </Button>
               ) : viewerIncomingTransferCount === 1 ? (
@@ -300,7 +310,7 @@ export function SplitModeDashboard({
                   ) : (
                     <Share2 className="h-4 w-4 mr-2" />
                   )}
-                  Share Request Link
+                  Nudge
                 </Button>
               ) : (
                 <Button
@@ -313,139 +323,146 @@ export function SplitModeDashboard({
               )}
               <Button variant="outline" className="min-h-11 sm:min-h-10" onClick={onInvite}>
                 <Copy className="h-4 w-4 mr-2" />
-                Invite a Member
+                Invite
               </Button>
             </div>
-          </div>
-          <div className="grid gap-3 border-t border-border/70 bg-muted/20 p-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-border/80 bg-background/90 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Group Members
-              </p>
-              <p className="mt-2 font-mono text-2xl font-semibold tabular-nums">{memberNameByWallet.size}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Everyone who can log an Expense or settle.</p>
-            </div>
-            <div className="rounded-lg border border-border/80 bg-background/90 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Logged Expenses
-              </p>
-              <p className="mt-2 font-mono text-2xl font-semibold tabular-nums">{expenseCount}</p>
-              <p className="mt-1 text-xs text-muted-foreground">The ledger driving the current live Balances.</p>
-            </div>
-            <div className="rounded-lg border border-border/80 bg-background/90 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Suggested Settlements
-              </p>
-              <p className="mt-2 font-mono text-2xl font-semibold tabular-nums">{transfers.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                The smallest set of transfers needed to simplify the Group.
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
 
-      {isMember && balances.length > 0 && (
-        <Card id="balances-card" className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Balances</h2>
-          <div className="space-y-3">
-            {balances.map((balance) => (
-              <div key={balance.wallet} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex min-w-0 items-center gap-3">
-                  <WalletAvatar address={balance.wallet} size={32} />
-                  <span className="truncate font-medium">{balance.displayName}</span>
-                  {balance.wallet === walletAddress && (
-                    <Badge variant="secondary" className="text-xs">
-                      You
-                    </Badge>
-                  )}
-                </div>
-                <span
-                  className={`font-semibold ${
-                    balance.amount > 0
-                      ? "text-green-600 dark:text-green-400"
-                      : balance.amount < 0
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-muted-foreground"
-                  } font-mono tabular-nums sm:text-right`}
-                >
-                  {balance.amount > 0 ? "+" : ""}
-                  {formatTokenAmount(balance.amount)} {tokenName}
-                </span>
-              </div>
-            ))}
+            {/* Inline stats */}
+            <p className="text-xs text-muted-foreground">
+              {memberNameByWallet.size} member{memberNameByWallet.size !== 1 ? "s" : ""}
+              {" · "}
+              {expenseCount} expense{expenseCount !== 1 ? "s" : ""}
+              {" · "}
+              {settlementCount} settled
+            </p>
           </div>
 
-          {transfers.length > 0 && (
-            <div className="mt-6 pt-4 border-t">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Suggested Settlements
-              </h3>
-              <div className="space-y-2">
-                {transfers.map((transfer, index) => {
-                  const isRequested = isRequestedTransfer(
-                    transfer,
-                    requestedFromWallet,
-                    requestedToWallet
-                  )
-                  const transferKey = `${transfer.from}:${transfer.to}`
-
-                  return (
-                    <div
-                      key={`${transfer.from}-${transfer.to}-${index}`}
-                      className={`flex flex-col gap-3 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between ${
-                        isRequested ? "border border-accent/40 bg-accent/5" : "bg-muted/50"
+          {/* Balance chips */}
+          {balances.length > 0 && (
+            <div className="border-t border-border/50 px-6 py-3">
+              <div className="flex flex-wrap gap-2">
+                {balances.map((balance) => (
+                  <div
+                    key={balance.wallet}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      balance.wallet === walletAddress
+                        ? "border-accent/30 bg-accent/5"
+                        : "border-border/60 bg-muted/30"
+                    }`}
+                  >
+                    <WalletAvatar address={balance.wallet} size={20} />
+                    <span className="truncate max-w-[80px] font-medium text-sm">
+                      {balance.displayName}
+                    </span>
+                    <span
+                      className={`font-mono tabular-nums font-semibold text-xs ${
+                        balance.amount > 0
+                          ? "text-green-600 dark:text-green-400"
+                          : balance.amount < 0
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-muted-foreground"
                       }`}
                     >
-                      <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <span>{transfer.fromName || shortWallet(transfer.from)}</span>
-                        <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                        <span>{transfer.toName || shortWallet(transfer.to)}</span>
-                      </div>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                      {balance.amount > 0 ? "+" : ""}
+                      {formatTokenAmount(balance.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Settlement rows */}
+          {transfers.length > 0 && (
+            <div className="border-t border-border/50 px-6 py-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Suggested Settlements
+              </p>
+              {transfers.map((transfer, index) => {
+                const isRequested = isRequestedTransfer(
+                  transfer,
+                  requestedFromWallet,
+                  requestedToWallet
+                )
+                const transferKey = `${transfer.from}:${transfer.to}`
+
+                return (
+                  <div
+                    key={`${transfer.from}-${transfer.to}-${index}`}
+                    className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm ${
+                      isRequested ? "border border-accent/40 bg-accent/5" : "bg-muted/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="truncate">{transfer.fromName || shortWallet(transfer.from)}</span>
+                      <ArrowRightLeft className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">{transfer.toName || shortWallet(transfer.to)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="font-semibold font-mono tabular-nums">
+                        {formatTokenAmount(transfer.amount)}
+                      </span>
+                      {transfer.from === walletAddress ? (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs bg-accent hover:bg-accent/90"
+                          disabled={isSettling}
+                          onClick={() => setPreviewTransfer(transfer)}
+                        >
+                          {isSettling && settlingTransfer === transfer ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Settle"
+                          )}
+                        </Button>
+                      ) : (
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label={`Share settlement request link for ${transfer.fromName || shortWallet(transfer.from)} to ${transfer.toName || shortWallet(transfer.to)}`}
-                          className="min-h-10 justify-start text-muted-foreground hover:text-foreground sm:min-h-9 sm:justify-center"
+                          className="h-7 text-xs text-muted-foreground hover:text-foreground"
                           disabled={sharingTransferKey === transferKey}
                           onClick={() => onShareSettlementRequest(transfer)}
                         >
                           {sharingTransferKey === transferKey ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
-                            <Share2 className="h-4 w-4" />
+                            "Nudge"
                           )}
                         </Button>
-                        <span className="font-semibold">
-                          {formatTokenAmount(transfer.amount)} {tokenName}
-                        </span>
-                        {transfer.from === walletAddress && (
-                          <Button
-                            size="sm"
-                            className="min-h-10 bg-accent hover:bg-accent/90 sm:min-h-9"
-                            disabled={isSettling}
-                            onClick={() => onSettle(transfer)}
-                          >
-                            {isSettling && settlingTransfer === transfer ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              "Settle"
-                            )}
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </Card>
       )}
 
+      {/* Section 3: Compact Activity Feed */}
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Activity</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">Activity</h2>
+            {activity.length > 0 && (
+              <Badge variant="outline" className="text-[10px]">
+                {expenseCount} expense{expenseCount !== 1 ? "s" : ""} · {settlementCount} settlement{settlementCount !== 1 ? "s" : ""}
+              </Badge>
+            )}
+          </div>
+          {isMember && activity.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={onOpenCreateExpenseDialog}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add
+            </Button>
+          )}
+        </div>
+
         {activity.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -454,9 +471,9 @@ export function SplitModeDashboard({
               {isMember
                 ? "Log the first Expense to generate live Balances and suggested Settlements."
                 : connected && isWalletVerified
-                  ? "Join this Group to start tracking Expenses and Settlements with the other Members."
+                  ? "Join this Group to start tracking Expenses and Settlements."
                   : connected
-                    ? "Verify your wallet to reveal the live Group ledger and join state."
+                    ? "Verify your wallet to reveal the live Group ledger."
                     : "Connect your wallet to join this Group and start tracking shared Expenses."}
             </p>
             {isMember ? (
@@ -480,8 +497,8 @@ export function SplitModeDashboard({
             ) : null}
           </div>
         ) : (
-          <div className="space-y-4">
-            {activity.map((item, index) => {
+          <div className="space-y-0">
+            {visibleActivity.map((item, index) => {
               if (item.type === "expense") {
                 const expense = item.data
                 const expenseCanBeDeleted = canDeleteExpense(expense)
@@ -494,7 +511,7 @@ export function SplitModeDashboard({
                 return (
                   <div
                     key={`${item.type}-${expense.id}-${index}`}
-                    className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
@@ -504,7 +521,7 @@ export function SplitModeDashboard({
                         <p className="truncate font-medium text-sm">{expense.memo || expense.category}</p>
                         <p className="text-xs text-muted-foreground">
                           {payerLabel} paid
-                          {expense.created_by !== expense.payer ? ` · ${creatorLabel} logged` : ""} ·{" "}
+                          {expense.created_by !== expense.payer ? ` · ${creatorLabel} logged` : ""} · {" "}
                           {new Date(expense.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -515,8 +532,11 @@ export function SplitModeDashboard({
                           Edited
                         </Badge>
                       )}
-                      <span className="font-semibold">
+                      <span className="font-semibold font-mono tabular-nums">
                         {formatTokenAmount(expense.amount)} {tokenName}
+                        {expense.source_currency && expense.source_currency !== "USD" && expense.source_amount != null && (
+                          <>{" "}({formatTokenAmount(expense.source_amount)} {expense.source_currency})</>
+                        )}
                       </span>
                       {isExpenseOwnedByWallet &&
                         (expenseCanBeDeleted ? (
@@ -525,30 +545,30 @@ export function SplitModeDashboard({
                               variant="ghost"
                               size="icon"
                               aria-label={`Edit ${expense.memo || expense.category}`}
-                              className="h-10 w-10 text-muted-foreground hover:text-foreground"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
                               disabled={isSubmitting}
                               onClick={() => onOpenEditExpenseDialog(expense)}
                             >
-                              <Pencil className="h-4 w-4" />
+                              <Pencil className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               aria-label={`Delete ${expense.memo || expense.category}`}
-                              className="h-10 w-10 text-muted-foreground hover:text-red-600"
+                              className="h-8 w-8 text-muted-foreground hover:text-red-600"
                               disabled={deletingExpenseId === expense.id}
                               onClick={() => setPendingDeleteExpense(expense)}
                             >
                               {deletingExpenseId === expense.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               )}
                             </Button>
                           </>
                         ) : (
                           <Badge variant="outline" className="text-[10px]">
-                            Locked After Settlement
+                            Locked
                           </Badge>
                         ))}
                     </div>
@@ -565,30 +585,63 @@ export function SplitModeDashboard({
               return (
                 <div
                   key={`${item.type}-${settlement.id}-${index}`}
-                  className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex items-center justify-between border-b py-3 last:border-0"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 flex-shrink-0">
                       <Minus className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-medium text-sm">Settlement</p>
-                      <p className="text-xs text-muted-foreground">
-                        {settlementFromLabel} → {settlementToLabel} ·{" "}
+                      <p className="text-xs text-muted-foreground truncate">
+                        {settlementFromLabel} → {settlementToLabel} · {" "}
                         {new Date(settlement.confirmed_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <span className="font-semibold text-green-600 dark:text-green-400">
+                  <span className="font-semibold text-green-600 dark:text-green-400 font-mono tabular-nums flex-shrink-0">
                     {formatTokenAmount(settlement.amount)} {tokenName}
                   </span>
                 </div>
               )
             })}
+
+            {/* Show N more */}
+            {hasMoreActivity && !showAllActivity && (
+              <div className="pt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowAllActivity(true)}
+                >
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  Show {activity.length - VISIBLE_ACTIVITY_COUNT} more
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </Card>
 
+      {/* Settlement preview dialog */}
+      {previewTransfer && (
+        <SettlementPreviewDialog
+          open={Boolean(previewTransfer)}
+          onOpenChange={(isOpen) => { if (!isOpen) setPreviewTransfer(null) }}
+          transfer={previewTransfer}
+          tokenName={tokenName}
+          viewerWallet={walletAddress}
+          isSettling={isSettling}
+          onConfirm={() => {
+            const t = previewTransfer
+            setPreviewTransfer(null)
+            return onSettle(t)
+          }}
+        />
+      )}
+
+      {/* Delete confirmation */}
       <AlertDialog
         open={Boolean(pendingDeleteExpense)}
         onOpenChange={(open) => {

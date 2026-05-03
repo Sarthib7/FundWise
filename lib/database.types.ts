@@ -110,6 +110,11 @@ export interface Database {
           created_at: string
           edited_at: string | null
           deleted_at: string | null
+          source_currency: string | null
+          source_amount: number | null
+          exchange_rate: number | null
+          exchange_rate_source: string | null
+          exchange_rate_at: string | null
         }
         Insert: {
           id?: string
@@ -124,6 +129,11 @@ export interface Database {
           created_at?: string
           edited_at?: string | null
           deleted_at?: string | null
+          source_currency?: string | null
+          source_amount?: number | null
+          exchange_rate?: number | null
+          exchange_rate_source?: string | null
+          exchange_rate_at?: string | null
         }
         Update: {
           id?: string
@@ -138,6 +148,11 @@ export interface Database {
           created_at?: string
           edited_at?: string | null
           deleted_at?: string | null
+          source_currency?: string | null
+          source_amount?: number | null
+          exchange_rate?: number | null
+          exchange_rate_source?: string | null
+          exchange_rate_at?: string | null
         }
         Relationships: []
       }

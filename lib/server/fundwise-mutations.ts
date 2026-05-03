@@ -224,6 +224,11 @@ export async function addExpenseMutation(data: {
   category?: string
   splitMethod: "equal" | "exact" | "shares" | "percentage"
   splits: ExpenseSplitInput[]
+  sourceCurrency?: string
+  sourceAmount?: number
+  exchangeRate?: number
+  exchangeRateSource?: string
+  exchangeRateAt?: string
 }) {
   const group = await getGroupOrThrow(data.groupId)
 
@@ -253,6 +258,11 @@ export async function addExpenseMutation(data: {
       memo: data.memo || null,
       category: data.category || "general",
       split_method: data.splitMethod,
+      source_currency: data.sourceCurrency || "USD",
+      source_amount: data.sourceAmount ?? data.amount,
+      exchange_rate: data.exchangeRate ?? 1.0,
+      exchange_rate_source: data.exchangeRateSource || (data.sourceCurrency && data.sourceCurrency !== "USD" ? "coingecko" : "default"),
+      exchange_rate_at: data.exchangeRateAt || new Date().toISOString(),
     })
     .select("id")
     .single()
@@ -286,6 +296,11 @@ export async function updateExpenseMutation(data: {
   category?: string
   splitMethod: "equal" | "exact" | "shares" | "percentage"
   splits: ExpenseSplitInput[]
+  sourceCurrency?: string
+  sourceAmount?: number
+  exchangeRate?: number
+  exchangeRateSource?: string
+  exchangeRateAt?: string
 }) {
   const expense = await getExpenseOrThrow(data.expenseId)
 
@@ -309,6 +324,24 @@ export async function updateExpenseMutation(data: {
 
   if (error) {
     throw new FundWiseError(`Failed to update expense: ${error.message}`)
+  }
+
+  // Update currency fields separately (not in the RPC)
+  if (data.sourceCurrency || data.sourceAmount || data.exchangeRate) {
+    const { error: currencyError } = await getAdmin()
+      .from("expenses")
+      .update({
+        source_currency: data.sourceCurrency || "USD",
+        source_amount: data.sourceAmount ?? data.amount,
+        exchange_rate: data.exchangeRate ?? 1.0,
+        exchange_rate_source: data.exchangeRateSource || (data.sourceCurrency && data.sourceCurrency !== "USD" ? "coingecko" : "default"),
+        exchange_rate_at: data.exchangeRateAt || new Date().toISOString(),
+      })
+      .eq("id", data.expenseId)
+
+    if (currencyError) {
+      throw new FundWiseError(`Failed to update expense currency fields: ${currencyError.message}`)
+    }
   }
 }
 

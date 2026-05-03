@@ -492,6 +492,11 @@ export function useGroupDashboard() {
         txSig: signature,
       })
 
+      const creditorLabel = memberNameByWallet.get(transfer.to) || shortWallet(transfer.to)
+      toast.success(`Settled ${formatTokenAmount(transfer.amount)} ${tokenName} with ${creditorLabel}`, {
+        description: "View your receipt →",
+      })
+
       router.push(`/groups/${groupId}/settlements/${settlement.id}`)
     } catch (error) {
       if (error instanceof Error && error.message === "TRANSACTION_CANCELLED") {

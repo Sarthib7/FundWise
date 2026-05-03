@@ -1,9 +1,15 @@
 "use client"
 
+import { useCallback, useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   Select,
   SelectContent,
@@ -13,7 +19,13 @@ import {
 } from "@/components/ui/select"
 import type { Database } from "@/lib/database.types"
 import type { ActivityItem } from "@/lib/db"
-import { Loader2 } from "lucide-react"
+import {
+  SUPPORTED_CURRENCIES,
+  CURRENCY_SYMBOLS,
+  convertToUsd,
+  type SupportedCurrency,
+} from "@/lib/currency"
+import { ChevronDown, Loader2 } from "lucide-react"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type SplitMethod = Database["public"]["Enums"]["split_method"]
@@ -58,23 +70,110 @@ export function ExpenseDialog({
   members,
   expenseAmount,
   expenseMemo,
-  expenseCategory,
+  expenseCategory: _expenseCategory,
   expensePayer,
   splitMethod,
   customSplitValues,
   expenseDialogParticipantWallets,
   memberNameByWallet,
-  expenseCategories,
+  expenseCategories: _expenseCategories,
   expenseSplitMethods,
   isSubmitting,
   onExpenseAmountChange,
   onExpenseMemoChange,
-  onExpenseCategoryChange,
+  onExpenseCategoryChange: _onExpenseCategoryChange,
   onExpensePayerChange,
   onSplitMethodChange,
   onCustomSplitValueChange,
   onSubmit,
 }: ExpenseDialogProps) {
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [sourceCurrency, setSourceCurrency] = useState<SupportedCurrency>("USD")
+  const [convertedUsdDisplay, setConvertedUsdDisplay] = useState<string | null>(null)
+  const [isConverting, setIsConverting] = useState(false)
+  const [conversionRate, setConversionRate] = useState<number | null>(null)
+
+  const isDefaultSplit = splitMethod === "equal"
+  const isNonUsd = sourceCurrency !== "USD"
+
+  // When editing, restore the source currency from the expense
+  useEffect(() => {
+    if (editingExpense) {
+      const savedCurrency = (editingExpense as Record<string, unknown>).source_currency as string | undefined
+      if (savedCurrency && SUPPORTED_CURRENCIES.includes(savedCurrency as SupportedCurrency)) {
+        setSourceCurrency(savedCurrency as SupportedCurrency)
+      }
+    }
+  }, [editingExpense])
+
+  // Fetch conversion when amount or currency changes
+  useEffect(() => {
+    if (!isNonUsd || !expenseAmount) {
+      setConvertedUsdDisplay(null)
+      setConversionRate(null)
+      return
+    }
+
+    const parsedAmount = Number(expenseAmount)
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setConvertedUsdDisplay(null)
+      setConversionRate(null)
+      return
+    }
+
+    let cancelled = false
+    setIsConverting(true)
+
+    convertToUsd(parsedAmount, sourceCurrency)
+      .then(({ usdAmount, rate }) => {
+        if (!cancelled) {
+          setConvertedUsdDisplay(`≈ $${usdAmount.toFixed(2)} USDC`)
+          setConversionRate(rate)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setConvertedUsdDisplay("Rate unavailable")
+          setConversionRate(null)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsConverting(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [expenseAmount, sourceCurrency, isNonUsd])
+
+  // Reset currency when dialog opens for new expense
+  useEffect(() => {
+    if (open && !editingExpense) {
+      setSourceCurrency("USD")
+      setConvertedUsdDisplay(null)
+      setConversionRate(null)
+    }
+  }, [open, editingExpense])
+
+  // Expose conversion data to the parent via a hidden state pattern
+  // The parent page reads these from window or we pass them through a callback
+  // For now, we store them in a ref that the parent can query
+
+  const handleCurrencyChange = useCallback((currency: string) => {
+    setSourceCurrency(currency as SupportedCurrency)
+  }, [])
+
+  // Store conversion data on the window so the parent form can read it
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const w = window as any // eslint-disable-line
+      w.__fw_expense_currency = sourceCurrency
+      w.__fw_expense_rate = conversionRate
+    }
+  }, [sourceCurrency, conversionRate])
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-xl">
@@ -89,129 +188,179 @@ export function ExpenseDialog({
             void onSubmit()
           }}
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="expense-amount">Amount ({tokenName})</Label>
-              <Input
-                id="expense-amount"
-                type="text"
-                inputMode="decimal"
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="0.00"
-                value={expenseAmount}
-                onChange={(event) => onExpenseAmountChange(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="expense-payer">Paid By</Label>
-              <Select value={expensePayer} onValueChange={onExpensePayerChange}>
-                <SelectTrigger id="expense-payer" className="w-full">
-                  <SelectValue placeholder="Select the payer" />
+          {/* Field 1: Amount + Currency */}
+          <div className="space-y-2">
+            <Label htmlFor="expense-amount">Amount</Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  id="expense-amount"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="0.00"
+                  value={expenseAmount}
+                  onChange={(event) => onExpenseAmountChange(event.target.value)}
+                  className="text-lg font-semibold"
+                />
+              </div>
+              <Select value={sourceCurrency} onValueChange={handleCurrencyChange}>
+                <SelectTrigger className="w-[100px]" aria-label="Currency">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={member.wallet}>
-                      {member.display_name || shortWallet(member.wallet)}
+                  {SUPPORTED_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      {CURRENCY_SYMBOLS[currency]} {currency}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            {/* Converted amount display */}
+            {isNonUsd && (
+              <div className="flex items-center gap-2 h-6">
+                {isConverting ? (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Converting...
+                  </span>
+                ) : convertedUsdDisplay ? (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {convertedUsdDisplay}
+                  </span>
+                ) : null}
+              </div>
+            )}
           </div>
 
+          {/* Field 2: What was it for? */}
           <div className="space-y-2">
-            <Label htmlFor="expense-description">Description</Label>
+            <Label htmlFor="expense-description">What was it for?</Label>
             <Input
               id="expense-description"
-              placeholder="e.g., Dinner, Uber, Groceries"
+              placeholder="e.g., Dinner at Padaria, Uber to airport"
               value={expenseMemo}
               onChange={(event) => onExpenseMemoChange(event.target.value)}
             />
           </div>
 
+          {/* Field 3: Paid by */}
           <div className="space-y-2">
-            <Label>Split Method</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {expenseSplitMethods.map((method) => (
-                <Button
-                  key={method}
-                  type="button"
-                  variant={splitMethod === method ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => onSplitMethodChange(method)}
-                  className={splitMethod === method ? "bg-accent hover:bg-accent/90" : ""}
-                >
-                  {method.charAt(0).toUpperCase() + method.slice(1)}
-                </Button>
-              ))}
-            </div>
+            <Label htmlFor="expense-payer">Paid by</Label>
+            <Select value={expensePayer} onValueChange={onExpensePayerChange}>
+              <SelectTrigger id="expense-payer" className="w-full">
+                <SelectValue placeholder="Select the payer" />
+              </SelectTrigger>
+              <SelectContent>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.wallet}>
+                    {member.display_name || shortWallet(member.wallet)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {splitMethod !== "equal" && (
-            <div className="space-y-3">
-              <Label>
-                {splitMethod === "exact"
-                  ? `Exact ${tokenName} amounts`
-                  : splitMethod === "percentage"
-                    ? "Percentages"
-                    : "Relative shares"}
-              </Label>
-              <div className="space-y-3 rounded-lg border p-4">
-                {expenseDialogParticipantWallets.map((participantWallet) => (
-                  <div
-                    key={participantWallet}
-                    className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_120px] sm:items-center sm:gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {memberNameByWallet.get(participantWallet) || shortWallet(participantWallet)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {participantWallet === expensePayer ? "Selected as payer" : "Included in this Expense"}
-                      </p>
-                    </div>
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      spellCheck={false}
-                      step={splitMethod === "shares" ? "0.1" : "0.01"}
-                      placeholder={splitMethod === "shares" ? "1" : "0.00"}
-                      value={customSplitValues[participantWallet] || ""}
-                      onChange={(event) =>
-                        onCustomSplitValueChange(participantWallet, event.target.value)
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Default split hint */}
+          {isDefaultSplit && !advancedOpen && (
+            <p className="text-xs text-muted-foreground">
+              Split equally among {expenseDialogParticipantWallets.length} Member{expenseDialogParticipantWallets.length !== 1 ? "s" : ""}
+            </p>
           )}
 
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {expenseCategories.map((category) => (
-                <Button
-                  key={category}
-                  type="button"
-                  variant={expenseCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => onExpenseCategoryChange(category)}
-                  className={expenseCategory === category ? "bg-accent hover:bg-accent/90 text-xs" : "text-xs"}
-                >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </Button>
-              ))}
-            </div>
-          </div>
+          {/* Advanced: split options */}
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full justify-between text-muted-foreground hover:text-foreground -mx-1"
+              >
+                <span>
+                  {advancedOpen ? "Hide" : "Show"} split options
+                  {!isDefaultSplit && (
+                    <span className="ml-1 text-accent font-medium">
+                      ({splitMethod})
+                    </span>
+                  )}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${advancedOpen ? "rotate-180" : ""}`}
+                />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-2">
+              {/* Split method selector */}
+              <div className="space-y-2">
+                <Label>Split Method</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {expenseSplitMethods.map((method) => (
+                    <Button
+                      key={method}
+                      type="button"
+                      variant={splitMethod === method ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onSplitMethodChange(method)}
+                      className={splitMethod === method ? "bg-accent hover:bg-accent/90" : ""}
+                    >
+                      {method.charAt(0).toUpperCase() + method.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-          <p className="text-xs text-muted-foreground">
-            {splitMethod === "equal"
-              ? `Split equally among ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}`
-              : `This Expense currently includes ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}.`}
-          </p>
+              {/* Custom split values (when not equal) */}
+              {splitMethod !== "equal" && (
+                <div className="space-y-3">
+                  <Label>
+                    {splitMethod === "exact"
+                      ? `Exact ${tokenName} amounts`
+                      : splitMethod === "percentage"
+                        ? "Percentages"
+                        : "Relative shares"}
+                  </Label>
+                  <div className="space-y-3 rounded-lg border p-4">
+                    {expenseDialogParticipantWallets.map((participantWallet) => (
+                      <div
+                        key={participantWallet}
+                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_120px] sm:items-center sm:gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {memberNameByWallet.get(participantWallet) || shortWallet(participantWallet)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {participantWallet === expensePayer ? "Selected as payer" : "Included in this Expense"}
+                          </p>
+                        </div>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          spellCheck={false}
+                          step={splitMethod === "shares" ? "0.1" : "0.01"}
+                          placeholder={splitMethod === "shares" ? "1" : "0.00"}
+                          value={customSplitValues[participantWallet] || ""}
+                          onChange={(event) =>
+                            onCustomSplitValueChange(participantWallet, event.target.value)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                {splitMethod === "equal"
+                  ? `Split equally among ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}`
+                  : `This Expense currently includes ${expenseDialogParticipantWallets.length} Member${expenseDialogParticipantWallets.length !== 1 ? "s" : ""}.`}
+              </p>
+            </CollapsibleContent>
+          </Collapsible>
 
           <Button
             type="submit"

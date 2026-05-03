@@ -31,3 +31,4 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-015 → [0015-wallet-signed-session-cookies-for-server-mutations.md](./docs/adr/0015-wallet-signed-session-cookies-for-server-mutations.md)
 - ADR-016 → [0016-prioritize-split-mode-and-hide-cross-chain-routing.md](./docs/adr/0016-prioritize-split-mode-and-hide-cross-chain-routing.md)
 - ADR-017 → [0017-snapshot-source-currency-expenses-into-usdc-ledger.md](./docs/adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md)
+- ADR-018 → [0018-agent-skill-endpoint-and-fundy-telegram-bot.md](./docs/adr/0018-agent-skill-endpoint-and-fundy-telegram-bot.md)

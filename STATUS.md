@@ -1,6 +1,6 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-04-29
+**Snapshot date:** 2026-04-30
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 
@@ -26,6 +26,8 @@ The product direction is now sharper:
 - `LI.FI` is now the highest-priority sponsor support layer after Split Mode hardening. The intended user-facing language is `Add funds` or `Top up to settle`, not bridge jargon.
 - **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
 - The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
+- **Fundy** is the name of the hosted Telegram bot that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Fundy handles read-only and draft-safe actions; money movement still requires wallet confirmation in the app.
+- The **Agent Skill Endpoint** (`/skill.md`) is a public URL on the production host (`https://fundwise.kairen.xyz/skill.md`) that returns a detailed machine-readable markdown document so any autonomous agent can curl it, discover FundWise capabilities, and integrate through Scoped Agent Access.
 - Fund Mode is still incomplete. Treasury initialization and Contributions exist, but Proposal flows are not yet ready to be presented as fully shipped product behavior.
 
 ---
@@ -103,11 +105,13 @@ The product direction is now sharper:
 3. Finish the LI.FI support layer for EVM-first users:
    `Add funds` / `Top up to settle`, route execution, and clean return into the same Group Settlement flow.
 4. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
-   wallet analysis, reminders, FundWise Agent, Telegram auth + bot + mini app, and later scoped agent access.
-5. Add the missing Supabase data model for later Fund Mode and channel expansion:
-   Telegram-to-wallet links, Expense Proof attachments, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
-6. Return to Fund Mode proposals only after the Split Mode plus LI.FI story is coherent under devnet rehearsal.
-7. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
+   wallet analysis, reminders, FundWise Agent, **Fundy** (hosted Telegram bot with wallet linking and read-only/draft-safe Group interactions), and later scoped agent access.
+5. Add the Agent Skill Endpoint (`/skill.md`) and Scoped Agent Access API after the backend is stable:
+   public discovery document, scoped agent capability grants, and authenticated agent-to-FundWise interactions.
+6. Add the missing Supabase data model for later Fund Mode and channel expansion:
+   Telegram-to-wallet links, Telegram chat–Group links, short-lived link codes, draft expenses, agent-access grants, Expense Proof attachments, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
+7. Return to Fund Mode proposals only after the Split Mode plus LI.FI story is coherent under devnet rehearsal.
+8. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
 
 ---
 
@@ -144,7 +148,10 @@ The product direction is now sharper:
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
 - Future expansion should keep one shared engine across surfaces: web first, then FundWise Agent, Telegram, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
 - The FundWise Agent name should cover Telegram bot / mini app, scoped agent access, reminders, draft Expense creation, proof upload, and wallet-aware suggestions.
-- Telegram scope should stay read-only and draft-safe plus comments/history; approvals, execution, and money movement remain app-and-wallet confirmed.
+- Fundy is the hosted Telegram bot that runs the FundWise Agent. It is not a separate product; it is a distribution surface for the same wallet-bound engine.
+- The Agent Skill Endpoint (`/skill.md`) is a public machine-readable discovery document for autonomous agents. It does not require auth and does not expose private data.
+- Scoped Agent Access is the permission model for autonomous agents: capabilities tied to Member wallet, Group, and action type, not broad permanent API keys.
+- Telegram scope should stay read-only and draft-safe plus comments/history. **Proposal approve/reject** may run from Fundy when those actions are database-only; **on-chain** Settlement, Contribution, and Proposal execution remain app-and-wallet confirmed (deep-link back; reuse **Settlement Request Links** for settle intents).
 - Telegram identity should stay simple: one Telegram account links to one active wallet at a time, with an explicit relink flow later if needed.
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
 - Telegram bot attachment may be initiated by any Member, but each person must authenticate privately in DM before the bot acts for them in the shared chat.
@@ -156,6 +163,16 @@ The product direction is now sharper:
 - Landing marketing anchors belong on `/` only; do not repeat that section nav on Group routes.
 - Zerion track = **CLI / analysis**, not an in-app “Zerion wallet connect” replacement.
 - Optional Phantom Connect is **additive** to wallet-adapter, with Portal configuration supplied by the owner.
+
+## Product decisions locked on 2026-04-30 (Fundy + Agent Skill grill)
+
+- **Production web host for agent discovery:** `https://fundwise.kairen.xyz` — Agent Skill at **`/skill.md`** (root).
+- **Fundy hosting:** separate **Railway** service; **monorepo** path **`services/fundy/`**; Telegram library **`grammy`**.
+- **Fundy ↔ FundWise data path:** HTTP **API routes only** (same surface as browsers/agents), with **`FUNDWISE_SERVICE_API_KEY`** + **`X-Fundy-Wallet`** for bot calls; extend routes for Scoped Agent Access (user tokens from **`/profile/agents`** + optional wallet-signed agent auth).
+- **Telegram ↔ wallet linking:** **Option A** — short-lived codes from the authenticated web app, pasted as `/link FW-…` in DM.
+- **Evolution:** command-based v1 → LLM agent (e.g. **OpenRouter**) as end state; Zerion **`/analyze`**, **`/readiness`**, **`/verify`** in v1.
+- **Zerion CLI auth for Fundy:** prefer free **`ZERION_API_KEY`** initially; optional **x402** on Solana later.
+- **Money movement from Telegram:** deep-link to web app; **Settlement** links must reuse existing **Settlement Request Link** behavior.
 
 ---
 
@@ -178,17 +195,19 @@ The product direction is now sharper:
 
 - Tighten the production schema and migrations around Fund Mode before mainnet-beta:
   Proposal comments, Proposal proof attachments / links, Proposal edit-history records, and execution-state metadata.
-- Add Telegram identity-link tables with a one-Telegram-account-to-one-active-wallet rule.
-- Add later scoped agent-access records instead of broad permanent API keys.
+- Add Telegram identity-link tables with a one-Telegram-account-to-one-active-wallet rule, plus **telegram chat ↔ group**, **short-lived link codes**, and **`draft_expenses`** for Telegram/agent drafts.
+- Add scoped agent-access records instead of broad permanent API keys.
+- Add agent-access grant tables for autonomous agent capabilities: scoped to Member wallet, Group, and action type, with expiration and revocation support; support **user-generated tokens** from `/profile/agents` (rotate/delete/renew) and optional **wallet-signed** agent auth.
 - Keep all of that behind the same server-side wallet-bound authorization model rather than exposing new public-client mutation paths.
 
 ---
 
 ## Secondary work kept out of the main path
 
-- Telegram auth, Telegram bot, and Telegram mini app for existing group chats
-- FundWise Agent for Telegram, reminders, draft Expenses, proof upload, wallet analysis, and scoped assistant-driven FundWise actions
-- Agent skill and scoped agent access for autonomous or assistant-driven FundWise actions
+- **Fundy**: the hosted Telegram bot for the FundWise Agent, **command-first v1** on **Railway** (`grammy`), code in **`services/fundy/`** (monorepo). Calls FundWise **HTTP APIs** with **`FUNDWISE_SERVICE_API_KEY` + `X-Fundy-Wallet`** (not direct Supabase from the bot). Telegram–wallet linking uses **web-generated short codes** in DM. Zerion via **`/analyze`**, **`/readiness`**, **`/verify`** (Zerion CLI; start with **`ZERION_API_KEY`**, optional x402 later). End goal: LLM agent (e.g. OpenRouter) on same tools. See ADR-0018 and CONTEXT.md.
+- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.kairen.xyz/skill.md`** — what to call, what not to call, auth, limits, errors. Does not require auth to fetch; does not expose private Member data. See ADR-0018.
+- **Scoped Agent Access**: the permission model for autonomous agents. Agents get scoped capabilities tied to Member wallet, Group, and action type — not broad permanent API keys.
+- FundWise Agent for reminders, draft Expenses, proof upload, wallet analysis, and scoped assistant-driven FundWise actions
 - Wallet-embedded mini dapp distribution
 - Native mobile app
 - Long-range stablecoin-only UX:
@@ -230,15 +249,62 @@ Fund Mode remains a real product mode, but it is no longer part of the devnet-re
 
 ---
 
+## Product roast — 2026-04-30
+
+Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
+
+**Top 5 issues:**
+1. Target user too narrow (wallet + USDC + SOL + crypto-literate friends)
+2. Entire app behind wallet gate — no demo, no trial
+3. 18 ADRs, zero tests, zero real users
+4. Documentation-to-product ratio inverted
+5. No retention — episodic loop, no notifications
+
+**Actions taken:**
+- Added interactive demo at `/demo` (5-step walkthrough: Group → Expenses → Balances → Settle → Receipt)
+- Added 32 unit tests for `expense-engine.ts` (splits, balances, settlement graph, formatting)
+- Added "Try demo" CTA on landing page hero
+- Created GitHub issues #4–#9 for all remaining fixes
+
+**Remaining issues (from roast):**
+- #6 Settlement preview before wallet sign ✅ **SHIPPED**
+- #7 Archive future-planning docs ✅ **SHIPPED**
+- #8 Landing page tightening ✅ **SHIPPED**
+- #9 Post-settlement notifications ✅ **SHIPPED**
+
+**Additional actions taken (session 2):**
+- Added `SettlementPreviewDialog` component — shows amount, recipient, fee, and steps before wallet sign
+- All settlement buttons (hero card, balances list, request link) now route through preview dialog
+- Post-settlement success toast with creditor name and "View your receipt →"
+- Activity Feed header shows expense/settlement count badge
+- Hero headline rewritten: "Splitwise, but you actually get paid."
+- CTA section rewritten: "Stop chasing. Start settling."
+- Archival of ADR-0018 (Agent Skill + Fundy) and ADR-0014 (Phantom Connect) to `docs/archive/`
+- Landing page hero badge updated to mention Solana + USDC settlement
+- Dependabot alert acknowledged: 10 transitive vulnerabilities, all from `@solana/*` wallet adapter deps. None exploitable in client-side Next.js app.
+
+---
+
 ## Resume point for the next session
 
 1. Harden devnet Settlement and Contribution UX around insufficient funds, SOL-for-gas guidance, and recipient / Treasury token-account creation messaging.
-2. Restore raw TypeScript checking and working lint so `next build` is no longer hiding readiness issues.
-3. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
-4. If `next dev` falls into missing `.next/server` chunk errors during browser QA again, clear `.next` and restart `pnpm dev` before debugging app code.
-5. Turn the LI.FI top-up flow into a user-facing `Add funds` / `Top up to settle` path for EVM-first users without bloating the main settlement UX.
-6. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
-7. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
+2. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
+3. Turn the LI.FI top-up flow into a user-facing `Add funds` / `Top up to settle` path for EVM-first users.
+4. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
+5. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
+6. Close GitHub issues #4–#9 on the repo after verifying all fixes.
+
+## Planned, not yet built
+
+- **Dashboard + Expense UX overhaul** (ADR-0020): 7→4 sections on mobile, expense dialog simplified to 3 fields, category dropdown killed, photo button added. **Next to build.**
+- **Currency conversion** (ADR-0020): CoinGecko free tier, 5 currencies (USD/EUR/GBP/INR/AED), rate snapshot. After dashboard cleanup.
+- **Photo upload** (ADR-0020): Supabase Storage, JPEG/PNG only, client-side compress, one per expense. After currency conversion.
+- **Fundy Lite** (ADR-0018): Hackathon Telegram bot. Command-based, Zerion wallet analysis, draft expenses, settlement nudges. **Parallel track — second developer.**
+- **Fundy Full** (ADR-0018): Post-hackathon. LLM via OpenRouter, personal finance manager, budgets, spending patterns, receipt parsing, proactive reminders.
+- **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon.
+- **Fund Mode Proposals**: creation, approval, execution UI still pending.
+- **Agent Skill Endpoint** (`/skill.md`): public discovery document. Post-hackathon.
+- **Scoped Agent Access**: permission model for autonomous agents. Post-hackathon.
 
 ---
 

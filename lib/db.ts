@@ -193,6 +193,11 @@ export async function addExpense(data: {
   category?: string
   splitMethod: "equal" | "exact" | "shares" | "percentage"
   splits: { wallet: string; share: number }[]
+  sourceCurrency?: string
+  sourceAmount?: number
+  exchangeRate?: number
+  exchangeRateSource?: string
+  exchangeRateAt?: string
 }) {
   return requestJson<{ id: string }>("/api/expenses", {
     method: "POST",
@@ -249,6 +254,11 @@ export async function updateExpense(data: {
   category?: string
   splitMethod: "equal" | "exact" | "shares" | "percentage"
   splits: { wallet: string; share: number }[]
+  sourceCurrency?: string
+  sourceAmount?: number
+  exchangeRate?: number
+  exchangeRateSource?: string
+  exchangeRateAt?: string
 }) {
   await requestJson<{ ok: true }>(`/api/expenses/${data.expenseId}`, {
     method: "PATCH",

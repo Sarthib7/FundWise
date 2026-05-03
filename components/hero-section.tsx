@@ -8,6 +8,7 @@ import {
   Home,
   Hotel,
   Palmtree,
+  Play,
   UtensilsCrossed,
 } from "lucide-react"
 import { AppEntryButton } from "@/components/app-entry-button"
@@ -27,17 +28,17 @@ export function HeroSection() {
 
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
-          Split bills with friends — no more chasing
+          Built on Solana · Instant USDC settlement
         </div>
 
         <h1 className="font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
-          Shared expenses,
+          Splitwise, but you
           <br />
-          <em className="not-italic text-brand-grad font-serif">settled simply.</em>
+          <em className="not-italic text-brand-grad font-serif">actually get paid.</em>
         </h1>
 
         <p className="mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
-          Track shared costs, see who owes what, and settle up in seconds.
+          Track shared costs, see who owes what, and settle in USDC on Solana. No more chasing payments across apps.
         </p>
 
         <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -47,6 +48,13 @@ export function HeroSection() {
             navigateAfterConnect
             className="w-full sm:min-h-11 sm:w-auto"
           />
+          <Link
+            href="/demo"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
+          >
+            <Play className="h-4 w-4" />
+            Try demo
+          </Link>
           <Link
             href="/#how"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
