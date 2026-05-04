@@ -1,7 +1,7 @@
 /**
  * Currency conversion utility for FundWise expenses.
  *
- * Uses CoinGecko free tier (30 calls/min) to fetch live rates.
+ * Uses a free fiat exchange-rate endpoint to fetch live rates.
  * ADR-0020 Decision 4, ADR-0017.
  *
  * Supported currencies: USD, EUR, GBP, INR, AED
@@ -32,43 +32,49 @@ type RateCache = {
   fetchedAt: number
 }
 
+type ExchangeRateApiResponse = {
+  result?: string
+  base_code?: string
+  rates?: Partial<Record<SupportedCurrency, number>>
+}
+
 let rateCache: RateCache | null = null
 const CACHE_TTL_MS = 60_000 // 1 minute
 
 /**
- * Fetch USD rates from CoinGecko for all supported currencies.
+ * Fetch USD conversion rates for all supported Source Currencies.
  * Returns a map of currency code → USD rate (1 unit = X USD).
  */
 export async function fetchUsdRates(): Promise<Record<string, number>> {
-  // Return cached rates if fresh
   if (rateCache && Date.now() - rateCache.fetchedAt < CACHE_TTL_MS) {
     return rateCache.rates
   }
 
-  const coinGeckoIds: Record<SupportedCurrency, string> = {
-    USD: "usd",
-    EUR: "eur",
-    GBP: "british-pound",
-    INR: "indian-rupee",
-    AED: "united-arab-emirates-dirham",
-  }
-
-  const ids = Object.values(coinGeckoIds).join(",")
-  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-
-  const response = await fetch(url)
+  const response = await fetch("https://open.er-api.com/v6/latest/USD")
 
   if (!response.ok) {
-    throw new Error(`CoinGecko API returned ${response.status}`)
+    throw new Error(`Exchange-rate API returned ${response.status}`)
   }
 
-  const data = await response.json() as Record<string, { usd: number }>
+  const data = (await response.json()) as ExchangeRateApiResponse
 
-  // Map coinGecko IDs back to currency codes
+  if (data.result && data.result !== "success") {
+    throw new Error("Exchange-rate API did not return a successful response")
+  }
+
+  if (data.base_code !== "USD" || !data.rates) {
+    throw new Error("Exchange-rate API returned an unexpected payload")
+  }
+
   const rates: Record<string, number> = { USD: 1.0 }
-  for (const [currency, geckoId] of Object.entries(coinGeckoIds)) {
-    if (data[geckoId]?.usd !== undefined) {
-      rates[currency] = data[geckoId].usd
+  for (const currency of SUPPORTED_CURRENCIES) {
+    if (currency === "USD") {
+      continue
+    }
+
+    const usdToCurrencyRate = data.rates[currency]
+    if (typeof usdToCurrencyRate === "number" && Number.isFinite(usdToCurrencyRate) && usdToCurrencyRate > 0) {
+      rates[currency] = 1 / usdToCurrencyRate
     }
   }
 
