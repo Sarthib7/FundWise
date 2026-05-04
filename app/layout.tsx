@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   description:
     "Splitwise on Solana. Split expenses with friends, top up from other chains when needed, and settle in USDC. Fund Mode treasury workflows remain a later product layer.",
   generator: "Next.js",
+  icons: {
+    icon: "/icon.png",
+  },
 }
 
 export default function RootLayout({

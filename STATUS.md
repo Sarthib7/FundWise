@@ -39,6 +39,7 @@ The product direction is now sharper:
 **Stack:**
 
 - Next.js 15 (App Router) + React 19 + Tailwind v4 + Radix/shadcn UI
+- Cloudflare Pages deployment via `@cloudflare/next-on-pages` (`pnpm build:pages`, output `.vercel/output/static`)
 - `@solana/wallet-adapter-*` for wallet-native auth
 - `@solana/web3.js`, `@solana/spl-token`
 - Supabase (`@supabase/supabase-js`) with schema in `supabase/schema.sql`

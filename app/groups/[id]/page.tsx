@@ -1,5 +1,7 @@
 "use client"
 
+export const runtime = "edge"
+
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
 import { Header } from "@/components/header"

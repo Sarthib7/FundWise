@@ -1,3 +1,5 @@
+export const runtime = "edge"
+
 import { NextResponse } from "next/server"
 import { addSettlementMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"

@@ -185,6 +185,23 @@ pnpm lint
 pnpm test          # vitest — expense engine unit tests
 ```
 
+### Deploy on Cloudflare Pages
+
+FundWise is configured for a Cloudflare **Pages** project, not direct Worker deploys.
+
+Pages build settings:
+
+- Build command: `pnpm build:pages`
+- Build output directory: `.vercel/output/static`
+- Deploy command: leave empty
+- Node.js: `22` works on Cloudflare Pages; `20` also works locally
+
+Do not use `wrangler deploy` for this app. If deploying manually, use:
+
+```bash
+pnpm deploy:pages
+```
+
 Current verification state:
 
 - `pnpm exec tsc --noEmit` passes

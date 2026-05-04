@@ -1,3 +1,5 @@
+export const runtime = "edge"
+
 import { NextResponse } from "next/server"
 import { createGroupMutation } from "@/lib/server/fundwise-mutations"
 import { getGroupByCodeLookup, getGroupsForWalletRead } from "@/lib/server/fundwise-reads"

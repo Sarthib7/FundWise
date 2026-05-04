@@ -89,7 +89,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+# FundWise uses public/ for committed static assets.
+# Do not ignore it as a Gatsby build output directory.
 
 # Vuepress build output
 .vuepress/dist

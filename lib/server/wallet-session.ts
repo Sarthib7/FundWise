@@ -1,4 +1,3 @@
-import { createHmac, randomBytes, timingSafeEqual, webcrypto } from "node:crypto"
 import { cookies } from "next/headers"
 import { PublicKey } from "@solana/web3.js"
 import { FundWiseError } from "@/lib/server/fundwise-error"
@@ -8,6 +7,8 @@ export const FUNDWISE_WALLET_SESSION_COOKIE = "fundwise_wallet_session"
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000
+const textEncoder = new TextEncoder()
+const textDecoder = new TextDecoder()
 
 export type WalletChallengePayload = {
   wallet: string
@@ -42,17 +43,62 @@ function getCookieOptions(expiresAt: number) {
   }
 }
 
-function signCookiePayload(payload: string) {
-  return createHmac("sha256", getSessionSecret()).update(payload).digest("base64url")
+function base64UrlEncode(bytes: Uint8Array) {
+  let binary = ""
+  const chunkSize = 0x8000
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.slice(index, index + chunkSize))
+  }
+
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
 }
 
-export function createSignedCookieValue(payload: WalletChallengePayload | WalletSessionPayload) {
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url")
-  const signature = signCookiePayload(encodedPayload)
+function base64UrlDecode(value: string) {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/")
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")
+  const binary = atob(padded)
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0))
+}
+
+function base64Decode(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/")
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")
+  const binary = atob(padded)
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0))
+}
+
+function createNonce() {
+  const bytes = new Uint8Array(18)
+  crypto.getRandomValues(bytes)
+  return base64UrlEncode(bytes)
+}
+
+async function getHmacKey() {
+  return crypto.subtle.importKey(
+    "raw",
+    textEncoder.encode(getSessionSecret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  )
+}
+
+async function signCookiePayload(payload: string) {
+  const key = await getHmacKey()
+  const signature = await crypto.subtle.sign("HMAC", key, textEncoder.encode(payload))
+  return base64UrlEncode(new Uint8Array(signature))
+}
+
+export async function createSignedCookieValue(
+  payload: WalletChallengePayload | WalletSessionPayload
+) {
+  const encodedPayload = base64UrlEncode(textEncoder.encode(JSON.stringify(payload)))
+  const signature = await signCookiePayload(encodedPayload)
   return `${encodedPayload}.${signature}`
 }
 
-export function readSignedCookieValue<T extends { expiresAt: number }>(rawValue?: string) {
+export async function readSignedCookieValue<T extends { expiresAt: number }>(rawValue?: string) {
   if (!rawValue) {
     return null
   }
@@ -63,20 +109,20 @@ export function readSignedCookieValue<T extends { expiresAt: number }>(rawValue?
     return null
   }
 
-  const expectedSignature = signCookiePayload(encodedPayload)
-  const signatureBuffer = Buffer.from(signature)
-  const expectedSignatureBuffer = Buffer.from(expectedSignature)
-
-  if (signatureBuffer.length !== expectedSignatureBuffer.length) {
-    return null
-  }
-
-  if (!timingSafeEqual(signatureBuffer, expectedSignatureBuffer)) {
-    return null
-  }
-
   try {
-    const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as T
+    const key = await getHmacKey()
+    const verified = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      base64UrlDecode(signature),
+      textEncoder.encode(encodedPayload)
+    )
+
+    if (!verified) {
+      return null
+    }
+
+    const payload = JSON.parse(textDecoder.decode(base64UrlDecode(encodedPayload))) as T
 
     if (payload.expiresAt <= Date.now()) {
       return null
@@ -92,7 +138,7 @@ export function createWalletChallengePayload(wallet: string): WalletChallengePay
   const issuedAt = Date.now()
   return {
     wallet,
-    nonce: randomBytes(18).toString("base64url"),
+    nonce: createNonce(),
     issuedAt,
     expiresAt: issuedAt + CHALLENGE_TTL_MS,
   }
@@ -125,15 +171,15 @@ export async function verifyWalletSignature(
   message: string,
   signatureBase64: string
 ) {
-  const publicKey = new PublicKey(wallet).toBytes()
-  const signature = Buffer.from(signatureBase64, "base64")
-  const cryptoKey = await webcrypto.subtle.importKey("raw", publicKey, "Ed25519", false, ["verify"])
+  const publicKey = new Uint8Array(new PublicKey(wallet).toBytes())
+  const signature = new Uint8Array(base64Decode(signatureBase64))
+  const cryptoKey = await crypto.subtle.importKey("raw", publicKey, "Ed25519", false, ["verify"])
 
-  return webcrypto.subtle.verify(
+  return crypto.subtle.verify(
     "Ed25519",
     cryptoKey,
     signature,
-    new TextEncoder().encode(message)
+    textEncoder.encode(message)
   )
 }
 
@@ -158,7 +204,7 @@ export async function writeWalletChallengeCookie(payload: WalletChallengePayload
   const cookieStore = await cookies()
   cookieStore.set(
     FUNDWISE_WALLET_CHALLENGE_COOKIE,
-    createSignedCookieValue(payload),
+    await createSignedCookieValue(payload),
     getCookieOptions(payload.expiresAt)
   )
 }
@@ -179,7 +225,7 @@ export async function writeWalletSessionCookie(payload: WalletSessionPayload) {
   const cookieStore = await cookies()
   cookieStore.set(
     FUNDWISE_WALLET_SESSION_COOKIE,
-    createSignedCookieValue(payload),
+    await createSignedCookieValue(payload),
     getCookieOptions(payload.expiresAt)
   )
 }

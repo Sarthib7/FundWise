@@ -1,3 +1,5 @@
+export const runtime = "edge"
+
 import { NextResponse } from "next/server"
 import { computeBalancesFromActivity, simplifySettlements } from "@/lib/expense-engine"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
