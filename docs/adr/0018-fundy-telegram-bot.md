@@ -1,5 +1,7 @@
 # Fundy Telegram Bot — Full Specification
 
+> **Repo-structure note:** the monorepo / `services/fundy/` layout described below is **superseded by [ADR-022](./0022-fundy-moves-to-a-separate-repository.md)**. Fundy now lives in its own repository and calls FundWise over public HTTP APIs. All other decisions in this document (linking flow, command set, hosting on Railway, `grammy`, Zerion commands, group-chat DM auth, deep links) remain in effect.
+
 FundWise ships a hosted Telegram bot called **Fundy** that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet via short-lived codes, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe actions run in Telegram; on-chain Settlement, Contribution, and Proposal execution deep-link back to the web app for wallet confirmation. This is hard to reverse because it introduces a hosted service dependency and a multi-surface product model.
 
 ## Two phases
