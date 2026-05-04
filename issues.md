@@ -12,7 +12,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | --- | --- | --- | --- | --- | --- |
 | FW-001 | Done | P0 | AFK | Run full Split Mode devnet rehearsal and capture blockers | None |
 | FW-002 | Done | P0 | AFK | Harden Settlement failure states on devnet | FW-001 |
-| FW-003 | Open | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
+| FW-003 | In Progress | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
 | FW-004 | Open | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
 | FW-005 | Open | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
 | FW-006 | Open | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
@@ -81,7 +81,7 @@ Completed on 2026-05-04. Funding-gap copy now points to `Top up to settle` or `A
 
 ## FW-003 - Sign Off Responsive QA For The Core Demo Path
 
-**Status:** Open  
+**Status:** In Progress  
 **Priority:** P0  
 **Type:** HITL  
 **Blocked by:** FW-001
