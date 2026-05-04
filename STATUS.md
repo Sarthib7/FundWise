@@ -4,7 +4,7 @@
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 **Active issue index:** [issues.md](./issues.md)
-**Handoff:** Claude / Lot should pick up FW-005 first, then FW-007.
+**Handoff:** FW-005 (Zerion CLI readiness support) is shipped as a narrow script-only demo. Next: resolve the FW-007 Source Currency / Expense Proof ship decision with the owner.
 
 ---
 
@@ -101,15 +101,11 @@ Completed:
 - **FW-003:** Responsive QA signed off for public, disconnected, wallet-modal, demo Settlement, Receipt, and Group-not-found recovery surfaces at `375`, `768`, and `1280`; live connected-wallet path was already checked by owner.
 - **FW-006:** Judge-facing submission brief created in [SUBMISSION.md](./SUBMISSION.md) with demo script, screenshot checklist, submission copy, track framing, and claims to avoid.
 - **FW-004:** LI.FI handoff copy now uses `Top up to settle` / `Add funds`, returns to the Group after top-up submission, and preserves the normal Settlement / Receipt path.
+- **FW-005:** Zerion CLI wallet-readiness support shipped as `scripts/zerion-readiness.mjs` plus `pnpm zerion:readiness` and `docs/zerion-readiness.md`. Wraps `zerion analyze <address>`, summarizes USDC/SOL/broader context, prints a `READY` / `NOT READY` verdict with reasons, and falls back to a clear install message if the CLI is missing. Auth is pass-through (`ZERION_API_KEY`); optional x402 is documented, not required. `pnpm build` green.
 
 Next:
 
-1. **FW-005:** Add a narrow Zerion CLI wallet-readiness support demo after the core Settlement path is stable.
-   - Keep it outside wallet auth and Settlement execution.
-   - Suggested scope: a tiny `zerion` wrapper script, a package script, setup docs, and status updates.
-   - Use `ZERION_API_KEY` or documented optional x402; do not hardcode or invent credentials.
-   - Official CLI behavior to preserve: `zerion analyze <address>` for wallet analysis, JSON by default, optional human-readable output.
-2. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
+1. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
    - Hackathon-safe default: keep them future or explicitly mocked unless the next agent can complete the ledger/storage path end-to-end.
 
 Deferred:
@@ -119,13 +115,12 @@ Deferred:
 
 ## Agent handoff notes
 
-Ask Claude / Lot to do this next:
+FW-005 was completed on 2026-05-04: feature commit landed first (`feat(zerion): add FW-005 wallet-readiness CLI support demo`), `pnpm build` ran clean (same pre-existing warnings), and this docs/status update was committed separately. No co-author trailers were added.
 
-1. Implement **FW-005 Zerion CLI readiness support** as a narrow sponsor demo.
-2. Commit the code as its own feature commit, with no co-author trailer.
-3. Run `pnpm build`.
-4. Update [issues.md](./issues.md) and this file, then commit those docs/status changes separately.
-5. After FW-005, help the owner make the **FW-007 Source Currency / Expense Proof** ship decision and update submission copy to match.
+Next:
+
+1. Help the owner resolve **FW-007 (Source Currency / Expense Proof ship decision)**. Hackathon-safe default is to keep both as future or explicitly mocked unless the ledger/storage path is end-to-end complete.
+2. Update [SUBMISSION.md](./SUBMISSION.md) copy to match whatever FW-007 lands on, so the demo claims and the shipped state are consistent.
 
 Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 
