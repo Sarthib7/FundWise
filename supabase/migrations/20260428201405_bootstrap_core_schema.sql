@@ -41,6 +41,11 @@ create table if not exists public.expenses (
   memo text,
   category text default 'general',
   split_method text not null default 'equal' check (split_method in ('equal', 'exact', 'shares', 'percentage')),
+  source_currency text default 'USD',
+  source_amount bigint,
+  exchange_rate double precision,
+  exchange_rate_source text,
+  exchange_rate_at timestamptz,
   created_at timestamptz not null default now(),
   edited_at timestamptz,
   deleted_at timestamptz
