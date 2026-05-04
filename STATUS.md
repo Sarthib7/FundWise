@@ -98,13 +98,13 @@ Completed:
 - **FW-001:** Full Split Mode devnet rehearsal passed per owner report.
 - **FW-002:** Settlement failure states hardened for insufficient-USDC, insufficient-SOL-for-gas, token-account creation, wallet cancellation, simulation/send/confirmation failures, duplicate recording, and receipt-recording failure.
 - **FW-003:** Responsive QA signed off for public, disconnected, wallet-modal, demo Settlement, Receipt, and Group-not-found recovery surfaces at `375`, `768`, and `1280`; live connected-wallet path was already checked by owner.
+- **FW-006:** Judge-facing submission brief created in [SUBMISSION.md](./SUBMISSION.md) with demo script, screenshot checklist, submission copy, track framing, and claims to avoid.
 
 Next:
 
-1. **FW-006:** Prepare judge-facing demo script, screenshots, and submission copy.
-2. **FW-004:** Polish LI.FI `Top up to settle` handoff for EVM-first debtors.
-3. **FW-005:** Add a narrow Zerion CLI wallet-readiness support demo after the core Settlement path is stable.
-4. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
+1. **FW-004:** Polish LI.FI `Top up to settle` handoff for EVM-first debtors.
+2. **FW-005:** Add a narrow Zerion CLI wallet-readiness support demo after the core Settlement path is stable.
+3. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
 
 Deferred:
 

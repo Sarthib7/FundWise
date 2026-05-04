@@ -15,7 +15,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-003 | Done | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
 | FW-004 | Open | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
 | FW-005 | Open | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
-| FW-006 | Open | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
+| FW-006 | Done | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
 | FW-007 | Open | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
 | FW-008 | Deferred | P3 | HITL | Fund Mode Proposal lifecycle | Post-hackathon |
 | FW-009 | Deferred | P3 | HITL | Fundy, Agent Skill Endpoint, and Scoped Agent Access | Post-hackathon |
@@ -158,7 +158,7 @@ Create a narrow Zerion CLI support demo around wallet readiness and next actions
 
 ## FW-006 - Prepare Judge-Facing Demo Script And Submission Assets
 
-**Status:** Open  
+**Status:** Done  
 **Priority:** P0  
 **Type:** HITL  
 **Blocked by:** FW-001, FW-003
@@ -169,12 +169,16 @@ Create the script, screenshots, and submission copy around one clear story: priv
 
 ### Acceptance Criteria
 
-- [ ] Demo script fits within the expected submission video length.
-- [ ] Screenshots cover Group creation, Expense entry, Balance, Settlement, and Receipt.
-- [ ] Submission copy leads with Visa / consumer payments fit.
-- [ ] LI.FI is described as `Top up to settle`, not as generic multichain settlement.
-- [ ] Zerion is described as wallet-readiness support, not wallet auth.
-- [ ] Fund Mode, Fundy, Agent Skill Endpoint, and Scoped Agent Access are marked as future direction unless actually shipped.
+- [x] Demo script fits within the expected submission video length.
+- [x] Screenshots cover Group creation, Expense entry, Balance, Settlement, and Receipt.
+- [x] Submission copy leads with Visa / consumer payments fit.
+- [x] LI.FI is described as `Top up to settle`, not as generic multichain settlement.
+- [x] Zerion is described as wallet-readiness support, not wallet auth.
+- [x] Fund Mode, Fundy, Agent Skill Endpoint, and Scoped Agent Access are marked as future direction unless actually shipped.
+
+### Notes
+
+Completed on 2026-05-04. See [SUBMISSION.md](./SUBMISSION.md) for the demo script, screenshot checklist, submission copy, track framing, and explicit claims to avoid.
 
 ### User Stories Covered
 

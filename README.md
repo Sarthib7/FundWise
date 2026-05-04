@@ -24,6 +24,7 @@ Quick links:
 - [PRD.md](./PRD.md) - MVP scope, user stories, implementation decisions
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
+- [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
 - [issues.md](./issues.md) - active indexed backlog for hackathon execution
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [audit.md](./audit.md) - current security findings and mainnet blockers
