@@ -13,7 +13,8 @@
     "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "zerion:readiness": "node scripts/zerion-readiness.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
