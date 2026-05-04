@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Avoid SegmentViewNode / next-devtools RSC client manifest errors in dev (Next 15.5).
+  experimental: {
+    devtoolSegmentExplorer: false,
+  },
   images: {
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

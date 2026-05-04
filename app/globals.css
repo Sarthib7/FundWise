@@ -175,6 +175,11 @@
     50% { opacity: 0.4; }
   }
 
+  @keyframes stackLogoFloat {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -3px, 0); }
+  }
+
   .animate-flow-slow {
     animation: flowSlide 15s linear infinite;
   }
@@ -203,6 +208,10 @@
     animation: pulse-dot 2s ease-in-out infinite;
   }
 
+  .animate-stack-logo {
+    animation: stackLogoFloat 6s ease-in-out infinite;
+  }
+
   .bg-brand-grad {
     background: linear-gradient(135deg, #0d6b3a 0%, #2db870 100%);
   }
@@ -221,7 +230,8 @@
     .animate-drift-slow,
     .animate-drift-medium,
     .animate-drift-fast,
-    .animate-pulse-dot {
+    .animate-pulse-dot,
+    .animate-stack-logo {
       animation: none !important;
     }
   }
