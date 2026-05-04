@@ -29,7 +29,7 @@ The product direction is now sharper:
 - **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
 - The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
 - **Fundy** is the name of the hosted Telegram bot that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Fundy handles read-only and draft-safe actions; money movement still requires wallet confirmation in the app.
-- The **Agent Skill Endpoint** (`/skill.md`) is a public URL on the production host (`https://fundwise.kairen.xyz/skill.md`) that returns a detailed machine-readable markdown document so any autonomous agent can curl it, discover FundWise capabilities, and integrate through Scoped Agent Access.
+- The **Agent Skill Endpoint** (`/skill.md`) is a public URL on the production host (`https://fundwise.kairen.xyz/skill.md`) that returns a detailed machine-readable markdown document so any autonomous agent can curl it, discover FundWise capabilities, and integrate through Scoped Agent Access. Public API reference markdown is also exposed at `https://fundwise.kairen.xyz/api/docs`.
 - Fund Mode is still incomplete. Treasury initialization and Contributions exist, but Proposal flows are not yet ready to be presented as fully shipped product behavior.
 
 ---
@@ -133,8 +133,8 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
    `Add funds` / `Top up to settle`, route execution, and clean return into the same Group Settlement flow.
 4. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
    wallet analysis, reminders, FundWise Agent, **Fundy** (hosted Telegram bot with wallet linking and read-only/draft-safe Group interactions), and later scoped agent access.
-5. Add the Agent Skill Endpoint (`/skill.md`) and Scoped Agent Access API after the backend is stable:
-   public discovery document, scoped agent capability grants, and authenticated agent-to-FundWise interactions.
+5. Extend the now-public Agent Skill/API docs with Scoped Agent Access API after the backend is stable:
+   scoped agent capability grants and authenticated agent-to-FundWise interactions.
 6. Add the missing Supabase data model for later Fund Mode and channel expansion:
    Telegram-to-wallet links, Telegram chat–Group links, short-lived link codes, draft expenses, agent-access grants, Expense Proof attachments, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
 7. Return to Fund Mode proposals only after the Split Mode plus LI.FI story is coherent under devnet rehearsal.
@@ -331,7 +331,7 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 - **Fundy Full** (ADR-0018): Post-hackathon. LLM via OpenRouter, personal finance manager, budgets, spending patterns, receipt parsing, proactive reminders.
 - **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon.
 - **Fund Mode Proposals**: creation, approval, execution UI still pending.
-- **Agent Skill Endpoint** (`/skill.md`): public discovery document. Post-hackathon.
+- **Agent Skill Endpoint** (`/skill.md`) and **API docs** (`/api/docs`): public discovery/reference documents added for Fundy and external agent clients. Scoped Agent Access remains post-hackathon.
 - **Scoped Agent Access**: permission model for autonomous agents. Post-hackathon.
 
 ---
