@@ -539,6 +539,7 @@ export function useGroupDashboard() {
     maybeExplainAtaCreation,
     memberNameByWallet,
     router,
+    tokenName,
     wallet?.adapter,
     walletAddress,
   ])

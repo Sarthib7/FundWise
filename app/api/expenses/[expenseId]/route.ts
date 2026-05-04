@@ -1,7 +1,28 @@
 import { NextResponse } from "next/server"
 import { deleteExpenseMutation, updateExpenseMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { getExpenseRead } from "@/lib/server/fundwise-reads"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ expenseId: string }> }
+) {
+  try {
+    const session = await requireAuthenticatedWallet()
+    const { expenseId } = await context.params
+
+    if (!expenseId) {
+      throw new FundWiseError("Missing Expense id.")
+    }
+
+    const expense = await getExpenseRead(expenseId, session.wallet)
+    return NextResponse.json(expense)
+  } catch (error) {
+    const { status, message } = getErrorDetails(error, "Failed to load Expense.")
+    return NextResponse.json({ error: message }, { status })
+  }
+}
 
 export async function PATCH(
   request: Request,

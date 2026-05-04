@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ExpenseDialog } from "@/components/group-dashboard/expense-dialog"
+import { ExpenseDialog, type ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
 import { FundModeDashboard } from "@/components/group-dashboard/fund-mode-dashboard"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
@@ -119,10 +119,15 @@ function buildCustomSplitInputValues(params: {
     const splitByWallet = new Map(expense.splits.map((split) => [split.wallet, split.share]))
 
     if (splitMethod === "exact") {
+      const displayRate =
+        expense.source_currency && expense.source_currency !== "USD" && expense.exchange_rate
+          ? expense.exchange_rate
+          : 1
+
       return Object.fromEntries(
         participantWallets.map((wallet) => [
           wallet,
-          formatEditableTokenAmount(splitByWallet.get(wallet) || 0),
+          formatEditableTokenAmount(Math.round((splitByWallet.get(wallet) || 0) / displayRate)),
         ])
       )
     }
@@ -241,6 +246,10 @@ export default function GroupDashboard() {
   const [splitMethod, setSplitMethod] = useState<SplitMethod>("equal")
   const [customSplitValues, setCustomSplitValues] = useState<ExpenseCustomSplitValues>({})
   const [editingExpense, setEditingExpense] = useState<ActivityExpense | null>(null)
+  const [expenseCurrencyState, setExpenseCurrencyState] = useState<ExpenseCurrencyState>({
+    sourceCurrency: "USD",
+    conversionRate: null,
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [contributionAmount, setContributionAmount] = useState("")
@@ -259,6 +268,7 @@ export default function GroupDashboard() {
     setExpensePayer(walletAddress)
     setSplitMethod("equal")
     setCustomSplitValues({})
+    setExpenseCurrencyState({ sourceCurrency: "USD", conversionRate: null })
   }, [walletAddress])
 
   const openProfileDialog = useCallback(() => {
@@ -288,6 +298,7 @@ export default function GroupDashboard() {
     setExpensePayer(walletAddress)
     setSplitMethod("equal")
     setCustomSplitValues({})
+    setExpenseCurrencyState({ sourceCurrency: "USD", conversionRate: null })
     setShowExpenseDialog(true)
   }, [walletAddress])
 
@@ -295,11 +306,15 @@ export default function GroupDashboard() {
     const participantWallets = expense.splits.map((split) => split.wallet)
 
     setEditingExpense(expense)
-    setExpenseAmount(formatEditableTokenAmount(expense.amount))
+    setExpenseAmount(formatEditableTokenAmount(expense.source_amount ?? expense.amount))
     setExpenseMemo(expense.memo || "")
     setExpenseCategory(expense.category || "general")
     setExpensePayer(expense.payer)
     setSplitMethod(expense.split_method)
+    setExpenseCurrencyState({
+      sourceCurrency: (expense.source_currency as ExpenseCurrencyState["sourceCurrency"] | null) || "USD",
+      conversionRate: expense.exchange_rate,
+    })
     setCustomSplitValues(
       buildCustomSplitInputValues({
         participantWallets,
@@ -353,26 +368,16 @@ export default function GroupDashboard() {
         throw new Error("Choose who paid this Expense")
       }
 
-      // Currency conversion: get source currency and rate from the dialog
-      const w = typeof window !== "undefined" ? (window as any) : {} // eslint-disable-line
-      const sourceCurrency = (w.__fw_expense_currency as string | undefined) || "USD"
-      const conversionRate = w.__fw_expense_rate as number | undefined
+      const { sourceCurrency, conversionRate } = expenseCurrencyState
       const isNonUsd = sourceCurrency !== "USD"
 
-      // Convert to USDC if needed
-      let usdAmount: number
-      let exchangeRate: number
-      let exchangeRateSource: string
-
-      if (isNonUsd && conversionRate) {
-        usdAmount = parsedAmount * conversionRate
-        exchangeRate = conversionRate
-        exchangeRateSource = "coingecko"
-      } else {
-        usdAmount = parsedAmount
-        exchangeRate = 1.0
-        exchangeRateSource = "default"
+      if (isNonUsd && (conversionRate == null || conversionRate <= 0)) {
+        throw new Error("Wait for the Source Currency conversion quote before saving this Expense")
       }
+
+      const exchangeRate = isNonUsd ? conversionRate! : 1.0
+      const exchangeRateSource = isNonUsd ? "open.er-api.com" : "default"
+      const usdAmount = parsedAmount * exchangeRate
 
       const amount = parseTokenAmount(usdAmount.toFixed(6))
       const sourceAmount = parseTokenAmount(expenseAmount)
@@ -396,7 +401,9 @@ export default function GroupDashboard() {
 
                 return [
                   participantWallet,
-                  splitMethod === "exact" ? parseTokenAmount(rawValue) : parsedValue,
+                  splitMethod === "exact"
+                    ? parseTokenAmount((parsedValue * exchangeRate).toFixed(6))
+                    : parsedValue,
                 ]
               })
             )
@@ -765,6 +772,7 @@ export default function GroupDashboard() {
               [wallet]: value,
             }))
           }
+          onCurrencyStateChange={setExpenseCurrencyState}
           onSubmit={handleSubmitExpense}
         />
       )}

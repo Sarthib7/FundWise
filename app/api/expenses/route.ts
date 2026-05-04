@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server"
 import { addExpenseMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { listExpensesForGroupRead } from "@/lib/server/fundwise-reads"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+
+export async function GET(request: Request) {
+  try {
+    const session = await requireAuthenticatedWallet()
+    const url = new URL(request.url)
+    const groupId = url.searchParams.get("groupId")?.trim()
+
+    if (!groupId) {
+      throw new FundWiseError("Missing required groupId query parameter.")
+    }
+
+    const expenses = await listExpensesForGroupRead(groupId, session.wallet)
+    return NextResponse.json(expenses)
+  } catch (error) {
+    const { status, message } = getErrorDetails(error, "Failed to list Expenses.")
+    return NextResponse.json({ error: message }, { status })
+  }
+}
 
 export async function POST(request: Request) {
   try {
