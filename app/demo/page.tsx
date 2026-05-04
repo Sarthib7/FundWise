@@ -116,7 +116,7 @@ function ExpensesStep() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{exp.description}</p>
-                <p className="text-[11px] text-muted-foreground">Paid by {exp.payer} · {formatCents(exp.amount * 100)}</p>
+                <p className="text-[11px] text-muted-foreground">Paid by {exp.payer} · {formatCents(exp.amount)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-bold">{formatCents(exp.amount)}</p>
@@ -165,7 +165,7 @@ function BalancesStep() {
               <span className="text-sm font-medium">{b.name}</span>
             </div>
             <span className={`text-sm font-bold ${b.amount > 0 ? "text-brand-mid" : b.amount < 0 ? "text-red-500" : ""}`}>
-              {b.amount > 0 ? "+" : ""}{formatCents(b.amount * 100)}
+              {b.amount > 0 ? "+" : ""}{formatCents(b.amount)}
             </span>
           </div>
         ))}
@@ -178,7 +178,7 @@ function BalancesStep() {
             <span className="font-medium">{s.from}</span>
             <ArrowRight className="h-3 w-3 text-muted-foreground" />
             <span className="font-medium">{s.to}</span>
-            <span className="ml-auto font-bold">{formatCents(s.amount * 100)}</span>
+            <span className="ml-auto font-bold">{formatCents(s.amount)}</span>
           </div>
         ))}
       </div>
