@@ -32,6 +32,11 @@ type SplitMethod = Database["public"]["Enums"]["split_method"]
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 type ExpenseCustomSplitValues = Record<string, string>
 
+export type ExpenseCurrencyState = {
+  sourceCurrency: SupportedCurrency
+  conversionRate: number | null
+}
+
 type ExpenseDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -55,6 +60,7 @@ type ExpenseDialogProps = {
   onExpensePayerChange: (value: string) => void
   onSplitMethodChange: (method: SplitMethod) => void
   onCustomSplitValueChange: (wallet: string, value: string) => void
+  onCurrencyStateChange: (state: ExpenseCurrencyState) => void
   onSubmit: () => void | Promise<void>
 }
 
@@ -85,6 +91,7 @@ export function ExpenseDialog({
   onExpensePayerChange,
   onSplitMethodChange,
   onCustomSplitValueChange,
+  onCurrencyStateChange,
   onSubmit,
 }: ExpenseDialogProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -157,22 +164,13 @@ export function ExpenseDialog({
     }
   }, [open, editingExpense])
 
-  // Expose conversion data to the parent via a hidden state pattern
-  // The parent page reads these from window or we pass them through a callback
-  // For now, we store them in a ref that the parent can query
-
   const handleCurrencyChange = useCallback((currency: string) => {
     setSourceCurrency(currency as SupportedCurrency)
   }, [])
 
-  // Store conversion data on the window so the parent form can read it
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const w = window as any // eslint-disable-line
-      w.__fw_expense_currency = sourceCurrency
-      w.__fw_expense_rate = conversionRate
-    }
-  }, [sourceCurrency, conversionRate])
+    onCurrencyStateChange({ sourceCurrency, conversionRate })
+  }, [conversionRate, onCurrencyStateChange, sourceCurrency])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
