@@ -14,7 +14,8 @@ Read these in order:
 4. [ROADMAP.md](./ROADMAP.md)
 5. [HACKATHON_PLAN.md](./HACKATHON_PLAN.md)
 6. [PRD.md](./PRD.md)
-7. [docs/adr/](./docs/adr/)
+7. [issues.md](./issues.md)
+8. [docs/adr/](./docs/adr/)
 
 Quick links:
 
@@ -23,6 +24,7 @@ Quick links:
 - [PRD.md](./PRD.md) - MVP scope, user stories, implementation decisions
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
+- [issues.md](./issues.md) - active indexed backlog for hackathon execution
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [audit.md](./audit.md) - current security findings and mainnet blockers
 
@@ -93,6 +95,7 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 ├── PRD.md
 ├── ROADMAP.md
 ├── STATUS.md
+├── issues.md
 ├── DECISIONS.md
 ├── docs/adr/
 ├── app/

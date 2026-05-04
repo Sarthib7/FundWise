@@ -1,8 +1,9 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-04-30
+**Snapshot date:** 2026-05-04
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
+**Active issue index:** [issues.md](./issues.md)
 
 ---
 
@@ -90,12 +91,25 @@ The product direction is now sharper:
 
 ## Next active work
 
-- Devnet settlement UX hardening:
-  insufficient-USDC states, insufficient-SOL-for-gas states, and clearer ATA-creation messaging during Settlement and Contribution flows
-- Manual breakpoint QA and sign-off across landing, Group list, Group detail, join, modal, and Receipt flows
-- LI.FI top-up / add-funds polish for EVM-first users:
-  tighten copy, handoff, and post-bridge return into the normal Settlement flow
-- Remove unused `group-showcase-section` after owner confirmation
+Use [issues.md](./issues.md) as the indexed execution backlog. Current order:
+
+Completed:
+
+- **FW-001:** Full Split Mode devnet rehearsal passed per owner report.
+- **FW-002:** Settlement failure states hardened for insufficient-USDC, insufficient-SOL-for-gas, token-account creation, wallet cancellation, simulation/send/confirmation failures, duplicate recording, and receipt-recording failure.
+
+Next:
+
+1. **FW-003:** Sign off responsive QA for landing, Group list, Group detail, join, dialogs, Settlement Request Links, and Receipts.
+2. **FW-006:** Prepare judge-facing demo script, screenshots, and submission copy once QA is signed off.
+3. **FW-004:** Polish LI.FI `Top up to settle` handoff for EVM-first debtors.
+4. **FW-005:** Add a narrow Zerion CLI wallet-readiness support demo after the core Settlement path is stable.
+5. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
+
+Deferred:
+
+- **FW-008:** Fund Mode Proposal lifecycle.
+- **FW-009:** Fundy, Agent Skill Endpoint, and Scoped Agent Access.
 
 ## Foundation-first delivery order
 
@@ -178,6 +192,7 @@ The product direction is now sharper:
 
 ## Still pending for the primary MVP
 
+- Keep [issues.md](./issues.md) updated as the working backlog and use `FW-*` IDs in session notes.
 - Keep the devnet quality gates green:
   `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
