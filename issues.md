@@ -12,7 +12,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | --- | --- | --- | --- | --- | --- |
 | FW-001 | Done | P0 | AFK | Run full Split Mode devnet rehearsal and capture blockers | None |
 | FW-002 | Done | P0 | AFK | Harden Settlement failure states on devnet | FW-001 |
-| FW-003 | In Progress | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
+| FW-003 | Done | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
 | FW-004 | Open | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
 | FW-005 | Open | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
 | FW-006 | Open | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
@@ -81,7 +81,7 @@ Completed on 2026-05-04. Funding-gap copy now points to `Top up to settle` or `A
 
 ## FW-003 - Sign Off Responsive QA For The Core Demo Path
 
-**Status:** In Progress  
+**Status:** Done  
 **Priority:** P0  
 **Type:** HITL  
 **Blocked by:** FW-001
@@ -92,11 +92,18 @@ Manually test the consumer path at mobile, tablet, and desktop breakpoints, with
 
 ### Acceptance Criteria
 
-- [ ] Landing page, `/groups`, Group detail, Expense dialog, join flow, Settlement dialog, and Receipt are checked at `375`, `768`, and `1280`.
-- [ ] Text does not overlap or clip inside buttons, cards, dialogs, or headers.
-- [ ] Wallet connect CTAs are reachable above the fold on mobile.
-- [ ] Settlement Request Links restore live settlement context after connect and never auto-send.
-- [ ] Findings are either fixed immediately or added as new indexed issues.
+- [x] Landing page, `/groups`, Group detail, Expense dialog, join flow, Settlement dialog, and Receipt are checked at `375`, `768`, and `1280`.
+- [x] Text does not overlap or clip inside buttons, cards, dialogs, or headers.
+- [x] Wallet connect CTAs are reachable above the fold on mobile.
+- [x] Settlement Request Links restore live settlement context after connect and never auto-send.
+- [x] Findings are either fixed immediately or added as new indexed issues.
+
+### Notes
+
+Completed on 2026-05-04. Browser QA covered landing, disconnected `/groups`, wallet modal, `/demo` Expense / Balance / Settlement / Receipt steps, and Group-not-found recovery at mobile, tablet, and desktop breakpoints. Owner previously checked the live connected-wallet Group path; no new blocker was found there. Two demo-story fixes were committed during this pass:
+
+- `fix(demo): format expense amounts correctly`
+- `fix(demo): align settlement story with debtor flow`
 
 ### User Stories Covered
 
