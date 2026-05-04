@@ -2,7 +2,7 @@
 
 **Last indexed:** 2026-05-04
 **Deadline:** 2026-05-11 Colosseum Frontier submission
-**Current focus:** make the Split Mode devnet demo reliable before adding sponsor or agent scope.
+**Current focus:** hand off the remaining hackathon work cleanly: Zerion readiness support first, then the Source Currency / Expense Proof ship decision.
 
 This file is the local issue index for hackathon execution. Keep each issue as a vertical slice: a completed issue should be independently demoable, testable, or useful for submission.
 
@@ -14,11 +14,26 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-002 | Done | P0 | AFK | Harden Settlement failure states on devnet | FW-001 |
 | FW-003 | Done | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
 | FW-004 | Done | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
-| FW-005 | Open | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
+| FW-005 | Ready | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
 | FW-006 | Done | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
-| FW-007 | Open | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
+| FW-007 | Ready | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
 | FW-008 | Deferred | P3 | HITL | Fund Mode Proposal lifecycle | Post-hackathon |
 | FW-009 | Deferred | P3 | HITL | Fundy, Agent Skill Endpoint, and Scoped Agent Access | Post-hackathon |
+
+## Handoff Queue For Claude / Lot
+
+1. **Start with FW-005.** Build a narrow Zerion CLI readiness support demo. Keep it isolated from wallet auth and Settlement execution. Suggested write scope: `scripts/zerion-readiness.*`, `package.json`, optional `docs/zerion-readiness.md`, then update this file and `STATUS.md`.
+2. **Then resolve FW-007 with the owner.** Do not partially ship Source Currency or Expense Proof unless the ledger/storage implications are handled end-to-end. The likely hackathon-safe answer is to keep both as future or explicitly mocked in submission copy.
+3. **Keep commits sequential.** Commit feature/code first, then docs/status updates. Do not add co-author trailers.
+4. **Quality gate after code changes:** run `pnpm build`. Known warnings from previous runs: workspace-root inference from another lockfile, two unused eslint-disable directives, and `bigint` pure-JS fallback.
+
+### FW-005 Implementation Notes
+
+- Official Zerion CLI docs say to use commands such as `zerion analyze <address>` for complete wallet analysis; JSON output is the default and `--format human` is available for readable output.
+- Prefer `ZERION_API_KEY` for auth. Optional x402 can be documented, but do not require it and do not invent keys.
+- The output should be framed as `wallet-readiness support`: USDC readiness, SOL-for-gas readiness, and broader wallet context when Zerion exposes it.
+- It must not become wallet connection, identity, signing, or Settlement execution. Solana wallet-adapter remains the identity and money-movement path.
+- If the CLI is missing, fail with a clear setup message instead of hiding the error.
 
 ## FW-001 - Run Full Split Mode Devnet Rehearsal And Capture Blockers
 
@@ -139,7 +154,7 @@ Completed on 2026-05-04. The LI.FI support path now uses top-up language, closes
 
 ## FW-005 - Add Zerion CLI Wallet-Readiness Support Demo
 
-**Status:** Open  
+**Status:** Ready  
 **Priority:** P1  
 **Type:** AFK  
 **Blocked by:** FW-002
@@ -155,6 +170,11 @@ Create a narrow Zerion CLI support demo around wallet readiness and next actions
 - [ ] Output distinguishes missing USDC, missing gas, and broader wallet context when available.
 - [ ] The feature is framed as support / analysis, not wallet connection.
 - [ ] Required credentials or CLI setup are documented without inventing secrets.
+- [ ] `pnpm build` passes after the code/docs change.
+
+### Notes
+
+Ready for Claude / Lot handoff on 2026-05-04. Recommended implementation is a tiny local CLI wrapper plus docs, not an in-app surface. Use official Zerion CLI docs before falling back to other documentation sources.
 
 ### User Stories Covered
 
@@ -190,7 +210,7 @@ Completed on 2026-05-04. See [SUBMISSION.md](./SUBMISSION.md) for the demo scrip
 
 ## FW-007 - Decide Whether Source Currency And Expense Proof Ship In The Demo
 
-**Status:** Open  
+**Status:** Ready  
 **Priority:** P2  
 **Type:** HITL  
 **Blocked by:** FW-006
@@ -206,6 +226,10 @@ Decide whether Source Currency entry and Expense Proof upload are actual demo fe
 - [ ] If Source Currency ships, every Expense stores converted USD/USDC ledger value plus Exchange Rate Snapshot.
 - [ ] If Expense Proof ships, file/link storage, preview, and access rules are documented.
 - [ ] Submission copy matches the actual shipped state.
+
+### Notes
+
+Ready for owner / agent decision. Hackathon-safe default: do not ship either as real product behavior unless the next agent can complete the end-to-end ledger and storage path without risking Balance or Settlement correctness.
 
 ### User Stories Covered
 

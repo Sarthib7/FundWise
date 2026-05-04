@@ -4,6 +4,7 @@
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 **Active issue index:** [issues.md](./issues.md)
+**Handoff:** Claude / Lot should pick up FW-005 first, then FW-007.
 
 ---
 
@@ -104,12 +105,29 @@ Completed:
 Next:
 
 1. **FW-005:** Add a narrow Zerion CLI wallet-readiness support demo after the core Settlement path is stable.
+   - Keep it outside wallet auth and Settlement execution.
+   - Suggested scope: a tiny `zerion` wrapper script, a package script, setup docs, and status updates.
+   - Use `ZERION_API_KEY` or documented optional x402; do not hardcode or invent credentials.
+   - Official CLI behavior to preserve: `zerion analyze <address>` for wallet analysis, JSON by default, optional human-readable output.
 2. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
+   - Hackathon-safe default: keep them future or explicitly mocked unless the next agent can complete the ledger/storage path end-to-end.
 
 Deferred:
 
 - **FW-008:** Fund Mode Proposal lifecycle.
 - **FW-009:** Fundy, Agent Skill Endpoint, and Scoped Agent Access.
+
+## Agent handoff notes
+
+Ask Claude / Lot to do this next:
+
+1. Implement **FW-005 Zerion CLI readiness support** as a narrow sponsor demo.
+2. Commit the code as its own feature commit, with no co-author trailer.
+3. Run `pnpm build`.
+4. Update [issues.md](./issues.md) and this file, then commit those docs/status changes separately.
+5. After FW-005, help the owner make the **FW-007 Source Currency / Expense Proof** ship decision and update submission copy to match.
+
+Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 
 ## Foundation-first delivery order
 
