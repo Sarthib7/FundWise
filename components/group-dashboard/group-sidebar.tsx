@@ -47,7 +47,7 @@ export function GroupSidebar({
       {isMember && (
         <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
           <h3 className="text-lg font-semibold mb-2">
-            {isFundMode ? "Bridge USDC To Contribute" : "Bridge USDC To Solana"}
+            {isFundMode ? "Add USDC to contribute" : "Top up to settle"}
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
             {isFundMode
@@ -66,7 +66,7 @@ export function GroupSidebar({
             disabled={!lifiSupported}
           >
             <ArrowRightLeft className="h-4 w-4 mr-2" />
-            Bridge To My Wallet
+            {isFundMode ? "Add funds" : "Top up to settle"}
           </Button>
         </Card>
       )}
