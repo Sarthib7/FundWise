@@ -67,14 +67,15 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 - **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent. Fundy Lite (hackathon) is command-based with Zerion wallet analysis. Fundy Full (post-hackathon) adds LLM via OpenRouter for natural language, personal finance features, budgets, and proactive reminders. See ADR-0018.
-- **Agent Skill Endpoint** (`/skill.md`) is the planned public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, what to call vs avoid, supported actions, and how to authenticate through Scoped Agent Access.
+- **Agent Skill Endpoint** (`/skill.md`) is the public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, what to call vs avoid, supported actions, and how to authenticate through Scoped Agent Access. API reference markdown is available at **`https://fundwise.kairen.xyz/api/docs`**.
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.
 
 ### Hosted app and agent discovery
 
 - Production web app: **`https://fundwise.kairen.xyz`**
-- Planned Agent Skill: **`https://fundwise.kairen.xyz/skill.md`**
+- Agent Skill: **`https://fundwise.kairen.xyz/skill.md`**
+- API docs: **`https://fundwise.kairen.xyz/api/docs`**
 
 ## Tech Stack
 
