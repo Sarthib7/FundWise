@@ -777,8 +777,8 @@ export default function GroupDashboard() {
         onSuccess={(txHash, amount) => {
           toast.success(
             isFundMode
-              ? `Bridged ${amount} USDC toward your Solana wallet. Continue with a Contribution next.`
-              : `Bridged ${amount} USDC toward your Solana wallet.`,
+              ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
+              : `Top-up submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
             {
               description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
             }

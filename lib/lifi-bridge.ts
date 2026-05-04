@@ -83,7 +83,7 @@ export async function executeBridgeRoute(
   onStatusChange: (status: BridgeStatus) => void
 ): Promise<{ txHash?: string }> {
   await ensureLifiChainsLoaded()
-  onStatusChange({ status: "executing", message: "Preparing bridge route..." })
+  onStatusChange({ status: "executing", message: "Preparing top-up..." })
 
   try {
     const result = await executeRoute(route, {
@@ -107,7 +107,7 @@ export async function executeBridgeRoute(
             status: "error",
             txHash: latestProcessWithTx?.txHash,
             txLink: latestProcessWithTx?.txLink,
-            message: failedProcess.error?.message || failedProcess.message || "Bridge failed",
+            message: failedProcess.error?.message || failedProcess.message || "Top-up failed",
           })
           return
         }
@@ -127,7 +127,7 @@ export async function executeBridgeRoute(
             status: "done",
             txHash: latestProcessWithTx?.txHash,
             txLink: latestProcessWithTx?.txLink,
-            message: "Bridge complete!",
+            message: "Top-up complete!",
           })
           return
         }
@@ -137,7 +137,7 @@ export async function executeBridgeRoute(
             status: "executing",
             txHash: latestProcessWithTx?.txHash,
             txLink: latestProcessWithTx?.txLink,
-            message: pendingProcess.message || "Bridge in progress...",
+            message: pendingProcess.message || "Top-up in progress...",
           })
         }
       },
@@ -150,7 +150,7 @@ export async function executeBridgeRoute(
   } catch (error) {
     onStatusChange({
       status: "error",
-      message: error instanceof Error ? error.message : "Bridge execution failed",
+      message: error instanceof Error ? error.message : "Top-up failed",
     })
     throw error
   }
