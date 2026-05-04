@@ -13,7 +13,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-001 | Done | P0 | AFK | Run full Split Mode devnet rehearsal and capture blockers | None |
 | FW-002 | Done | P0 | AFK | Harden Settlement failure states on devnet | FW-001 |
 | FW-003 | Done | P0 | HITL | Sign off responsive QA for the core demo path | FW-001 |
-| FW-004 | Open | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
+| FW-004 | Done | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
 | FW-005 | Open | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
 | FW-006 | Done | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
 | FW-007 | Open | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
@@ -111,7 +111,7 @@ Completed on 2026-05-04. Browser QA covered landing, disconnected `/groups`, wal
 
 ## FW-004 - Polish LI.FI Top Up To Settle Handoff
 
-**Status:** Open  
+**Status:** Done  
 **Priority:** P1  
 **Type:** AFK  
 **Blocked by:** FW-002
@@ -122,12 +122,16 @@ Make LI.FI a support path for debtors who cannot settle because their funds are 
 
 ### Acceptance Criteria
 
-- [ ] Insufficient-USDC Settlement state offers `Top up to settle` when LI.FI can help.
-- [ ] Copy avoids bridge jargon and does not imply cross-chain creditor settlement.
-- [ ] Route completion returns the debtor to the Group Settlement context.
-- [ ] The Receipt and ledger model remain unchanged after top-up.
-- [ ] Mainnet-sensitive warnings and error states are clear.
-- [ ] `pnpm build` passes.
+- [x] Insufficient-USDC Settlement state offers `Top up to settle` when LI.FI can help.
+- [x] Copy avoids bridge jargon and does not imply cross-chain creditor settlement.
+- [x] Route completion returns the debtor to the Group Settlement context.
+- [x] The Receipt and ledger model remain unchanged after top-up.
+- [x] Mainnet-sensitive warnings and error states are clear.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-04. The LI.FI support path now uses top-up language, closes back to the Group after successful execution, and keeps Settlement / Receipt behavior unchanged.
 
 ### User Stories Covered
 
