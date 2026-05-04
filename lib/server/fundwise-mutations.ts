@@ -9,6 +9,12 @@ import { getSupabaseAdmin } from "@/lib/server/supabase-admin"
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
+type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
+
+type SupabaseMutationError = {
+  code?: string
+  message?: string
+}
 
 type ExpenseSplitInput = {
   wallet: string
@@ -19,6 +25,26 @@ type ExpenseUpdateRpcSplit = Json
 
 function getAdmin() {
   return getSupabaseAdmin()
+}
+
+function isMissingExpenseCurrencyColumnError(error: SupabaseMutationError | null) {
+  if (!error?.message) {
+    return false
+  }
+
+  const message = error.message.toLowerCase()
+  const missingColumnCodes = new Set(["42703", "PGRST204"])
+
+  return (
+    (error.code ? missingColumnCodes.has(error.code) : false) &&
+    [
+      "source_currency",
+      "source_amount",
+      "exchange_rate",
+      "exchange_rate_source",
+      "exchange_rate_at",
+    ].some((columnName) => message.includes(columnName))
+  )
 }
 
 function isFundModeInviteWallet(wallet: string) {
@@ -247,28 +273,46 @@ export async function addExpenseMutation(data: {
     "Every Expense participant must already be a Member of this Group."
   )
 
-  const { data: expense, error: expenseError } = await getAdmin()
+  const expenseInsertBase: ExpenseInsert = {
+    group_id: data.groupId,
+    payer: data.payer,
+    created_by: data.createdBy,
+    amount: data.amount,
+    mint: data.mint,
+    memo: data.memo || null,
+    category: data.category || "general",
+    split_method: data.splitMethod,
+  }
+  const expenseInsertWithCurrency: ExpenseInsert = {
+    ...expenseInsertBase,
+    source_currency: data.sourceCurrency || "USD",
+    source_amount: data.sourceAmount ?? data.amount,
+    exchange_rate: data.exchangeRate ?? 1.0,
+    exchange_rate_source:
+      data.exchangeRateSource ||
+      (data.sourceCurrency && data.sourceCurrency !== "USD" ? "open.er-api.com" : "default"),
+    exchange_rate_at: data.exchangeRateAt || new Date().toISOString(),
+  }
+
+  let { data: expense, error: expenseError } = await getAdmin()
     .from("expenses")
-    .insert({
-      group_id: data.groupId,
-      payer: data.payer,
-      created_by: data.createdBy,
-      amount: data.amount,
-      mint: data.mint,
-      memo: data.memo || null,
-      category: data.category || "general",
-      split_method: data.splitMethod,
-      source_currency: data.sourceCurrency || "USD",
-      source_amount: data.sourceAmount ?? data.amount,
-      exchange_rate: data.exchangeRate ?? 1.0,
-      exchange_rate_source: data.exchangeRateSource || (data.sourceCurrency && data.sourceCurrency !== "USD" ? "coingecko" : "default"),
-      exchange_rate_at: data.exchangeRateAt || new Date().toISOString(),
-    })
+    .insert(expenseInsertWithCurrency)
     .select("id")
     .single()
 
-  if (expenseError) {
-    throw new FundWiseError(`Failed to add expense: ${expenseError.message}`)
+  if (expenseError && isMissingExpenseCurrencyColumnError(expenseError)) {
+    const fallbackResult = await getAdmin()
+      .from("expenses")
+      .insert(expenseInsertBase)
+      .select("id")
+      .single()
+
+    expense = fallbackResult.data
+    expenseError = fallbackResult.error
+  }
+
+  if (expenseError || !expense) {
+    throw new FundWiseError(`Failed to add expense: ${expenseError?.message || "unknown error"}`)
   }
 
   const { error: splitsError } = await getAdmin().from("expense_splits").insert(
@@ -334,12 +378,18 @@ export async function updateExpenseMutation(data: {
         source_currency: data.sourceCurrency || "USD",
         source_amount: data.sourceAmount ?? data.amount,
         exchange_rate: data.exchangeRate ?? 1.0,
-        exchange_rate_source: data.exchangeRateSource || (data.sourceCurrency && data.sourceCurrency !== "USD" ? "coingecko" : "default"),
+        exchange_rate_source:
+          data.exchangeRateSource ||
+          (data.sourceCurrency && data.sourceCurrency !== "USD" ? "open.er-api.com" : "default"),
         exchange_rate_at: data.exchangeRateAt || new Date().toISOString(),
       })
       .eq("id", data.expenseId)
 
     if (currencyError) {
+      if (isMissingExpenseCurrencyColumnError(currencyError)) {
+        return
+      }
+
       throw new FundWiseError(`Failed to update expense currency fields: ${currencyError.message}`)
     }
   }

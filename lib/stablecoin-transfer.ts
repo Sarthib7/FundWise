@@ -115,8 +115,13 @@ async function buildStablecoinTransferTransaction(params: StablecoinTransferPara
   }
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error)
+}
+
 function normalizeStablecoinTransferError(error: unknown) {
-  const errorMessage = error instanceof Error ? error.message : String(error)
+  const errorMessage = getErrorMessage(error)
+  const lowerMessage = errorMessage.toLowerCase()
   const errorCode = typeof error === "object" && error !== null && "code" in error
     ? (error as { code?: unknown }).code
     : undefined
@@ -131,8 +136,40 @@ function normalizeStablecoinTransferError(error: unknown) {
     return new Error("TRANSACTION_CANCELLED")
   }
 
-  if (errorMessage.toLowerCase().includes("insufficient")) {
-    return new Error("Insufficient SOL balance to cover the required network fees.")
+  if (lowerMessage.includes("insufficient funds for rent")) {
+    return new Error("This wallet needs more SOL to create the recipient token account and pay Solana network fees.")
+  }
+
+  if (lowerMessage.includes("insufficient")) {
+    return new Error("This wallet needs more SOL for Solana network fees.")
+  }
+
+  if (
+    lowerMessage.includes("transaction simulation failed") ||
+    lowerMessage.includes("simulation failed") ||
+    lowerMessage.includes("failed to simulate")
+  ) {
+    return new Error("Solana simulation failed before the transfer was submitted. Refresh the Group, check USDC and SOL balances, then try again.")
+  }
+
+  if (
+    lowerMessage.includes("blockhash not found") ||
+    lowerMessage.includes("transaction expired") ||
+    lowerMessage.includes("lastvalidblockheight")
+  ) {
+    return new Error("The Solana transaction expired before confirmation. Refresh the Group and try again.")
+  }
+
+  if (
+    lowerMessage.includes("failed to send transaction") ||
+    lowerMessage.includes("send transaction failed") ||
+    lowerMessage.includes("failed to submit")
+  ) {
+    return new Error("FundWise could not submit the signed transaction to Solana. Check your connection and try again.")
+  }
+
+  if (lowerMessage.includes("solana confirmed the transaction as failed")) {
+    return new Error("The transfer was submitted, but Solana confirmed it as failed. No FundWise Receipt was recorded. Refresh balances before retrying.")
   }
 
   return error instanceof Error ? error : new Error(errorMessage)
@@ -175,7 +212,9 @@ export async function executeStablecoinTransfer(
     )
 
     if (confirmation.value.err) {
-      throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`)
+      throw new Error(
+        `Solana confirmed the transaction as failed: ${JSON.stringify(confirmation.value.err)}`
+      )
     }
 
     return { signature, preview }

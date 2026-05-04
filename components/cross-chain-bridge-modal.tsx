@@ -110,11 +110,14 @@ export function CrossChainBridgeModal({
       setLifiEvmProvider(evmWallet)
       const result = await executeBridgeRoute(quote.route, setBridgeStatus)
       if (result.txHash) {
-        toast.success("Bridge submitted. Funds will arrive on Solana after confirmation.")
+        toast.success("Top-up submitted. Funds will arrive in your Solana wallet after confirmation.")
         onSuccess?.(result.txHash || "", quote.toAmount)
+        setQuote(null)
+        setAmount("")
+        onOpenChange(false)
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Bridge failed")
+      toast.error(error instanceof Error ? error.message : "Top-up failed")
     }
   }
 
@@ -139,7 +142,7 @@ export function CrossChainBridgeModal({
         <div className="space-y-5 py-4">
           {!lifiSupported && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-              LI.FI routes bridge into Solana mainnet. FundWise is currently configured for {clusterLabel}, so this flow is disabled until you switch the app to mainnet.
+              LI.FI routes into Solana mainnet. FundWise is currently configured for {clusterLabel}, so this top-up flow is disabled until the app moves to mainnet.
             </div>
           )}
 
@@ -147,13 +150,13 @@ export function CrossChainBridgeModal({
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Destination Wallet</p>
             <p className="mt-2 break-all font-mono text-sm">{destinationAddress}</p>
             <p className="mt-2 text-xs text-muted-foreground">
-              Funds land in your connected Solana wallet first. Settle or contribute in {groupName} after the bridge confirms.
+              Funds land in your connected Solana wallet first. Settle or contribute in {groupName} after the top-up confirms.
             </p>
           </div>
 
           {lifiSupported && (
             <div className="space-y-2">
-            <Label>Wallet Holding Your USDC</Label>
+              <Label>Wallet Holding Your USDC</Label>
               {evmWallet ? (
                 <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
@@ -205,7 +208,7 @@ export function CrossChainBridgeModal({
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Pick the EVM chain where your USDC already sits before requesting a route.
+              Pick the EVM chain where your USDC already sits before previewing the top-up.
             </p>
           </div>
 
@@ -232,7 +235,7 @@ export function CrossChainBridgeModal({
                 onClick={handleGetQuote}
                 disabled={!lifiSupported || !amount || !evmWallet || isQuoting}
               >
-                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Get Top-Up Quote"}
+                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Preview top-up"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -246,7 +249,7 @@ export function CrossChainBridgeModal({
                 {needsWalletConnection
                   ? "Step 1: connect the EVM wallet that holds your USDC"
                   : needsAmount
-                    ? "Step 2: enter a USDC amount to price the route"
+                    ? "Step 2: enter a USDC amount to preview the top-up"
                     : isQuoting
                       ? "Finding the best route into Solana"
                       : "Step 3: review the top-up before funds move"}
@@ -255,19 +258,19 @@ export function CrossChainBridgeModal({
                 {needsWalletConnection
                   ? "FundWise uses your injected EVM wallet to source the LI.FI route and request the needed signatures."
                   : needsAmount
-                    ? "We only fetch the route once you provide an amount, so the min received and estimated timing stay accurate."
+                    ? "We only fetch the top-up path once you provide an amount, so the min received and estimated timing stay accurate."
                     : isQuoting
-                      ? "This usually takes a moment while LI.FI compares bridge paths and fees."
-                      : "You’ll see the expected amount out, minimum received, and route provider before funds move."}
+                      ? "This usually takes a moment while LI.FI compares top-up paths and fees."
+                      : "You’ll see the expected amount out, minimum received, and provider before funds move."}
               </p>
             </div>
           )}
 
-          {/* Bridge Route Display */}
+          {/* Top-up path display */}
           {quote && (
             <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Route</span>
+                <span className="text-sm text-muted-foreground">Top-up path</span>
                 <Badge variant="secondary">{quote.tool}</Badge>
               </div>
 
@@ -356,7 +359,7 @@ export function CrossChainBridgeModal({
 
           {/* LI.FI Attribution */}
           <p className="text-xs text-center text-muted-foreground">
-            Powered by <span className="font-medium">LI.FI</span> — cross-chain bridge aggregation
+            Powered by <span className="font-medium">LI.FI</span> — cross-chain routing
           </p>
         </div>
       </DialogContent>

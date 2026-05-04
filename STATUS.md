@@ -1,8 +1,10 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-04-30
+**Snapshot date:** 2026-05-04
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
+**Active issue index:** [issues.md](./issues.md)
+**Handoff:** FW-005 (Zerion CLI readiness support) is shipped as a narrow script-only demo. Next: resolve the FW-007 Source Currency / Expense Proof ship decision with the owner.
 
 ---
 
@@ -90,12 +92,37 @@ The product direction is now sharper:
 
 ## Next active work
 
-- Devnet settlement UX hardening:
-  insufficient-USDC states, insufficient-SOL-for-gas states, and clearer ATA-creation messaging during Settlement and Contribution flows
-- Manual breakpoint QA and sign-off across landing, Group list, Group detail, join, modal, and Receipt flows
-- LI.FI top-up / add-funds polish for EVM-first users:
-  tighten copy, handoff, and post-bridge return into the normal Settlement flow
-- Remove unused `group-showcase-section` after owner confirmation
+Use [issues.md](./issues.md) as the indexed execution backlog. Current order:
+
+Completed:
+
+- **FW-001:** Full Split Mode devnet rehearsal passed per owner report.
+- **FW-002:** Settlement failure states hardened for insufficient-USDC, insufficient-SOL-for-gas, token-account creation, wallet cancellation, simulation/send/confirmation failures, duplicate recording, and receipt-recording failure.
+- **FW-003:** Responsive QA signed off for public, disconnected, wallet-modal, demo Settlement, Receipt, and Group-not-found recovery surfaces at `375`, `768`, and `1280`; live connected-wallet path was already checked by owner.
+- **FW-006:** Judge-facing submission brief created in [SUBMISSION.md](./SUBMISSION.md) with demo script, screenshot checklist, submission copy, track framing, and claims to avoid.
+- **FW-004:** LI.FI handoff copy now uses `Top up to settle` / `Add funds`, returns to the Group after top-up submission, and preserves the normal Settlement / Receipt path.
+- **FW-005:** Zerion CLI wallet-readiness support shipped as `scripts/zerion-readiness.mjs` plus `pnpm zerion:readiness` and `docs/zerion-readiness.md`. Wraps `zerion analyze <address>`, summarizes USDC/SOL/broader context, prints a `READY` / `NOT READY` verdict with reasons, and falls back to a clear install message if the CLI is missing. Auth is pass-through (`ZERION_API_KEY`); optional x402 is documented, not required. `pnpm build` green.
+
+Next:
+
+1. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
+   - Hackathon-safe default: keep them future or explicitly mocked unless the next agent can complete the ledger/storage path end-to-end.
+
+Deferred:
+
+- **FW-008:** Fund Mode Proposal lifecycle.
+- **FW-009:** Fundy, Agent Skill Endpoint, and Scoped Agent Access.
+
+## Agent handoff notes
+
+FW-005 was completed on 2026-05-04: feature commit landed first (`feat(zerion): add FW-005 wallet-readiness CLI support demo`), `pnpm build` ran clean (same pre-existing warnings), and this docs/status update was committed separately. No co-author trailers were added.
+
+Next:
+
+1. Help the owner resolve **FW-007 (Source Currency / Expense Proof ship decision)**. Hackathon-safe default is to keep both as future or explicitly mocked unless the ledger/storage path is end-to-end complete.
+2. Update [SUBMISSION.md](./SUBMISSION.md) copy to match whatever FW-007 lands on, so the demo claims and the shipped state are consistent.
+
+Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 
 ## Foundation-first delivery order
 
@@ -178,6 +205,7 @@ The product direction is now sharper:
 
 ## Still pending for the primary MVP
 
+- Keep [issues.md](./issues.md) updated as the working backlog and use `FW-*` IDs in session notes.
 - Keep the devnet quality gates green:
   `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces

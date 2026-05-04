@@ -148,7 +148,7 @@ export async function requireAuthenticatedWallet() {
   const session = await readWalletSession()
 
   if (!session) {
-    throw new FundWiseError("Wallet verification required before writing FundWise data.", 401)
+    throw new FundWiseError("Wallet verification required before accessing protected FundWise data.", 401)
   }
 
   return session

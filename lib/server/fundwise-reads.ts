@@ -148,6 +148,36 @@ async function listExpenseSplits(expenseIds: string[]): Promise<ExpenseSplitRow[
   return (data || []) as ExpenseSplitRow[]
 }
 
+async function getExpenseOrNull(expenseId: string): Promise<ExpenseRow | null> {
+  const { data, error } = await getAdmin()
+    .from("expenses")
+    .select("*")
+    .eq("id", expenseId)
+    .is("deleted_at", null)
+    .maybeSingle()
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Expense: ${error.message}`)
+  }
+
+  return (data as ExpenseRow | null) ?? null
+}
+
+function attachSplitsToExpenses(expenses: ExpenseRow[], expenseSplits: ExpenseSplitRow[]) {
+  const splitsByExpense = new Map<string, ExpenseSplitRow[]>()
+
+  for (const split of expenseSplits) {
+    const currentSplits = splitsByExpense.get(split.expense_id) || []
+    currentSplits.push(split)
+    splitsByExpense.set(split.expense_id, currentSplits)
+  }
+
+  return expenses.map((expense) => ({
+    ...expense,
+    splits: splitsByExpense.get(expense.id) || [],
+  }))
+}
+
 async function listSettlements(groupId: string): Promise<SettlementRow[]> {
   const { data, error } = await getAdmin()
     .from("settlements")
@@ -180,22 +210,12 @@ async function buildActivityFeed(groupId: string): Promise<ActivityItem[]> {
   const expenses = await listExpenses(groupId)
   const expenseSplits = await listExpenseSplits(expenses.map((expense) => expense.id))
   const settlements = await listSettlements(groupId)
-
-  const splitsByExpense = new Map<string, ExpenseSplitRow[]>()
-
-  for (const split of expenseSplits) {
-    const currentSplits = splitsByExpense.get(split.expense_id) || []
-    currentSplits.push(split)
-    splitsByExpense.set(split.expense_id, currentSplits)
-  }
+  const expensesWithSplits = attachSplitsToExpenses(expenses, expenseSplits)
 
   const activity: ActivityItem[] = [
-    ...expenses.map((expense) => ({
+    ...expensesWithSplits.map((expense) => ({
       type: "expense" as const,
-      data: {
-        ...expense,
-        splits: splitsByExpense.get(expense.id) || [],
-      },
+      data: expense,
     })),
     ...settlements.map((settlement) => ({
       type: "settlement" as const,
@@ -213,6 +233,38 @@ async function buildActivityFeed(groupId: string): Promise<ActivityItem[]> {
   })
 
   return activity
+}
+
+export async function listExpensesForGroupRead(groupId: string, viewerWallet: string) {
+  const isMember = await isWalletGroupMember(groupId, viewerWallet)
+
+  if (!isMember) {
+    throw new FundWiseError("Only Group Members can list Expenses for this Group.", 403)
+  }
+
+  const expenses = await listExpenses(groupId)
+  const splits = await listExpenseSplits(expenses.map((expense) => expense.id))
+  return attachSplitsToExpenses(expenses, splits)
+}
+
+export async function getExpenseRead(expenseId: string, viewerWallet: string) {
+  const expense = await getExpenseOrNull(expenseId)
+
+  if (!expense) {
+    throw new FundWiseError("Expense not found", 404)
+  }
+
+  const isMember = await isWalletGroupMember(expense.group_id, viewerWallet)
+
+  if (!isMember) {
+    throw new FundWiseError("Only Group Members can read this Expense.", 403)
+  }
+
+  const [expenseWithSplits] = attachSplitsToExpenses(
+    [expense],
+    await listExpenseSplits([expense.id])
+  )
+  return expenseWithSplits
 }
 
 export async function getGroupByCodeLookup(code: string): Promise<GroupRow | null> {

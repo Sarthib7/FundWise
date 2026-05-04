@@ -47,8 +47,10 @@ Fundy uses Zerion CLI for wallet analysis behind three commands:
 
 Auth: starts with free Zerion API key (`ZERION_API_KEY`), can switch to x402 pay-per-call on Solana later for demo purposes.
 
-### Repo structure (Q12)
-**Monorepo**. Fundy lives in `services/fundy/` inside the FundWise repo. Shares TypeScript types, Supabase types, and domain types. Railway deploys from the subdirectory. The `/skill.md` route stays in the Next.js app.
+### Repo structure (Q12) — SUPERSEDED by [ADR-022](./0022-fundy-moves-to-a-separate-repository.md)
+~~**Monorepo**. Fundy lives in `services/fundy/` inside the FundWise repo. Shares TypeScript types, Supabase types, and domain types. Railway deploys from the subdirectory. The `/skill.md` route stays in the Next.js app.~~
+
+**Current decision (ADR-022):** Fundy lives in a **separate repository**, calls FundWise over public HTTP APIs and the Agent Skill Endpoint, and does not import FundWise types directly. The `/skill.md` route remains in this Next.js app.
 
 ### Group chat DM auth flow (Q13)
 See the full flow in CONTEXT.md. Key rule: any Member can add Fundy to a group chat and `/connect` it to a FundWise Group, but every participant must authenticate in a private DM (`/link`) before Fundy acts for them in the group.

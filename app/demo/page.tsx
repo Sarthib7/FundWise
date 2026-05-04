@@ -37,16 +37,14 @@ const DEMO_EXPENSES = [
 ]
 
 const BALANCES = [
-  { name: "Asha", amount: 3600 },
-  { name: "Ben", amount: -2400 },
-  { name: "Carol", amount: -5200 },
-  { name: "You", amount: 4000 },
+  { name: "Asha", amount: 4000 },
+  { name: "Ben", amount: 0 },
+  { name: "Carol", amount: 0 },
+  { name: "You", amount: -4000 },
 ]
 
 const SETTLEMENTS = [
-  { from: "Ben", to: "You", amount: 2400 },
-  { from: "Carol", to: "You", amount: 4000 },
-  { from: "Carol", to: "Asha", amount: 1200 },
+  { from: "You", to: "Asha", amount: 4000 },
 ]
 
 type Step = "group" | "expenses" | "balances" | "settle" | "receipt"
@@ -116,7 +114,7 @@ function ExpensesStep() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{exp.description}</p>
-                <p className="text-[11px] text-muted-foreground">Paid by {exp.payer} · {formatCents(exp.amount * 100)}</p>
+                <p className="text-[11px] text-muted-foreground">Paid by {exp.payer} · {formatCents(exp.amount)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-bold">{formatCents(exp.amount)}</p>
@@ -143,8 +141,8 @@ function BalancesStep() {
 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-lg border p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">You are owed</p>
-          <p className="text-lg font-extrabold text-brand-mid">$40.00</p>
+          <p className="text-[10px] text-muted-foreground mb-1">You owe</p>
+          <p className="text-lg font-extrabold text-red-500">$40.00</p>
         </div>
         <div className="rounded-lg border p-3">
           <p className="text-[10px] text-muted-foreground mb-1">Total expenses</p>
@@ -165,7 +163,7 @@ function BalancesStep() {
               <span className="text-sm font-medium">{b.name}</span>
             </div>
             <span className={`text-sm font-bold ${b.amount > 0 ? "text-brand-mid" : b.amount < 0 ? "text-red-500" : ""}`}>
-              {b.amount > 0 ? "+" : ""}{formatCents(b.amount * 100)}
+              {b.amount > 0 ? "+" : ""}{formatCents(b.amount)}
             </span>
           </div>
         ))}
@@ -178,7 +176,7 @@ function BalancesStep() {
             <span className="font-medium">{s.from}</span>
             <ArrowRight className="h-3 w-3 text-muted-foreground" />
             <span className="font-medium">{s.to}</span>
-            <span className="ml-auto font-bold">{formatCents(s.amount * 100)}</span>
+            <span className="ml-auto font-bold">{formatCents(s.amount)}</span>
           </div>
         ))}
       </div>
@@ -205,7 +203,7 @@ function SettleStep({ onSettle }: { onSettle: () => void }) {
           <CheckCircle2 className="h-8 w-8" />
         </div>
         <h2 className="font-serif text-2xl tracking-tight">Settlement Confirmed!</h2>
-        <p className="text-sm text-muted-foreground">$40.00 USDC sent from Ben + Carol → You</p>
+        <p className="text-sm text-muted-foreground">$40.00 USDC sent from You → Asha</p>
       </div>
     )
   }
@@ -237,16 +235,16 @@ function SettleStep({ onSettle }: { onSettle: () => void }) {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">You send</span>
-            <span className="font-bold">$0.00</span>
+            <span className="font-bold">$40.00 USDC</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">You receive</span>
+            <span className="text-muted-foreground">Asha receives</span>
             <span className="font-bold text-brand-mid">$40.00 USDC</span>
           </div>
           <div className="h-px bg-border" />
           <div className="flex justify-between">
-            <span className="text-muted-foreground">From</span>
-            <span className="font-medium">Ben + Carol</span>
+            <span className="text-muted-foreground">To</span>
+            <span className="font-medium">Asha</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Network fee</span>
@@ -297,11 +295,11 @@ function ReceiptStep() {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">From</span>
-            <span className="font-medium">Ben · Carol</span>
+            <span className="font-medium">You</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">To</span>
-            <span className="font-medium">You</span>
+            <span className="font-medium">Asha</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Signature</span>

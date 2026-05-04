@@ -65,6 +65,14 @@ function getSigningWallet(walletAdapter: unknown) {
   return walletAdapter ?? (window as { solana?: unknown }).solana
 }
 
+function isTransactionCancelled(error: unknown) {
+  return error instanceof Error && error.message === "TRANSACTION_CANCELLED"
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
+
 export function useGroupDashboard() {
   const params = useParams()
   const router = useRouter()
@@ -264,17 +272,18 @@ export function useGroupDashboard() {
       actionLabel: string
     }) => {
       const shortfall = Math.max(0, amount - preview.sourceTokenBalance)
+      const topUpAction = actionLabel === "Settlement" ? "Top up to settle" : "Add funds"
 
       if (preview.sourceTokenAccountExists) {
         if (lifiSupported) {
-          return `You need ${formatTokenAmount(shortfall)} more ${tokenName} in your Solana wallet before this ${actionLabel}. Use "Bridge To My Wallet" in the sidebar, then try again.`
+          return `You need ${formatTokenAmount(shortfall)} more ${tokenName} in your Solana wallet before this ${actionLabel}. Use "${topUpAction}" in the sidebar, then try again.`
         }
 
         return `You need ${formatTokenAmount(shortfall)} more ${tokenName} in this Solana wallet before this ${actionLabel}.`
       }
 
       if (lifiSupported) {
-        return `This wallet does not hold ${tokenName} on Solana yet. Use "Bridge To My Wallet" in the sidebar first, then retry the ${actionLabel}.`
+        return `This wallet does not hold ${tokenName} on Solana yet. Use "${topUpAction}" in the sidebar first, then retry the ${actionLabel}.`
       }
 
       return `This wallet does not hold ${tokenName} on ${clusterLabel}. Add ${tokenName} to this Solana wallet first, then retry the ${actionLabel}.`
@@ -431,6 +440,7 @@ export function useGroupDashboard() {
       return
     }
 
+    let settlementTxSig: string | null = null
     setIsSettling(true)
     setSettlingTransfer(transfer)
 
@@ -482,6 +492,7 @@ export function useGroupDashboard() {
         transfer.amount,
         group.stablecoin_mint || DEFAULT_STABLECOIN.mint
       )
+      settlementTxSig = signature
 
       const settlement = await dbAddSettlement({
         groupId,
@@ -499,10 +510,20 @@ export function useGroupDashboard() {
 
       router.push(`/groups/${groupId}/settlements/${settlement.id}`)
     } catch (error) {
-      if (error instanceof Error && error.message === "TRANSACTION_CANCELLED") {
+      const errorMessage = getErrorMessage(error, "Settlement failed")
+
+      if (isTransactionCancelled(error)) {
         toast.info("Transaction cancelled")
+      } else if (settlementTxSig && errorMessage.includes("already been recorded")) {
+        toast.error("This Settlement transaction is already recorded.", {
+          description: "Refresh the Group to load the latest Receipt state.",
+        })
+      } else if (settlementTxSig) {
+        toast.error("Settlement reached Solana, but FundWise could not verify and record the Receipt.", {
+          description: `Refresh the Group before retrying. Transaction ${shortWallet(settlementTxSig)} is not recorded in FundWise yet.`,
+        })
       } else {
-        toast.error(error instanceof Error ? error.message : "Settlement failed")
+        toast.error(errorMessage)
       }
     } finally {
       setIsSettling(false)
@@ -518,6 +539,7 @@ export function useGroupDashboard() {
     maybeExplainAtaCreation,
     memberNameByWallet,
     router,
+    tokenName,
     wallet?.adapter,
     walletAddress,
   ])
@@ -620,6 +642,7 @@ export function useGroupDashboard() {
       return false
     }
 
+    let contributionTxSig: string | null = null
     setIsContributing(true)
 
     try {
@@ -670,6 +693,7 @@ export function useGroupDashboard() {
         group.stablecoin_mint,
         tokenAmount
       )
+      contributionTxSig = signature
 
       await dbAddContribution({
         groupId,
@@ -683,10 +707,20 @@ export function useGroupDashboard() {
       await loadData()
       return true
     } catch (error) {
-      if (error instanceof Error && error.message === "TRANSACTION_CANCELLED") {
+      const errorMessage = getErrorMessage(error, "Failed to contribute")
+
+      if (isTransactionCancelled(error)) {
         toast.info("Transaction cancelled")
+      } else if (contributionTxSig && errorMessage.includes("already been recorded")) {
+        toast.error("This Contribution transaction is already recorded.", {
+          description: "Refresh the Group to load the latest Treasury state.",
+        })
+      } else if (contributionTxSig) {
+        toast.error("Contribution reached Solana, but FundWise could not verify and record it.", {
+          description: `Refresh the Group before retrying. Transaction ${shortWallet(contributionTxSig)} is not recorded in FundWise yet.`,
+        })
       } else {
-        toast.error(error instanceof Error ? error.message : "Failed to contribute")
+        toast.error(errorMessage)
       }
       return false
     } finally {
