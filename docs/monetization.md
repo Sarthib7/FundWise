@@ -2,6 +2,8 @@
 
 FundWise should keep Split Mode free at launch. The early product needs trust, repeat use, and easy sharing more than it needs a small fee on the exact moment a Member is trying to repay a friend.
 
+This is also the competitive response. Shared-expense tracking is crowded, and several crypto-native bill splitters already exist. Charging the core Settlement loop too early would weaken the only acquisition loop that can make FundWise stand out: a Member shares a Settlement Request Link, the debtor signs the exact USDC Settlement, and the Group gets a verifiable Receipt.
+
 ## Decisions
 
 - Split Mode Group creation, Expense tracking, Balances, Settlement Request Links, and normal USDC Settlements stay free for the first public launch.
@@ -50,4 +52,3 @@ Approximate annualized run-rate at year end:
 - Total conservative year-end ARR: 18,000 USD
 
 The model intentionally leaves Split Mode free so it can act as the acquisition loop for Fund Mode, Fundy, and future rails.
-
