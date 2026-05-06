@@ -61,20 +61,39 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 
 - Group-owned Treasury using Squads primitives
 - Contributions into Treasury
+- Intended long-term use: durable shared pools for friends, households, clubs, and recurring Groups
 - Public Group creation keeps Fund Mode invite-only for now; internal testing can be re-enabled with `FUNDWISE_FUND_MODE_INVITE_WALLETS`
 - Proposal / approval / execution flow still pending and not part of the current hackathon mainline
+- Future private Group activities or mini-games must stay behind Fund Mode safety work and must not reintroduce prediction-market scope into the Split Mode MVP
 
 ### Sponsor layers
 
 - `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users route funds during Settlement through a `Route funds for Settlement` flow without needing to understand the underlying route details.
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
-- **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent. Fundy Lite (hackathon) is command-based with Zerion wallet analysis. Fundy Full (post-hackathon) adds LLM via OpenRouter for natural language, personal finance features, budgets, and proactive reminders. See ADR-0018.
-- **Agent Skill Endpoint** (`/skill.md`) is the public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, what to call vs avoid, supported actions, and how to authenticate through Scoped Agent Access. API reference markdown is available at **`https://fundwise.kairen.xyz/api/docs`**.
-- **Payable Settlement Requests** are a planned research direction for agent-paid settlement through x402 / MPP-style payment flows. They should extend Settlement Request Links for approved agents without bypassing scoped authority, live Balance checks, or Receipt verification. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
+- **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent from a separate repository. Fundy starts command-first with Zerion wallet analysis, personal finance support, Group Expense drafting, and Telegram group interaction; later versions add an LLM layer, tax guidance, and richer personal-finance workflows. See ADR-0018, ADR-0022, and ADR-0023.
+- **Agent Skill Endpoint** (`/skill.md`) is already live as a public discovery document at **`https://fundwise.kairen.xyz/skill.md`**. API reference markdown is available at **`https://fundwise.kairen.xyz/api/docs`**. Scoped Agent Access tokens and agent-paid Settlements are still planned.
+- **Payable Settlement Requests** are a planned research direction for agent-paid settlement through x402 / MPP-style payment flows. They should expose unpaid invoice/request state, payment challenge data, verification status, and the final Receipt only after payment is verified. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
 - **Spending Policies** are required before any agent can pay a Settlement. They set per-Settlement caps, daily limits, Group scope, counterparty scope, expiry, and human fallback behavior. See [docs/agent-payment-policy.md](./docs/agent-payment-policy.md).
+- **Visa / IBAN / Altitude-style top-ups** are a future non-crypto onboarding path, not current MVP functionality. The rollout order is crypto-native Groups first, then agents, then non-crypto users through card, bank-transfer, or Solana banking rails.
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.
+
+### Shipped vs planned
+
+| Surface | Current state | Notes |
+| --- | --- | --- |
+| Split Mode | Shipped on devnet MVP path | Primary hackathon and mainnet launch path |
+| Fund Mode | Partial / invite-only | Treasury and Contributions exist; Proposal lifecycle is not complete |
+| LI.FI | Support layer groundwork | User-facing language should be `Route funds for Settlement` |
+| Zerion | Scripted readiness demo | Read-only wallet analysis, not wallet auth |
+| Agent Skill Endpoint | Shipped baseline | Public `/skill.md` and `/api/docs`; no scoped tokens yet |
+| Scoped Agent Access | Planned | Required before external agents can read private data with durable grants |
+| Payable Settlement Requests | Planned research | x402 / MPP invoice, payment challenge, verification, Receipt |
+| Fundy | Planned separate repo | Telegram + personal-finance agent, wallet-confirmed for money movement |
+| Visa / IBAN / Altitude top-ups | Future | Non-crypto onboarding after crypto-native and agent surfaces work |
+| Fund Mode mini-games | Future / undecided | Must stay isolated from Split Mode and prediction-market cleanup |
+| Tax guidance | Future Fundy surface | Belongs to Fundy, not the FundWise web MVP |
 
 ### Hosted app and agent discovery
 
@@ -216,7 +235,7 @@ Current verification state:
 - `pnpm exec tsc --noEmit` passes
 - `pnpm lint` passes
 - `pnpm build` passes
-- `pnpm test` — 32 tests passing (expense engine splits, balances, settlement graph)
+- `pnpm test` — 34 tests passing (expense engine splits, balances, settlement graph)
 
 ### Database Bootstrap
 
@@ -234,8 +253,8 @@ supabase db push --include-all
 - Mainnet-beta comes later, after the devnet hardening and rehearsal path is finished.
 - Members need SOL for gas even though Settlements use USDC.
 - FundWise now preflights stablecoin transfers before the wallet prompt so users see insufficient-USDC, insufficient-SOL, and token-account-creation guidance earlier.
-- The current execution order is:
-  devnet settlement hardening -> manual QA -> LI.FI route-funds flow -> Zerion and FundWise Agent / Telegram support layers -> Fundy (hosted Telegram bot) -> Agent Skill Endpoint + Scoped Agent Access -> later Fund Mode proposals
+- The current rollout order is:
+  Split Mode devnet/mainnet hardening -> Fund Mode Proposal lifecycle -> Fundy companion agent -> Scoped Agent Access and Payable Settlement Requests -> non-crypto top-up rails
 - Planned Expense entry expansion: allow Source Currency input, show a current exchange-rate quote, save the Exchange Rate Snapshot, and keep Balances / Settlements in the converted USD/USDC ledger value.
 - Planned proof expansion: allow one lightweight receipt photo / PDF upload or proof link on an Expense.
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
