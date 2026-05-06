@@ -436,7 +436,7 @@ export function useGroupDashboard() {
 
   const handleSettle = useCallback(async (transfer: SettlementTransfer) => {
     if (!connected || !walletAddress || group?.mode !== "split") {
-      return
+      return false
     }
 
     let settlementTxSig: string | null = null
@@ -508,6 +508,7 @@ export function useGroupDashboard() {
       })
 
       router.push(`/groups/${groupId}/settlements/${settlement.id}`)
+      return true
     } catch (error) {
       const errorMessage = getErrorMessage(error, "Settlement failed")
 
@@ -524,6 +525,8 @@ export function useGroupDashboard() {
       } else {
         toast.error(errorMessage)
       }
+
+      return false
     } finally {
       setIsSettling(false)
       setSettlingTransfer(null)

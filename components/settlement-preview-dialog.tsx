@@ -29,7 +29,7 @@ type SettlementPreviewDialogProps = {
   viewerWallet: string
   isSettling: boolean
   lifiSupported?: boolean
-  onConfirm: () => void | Promise<void>
+  onConfirm: () => boolean | void | Promise<boolean | void>
   onOpenFundingRoute?: () => void
 }
 
@@ -55,7 +55,11 @@ export function SettlementPreviewDialog({
   const handleConfirm = async () => {
     setConfirmed(true)
     try {
-      await onConfirm()
+      const didSettle = await onConfirm()
+
+      if (didSettle === false) {
+        setConfirmed(false)
+      }
     } catch {
       setConfirmed(false)
     }

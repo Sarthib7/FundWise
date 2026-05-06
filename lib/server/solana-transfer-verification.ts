@@ -4,8 +4,8 @@ import { getSolanaRpcUrl } from "@/lib/solana-cluster"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 
 const VERIFICATION_COMMITMENT = "confirmed"
-const MAX_VERIFICATION_ATTEMPTS = 4
-const VERIFICATION_RETRY_DELAY_MS = 400
+const MAX_VERIFICATION_ATTEMPTS = 12
+const VERIFICATION_RETRY_DELAY_MS = 1000
 
 const connection = new Connection(getSolanaRpcUrl(), VERIFICATION_COMMITMENT)
 
@@ -104,7 +104,7 @@ async function loadParsedTransaction(signature: string) {
     }
 
     if (attempt < MAX_VERIFICATION_ATTEMPTS - 1) {
-      await sleep(VERIFICATION_RETRY_DELAY_MS * (attempt + 1))
+      await sleep(VERIFICATION_RETRY_DELAY_MS)
     }
   }
 

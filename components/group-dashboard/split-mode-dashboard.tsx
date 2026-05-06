@@ -66,7 +66,7 @@ type SplitModeDashboardProps = {
   onJoin: () => void | Promise<void>
   onClearSettlementRequest: () => void
   onShareSettlementRequest: (transfer: SettlementTransfer) => void | Promise<void>
-  onSettle: (transfer: SettlementTransfer) => void | Promise<void>
+  onSettle: (transfer: SettlementTransfer) => boolean | Promise<boolean>
   onOpenSettlementFundingRoute: (transfer: SettlementTransfer) => void
   onOpenCreateExpenseDialog: () => void
   onOpenEditExpenseDialog: (expense: ActivityExpense) => void
@@ -598,10 +598,14 @@ export function SplitModeDashboard({
           isSettling={isSettling}
           lifiSupported={lifiSupported}
           onOpenFundingRoute={() => onOpenSettlementFundingRoute(previewTransfer)}
-          onConfirm={() => {
-            const t = previewTransfer
-            setPreviewTransfer(null)
-            return onSettle(t)
+          onConfirm={async () => {
+            const didSettle = await onSettle(previewTransfer)
+
+            if (didSettle) {
+              setPreviewTransfer(null)
+            }
+
+            return didSettle
           }}
         />
       )}
