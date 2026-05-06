@@ -30,7 +30,7 @@ That is the primary demo path.
 
 Everything else is a supporting layer:
 
-- `LI.FI` helps an EVM-first debtor arrive at Solana USDC if their funds are on another chain, ideally through a simple `Add funds` / `Top up to settle` experience.
+- `LI.FI` helps an EVM-first debtor route funds if their USDC is on another chain, ideally from inside the Settlement flow.
 - `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
 - `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
 - `Fundy` is the hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
@@ -78,12 +78,12 @@ Everything else is a supporting layer:
 
 The strongest LI.FI story is not "FundWise is a generic multichain app." The strongest story is:
 
-`I owe money in a Group, my funds are not on Solana, LI.FI helps me top up into Solana USDC, then I complete the normal Settlement flow.`
+`I owe money in a Group, my USDC is on another network, LI.FI routes what is needed, then I complete the normal Settlement flow.`
 
 **Preferred MVP scope:**
 
 - Show that LI.FI can route value from another chain into Solana USDC
-- Present that path as `Add funds` / `Top up to settle` instead of teaching users the underlying route mechanics
+- Present that path as `Route funds for Settlement` inside the Settle flow instead of teaching users the underlying route mechanics
 - Return the user to the normal FundWise Group Settlement path
 - Keep the Receipt and ledger model unchanged
 
@@ -134,7 +134,7 @@ Low fit for the current product direction.
 ### LI.FI build framing
 
 - Detect insufficient Solana USDC
-- Offer cross-chain top-up path with app-owned language like `Add funds` or `Top up to settle`
+- Offer cross-chain routing from the Settlement preview with app-owned language like `Route funds for Settlement`
 - Land back in the same Group flow
 
 ### Zerion build framing
@@ -164,7 +164,7 @@ Low fit for the current product direction.
 
 - Harden backend trust model and verified ledger writes
 - Tighten on-chain settlement behavior and devnet wiring
-- Add LI.FI top-up branch
+- Add LI.FI Settlement routing branch
 - Add Zerion CLI support around wallet readiness and guidance
 - Keep Fund Mode in maintenance-only status unless the core Split Mode plus LI.FI path is already coherent
 - Prepare judge-friendly demo script

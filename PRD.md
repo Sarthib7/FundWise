@@ -17,7 +17,7 @@ FundWise is a web app with wallet-native identity and two product modes:
 - Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, attach optional Expense Proof, compute live net Balances, and settle with on-chain USDC transfers on Solana.
 - Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. This remains part of the product direction, but it is not the primary hackathon demo path.
 
-For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users top up a debtor's Solana wallet with USDC through `Add funds` / `Top up to settle` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
+For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users route funds during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
 
 `Group -> Expense -> Balance -> Settlement -> Receipt`
 
@@ -31,7 +31,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Off-chain metadata, on-chain money. Expenses and Group state live off-chain; Settlements and Contributions move money on-chain.
 - Current state over stale links. Settlement links resolve against the debtor's current Balance when opened.
 - Exact settlement over flexible settlement. The primary flow is settle the exact owed amount in one go.
-- Hide routing complexity. Users should think in terms of `Add funds` or `Top up to settle`, not bridge selection and multi-step route logic.
+- Hide routing complexity. Users should think in terms of `Settle` first and `Route funds for Settlement` only when needed, not bridge selection and multi-step route logic.
 - Activity feed, not chat. The Group timeline should explain the ledger without becoming a general messaging product. If Fund Mode needs discussion later, prefer Proposal-scoped comments over full Group chat.
 - Sponsor integrations must support the main flow, not redefine it.
 - Distribution expansion should reuse the same wallet-native ledger model across web, FundWise Agent, Telegram, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
@@ -59,7 +59,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 18. As a debtor Member, I want to pay in USDC on Solana with a normal wallet confirmation, so that the main flow stays simple and reliable.
 19. As a debtor Member, I want the app to auto-create the creditor's USDC token account when needed, so that my settlement does not fail on first receipt.
 20. As a debtor Member, I want the app to tell me clearly if I lack USDC or SOL, so that I understand why settlement cannot proceed.
-21. As a debtor Member with funds on another chain, I want an `Add funds` flow that tops up my Solana wallet with USDC, so that I can recover from insufficient funds without learning the underlying bridge mechanics or changing the main settlement model.
+21. As a debtor Member with funds on another chain, I want the Settlement flow to route funds when needed, so that I can recover from insufficient funds without learning the underlying bridge mechanics or changing the main settlement model.
 22. As a Member, I want the Group Activity Feed to show Expenses, edit markers, Settlements, and Receipts, so that the ledger stays understandable without a full chat product.
 23. As an Expense creator, I want to edit or delete my own Expense before later Settlements make that unsafe, so that I can fix mistakes without corrupting the ledger.
 24. As a Member, I want to leave a Group only when my Balance is zero, so that the Group ledger does not end up with orphaned debts.
@@ -153,7 +153,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - The Group timeline is an Activity Feed, not a chat system.
 - Fund Mode may add Proposal-scoped comments plus lightweight proof attachments later, but not a general Group-wide chat system in the MVP shape.
 - The core modules to deepen are profile identity and join flow, Group and membership ledger, Expense entry and split validation, Source Currency conversion and Exchange Rate Snapshots, Expense Proof storage, balance computation and simplified settlement graph, settlement orchestration and receipt generation, and sponsor integration adapters for LI.FI and Zerion.
-- LI.FI is the primary sponsor support adapter after Split Mode hardening, focused on topping up the debtor's Solana wallet with USDC through hidden-route `Add funds` / `Top up to settle` UX.
+- LI.FI is the primary sponsor support adapter after Split Mode hardening, focused on routing a debtor's funds during Settlement through hidden-route `Route funds for Settlement` UX.
 - Direct cross-chain creditor settlement is out of scope for the MVP.
 - Zerion is a secondary intelligence layer via **Zerion CLI** and related analysis, not a user-facing “connect with Zerion” wallet SDK for the core app.
 - Fund Mode keeps Treasury, Contribution, and Proposal concepts separate from Split Mode Settlement concepts.

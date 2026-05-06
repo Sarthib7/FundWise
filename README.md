@@ -66,7 +66,7 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 
 ### Sponsor layers
 
-- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users top up into Solana USDC through an `Add funds` / `Top up to settle` flow without needing to understand the underlying route details.
+- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users route funds during Settlement through a `Route funds for Settlement` flow without needing to understand the underlying route details.
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 - **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent. Fundy Lite (hackathon) is command-based with Zerion wallet analysis. Fundy Full (post-hackathon) adds LLM via OpenRouter for natural language, personal finance features, budgets, and proactive reminders. See ADR-0018.
@@ -235,7 +235,7 @@ supabase db push --include-all
 - Members need SOL for gas even though Settlements use USDC.
 - FundWise now preflights stablecoin transfers before the wallet prompt so users see insufficient-USDC, insufficient-SOL, and token-account-creation guidance earlier.
 - The current execution order is:
-  devnet settlement hardening -> manual QA -> LI.FI top-up / add-funds flow -> Zerion and FundWise Agent / Telegram support layers -> Fundy (hosted Telegram bot) -> Agent Skill Endpoint + Scoped Agent Access -> later Fund Mode proposals
+  devnet settlement hardening -> manual QA -> LI.FI route-funds flow -> Zerion and FundWise Agent / Telegram support layers -> Fundy (hosted Telegram bot) -> Agent Skill Endpoint + Scoped Agent Access -> later Fund Mode proposals
 - Planned Expense entry expansion: allow Source Currency input, show a current exchange-rate quote, save the Exchange Rate Snapshot, and keep Balances / Settlements in the converted USD/USDC ledger value.
 - Planned proof expansion: allow one lightweight receipt photo / PDF upload or proof link on an Expense.
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.

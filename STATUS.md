@@ -25,7 +25,7 @@ The product direction is now sharper:
 - USDC is the only settlement asset in the MVP.
 - Expenses may later be entered in other Source Currencies, but they must convert into a stored USD/USDC ledger value using an Exchange Rate Snapshot before Balance and Settlement math runs.
 - Receipt-photo upload belongs in the product plan as Expense Proof, stored off-chain as Expense metadata.
-- `LI.FI` is now the highest-priority sponsor support layer after Split Mode hardening. The intended user-facing language is `Add funds` or `Top up to settle`, not bridge jargon.
+- `LI.FI` is now the highest-priority sponsor support layer after Split Mode hardening. It should appear inside the Settlement path as `Route funds for Settlement` when a Member's USDC is on another supported network, not as a standalone dashboard top-up task.
 - **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
 - The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
 - **Fundy** is the name of the hosted Telegram bot that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Fundy handles read-only and draft-safe actions; money movement still requires wallet confirmation in the app.
@@ -60,7 +60,7 @@ The product direction is now sharper:
 - Final empty-state and copy polish across Group screens
 - Responsive pass across landing, Group list, Group detail, Receipt, and modal surfaces
 - Consumer landing rewrite with product-first messaging, tighter CTAs, and consistent iconography
-- Public Story page added for the problem narrative, Settlement Request Link loop, and LI.FI cross-chain top-up angle
+- Public Story page added for the problem narrative, Settlement Request Link loop, and LI.FI cross-chain Settlement routing angle
 - Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
 - Fund Mode vertical slice with invite-only creation support, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
@@ -102,7 +102,7 @@ Completed:
 - **FW-002:** Settlement failure states hardened for insufficient-USDC, insufficient-SOL-for-gas, token-account creation, wallet cancellation, simulation/send/confirmation failures, duplicate recording, and receipt-recording failure.
 - **FW-003:** Responsive QA signed off for public, disconnected, wallet-modal, demo Settlement, Receipt, and Group-not-found recovery surfaces at `375`, `768`, and `1280`; live connected-wallet path was already checked by owner.
 - **FW-006:** Judge-facing submission brief created in [SUBMISSION.md](./SUBMISSION.md) with demo script, screenshot checklist, submission copy, track framing, and claims to avoid.
-- **FW-004:** LI.FI handoff copy now uses `Top up to settle` / `Add funds`, returns to the Group after top-up submission, and preserves the normal Settlement / Receipt path.
+- **FW-004:** LI.FI handoff copy now uses `Route funds for Settlement`, returns to the Group after route submission, and preserves the normal Settlement / Receipt path.
 - **FW-005:** Zerion CLI wallet-readiness support shipped as `scripts/zerion-readiness.mjs` plus `pnpm zerion:readiness` and `docs/zerion-readiness.md`. Wraps `zerion analyze <address>`, summarizes USDC/SOL/broader context, prints a `READY` / `NOT READY` verdict with reasons, and falls back to a clear install message if the CLI is missing. Auth is pass-through (`ZERION_API_KEY`); optional x402 is documented, not required. `pnpm build` green.
 
 Next:
@@ -132,7 +132,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 2. Heavily test the core web product on devnet:
    create, invite, join, Expense, Balance, Settlement, Receipt, Treasury init, and Contribution.
 3. Finish the LI.FI support layer for EVM-first users:
-   `Add funds` / `Top up to settle`, route execution, and clean return into the same Group Settlement flow.
+   `Route funds for Settlement`, route execution, and clean return into the same Group Settlement flow.
 4. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
    wallet analysis, reminders, FundWise Agent, **Fundy** (hosted Telegram bot with wallet linking and read-only/draft-safe Group interactions), and later scoped agent access.
 5. Extend the now-public Agent Skill/API docs with Scoped Agent Access API after the backend is stable:
@@ -172,8 +172,8 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Historical Balances should not float with live exchange-rate changes. Live exchange values are for quoting at entry/edit time, not for silently repricing old Expenses.
 - Expense Proof should support one lightweight receipt photo / PDF upload or proof link per Expense.
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
-- LI.FI is the primary sponsor support layer after Split Mode hardening. It should be presented as `Add funds` / `Top up to settle`, not as a user-managed bridge workflow.
-- LI.FI still tops up the debtor's Solana wallet rather than paying the creditor directly across chains.
+- LI.FI is the primary sponsor support layer after Split Mode hardening. It should be presented inside Settlement as `Route funds for Settlement`, not as a user-managed bridge workflow or a standalone dashboard task.
+- LI.FI still routes funds into the normal Settlement path rather than paying the creditor directly across chains.
 - Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
 - Future expansion should keep one shared engine across surfaces: web first, then FundWise Agent, Telegram, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
 - The FundWise Agent name should cover Telegram bot / mini app, scoped agent access, reminders, draft Expense creation, proof upload, and wallet-aware suggestions.
@@ -244,7 +244,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Wallet-embedded mini dapp distribution
 - Native mobile app
 - Long-range stablecoin-only UX:
-  gas / fee abstraction, automatic bridging and top-up paths, and easier web2 onboarding / offboarding into stablecoin balances
+  gas / fee abstraction, automatic routing paths, and easier web2 onboarding / offboarding into stablecoin balances
 - Long-range fiat bridge research:
   evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; treat Altitude as inspiration for stablecoin account UX rather than the first direct consumer integration target
 - AI bill parsing beyond basic receipt-photo upload, or natural-language expense entry beyond draft-safe FundWise Agent flows
@@ -256,7 +256,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 
 ## Fund Mode status
 
-Fund Mode remains a real product mode, but it is no longer part of the devnet-ready definition for the hackathon story. The first requirement is a polished Split Mode web app, then a coherent LI.FI top-up path, then later support layers.
+Fund Mode remains a real product mode, but it is no longer part of the devnet-ready definition for the hackathon story. The first requirement is a polished Split Mode web app, then coherent LI.FI routing inside Settlement, then later support layers.
 
 **Already present:**
 
@@ -322,7 +322,7 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 
 1. Harden devnet Settlement and Contribution UX around insufficient funds, SOL-for-gas guidance, and recipient / Treasury token-account creation messaging.
 2. Finish manual breakpoint QA on join, Receipt, wallet-verification, and Group dashboard routes.
-3. Turn the LI.FI top-up flow into a user-facing `Add funds` / `Top up to settle` path for EVM-first users.
+3. Turn the LI.FI route flow into a user-facing `Route funds for Settlement` path for EVM-first users.
 4. Run the first full end-to-end devnet rehearsal across create, invite, join, Expense, Settlement, Receipt, Treasury init, and Contribution.
 5. Return to Zerion / Telegram support first, then Fund Mode proposals only after the Split Mode plus LI.FI path is polished.
 6. Close GitHub issues #4–#9 on the repo after verifying all fixes.

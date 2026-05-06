@@ -191,7 +191,7 @@ Avoid: Optimized debts, minimum transfers
 - SOL is required for gas on Solana mainnet-beta.
 - Split Mode is the primary product path for the hackathon MVP.
 - Fund Mode remains separate from Split Mode and uses Treasury plus Proposal concepts, not direct Settlements.
-- LI.FI is the primary sponsor support path for topping up a Member's Solana wallet with USDC when they cannot settle. The user-facing language should be `Add funds` or `Top up to settle`, not bridge jargon.
+- LI.FI is the primary sponsor support path when a Member's USDC is on another supported network. It belongs inside the Settlement path as `Route funds for Settlement`; the dashboard should not present a separate top-up task before the Member presses Settle.
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - FundWise Agent, Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 
@@ -265,7 +265,7 @@ Resolved: the MVP relies on shareable Settlement Request Links first. Push deliv
 Resolved: the MVP does not have a real-time Group-wide chat. If discussion is needed, keep it scoped to Fund Mode Proposals via comments and proof attachments.
 
 - "Multi-chain" was being used to describe both recovery and primary settlement.
-Resolved: the MVP settles on Solana in USDC. LI.FI may help a debtor top up their Solana wallet, but the Settlement itself remains a Solana USDC transfer.
+Resolved: the MVP settles on Solana in USDC. LI.FI may help a debtor route funds from another supported network during Settlement, but the Settlement itself remains a Solana USDC transfer.
 
 - "Embedded wallet" and "social login" were proposed as onboarding improvements.
 Resolved: wallet-adapter + Solana extension wallets stay the default. Optional Phantom Connect (Google/Apple + embedded) is an additive integration when Portal is configured; Member identity remains wallet pubkey–based, not email accounts owned by FundWise.

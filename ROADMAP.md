@@ -117,11 +117,11 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 
 **Still to finish:**
 
-- `Add funds` / `Top up to settle` entry point when a debtor lacks USDC on Solana
+- `Route funds for Settlement` entry point inside the Settlement preview when a debtor's USDC is on another supported network
 - Clean handoff back into the normal Group Settlement flow
 - Mainnet-safe copy and error states
 
-**Exit criterion:** a user with funds on another chain can connect their existing EVM wallet, top up into Solana USDC, and then complete the normal Group Settlement flow without learning the underlying route mechanics.
+**Exit criterion:** a user with funds on another chain can press Settle, route the needed USDC when prompted, and then complete the normal Group Settlement flow without learning the underlying route mechanics.
 
 ### Zerion support
 
@@ -280,7 +280,7 @@ Only pursue these after the core Group ledger, USDC settlement flow, and Fundy c
 
 - Multi-stablecoin support
 - Broader Source Currency support for Expense entry, including exchange-rate provider redundancy and better display of original amount vs converted ledger amount
-- Cross-chain direct flows beyond top-up
+- Cross-chain direct flows beyond Settlement routing
 - Embedded wallets
 - Social login
 - Gas abstraction / gasless settlement
