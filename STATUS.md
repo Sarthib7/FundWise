@@ -1,10 +1,10 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-05-04
+**Snapshot date:** 2026-05-06
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 **Active issue index:** [issues.md](./issues.md)
-**Handoff:** FW-005 (Zerion CLI readiness support) is shipped as a narrow script-only demo. Next: resolve the FW-007 Source Currency / Expense Proof ship decision with the owner.
+**Handoff:** Review and issue docs were updated for the product-roast corrections. Next: run FW-012 docs cleanup through the remaining public docs, then resolve FW-007 and FW-011.
 
 ---
 
@@ -29,7 +29,8 @@ The product direction is now sharper:
 - **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
 - The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
 - **Fundy** is the name of the hosted Telegram bot that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Fundy handles read-only and draft-safe actions; money movement still requires wallet confirmation in the app.
-- The **Agent Skill Endpoint** (`/skill.md`) is a public URL on the production host (`https://fundwise.kairen.xyz/skill.md`) that returns a detailed machine-readable markdown document so any autonomous agent can curl it, discover FundWise capabilities, and integrate through Scoped Agent Access. Public API reference markdown is also exposed at `https://fundwise.kairen.xyz/api/docs`.
+- The **Agent Skill Endpoint** (`/skill.md`) is live as a public discovery document on the production host (`https://fundwise.kairen.xyz/skill.md`). Public API reference markdown is also exposed at `https://fundwise.kairen.xyz/api/docs`. Scoped Agent Access and agent-paid Settlements remain planned.
+- The audience rollout is crypto-native Groups first, then agents, then non-crypto users through Visa/card, IBAN, and Altitude-style Solana banking rails after the core flow is reliable.
 - Fund Mode is still incomplete. Treasury initialization and Contributions exist, but Proposal flows are not yet ready to be presented as fully shipped product behavior.
 
 ---
@@ -109,11 +110,18 @@ Next:
 
 1. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
    - Hackathon-safe default: keep them future or explicitly mocked unless the next agent can complete the ledger/storage path end-to-end.
+2. **FW-011:** Define the monetization model and finance analysis.
+   - Owner preference: keep Split Mode free for acquisition if possible; evaluate fees around Fund Mode, Fundy top-ups, card/rail revenue, and carefully scoped Settlement fees.
+3. **FW-012:** Clean shipped-vs-planned docs and messaging drift.
+   - Canonical LI.FI wording is `Route funds for Settlement`.
+   - Fundy lives in a separate repo per ADR-0022, not `services/fundy/`.
+   - `/skill.md` baseline is live; Scoped Agent Access and agent-paid payment authority are planned.
 
 Deferred:
 
 - **FW-008:** Fund Mode Proposal lifecycle.
-- **FW-009:** Fundy, Agent Skill Endpoint, and Scoped Agent Access.
+- **FW-009:** Fundy, FundWise Agent, and Scoped Agent Access.
+- **FW-010:** Payable Settlement Requests, invoice/Receipt endpoint, and Agent Spending Policies.
 
 ## Agent handoff notes
 
@@ -199,7 +207,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 ## Product decisions locked on 2026-04-30 (Fundy + Agent Skill grill)
 
 - **Production web host for agent discovery:** `https://fundwise.kairen.xyz` — Agent Skill at **`/skill.md`** (root).
-- **Fundy hosting:** separate **Railway** service; **monorepo** path **`services/fundy/`**; Telegram library **`grammy`**.
+- **Fundy hosting:** separate **Railway** service in a **separate repository** per ADR-0022; Telegram library **`grammy`**.
 - **Fundy ↔ FundWise data path:** HTTP **API routes only** (same surface as browsers/agents), with **`FUNDWISE_SERVICE_API_KEY`** + **`X-Fundy-Wallet`** for bot calls; extend routes for Scoped Agent Access (user tokens from **`/profile/agents`** + optional wallet-signed agent auth).
 - **Telegram ↔ wallet linking:** **Option A** — short-lived codes from the authenticated web app, pasted as `/link FW-…` in DM.
 - **Evolution:** command-based v1 → LLM agent (e.g. **OpenRouter**) as end state; Zerion **`/analyze`**, **`/readiness`**, **`/verify`** in v1.
@@ -237,7 +245,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 
 ## Secondary work kept out of the main path
 
-- **Fundy**: the hosted Telegram bot for the FundWise Agent, **command-first v1** on **Railway** (`grammy`), code in **`services/fundy/`** (monorepo). Calls FundWise **HTTP APIs** with **`FUNDWISE_SERVICE_API_KEY` + `X-Fundy-Wallet`** (not direct Supabase from the bot). Telegram–wallet linking uses **web-generated short codes** in DM. Zerion via **`/analyze`**, **`/readiness`**, **`/verify`** (Zerion CLI; start with **`ZERION_API_KEY`**, optional x402 later). End goal: LLM agent (e.g. OpenRouter) on same tools. See ADR-0018 and CONTEXT.md.
+- **Fundy**: the hosted Telegram bot for the FundWise Agent, **command-first v1** on **Railway** (`grammy`), in a **separate repository**. Calls FundWise **HTTP APIs** with service-to-service auth and later Scoped Agent Access (not direct Supabase from the bot). Telegram–wallet linking uses **web-generated short codes** in DM. Zerion via **`/analyze`**, **`/readiness`**, **`/verify`** (Zerion CLI; start with **`ZERION_API_KEY`**, optional x402 later). End goal: LLM agent (e.g. OpenRouter), personal finance, and tax guidance on the same tools. See ADR-0018, ADR-0022, ADR-0023, and CONTEXT.md.
 - **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.kairen.xyz/skill.md`** — what to call, what not to call, auth, limits, errors. Does not require auth to fetch; does not expose private Member data. See ADR-0018.
 - **Scoped Agent Access**: the permission model for autonomous agents. Agents get scoped capabilities tied to Member wallet, Group, and action type — not broad permanent API keys.
 - FundWise Agent for reminders, draft Expenses, proof upload, wallet analysis, and scoped assistant-driven FundWise actions
@@ -246,7 +254,9 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Long-range stablecoin-only UX:
   gas / fee abstraction, automatic routing paths, and easier web2 onboarding / offboarding into stablecoin balances
 - Long-range fiat bridge research:
-  evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; treat Altitude as inspiration for stablecoin account UX rather than the first direct consumer integration target
+  evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; keep Altitude-style Solana banking rails in the roadmap for Visa/card and IBAN-like top-up flows once non-crypto onboarding becomes a priority
+- Long-range Fund Mode mini-games / private Group activities:
+  keep out of Split Mode and out of the hackathon story until Proposal safety, spending boundaries, and prediction-market/gaming risk are explicitly resolved
 - AI bill parsing beyond basic receipt-photo upload, or natural-language expense entry beyond draft-safe FundWise Agent flows
 - **FundWise-native** email/password or social identity as the primary account system (optional Phantom Connect for wallet onboarding is a separate, additive path; see ADR-0014)
 - Gas abstraction / gasless settlement
