@@ -34,7 +34,7 @@ Everything else is a supporting layer:
 - `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
 - `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
 - `Fundy` is the hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
-- The `Agent Skill Endpoint` (`/skill.md`) will be a public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and Scoped Agent Access; it must not expose private Member data.
+- The `Agent Skill Endpoint` (`/skill.md`) is a public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and planned Scoped Agent Access; it must not expose private Member data.
 - `Fund Mode` broadens the product story, but it is incomplete and should not be presented as the current mainline product path.
 
 ---
@@ -204,7 +204,7 @@ Avoid these claims in the main pitch unless they are actually shipped:
 - Telegram-first product surface
 - AI-native expense entry
 - Fundy as a shipped product (it is planned, not shipped)
-- Autonomous agent integration as a shipped feature (Agent Skill Endpoint and Scoped Agent Access are planned, not shipped)
+- Scoped Agent Access or autonomous agent payment as a shipped feature
 - Payable Settlement Requests or autonomous money movement as shipped features. They are documented research, not part of the current demo path.
 - Unlimited agent spending, broad API keys, or prompt-only authorization for financial actions.
 
@@ -212,7 +212,7 @@ For future expansion after the core demo path is solid:
 
 - Telegram is a strong distribution layer because the real groups already exist there, but it should call into the same FundWise wallet-bound engine rather than becoming a separate ledger product.
 - **Fundy** is the hosted Telegram bot that will run the FundWise Agent. It is a distribution surface for the same wallet-bound engine, not a separate product.
-- The **Agent Skill Endpoint** (`/skill.md`) will let any autonomous agent curl the FundWise domain and discover what FundWise can do. Agents interact through Scoped Agent Access, not broad API keys.
+- The **Agent Skill Endpoint** (`/skill.md`) lets any autonomous agent curl the FundWise domain and discover what FundWise can do. Private data and durable agent actions still require planned Scoped Agent Access, not broad API keys.
 - Agent skills and personal-agent access are promising only if they operate through scoped capabilities instead of broad raw API keys.
 - FundWise Agent can eventually support Telegram reminders, draft-safe Expense creation, proof upload, and Group summaries, but money movement still returns to app-and-wallet confirmation.
 - Wallet mini apps and native mobile should come after the shared engine is stable enough to support multiple clients cleanly.
