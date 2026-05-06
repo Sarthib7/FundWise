@@ -1,0 +1,23 @@
+1
+00:00:00,000 --> 00:00:04,000
+someone still owes you from that trip?
+
+2
+00:00:04,000 --> 00:00:09,000
+the spreadsheet knows. the group chat knows. nobody wants the awkward follow-up.
+
+3
+00:00:09,000 --> 00:00:15,000
+make a Group. log the Expense. see who owes what.
+
+4
+00:00:15,000 --> 00:00:22,000
+then settle the exact amount in USDC.
+
+5
+00:00:22,000 --> 00:00:27,000
+everyone gets a Receipt. awkward follow-up: gone.
+
+6
+00:00:27,000 --> 00:00:30,000
+FundWise. Group money, done right. fundwise.fun
