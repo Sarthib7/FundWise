@@ -28,6 +28,11 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-016 | Done | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
 | FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
 | FW-018 | Ready | P3 | AFK | Add production browser security headers | FW-014 |
+| FW-019 | Ready | P1 | AFK | Verify Fund Mode Treasury addresses on-chain before persistence | FW-014 |
+| FW-020 | Ready | P2 | AFK | Remove legacy SOL vault helpers from Squads Fund Mode code | FW-019 |
+| FW-021 | Ready | P2 | AFK | Validate LI.FI top-up amount parsing before quote execution | FW-004 |
+| FW-022 | Ready | P2 | AFK | Retire direct browser Supabase ledger helpers after RLS lockdown | FW-014 |
+| FW-023 | Ready | P3 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
 
 ## Handoff Queue For Claude / Lot
 
@@ -564,3 +569,138 @@ Created from CSO finding `FW-CSO-005` on 2026-05-06.
 ### User Stories Covered
 
 25, 26
+
+## FW-019 - Verify Fund Mode Treasury Addresses On-Chain Before Persistence
+
+**Status:** Ready  
+**Priority:** P1  
+**Type:** AFK  
+**Blocked by:** FW-014
+
+### What to fix
+
+The pentest pass found that `PATCH /api/groups/{groupId}/treasury` requires the creator's wallet session, but then persists caller-supplied `multisigAddress` and `treasuryAddress` without an RPC proof that the Squads multisig exists or that the Treasury is the expected vault PDA. A malicious or buggy creator client can store arbitrary Treasury addresses for a Fund Mode Group, causing future Contributions to verify and record against the wrong destination.
+
+### Acceptance Criteria
+
+- [ ] Treasury initialization API accepts a creation transaction signature or equivalent proof, not just raw addresses.
+- [ ] Server verifies the Squads multisig account exists on the configured Solana cluster.
+- [ ] Server derives vault index `0` from the verified multisig PDA and rejects mismatched `treasuryAddress` values.
+- [ ] Server verifies the submitted creator wallet participated in the creation path or is a configured Squads Member.
+- [ ] Contributions continue to verify SPL transfers to the verified Treasury token account owner.
+- [ ] Tests cover forged Treasury addresses, nonexistent multisigs, and the valid initialization path.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from AI pentest / blockchain audit on 2026-05-06. Evidence: `app/api/groups/[groupId]/treasury/route.ts` lines 21-34 checks presence and wallet-session match only; `lib/server/fundwise-mutations.ts` lines 696-726 updates both addresses without RPC verification. The UI calls `createSquadsMultisig`, but this is not a security boundary because the API is directly callable.
+
+### User Stories Covered
+
+29, 30
+
+## FW-020 - Remove Legacy SOL Vault Helpers From Squads Fund Mode Code
+
+**Status:** Ready  
+**Priority:** P2  
+**Type:** AFK  
+**Blocked by:** FW-019
+
+### What to fix
+
+`lib/squads-multisig.ts` still exports legacy SOL helpers (`payToSquadsVault`, `withdrawFromSquadsVault`, `getVaultBalance`, `solToLamports`, `lamportsToSol`) that use `SystemProgram.transfer` and lamports. FundWise's money model is stablecoins-only, with SOL only for gas, so these helpers are a future integration footgun even though current UI paths use `contributeStablecoinToTreasury`.
+
+### Acceptance Criteria
+
+- [ ] Remove unused SOL vault payment and withdrawal helpers, or move them to clearly non-shipped archive code outside the app bundle.
+- [ ] Remaining Fund Mode Treasury helpers only handle stablecoin Contributions and stablecoin balance reads.
+- [ ] No app, hook, or API route imports SOL vault payment or withdrawal helpers.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from AI pentest / blockchain audit on 2026-05-06. Evidence: `lib/squads-multisig.ts` lines 172-258 transfers SOL to the vault; lines 299-484 create SOL withdrawal proposals and auto-execute for `1/1` multisigs. `rg` found no current caller for these helpers, so this is not an active exploit path today.
+
+### User Stories Covered
+
+29, 30
+
+## FW-021 - Validate LI.FI Top-Up Amount Parsing Before Quote Execution
+
+**Status:** Ready  
+**Priority:** P2  
+**Type:** AFK  
+**Blocked by:** FW-004
+
+### What to fix
+
+`getBridgeQuote` converts the human USDC amount with `parseFloat(params.fromAmount) * 1e6` before calling LI.FI. That accepts malformed strings and can produce unsafe, rounded, exponential, or non-finite values. This is a support path rather than the core Settlement ledger, but it can still create bad quotes or confusing wallet prompts.
+
+### Acceptance Criteria
+
+- [ ] Add a shared USDC amount parser for LI.FI top-up inputs that rejects malformed strings, non-finite numbers, zero/negative values, more than six decimals, and unsafe integer raw amounts.
+- [ ] Use integer string math instead of floating point for `fromAmount`.
+- [ ] UI shows a clear validation error before requesting a LI.FI quote.
+- [ ] Tests cover malformed, fractional, too-precise, and valid top-up amounts.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from AI pentest on 2026-05-06. Evidence: `lib/lifi-bridge.ts` lines 47-55 builds the quote amount with `parseFloat`; `components/cross-chain-bridge-modal.tsx` lines 89-103 forwards the raw input string to `getBridgeQuote`.
+
+### User Stories Covered
+
+21, 27, 28
+
+## FW-022 - Retire Direct Browser Supabase Ledger Helpers After RLS Lockdown
+
+**Status:** Ready  
+**Priority:** P2  
+**Type:** AFK  
+**Blocked by:** FW-014
+
+### What to fix
+
+After FW-014, direct browser Supabase reads should no longer be part of the ledger access model. `lib/db.ts` still keeps direct `supabase.from(...)` helpers for profiles, Expenses, splits, and Settlements. Current main UI paths use HTTP APIs, but these helpers now either fail under RLS or invite future agents to reintroduce public anon-table access assumptions.
+
+### Acceptance Criteria
+
+- [ ] Remove unused direct browser Supabase ledger helpers from `lib/db.ts`, or rewrite them to call protected HTTP APIs.
+- [ ] Keep invite-code lookup and dashboard reads on server-backed routes only.
+- [ ] Ensure no browser component imports the raw `supabase` client for private ledger tables.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from AI pentest on 2026-05-06. Evidence: `lib/db.ts` lines 110-145 reads `profiles`; lines 208-238 reads `expenses` and `expense_splits`; lines 287-295 reads `settlements` through the public Supabase client. `rg` currently shows the main app path mostly uses the HTTP wrappers, so this is a cleanup/hardening issue rather than a currently exploitable data leak after FW-014.
+
+### User Stories Covered
+
+1, 2, 12, 13, 15, 16, 31, 32, 33
+
+## FW-023 - Add Wallet-Session Abuse Controls And Origin Binding
+
+**Status:** Ready  
+**Priority:** P3  
+**Type:** AFK  
+**Blocked by:** FW-014
+
+### What to fix
+
+Wallet challenge and verification endpoints are simple and correct for the current MVP, but they have no rate limits and the signed message is not explicitly bound to the deployment origin or Solana cluster. This is not a direct bypass because challenges are nonce-backed and HMAC-bound to httpOnly cookies, but production should add abuse controls before public launch traffic.
+
+### Acceptance Criteria
+
+- [ ] Rate-limit `/api/auth/wallet/challenge` and `/api/auth/wallet/verify` by IP and wallet address.
+- [ ] Include deployment origin and Solana cluster in the wallet challenge message.
+- [ ] Consider `__Host-` cookie names for production session cookies where deployment constraints allow it.
+- [ ] Add tests for challenge mismatch, expired challenge, invalid signature, and origin/cluster message formatting.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from AI pentest on 2026-05-06. Evidence: `app/api/auth/wallet/challenge/route.ts` lines 11-26 issues challenges without throttling; `lib/server/wallet-session.ts` lines 156-166 builds the message without origin or cluster fields.
+
+### User Stories Covered
+
+25, 26, 31, 32, 33
