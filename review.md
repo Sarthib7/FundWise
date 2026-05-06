@@ -1,110 +1,125 @@
 # FundWise — Product Roast Review
 
-**Date:** 2026-04-30
-**Reviewer:** Pi Agent (roast-my-product skill)
-**Product:** FundWise — Group money, done right
-**Stage:** Hackathon MVP (Colosseum Frontier, deadline May 11, 2026)
+**Date:** 2026-05-06  
+**Reviewer:** Pi Agent (`roast-my-product`)  
+**Product:** FundWise — Group money, done right  
+**Stage:** Split Mode devnet MVP, Fund Mode / Fundy / agent-payments roadmap
 
 ---
 
 ## Verdict
 
-FundWise is a Group money app for crypto people who already have USDC on Solana — a product for approximately 47 humans, built by a team that spent more words on ADRs, CONTEXT.md glossaries, and planned Telegram bots than on getting a single real user through the core loop on mainnet.
+FundWise has a real crypto-native wedge — Group ledger + USDC Settlement + shared Treasury + agent-readable Receipts — but the product story is still trying to be Splitwise, a pooled treasury, an agent payments network, a Telegram finance bot, Visa top-up rails, mini-games, and tax software before proving one beachhead can retain users.
+
+---
+
+## What changed from the earlier roast
+
+The earlier roast undercounted several parts of the product direction:
+
+- **Fund Mode is not decorative.** It is meant to be a long-lived shared pool / Treasury for friends, with Proposals to release funds. That is a stronger crypto primitive than plain expense splitting.
+- **Agent Skill + payable Receipt / invoice endpoints are strategic.** The intended x402 / MPP-style endpoint where agents can call, pay, and receive Receipts or invoices increases crypto necessity beyond “wallet payment button.”
+- **Fundy is broader than a Telegram reminder bot.** The plan is a personal-finance agent that can manage personal expenses, interact with Telegram Groups, draft Expenses, create Group interactions, and eventually support tax guidance.
+- **Visa / IBAN / card top-up is part of the non-crypto expansion path.** The stated long-term path is crypto-native users first, then agents, then non-crypto users once card / IBAN / Altitude-style Solana banking rails are available.
+- **Split Mode can be temporary or recurring.** Trips are temporary, but roommates, shared households, recurring friend groups, and Fund Mode Treasuries can become longer-lived.
+
+Those corrections improve the product’s ceiling. They do not remove the main risk: the shipped MVP, docs, and roadmap still need sharper separation between **live**, **demo**, **planned**, and **speculative**.
 
 ---
 
 ## Scorecard
 
 | Dimension | Score | Justification |
-|---|---|---|
-| **Value Proposition** (2x) | **6/10** | The problem is real: shared-expense tools handle bookkeeping but not final settlement. But "settle in USDC on Solana" narrows the addressable market to people who (a) split expenses, (b) are OK with crypto, (c) hold USDC on Solana, (d) want to settle debts that way. Niche of a niche of a niche. |
-| **Crypto Necessity** | **7/10** | One of the better crypto products for actual necessity. Existing shared-expense apps do not provide cross-border settlement finality. On-chain USDC transfer IS the settlement. Replace blockchain with Postgres and you're back to tracking debts but not closing them. |
-| **Target User Clarity** | **4/10** | Docs say "consumer payments" but UX requires: Solana wallet, USDC on Solana, SOL for gas, understanding of token accounts, and tolerance for devnet. Building for crypto-native expats and hackathon judges, not "consumers." |
-| **First-Time User Experience** | **3/10** | Landing page → Connect Wallet → figure out what to do. No demo. No "try it without a wallet." No onboarding walkthrough. The disconnected `/groups` page is decent but walls off ALL value behind wallet connect. |
-| **Core Loop** | **5/10** | Create Group → Add Expense → See Balance → Settle → Receipt. The loop exists and it's correct. But frequency is episodic (trips, dinners), not daily. No notifications. No push triggers to return. |
-| **Competitive Moat** | **2/10** | What stops an incumbent shared-expense app from adding "Settle with crypto"? Nothing. No network effects. No data lock-in. No liquidity moat. No user base. A funded competitor could replicate this in 2 weeks. |
-| **Technical Execution** | **5/10** | Code compiles. Architecture is solid (Supabase + Solana + server-side mutations + RPC verification). But: **zero tests**, LI.FI is "groundwork" not shipped, Fund Mode Proposals don't exist, no mainnet deployment. Well-structured prototype, not production. |
-| **Naming & Messaging** | **6/10** | "FundWise" is fine. The positioning is clear when it owns Group money instead of borrowing competitor mind-share. But landing page buries the lead under mode explanations, tech strips, and feature sections. Dual-mode confuses before anyone understands the first. |
-| **Monetization Path** | **2/10** | No monetization plan. No fees, no premium tier, no protocol revenue. PRD, ROADMAP, STATUS — none mention revenue. Free tool hoping the hackathon leads somewhere. |
-| **Market Timing** | **5/10** | Stablecoin payments are having a moment. Visa IS interested in on-chain settlement. But Solana consumer apps have struggled to find PMF. Not riding a wave; hoping one forms. |
-
-| **Total** | **51/110** |
-|---|---|
-
-**Verdict band: 50-69 — Needs significant work. Core issues to address.**
+|-----------|-------|---------------|
+| **Value Proposition** | **7/10** | “Group money, done right” is clear when focused on Split Mode: create Group, log Expenses, view Balances, settle exact USDC, get Receipt. It gets muddy when Fund Mode, Fundy, x402, Visa rails, mini-games, and tax are all discussed at once. |
+| **Crypto Necessity** | **8/10** | Stronger than a normal crypto app. On-chain USDC Settlement, Treasury custody, verifiable Receipts, agent-payable x402 / MPP flows, and future programmable spending policies are meaningfully worse without crypto. The problem is not necessity; it is sequencing. |
+| **Target User Clarity** | **6/10** | The staged target is clearer now: crypto-native friend groups first, then agents, then non-crypto users through card / IBAN / wallet top-up rails. But public copy still sometimes says “consumer payments” before the product is ready for non-crypto consumers. |
+| **First-Time User Experience** | **6/10** | `/demo` and the landing preview fix the old “connect wallet before seeing anything” sin. The live app is still wallet-first and requires USDC + SOL understanding, so non-crypto onboarding remains future-dependent. |
+| **Core Loop** | **6/10** | Split Mode has an episodic loop; Fund Mode and Fundy can create a durable loop through shared pools, recurring Expenses, Telegram interactions, personal finance, and tax. But those retention surfaces are mostly roadmap, not shipped proof. |
+| **Competitive Moat** | **4/10** | The moat thesis is better than “Splitwise clone”: shared Treasury, agent-accessible APIs, payable Receipt / invoice endpoints, and Fundy distribution can compound. Today, moat is still mostly planned architecture, not user/network lock-in. |
+| **Technical Execution** | **6/10** | Current repo builds, `pnpm build` passes, and `pnpm test` shows 34 passing tests. Wallet sessions, protected reads, RPC receipt verification, Settlement preflight, `/skill.md`, and `/api/docs` exist. Mainnet, robust E2E tests, Fund Mode Proposals, and production agent payment flows are still missing. |
+| **Naming & Messaging** | **7/10** | “FundWise” and “Group money, done right” work. But docs/UI still drift between “Top up to settle” and “Route funds for Settlement,” and Fundy / Agent Skill / Fund Mode status is not consistently marked as shipped vs planned. |
+| **Monetization Path** | **3/10** | There is now a rough thesis: Split Mode free, possible Settlement fees, Fund Mode fees/subscription/percentage, Fundy wallet top-up commissions. But none of this is modeled, priced, or validated. This is still the weakest business dimension. |
+| **Market Timing** | **8/10** | Stablecoins, Solana payments, Visa frontier interest, agent payments, x402, and wallet-aware agents are all timely. The window is good. The danger is overbuilding five narratives instead of landing one wedge. |
+| **Weighted Total** | **68/110** | Needs significant work; strong ceiling if focus and monetization get fixed. |
 
 ---
 
 ## The Worst Issues
 
-### 1. Ghost Market — Target User is Too Narrow
+### 1. The roadmap has a strong thesis, but the shipped story is still too noisy
 
-**What's wrong:** Target user needs to (1) have a Solana wallet, (2) hold USDC on Solana, (3) have SOL for gas, (4) want to split expenses with friends, (5) have friends who also meet criteria 1-3, and (6) prefer this over familiar off-chain settlement rails.
+**What's wrong:** FundWise has at least six stories competing for attention: Split Mode, Fund Mode, Fundy, Agent Skill, x402 payable endpoints, and Visa / IBAN onboarding. Each is plausible. Together, they make the product feel unfocused.
 
-**Why it matters:** No users = no product. Hackathon judges will see a demo that works for the 3 people in the room with Phantom wallets.
+**Why it matters:** Judges, users, and future contributors need to know what is live now. If everything is presented as part of the pitch, the strongest shipped path gets diluted.
 
-**What good looks like:** Either abstract the crypto away completely (user never needs to know they're on Solana) or own the niche explicitly: "for crypto-native expat groups who split bills across borders."
+**What good looks like:** A strict hierarchy everywhere:
 
-### 2. Zero Onboarding, Zero Discovery, Zero Trial
+1. **Live now:** Split Mode devnet / mainnet launch path.
+2. **Next:** Fund Mode Treasury + Proposal lifecycle.
+3. **Then:** Fundy and agent-readable APIs.
+4. **Later:** Visa / IBAN / Altitude top-ups, mini-games, tax.
 
-**What's wrong:** Entire app is behind a wallet gate. No way to see FundWise in action without connecting. No demo mode. No sample Group. No interactive preview.
+### 2. Fund Mode could be the moat, but it is not allowed to stay half-real
 
-**Why it matters:** First-time visitors bounce. They don't trust you enough to connect a wallet.
+**What's wrong:** Fund Mode is potentially the most differentiated human product: friends pool money into a shared Treasury and use Proposals to spend. But the Proposal lifecycle is incomplete, so today it risks being a menu item instead of a product.
 
-**What good looks like:** A "Try a demo Group" button that loads a pre-populated Group with sample expenses, balances, and a simulated settlement flow. Show the product working before asking for a wallet.
+**Why it matters:** A shared Treasury without complete Proposal creation, approval, rejection, proof, execution, and recovery rules is dangerous. It creates expectations around pooled money before the governance workflow is ready.
 
-### 3. 18 ADRs, 0 Tests, 0 Real Users
+**What good looks like:** Fund Mode stays invite-only until one full loop ships: create Treasury → Contribution → Proposal → approval/rejection → explicit execution → Receipt/history.
 
-**What's wrong:** Exceptional documentation — 18 ADRs, 600-line CONTEXT.md, 23KB STATUS.md. But `tests/` is empty. Zero test files. More documentation about planned features (Fundy, Agent Skill, Scoped Agent Access) than evidence the core loop works reliably.
+### 3. Agent payments are promising, but dangerous if underspecified
 
-**Why it matters:** Judges don't care about ADRs. They care whether settlement works when USDC is low, when SOL is missing, when the network is slow, when two people settle simultaneously.
+**What's wrong:** The x402 / MPP payable Receipt or invoice endpoint is a strong idea, but “agents can call and get Receipts/invoices” needs precise language. Is it a quote? invoice? payable settlement intent? receipt after verified payment? Who can call? What spending policy caps it? What prevents stale Balance payment?
 
-**What good looks like:** Tests on expense engine (balance math, settlement graph), tests on Supabase mutations, at minimum one end-to-end devnet flow that runs automatically.
+**Why it matters:** Agent payments without exact authorization semantics become either unusable or unsafe. A Receipt must never exist before verified payment.
 
-### 4. Documentation-to-Product Ratio is Inverted
+**What good looks like:** A spec that distinguishes:
 
-**What's wrong:** ~15 files of planning documentation totaling 100,000+ words. Actual meaningful TypeScript: ~5,000 lines across 20 files. Detailed specs for Fundy, Agent Skill Endpoint, Scoped Agent Access — all months away.
+- **Invoice / request:** unpaid intent, live amount, expires.
+- **Payment challenge:** x402 / MPP payable object.
+- **Verification:** proof or on-chain tx confirmed.
+- **Receipt:** created only after verification.
 
-**Why it matters:** Every hour spent documenting Fundy's `/link` command flow is an hour not spent making settlement work on mainnet. Docs create an illusion of progress.
+### 4. Monetization is still hand-wavy
 
-**What good looks like:** 2 planning docs max for hackathon: README + STATUS.md. ADRs only for implemented decisions. Archive all Fund Mode, Fundy, Agent Skill planning until Split Mode is live.
+**What's wrong:** Current monetization ideas are plausible but not yet a model: Split Mode free, possible Settlement fee, Fund Mode subscription or percentage, Fundy wallet top-up commission, finance-analysis revenue. There are no numbers.
 
-### 5. No One Comes Back
+**Why it matters:** Fees on friend-to-friend settlements are sensitive. A 1% fee on a dinner split feels bad. A Fund Mode Treasury fee may make more sense, but only if value is clear.
 
-**What's wrong:** Core loop is episodic, not habitual. No push notifications ("Alice added a $60 dinner"). No social feed. No recurring expenses. No weekly summary. Nothing triggers a return visit.
+**What good looks like:** A tiny monetization model with three scenarios: free Split Mode acquisition, Fund Mode paid tier, Fundy/payment-rail commission. Include expected fee, transaction volume, user tolerance, and what remains free.
 
-**Why it matters:** Without retention, every user is a one-time acquisition cost.
+### 5. The “mini-games / prediction market” idea is radioactive unless isolated
 
-**What good looks like:** Active notifications, Activity Feed as a reason to return, at least one retention mechanic before the hackathon.
+**What's wrong:** Private mini-games from a shared pool may be fun, but prediction-market language conflicts with the repo’s existing cleanup direction and can derail the payments story.
+
+**Why it matters:** The product just pivoted away from prediction-market baggage. Reintroducing it casually risks confusing scope, compliance, and judging narrative.
+
+**What good looks like:** If kept, frame it as a far-future Fund Mode “Group activity / game” module with explicit constraints. Do not put it in Split Mode. Do not pitch it for the hackathon. Do not build it before Treasury Proposal safety is done.
 
 ---
 
 ## Common Sins Detected
 
-- **Wallet Gate (#3):** Zero product value without wallet connect. `/groups` is a beautiful wall. Textbook wallet gate.
-- **No Retention Loop (#5):** Add expenses, settle, done. No return trigger. "Check your Group balances" is not a loop.
-- **Bridge to Nowhere (#8):** LI.FI integration is "groundwork" — SDK installed but no user-facing flow. Stop selling what isn't shipped.
-- **Complexity Worship (#12):** Drowning in terminology for what is essentially a shared ledger plus Send USDC. Source Currency, Exchange Rate Snapshot, Simplified Settlement Graph, Scoped Agent Access — the conceptual overhead is enormous.
-- **Grant-Dependent (#10):** This is a hackathon project built for Colosseum Frontier. No revenue model. No sustainability plan beyond sponsor prizes.
+- **Complexity Worship:** The product has too many named primitives for its shipped maturity: Fund Mode, Fundy, Agent Skill Endpoint, Scoped Agent Access, Payable Settlement Requests, Spending Policies, x402 invoices, Visa top-ups, mini-games, tax.
+- **No Retention Loop — partially unresolved:** Fundy and Fund Mode can fix this, but the currently shipped Split Mode loop is still mostly episodic.
+- **Bridge to Nowhere — reduced but not gone:** LI.FI / Visa / Altitude rails are valuable only if they directly unblock Settlement or top-up. If they become separate dashboards, they are sponsor/integration theater.
+- **Grant-Dependent — unresolved:** Hackathon timing is strong, but revenue is not yet defined.
 
 ---
 
 ## UX Red Flags
 
-- **Wallet Connection Before Value Preview (#1):** Entire app requires wallet to see anything. No demo mode, no preview, no sample data.
-- **No Transaction Simulation (#2):** Settlement asks users to sign a USDC transfer without a crystal-clear preview of exact amount, recipient, and fee.
-- **No Onboarding for Non-Crypto Users (#8):** Once connected, no guidance on "you need USDC" or "you need SOL for gas." Users discover requirements by failing.
-- **Stale Data After Transaction (#10):** No WebSocket subscriptions, no optimistic updates, no auto-refresh strategy documented for post-settlement state.
-- **Loading States Without Explanation (#12):** During settlement — the highest-anxiety moment — what does the user see while the tx confirms?
+- **Wallet-first live app:** Demo exists, but real usage still starts with wallet connection and wallet verification.
+- **Non-crypto users are roadmap-only:** Visa / IBAN / Altitude-style onboarding is a future solution, not a current UX defense.
+- **Terminology drift:** “Top up to settle” vs “Route funds for Settlement” needs one canonical term.
+- **Shipped/planned ambiguity:** `/skill.md` exists, but Scoped Agent Access and full agent payment flows remain planned. Docs should say that cleanly.
+- **Mainnet trust gap:** Devnet success is not enough for pooled Treasury or payable agent endpoints.
 
 ---
 
-## Fix These Now (Prioritized)
+## Fix These Now
 
-1. **Demo mode (highest impact):** ✅ SHIPPED — `/demo` route with 5-step walkthrough.
-2. **Cut docs, add tests (easiest win):** ✅ SHIPPED — 32 tests, ADR-0018/0014 archived.
-3. **Abstract crypto or own the niche (existential fix):** Partially addressed — hero copy now leads with "Group money, done right." Full resolution requires embedded wallet integration (post-hackathon).
-
-## Dependabot — 2026-04-30
-
-10 transitive vulnerabilities from `@solana/*` wallet adapter deps (protobufjs, bigint-buffer, lodash, elliptic, uuid, postcss). All are indirect deps. None exploitable in client-side Next.js app — no server-side protobuf parsing, no user-controlled template rendering, no direct crypto primitive usage. Safe to acknowledge and suppress. Patch by updating `@solana/wallet-adapter-*` when upstream releases fixes.
+1. **Highest impact:** Update docs and submission language into a shipped/planned matrix. Split Mode is live/primary; Fund Mode is invite-only/incomplete; Agent Skill baseline exists; Scoped Agent Access and x402 payable Receipts are planned; Visa / Altitude onboarding is future.
+2. **Easiest win:** Create a monetization issue with concrete options: free Split Mode, optional Settlement fee, Fund Mode paid tier / percentage, Fundy wallet top-up commission, and partner/card revenue.
+3. **Existential fix:** Decide the first beachhead and stop pitching beyond it. Recommended: **crypto-native Groups first**, then **Fund Mode for shared Treasuries**, then **Fundy/agents**, then **non-crypto top-up rails**.
