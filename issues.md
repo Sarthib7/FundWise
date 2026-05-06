@@ -23,9 +23,9 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-011 | Done | P1 | HITL | Define monetization model and finance analysis | Owner decision |
 | FW-012 | Done | P1 | AFK | Clean shipped-vs-planned docs and messaging drift | FW-007, FW-011 |
 | FW-013 | Done | P2 | HITL | Decide Fund Mode mini-games scope and prediction-market boundary | FW-008 |
-| FW-014 | Ready | P0 | AFK | Lock down anonymous Supabase ledger access | None |
-| FW-015 | Ready | P0 | AFK | Validate Expense ledger amounts and split shares server-side | FW-014 |
-| FW-016 | Ready | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
+| FW-014 | Blocked | P0 | AFK | Lock down anonymous Supabase ledger access | Supabase project access |
+| FW-015 | Done | P0 | AFK | Validate Expense ledger amounts and split shares server-side | FW-014 |
+| FW-016 | Done | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
 | FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
 | FW-018 | Ready | P3 | AFK | Add production browser security headers | FW-014 |
 
@@ -426,7 +426,7 @@ Decision on 2026-05-06: mini-games and prediction-market-like mechanics are out 
 
 ## FW-014 - Lock Down Anonymous Supabase Ledger Access
 
-**Status:** Ready  
+**Status:** Blocked  
 **Priority:** P0  
 **Type:** AFK  
 **Blocked by:** None
@@ -448,13 +448,15 @@ The CSO audit verified that the live Supabase REST API allows anonymous reads of
 
 Created from CSO finding `FW-CSO-001` on 2026-05-06. Treat this as a mainnet blocker and fix before further demo data is entered.
 
+Code migration added in `supabase/migrations/20260506223000_lock_down_public_ledger_rls.sql`, but live deployment is blocked: `supabase link --project-ref nurokwieqfhtsbiytjiu` failed because the current Supabase account lacks privileges for the project. The owner needs to apply the migration from an authorized Supabase account or grant CLI access, then verify anonymous REST reads/writes are denied.
+
 ### User Stories Covered
 
 1, 2, 12, 13, 15, 16, 31, 32, 33
 
 ## FW-015 - Validate Expense Ledger Amounts And Split Shares Server-Side
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P0  
 **Type:** AFK  
 **Blocked by:** FW-014
@@ -465,18 +467,18 @@ Expense create/update routes currently trust caller-supplied numeric `amount` an
 
 ### Acceptance Criteria
 
-- [ ] Server-side create and update reject non-integer, unsafe, zero, or negative Expense amounts.
-- [ ] Server-side create and update reject negative or unsafe split shares.
-- [ ] Server-side create and update require split shares to sum exactly to the Expense amount.
-- [ ] Server-side create and update reject duplicate split wallets.
-- [ ] Expense mint must match the Group stablecoin mint.
-- [ ] Database constraints protect new rows from invalid positive/non-negative amounts.
-- [ ] Tests cover malformed Expense amount and split cases.
-- [ ] `pnpm build` passes.
+- [x] Server-side create and update reject non-integer, unsafe, zero, or negative Expense amounts.
+- [x] Server-side create and update reject negative or unsafe split shares.
+- [x] Server-side create and update require split shares to sum exactly to the Expense amount.
+- [x] Server-side create and update reject duplicate split wallets.
+- [x] Expense mint must match the Group stablecoin mint.
+- [x] Database constraints protect new rows from invalid positive/non-negative amounts.
+- [x] Tests cover malformed Expense amount and split cases.
+- [x] `pnpm build` passes.
 
 ### Notes
 
-Created from CSO finding `FW-CSO-002` on 2026-05-06.
+Completed on 2026-05-06. Server mutations now validate positive safe-integer Expense amounts, non-negative safe-integer split shares, exact split totals, unique split wallets, and Group stablecoin mint match before insert/update. Added new Expense ledger constraints and unit tests.
 
 ### User Stories Covered
 
@@ -484,7 +486,7 @@ Created from CSO finding `FW-CSO-002` on 2026-05-06.
 
 ## FW-016 - Require Settlements To Match The Live Settlement Graph
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P0  
 **Type:** AFK  
 **Blocked by:** FW-015
@@ -495,16 +497,16 @@ Settlement receipt recording verifies that a real USDC transfer happened, but it
 
 ### Acceptance Criteria
 
-- [ ] `POST /api/settlements` recomputes the current Group Balance and simplified Settlement graph before recording a Receipt.
-- [ ] The route rejects transfers where sender, recipient, or amount do not exactly match a current suggested Settlement edge.
-- [ ] Stale Settlement Request Links cannot record overpayments, unrelated transfers, or transfers in the wrong direction.
-- [ ] On-chain transfer verification still runs before persistence.
-- [ ] Tests cover a valid edge and at least one invalid edge.
-- [ ] `pnpm build` passes.
+- [x] `POST /api/settlements` recomputes the current Group Balance and simplified Settlement graph before recording a Receipt.
+- [x] The route rejects transfers where sender, recipient, or amount do not exactly match a current suggested Settlement edge.
+- [x] Stale Settlement Request Links cannot record overpayments, unrelated transfers, or transfers in the wrong direction.
+- [x] On-chain transfer verification still runs before persistence.
+- [x] Tests cover a valid edge and at least one invalid edge.
+- [x] `pnpm build` passes.
 
 ### Notes
 
-Created from CSO finding `FW-CSO-003` on 2026-05-06. If partial Settlements become product scope later, this issue must be revisited with explicit cap rules.
+Completed on 2026-05-06. Settlement recording now asserts an exact current simplified-graph edge before and after on-chain transfer verification, so stale, wrong-direction, unrelated, or overpaid transfers are rejected before Receipt persistence. If partial Settlements become product scope later, this issue must be revisited with explicit cap rules.
 
 ### User Stories Covered
 
