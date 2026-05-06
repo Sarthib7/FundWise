@@ -15,7 +15,7 @@ FundWise should make shared expenses feel familiar while adding actual settlemen
 FundWise is a web app with wallet-native identity and two product modes:
 
 - Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, attach optional Expense Proof, compute live net Balances, and settle with on-chain USDC transfers on Solana.
-- Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. This remains part of the product direction, but it is not the primary hackathon demo path.
+- Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. It is the stronger long-term moat for durable Groups, but it remains invite-only until the full Proposal lifecycle is complete.
 
 For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users route funds during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
 
@@ -36,6 +36,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Sponsor integrations must support the main flow, not redefine it.
 - Distribution expansion should reuse the same wallet-native ledger model across web, FundWise Agent, Telegram, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
 - The long-range end state is a stablecoin-first product where gas, fees, and bridging are abstracted away as much as possible for the end user, while the core ledger still stays wallet-verifiable underneath.
+- Roll out by audience in sequence: crypto-native Groups first, then agents, then non-crypto users through card, IBAN, or Altitude-style Solana banking rails.
 
 ## User Stories
 
@@ -113,12 +114,13 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Spending Policies are required before an agent can pay a Payable Settlement Request. The backend must enforce caps and scopes; the LLM or agent prompt is not an authorization source.
 - Group ownership is administrative metadata, not financial authority. The owner may later manage metadata or transfer ownership, but must not bypass Member checks, Expense creator checks, Settlement verification, or Receipt rules.
 - Fundy is the hosted Telegram bot that runs the FundWise Agent. It is a distribution surface, not a separate product. Users authenticate by linking their Telegram account to their FundWise wallet address via **short-lived codes** issued from the authenticated web app (`/link FW-…` in DM with Fundy).
-- Fundy v1 is **command-based** (fixed commands); the end goal is an **LLM-backed** assistant (e.g. OpenRouter) with the same underlying tools. Fundy runs on **Railway** as a separate service from the Next.js app, under **`services/fundy/`** in the **monorepo**, using **`grammy`**. It calls FundWise through the **same HTTP API** as other clients, using **`FUNDWISE_SERVICE_API_KEY`** and **`X-Fundy-Wallet`** (not ad-hoc direct Supabase access from the bot).
+- Fundy v1 is **command-based** (fixed commands); the end goal is an **LLM-backed** assistant (e.g. OpenRouter) with the same underlying tools. Fundy runs on **Railway** as a separate service from the Next.js app and now lives in a **separate repository** per ADR-0022. It calls FundWise through the **same HTTP API** as other clients, using service-to-service auth and later Scoped Agent Access, not ad-hoc direct Supabase access from the bot.
 - Fundy supports read-only views (Balances, Expenses, Settlements, Receipts), draft-safe actions (draft Expense, upload proof), comments, and history. **Proposal approve/reject** may run from Fundy when those updates are **database-only**; **on-chain** Settlement, Contribution, and Proposal **execution** bounce the Member to the web app with **Settlement Request Links** used for settle intents where applicable.
 - Fundy integrates **Zerion CLI** for **`/analyze`**, **`/readiness`**, and **`/verify`** (wallet + transaction history). Prefer **`ZERION_API_KEY`** (free dev tier) for v1; optional **x402** pay-per-call on Solana later.
+- Fundy may later support private Group activities or mini-games for Fund Mode Treasuries, but those are not part of Split Mode and must not ship before Proposal safety, spending rules, and the prediction-market boundary are explicitly resolved.
 - Scoped Agent Access includes **user-generated agent tokens** managed from **`/profile/agents`** (rotate, delete, renew, scopes) plus optional **wallet-signed** agent authentication for agents that can sign Solana messages.
-- The Agent Skill document lives at **`https://fundwise.kairen.xyz/skill.md`** and must be detailed enough to explain purpose, allowed vs disallowed calls, auth, limits, and safety rules.
-- Later onboarding work should help web2 users reach stablecoin balances with far less friction, potentially through fiat rails, bank-transfer-style funding, and card or account layers, but only after the crypto-native core flow is reliable.
+- The Agent Skill document lives at **`https://fundwise.kairen.xyz/skill.md`** and is the shipped public discovery baseline. Scoped tokens, agent payment authority, and agent-paid Settlement execution remain planned.
+- Later onboarding work should help web2 users reach stablecoin balances with far less friction, potentially through Visa cards, IBAN/bank-transfer funding, fiat rails, and Altitude-style Solana banking flows, but only after the crypto-native core flow and agent surfaces are reliable.
 - A Member is keyed by wallet address and labeled with a global profile display name.
 - **Optional:** Phantom Connect (Google/Apple + embedded or extension via Phantom) may be offered **in addition to** `@solana/wallet-adapter-*`, with Phantom Portal configuration. It does not replace the adapter for users who use Solflare, Backpack, or other wallets. See [CONTEXT.md](./CONTEXT.md) and [docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md).
 - `/groups` is the wallet-first app entry. Its primary job for disconnected users is to get them connected, then restore their intended next action.
@@ -173,7 +175,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 ## Out of Scope
 
 - Fundy Telegram bot as a first-class product surface in the MVP
-- Agent Skill Endpoint as a first-class product surface in the MVP
+- Scoped Agent Access and agent-paid use of the Agent Skill Endpoint in the MVP
 - Scoped Agent Access API in the MVP
 - Telegram bot as a first-class product surface in the MVP
 - Telegram mini app as a first-class product surface in the MVP
@@ -191,6 +193,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Partial settlements
 - Installment or escrow-based settlements
 - Rewards, loyalty systems, or NFT reputation
+- Fund Mode mini-games or prediction-market-like mechanics in the MVP
 - Creator approval for Group joins
 - Advanced Group roles and permissions
 - Public Groups or Group discovery
