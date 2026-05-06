@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { Database } from "@/lib/database.types"
-import { ArrowRightLeft, Pencil, Share2, Users } from "lucide-react"
+import { Pencil, Share2, Users } from "lucide-react"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 
@@ -13,12 +13,9 @@ type GroupSidebarProps = {
   isFundMode: boolean
   isMember: boolean
   walletAddress: string
-  lifiSupported: boolean
-  clusterLabel: string
   memberCount: number
   members: MemberRow[]
   groupCreatorWallet: string
-  onOpenBridge: () => void
   onInvite: () => void
   onEditProfile: () => void
 }
@@ -31,12 +28,9 @@ export function GroupSidebar({
   isFundMode,
   isMember,
   walletAddress,
-  lifiSupported,
-  clusterLabel,
   memberCount,
   members,
   groupCreatorWallet,
-  onOpenBridge,
   onInvite,
   onEditProfile,
 }: GroupSidebarProps) {
@@ -44,33 +38,6 @@ export function GroupSidebar({
 
   return (
     <div className="space-y-6">
-      {isMember && (
-        <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
-          <h3 className="text-lg font-semibold mb-2">
-            {isFundMode ? "Add USDC to contribute" : "Top up to settle"}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {isFundMode
-              ? "Top up your Solana wallet from Base, Ethereum, or another EVM chain before making a Contribution to this Group Treasury."
-              : "Top up your Solana wallet from Base, Ethereum, or another EVM chain before settling in this Group."}
-          </p>
-          {!lifiSupported && (
-            <p className="mb-4 text-xs text-muted-foreground">
-              LI.FI only routes into Solana mainnet. FundWise is currently using {clusterLabel}, so this bridge stays disabled until the app moves to mainnet.
-            </p>
-          )}
-          <Button
-            type="button"
-            className="min-h-11 w-full bg-accent hover:bg-accent/90"
-            onClick={onOpenBridge}
-            disabled={!lifiSupported}
-          >
-            <ArrowRightLeft className="h-4 w-4 mr-2" />
-            {isFundMode ? "Add funds" : "Top up to settle"}
-          </Button>
-        </Card>
-      )}
-
       <Card className="p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>

@@ -218,7 +218,7 @@ export function CreateGroupDialog({
               </p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              The main hackathon path is shared Expenses, live Balances, Settlements, and later LI.FI top-ups. Treasury workflows remain in controlled testing until the Proposal lifecycle is ready.
+              The main hackathon path is shared Expenses, live Balances, Settlements, and later LI.FI routing from the Settlement flow. Treasury workflows remain in controlled testing until the Proposal lifecycle is ready.
             </p>
           </div>
 

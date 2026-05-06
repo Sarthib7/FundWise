@@ -102,6 +102,10 @@ export function ExpenseDialog({
 
   const isDefaultSplit = splitMethod === "equal"
   const isNonUsd = sourceCurrency !== "USD"
+  const percentageTotal = expenseDialogParticipantWallets.reduce((total, wallet) => {
+    const parsedValue = Number(customSplitValues[wallet] || "0")
+    return total + (Number.isFinite(parsedValue) ? parsedValue : 0)
+  }, 0)
 
   // When editing, restore the source currency from the expense
   useEffect(() => {
@@ -313,41 +317,70 @@ export function ExpenseDialog({
               {/* Custom split values (when not equal) */}
               {splitMethod !== "equal" && (
                 <div className="space-y-3">
-                  <Label>
-                    {splitMethod === "exact"
-                      ? `Exact ${tokenName} amounts`
-                      : splitMethod === "percentage"
-                        ? "Percentages"
-                        : "Relative shares"}
-                  </Label>
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div className="space-y-1">
+                      <Label>
+                        {splitMethod === "exact"
+                          ? `Exact ${tokenName} amounts`
+                          : splitMethod === "percentage"
+                            ? "Percentages"
+                            : "Relative shares"}
+                      </Label>
+                      {splitMethod === "percentage" ? (
+                        <p className="text-xs text-muted-foreground">
+                          Edit any Member. FundWise assigns the remaining percentage to the rest.
+                        </p>
+                      ) : null}
+                    </div>
+                    {splitMethod === "percentage" ? (
+                      <span className="rounded-full border px-2 py-1 text-xs font-medium text-muted-foreground">
+                        {percentageTotal.toFixed(2).replace(/\.?0+$/, "")}% allocated
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="space-y-3 rounded-lg border p-4">
-                    {expenseDialogParticipantWallets.map((participantWallet) => (
-                      <div
-                        key={participantWallet}
-                        className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_120px] sm:items-center sm:gap-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {memberNameByWallet.get(participantWallet) || shortWallet(participantWallet)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {participantWallet === expensePayer ? "Selected as payer" : "Included in this Expense"}
-                          </p>
+                    {expenseDialogParticipantWallets.map((participantWallet) => {
+                      const inputId = `split-value-${participantWallet}`
+                      const participantLabel =
+                        memberNameByWallet.get(participantWallet) || shortWallet(participantWallet)
+
+                      return (
+                        <div
+                          key={participantWallet}
+                          className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_120px] sm:items-center sm:gap-3"
+                        >
+                          <label htmlFor={inputId} className="min-w-0">
+                            <span className="block truncate text-sm font-medium">
+                              {participantLabel}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {participantWallet === expensePayer ? "Selected as payer" : "Included in this Expense"}
+                            </span>
+                          </label>
+                          <div className="relative">
+                            <Input
+                              id={inputId}
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              spellCheck={false}
+                              step={splitMethod === "shares" ? "0.1" : "0.01"}
+                              placeholder={splitMethod === "shares" ? "1" : "0.00"}
+                              value={customSplitValues[participantWallet] || ""}
+                              onChange={(event) =>
+                                onCustomSplitValueChange(participantWallet, event.target.value)
+                              }
+                              className={splitMethod === "percentage" ? "pr-8" : undefined}
+                            />
+                            {splitMethod === "percentage" ? (
+                              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                                %
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
-                        <Input
-                          type="text"
-                          inputMode="decimal"
-                          autoComplete="off"
-                          spellCheck={false}
-                          step={splitMethod === "shares" ? "0.1" : "0.01"}
-                          placeholder={splitMethod === "shares" ? "1" : "0.00"}
-                          value={customSplitValues[participantWallet] || ""}
-                          onChange={(event) =>
-                            onCustomSplitValueChange(participantWallet, event.target.value)
-                          }
-                        />
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}

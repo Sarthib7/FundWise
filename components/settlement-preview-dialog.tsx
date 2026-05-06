@@ -28,7 +28,9 @@ type SettlementPreviewDialogProps = {
   tokenName: string
   viewerWallet: string
   isSettling: boolean
+  lifiSupported?: boolean
   onConfirm: () => void | Promise<void>
+  onOpenFundingRoute?: () => void
 }
 
 export function SettlementPreviewDialog({
@@ -38,7 +40,9 @@ export function SettlementPreviewDialog({
   tokenName,
   viewerWallet,
   isSettling,
+  lifiSupported = false,
   onConfirm,
+  onOpenFundingRoute,
 }: SettlementPreviewDialogProps) {
   const [confirmed, setConfirmed] = useState(false)
 
@@ -62,6 +66,16 @@ export function SettlementPreviewDialog({
       setConfirmed(false)
       onOpenChange(isOpen)
     }
+  }
+
+  const handleOpenFundingRoute = () => {
+    if (!onOpenFundingRoute || isSettling) {
+      return
+    }
+
+    setConfirmed(false)
+    onOpenChange(false)
+    onOpenFundingRoute()
   }
 
   return (
@@ -104,8 +118,8 @@ export function SettlementPreviewDialog({
                   <span className="font-bold">{formatTokenAmount(transfer.amount)} {tokenName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Network</span>
-                  <span className="font-medium">Solana</span>
+                  <span className="text-muted-foreground">Funding</span>
+                  <span className="font-medium text-right">Wallet first, LI.FI if needed</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Est. fee</span>
@@ -121,15 +135,15 @@ export function SettlementPreviewDialog({
               <div className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground space-y-1">
                 <div className="flex items-start gap-2">
                   <span className="font-bold text-foreground">1.</span>
-                  <span>Your wallet will ask you to confirm this transfer</span>
+                  <span>FundWise checks the funds available for this Settlement</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-bold text-foreground">2.</span>
-                  <span>{tokenName} transfers on Solana (instant finality)</span>
+                  <span>If funds are elsewhere, LI.FI can route them before the final transfer</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-bold text-foreground">3.</span>
-                  <span>Balances update and a Receipt is generated</span>
+                  <span>You confirm once the Settlement is ready and a Receipt is generated</span>
                 </div>
               </div>
             </div>
@@ -142,7 +156,7 @@ export function SettlementPreviewDialog({
               {isSettling ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Confirming on Solana…
+                  Confirming Settlement…
                 </>
               ) : (
                 <>
@@ -155,12 +169,22 @@ export function SettlementPreviewDialog({
         ) : (
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSettling}>Cancel</AlertDialogCancel>
+            {lifiSupported && onOpenFundingRoute ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSettling}
+                onClick={handleOpenFundingRoute}
+              >
+                Route from another network
+              </Button>
+            ) : null}
             <Button
               className="bg-brand-mid hover:bg-brand-mid/90 text-white"
               onClick={() => void handleConfirm()}
             >
               <Wallet className="mr-2 h-4 w-4" />
-              Confirm in Wallet
+              Settle {formatTokenAmount(transfer.amount)} {tokenName}
             </Button>
           </AlertDialogFooter>
         )}

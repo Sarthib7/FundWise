@@ -23,6 +23,7 @@ import {
   DEFAULT_STABLECOIN,
   formatTokenAmount,
   parseTokenAmount,
+  type SettlementTransfer,
 } from "@/lib/expense-engine"
 import type { Database } from "@/lib/database.types"
 import { toast } from "sonner"
@@ -32,7 +33,6 @@ import {
   Copy,
   Landmark,
   Loader2,
-  Plus,
   Receipt,
   Share2,
   Wallet,
@@ -90,6 +90,48 @@ function buildEqualPercentageSplitInputs(participantWallets: string[]): ExpenseC
       split.wallet,
       formatEditableNumber(split.share / 100, 2),
     ])
+  )
+}
+
+function buildRedistributedPercentageSplitInputs(
+  participantWallets: string[],
+  editedWallet: string,
+  rawValue: string
+): ExpenseCustomSplitValues {
+  if (participantWallets.length === 0) {
+    return {}
+  }
+
+  const trimmedValue = rawValue.trim()
+  const parsedPercentage = Number(trimmedValue)
+  const editedBasisPoints =
+    trimmedValue === "" || !Number.isFinite(parsedPercentage)
+      ? 0
+      : Math.min(PERCENTAGE_BASIS_POINTS, Math.max(0, Math.round(parsedPercentage * 100)))
+  const otherWallets = participantWallets.filter((wallet) => wallet !== editedWallet)
+  const redistributedBasisPoints = PERCENTAGE_BASIS_POINTS - editedBasisPoints
+  const redistributedSplits =
+    otherWallets.length > 0
+      ? calculateSplits(redistributedBasisPoints, otherWallets, "equal")
+      : []
+  const redistributedByWallet = new Map(
+    redistributedSplits.map((split) => [split.wallet, split.share])
+  )
+
+  return Object.fromEntries(
+    participantWallets.map((wallet) => {
+      if (wallet === editedWallet) {
+        return [
+          wallet,
+          trimmedValue === "" ? "" : formatEditableNumber(editedBasisPoints / 100, 2),
+        ]
+      }
+
+      return [
+        wallet,
+        formatEditableNumber((redistributedByWallet.get(wallet) || 0) / 100, 2),
+      ]
+    })
   )
 }
 
@@ -176,7 +218,6 @@ export default function GroupDashboard() {
   const dashboard = useGroupDashboard()
   const {
     groupId,
-    clusterLabel,
     lifiSupported,
     connected,
     walletAddress,
@@ -237,6 +278,7 @@ export default function GroupDashboard() {
   } = dashboard
   const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
+  const [bridgeInitialAmount, setBridgeInitialAmount] = useState("")
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [profileName, setProfileName] = useState("")
@@ -291,6 +333,11 @@ export default function GroupDashboard() {
       setContributionAmount("")
     }
   }, [contribute, contributionAmount])
+
+  const openSettlementFundingRoute = useCallback((transfer: SettlementTransfer) => {
+    setBridgeInitialAmount(formatEditableTokenAmount(transfer.amount))
+    setShowBridge(true)
+  }, [])
 
   const openCreateExpenseDialog = useCallback(() => {
     setEditingExpense(null)
@@ -351,6 +398,24 @@ export default function GroupDashboard() {
       })
     )
   }, [editingExpense, expenseAmount, expenseDialogParticipantWallets])
+
+  const handleCustomSplitValueChange = useCallback((wallet: string, value: string) => {
+    if (splitMethod === "percentage") {
+      setCustomSplitValues(
+        buildRedistributedPercentageSplitInputs(
+          expenseDialogParticipantWallets,
+          wallet,
+          value
+        )
+      )
+      return
+    }
+
+    setCustomSplitValues((current) => ({
+      ...current,
+      [wallet]: value,
+    }))
+  }, [expenseDialogParticipantWallets, splitMethod])
 
   const handleSubmitExpense = async () => {
     if (!connected || !walletAddress || !expenseAmount || group?.mode !== "split") {
@@ -600,12 +665,9 @@ export default function GroupDashboard() {
                 isFundMode={isFundMode}
                 isMember={isMember}
                 walletAddress={walletAddress}
-                lifiSupported={lifiSupported}
-                clusterLabel={clusterLabel}
                 memberCount={memberCount}
                 members={members}
                 groupCreatorWallet={group.created_by}
-                onOpenBridge={() => setShowBridge(true)}
                 onInvite={() => setShowInviteDialog(true)}
                 onEditProfile={openProfileDialog}
               />
@@ -656,16 +718,6 @@ export default function GroupDashboard() {
                     <Share2 className="h-4 w-4 mr-2" />
                     Invite
                   </Button>
-                  {!isFundMode && isMember && (
-                    <Button
-                      size="sm"
-                      className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
-                      onClick={openCreateExpenseDialog}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Expense
-                    </Button>
-                  )}
                   {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
                     <Button
                       size="sm"
@@ -689,6 +741,7 @@ export default function GroupDashboard() {
                   connected={connected}
                   isWalletVerified={isWalletVerified}
                   isMember={isMember}
+                  lifiSupported={lifiSupported}
                   walletAddress={walletAddress}
                   groupName={group.name}
                   tokenName={tokenName}
@@ -703,7 +756,6 @@ export default function GroupDashboard() {
                   isSubmitting={isSubmitting}
                   deletingExpenseId={deletingExpenseId}
                   balances={balances}
-                  transfers={transfers}
                   activity={activity}
                   viewerBalance={viewerBalance}
                   viewerOutgoingTransfers={viewerOutgoingTransfers}
@@ -714,10 +766,10 @@ export default function GroupDashboard() {
                   onClearSettlementRequest={clearSettlementRequest}
                   onShareSettlementRequest={shareSettlementRequest}
                   onSettle={settle}
+                  onOpenSettlementFundingRoute={openSettlementFundingRoute}
                   onOpenCreateExpenseDialog={openCreateExpenseDialog}
                   onOpenEditExpenseDialog={openEditExpenseDialog}
                   onDeleteExpense={deleteExpense}
-                  onInvite={() => setShowInviteDialog(true)}
                   canDeleteExpense={canDeleteExpense}
                 />
               )}
@@ -778,12 +830,7 @@ export default function GroupDashboard() {
           onExpenseCategoryChange={setExpenseCategory}
           onExpensePayerChange={setExpensePayer}
           onSplitMethodChange={handleSplitMethodChange}
-          onCustomSplitValueChange={(wallet, value) =>
-            setCustomSplitValues((current) => ({
-              ...current,
-              [wallet]: value,
-            }))
-          }
+          onCustomSplitValueChange={handleCustomSplitValueChange}
           onCurrencyStateChange={setExpenseCurrencyState}
           onSubmit={handleSubmitExpense}
         />
@@ -794,11 +841,12 @@ export default function GroupDashboard() {
         onOpenChange={setShowBridge}
         destinationAddress={walletAddress}
         groupName={group.name}
+        initialAmount={bridgeInitialAmount}
         onSuccess={(txHash, amount) => {
           toast.success(
             isFundMode
               ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
-              : `Top-up submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
+              : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
             {
               description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
             }

@@ -25,6 +25,7 @@ interface CrossChainBridgeModalProps {
   onOpenChange: (open: boolean) => void
   destinationAddress: string
   groupName: string
+  initialAmount?: string
   onSuccess?: (txHash: string, amount: string) => void
 }
 
@@ -33,6 +34,7 @@ export function CrossChainBridgeModal({
   onOpenChange,
   destinationAddress,
   groupName,
+  initialAmount = "",
   onSuccess,
 }: CrossChainBridgeModalProps) {
   const sourceChains = getSupportedSourceChains()
@@ -55,6 +57,10 @@ export function CrossChainBridgeModal({
       return
     }
 
+    setAmount(initialAmount)
+    setQuote(null)
+    setBridgeStatus({ status: "idle" })
+
     getInjectedEvmWallet()
       .then((wallet) => {
         setEvmWallet(wallet)
@@ -63,7 +69,7 @@ export function CrossChainBridgeModal({
       .catch((error) => {
         console.error("[FundWise] Failed to read injected EVM wallet:", error)
       })
-  }, [open])
+  }, [initialAmount, open])
 
   const handleConnectEvmWallet = async () => {
     setIsConnectingEvmWallet(true)
@@ -110,14 +116,14 @@ export function CrossChainBridgeModal({
       setLifiEvmProvider(evmWallet)
       const result = await executeBridgeRoute(quote.route, setBridgeStatus)
       if (result.txHash) {
-        toast.success("Top-up submitted. Funds will arrive in your Solana wallet after confirmation.")
+        toast.success("Route submitted. Return to the Settlement after confirmation.")
         onSuccess?.(result.txHash || "", quote.toAmount)
         setQuote(null)
         setAmount("")
         onOpenChange(false)
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Top-up failed")
+      toast.error(error instanceof Error ? error.message : "Funding route failed")
     }
   }
 
@@ -133,16 +139,16 @@ export function CrossChainBridgeModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Top Up To Settle</DialogTitle>
+          <DialogTitle>Route Funds For Settlement</DialogTitle>
           <DialogDescription>
-            FundWise uses LI.FI behind the scenes to move USDC from your EVM wallet into your connected Solana wallet so you can settle balances in {groupName}.
+            If the USDC for this Settlement is on another supported network, FundWise uses LI.FI to route it and then returns you to {groupName}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-4">
           {!lifiSupported && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-              LI.FI routes into Solana mainnet. FundWise is currently configured for {clusterLabel}, so this top-up flow is disabled until the app moves to mainnet.
+              LI.FI routes into Solana mainnet. FundWise is currently configured for {clusterLabel}, so this funding route is disabled until the app moves to mainnet.
             </div>
           )}
 
@@ -150,13 +156,13 @@ export function CrossChainBridgeModal({
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Destination Wallet</p>
             <p className="mt-2 break-all font-mono text-sm">{destinationAddress}</p>
             <p className="mt-2 text-xs text-muted-foreground">
-              Funds land in your connected Solana wallet first. Settle or contribute in {groupName} after the top-up confirms.
+              This is the wallet that will complete the final FundWise Settlement.
             </p>
           </div>
 
           {lifiSupported && (
             <div className="space-y-2">
-              <Label>Wallet Holding Your USDC</Label>
+              <Label>Wallet holding your USDC</Label>
               {evmWallet ? (
                 <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
@@ -190,7 +196,7 @@ export function CrossChainBridgeModal({
 
           {/* Source Chain Selection */}
           <div className="space-y-2">
-            <Label>Funds Are Currently On</Label>
+            <Label>Funds are currently on</Label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {sourceChains.map((chain) => (
                 <Button
@@ -208,7 +214,7 @@ export function CrossChainBridgeModal({
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Pick the EVM chain where your USDC already sits before previewing the top-up.
+              Pick the network where your USDC already sits before previewing the route.
             </p>
           </div>
 
@@ -218,10 +224,10 @@ export function CrossChainBridgeModal({
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 id="bridge-amount"
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
                 inputMode="decimal"
+                autoComplete="off"
+                spellCheck={false}
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => {
@@ -235,11 +241,11 @@ export function CrossChainBridgeModal({
                 onClick={handleGetQuote}
                 disabled={!lifiSupported || !amount || !evmWallet || isQuoting}
               >
-                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Preview top-up"}
+                {isQuoting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Preview route"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Enter the USDC amount you want FundWise to top up into your Solana wallet.
+              This should match the Settlement amount unless you want to route extra USDC.
             </p>
           </div>
 
@@ -249,28 +255,28 @@ export function CrossChainBridgeModal({
                 {needsWalletConnection
                   ? "Step 1: connect the EVM wallet that holds your USDC"
                   : needsAmount
-                    ? "Step 2: enter a USDC amount to preview the top-up"
+                    ? "Step 2: enter a USDC amount to preview the route"
                     : isQuoting
                       ? "Finding the best route into Solana"
-                      : "Step 3: review the top-up before funds move"}
+                      : "Step 3: review the route before funds move"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {needsWalletConnection
                   ? "FundWise uses your injected EVM wallet to source the LI.FI route and request the needed signatures."
                   : needsAmount
-                    ? "We only fetch the top-up path once you provide an amount, so the min received and estimated timing stay accurate."
+                    ? "We only fetch the route once you provide an amount, so the min received and estimated timing stay accurate."
                     : isQuoting
-                      ? "This usually takes a moment while LI.FI compares top-up paths and fees."
+                      ? "This usually takes a moment while LI.FI compares routes and fees."
                       : "You’ll see the expected amount out, minimum received, and provider before funds move."}
               </p>
             </div>
           )}
 
-          {/* Top-up path display */}
+          {/* Funding route display */}
           {quote && (
             <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Top-up path</span>
+                <span className="text-sm text-muted-foreground">Route</span>
                 <Badge variant="secondary">{quote.tool}</Badge>
               </div>
 
@@ -296,7 +302,7 @@ export function CrossChainBridgeModal({
                   Destination wallet: {destinationAddress.slice(0, 6)}...{destinationAddress.slice(-4)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Funds land in your connected Solana wallet first, then you continue the normal FundWise settlement flow.
+                  After routing confirms, return here and press Settle to create the Receipt.
                 </p>
               </div>
             </div>
@@ -350,7 +356,7 @@ export function CrossChainBridgeModal({
                 </>
               ) : (
                 <>
-                  Add Funds To My Solana Wallet
+                  Route Funds For Settlement
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

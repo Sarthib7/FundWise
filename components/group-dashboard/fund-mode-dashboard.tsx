@@ -177,7 +177,7 @@ export function FundModeDashboard({
             <div>
               <h2 className="text-lg font-semibold">Make a Contribution</h2>
               <p className="text-sm text-muted-foreground">
-                Transfer stablecoins from your connected Solana wallet into this Group Treasury.
+                Transfer stablecoins from the connected wallet into this Group Treasury.
               </p>
             </div>
             <Badge className="bg-accent/10 text-accent border-accent/20">Treasury Live</Badge>
@@ -237,7 +237,7 @@ export function FundModeDashboard({
             <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
               <p>Join this Group first to make a Contribution.</p>
               <p className="mt-1 text-xs">
-                Once you join, you can move stablecoins into the Group Treasury from your connected Solana wallet.
+                Once you join, you can move stablecoins into the Group Treasury from the connected wallet.
               </p>
             </div>
           )}
@@ -265,7 +265,7 @@ export function FundModeDashboard({
               {!treasuryAddress
                 ? "Initialize the Treasury above before this Group can start recording Contributions."
                 : isMember
-                  ? "Make the first Contribution to seed this Treasury, or top up your Solana wallet first if you need more USDC."
+                  ? "Make the first Contribution to seed this Treasury. Funding routes can happen from the Contribution flow when needed."
                   : connected && isWalletVerified
                     ? "Join this Group to make the first Contribution once you are ready."
                     : connected

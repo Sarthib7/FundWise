@@ -24,8 +24,8 @@ const features = [
   },
   {
     icon: ArrowRightLeft,
-    title: "Cross-chain top-ups",
-    desc: "Use LI.FI when your funds are on another chain, then come back and settle in the same flow.",
+    title: "Cross-chain routing",
+    desc: "Use LI.FI from Settlement when the funds are on another chain, then finish in the same flow.",
   },
   {
     icon: ReceiptText,
@@ -49,7 +49,7 @@ export function FeaturesSection() {
         Built for the moments where IOUs fail
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        FundWise turns Group bookkeeping into wallet-confirmed settlement, with cross-chain top-ups when a friend&apos;s funds are somewhere else.
+        FundWise turns Group bookkeeping into wallet-confirmed settlement, with cross-chain routing when a friend&apos;s funds are somewhere else.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

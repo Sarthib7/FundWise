@@ -113,7 +113,7 @@ export default function StoryPage() {
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
               <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-mid">
-                Cross-chain top-ups
+                Cross-chain routing
               </div>
               <h2 className="font-serif text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-tight text-foreground text-balance">
                 Chain does not matter when your friends owe you money.
@@ -121,18 +121,18 @@ export default function StoryPage() {
             </div>
             <div className="space-y-4 text-sm leading-relaxed text-brand-text-2 md:text-base">
               <p>
-                Your Ethereum friend owes $35. Your Base friend owes $20. Your Solana friend owes $47. FundWise keeps the Settlement model simple: top up into Solana USDC when needed, then settle through the same Group flow.
+                Your Ethereum friend owes $35. Your Base friend owes $20. Your Solana friend owes $47. FundWise keeps the Settlement model simple: route funds when needed, then settle through the same Group flow.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[16px] border border-brand-border-c bg-brand-surface p-4">
                   <WalletCards className="mb-3 h-5 w-5 text-brand-deep" aria-hidden="true" />
-                  <h3 className="font-semibold text-foreground">Add funds</h3>
+                  <h3 className="font-semibold text-foreground">Route funds for Settlement</h3>
                   <p className="mt-1 text-sm text-brand-text-2">LI.FI helps EVM-first Members reach Solana USDC without turning Settlement into bridge management.</p>
                 </div>
                 <div className="rounded-[16px] border border-brand-border-c bg-brand-surface p-4">
                   <ArrowRightLeft className="mb-3 h-5 w-5 text-brand-deep" aria-hidden="true" />
                   <h3 className="font-semibold text-foreground">Same Receipt</h3>
-                  <p className="mt-1 text-sm text-brand-text-2">The top-up path supports the core flow. The actual Settlement still ends with one on-chain Receipt.</p>
+                  <p className="mt-1 text-sm text-brand-text-2">The route path supports the core flow. The actual Settlement still ends with one on-chain Receipt.</p>
                 </div>
               </div>
             </div>
