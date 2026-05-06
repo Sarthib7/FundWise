@@ -9,7 +9,7 @@ FundWise uses the **Strata** logo system from [`brand-strata/`](./brand-strata/)
 - Primary mark: Strata gradient mark.
 - Header lockup: Strata mark plus `FundWise` wordmark in DM Serif Display.
 - Footer lockup: smaller Strata mark plus text wordmark.
-- Hero usage: show the Strata mark as a large first-viewport brand device with a subtle oversized layer watermark behind the main copy.
+- Hero usage: keep the Strata mark as a subtle oversized layer watermark behind the main copy. Do not place a second foreground logo in the hero; the header lockup is the primary visible logo.
 - Favicon/app icon: Strata SVG assets copied to [`public/brand-strata/svg/`](./public/brand-strata/svg/).
 
 Use [`components/fundwise-logo.tsx`](./components/fundwise-logo.tsx) for app UI instead of hand-drawing inline logos.

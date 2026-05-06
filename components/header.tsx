@@ -47,13 +47,13 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-brand-border-c bg-background/92 backdrop-blur-xl">
-      <div className="px-4 py-3 sm:px-6 lg:px-[max(24px,calc(50%-660px))]">
-        <div className="flex min-h-12 items-center justify-between gap-3">
+      <div className="px-4 py-3.5 sm:px-6 lg:px-[max(24px,calc(50%-660px))]">
+        <div className="flex min-h-14 items-center justify-between gap-3">
           <Link
             href="/"
             className="flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <FundWiseLogo markSize={40} wordmarkClassName="text-2xl" />
+            <FundWiseLogo markSize={46} wordmarkClassName="text-[28px] leading-none" />
           </Link>
 
           {isMarketingRoute ? (

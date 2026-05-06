@@ -287,7 +287,7 @@ export function HeroSection() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-20 text-center sm:px-6 sm:pt-24 md:pb-24 md:pt-28 lg:px-[max(24px,calc(50%-660px))]">
+      <section className="relative overflow-hidden px-4 pb-20 pt-24 text-center sm:px-6 sm:pt-28 md:pb-24 md:pt-32 lg:px-[max(24px,calc(50%-660px))]">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -300,12 +300,6 @@ export function HeroSection() {
           className="pointer-events-none absolute left-1/2 top-6 h-[260px] w-[260px] -translate-x-1/2 opacity-[0.045] sm:top-1 sm:h-[380px] sm:w-[380px] md:h-[460px] md:w-[460px]"
           aria-hidden="true"
         />
-
-        <div className="relative z-10 mb-5 flex justify-center">
-          <div className="rounded-[24px] border border-brand-border-c bg-background/86 p-3 shadow-[0_18px_40px_rgba(13,31,20,0.08)] backdrop-blur-sm">
-            <FundWiseLogoMark size={76} title="FundWise" />
-          </div>
-        </div>
 
         <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
