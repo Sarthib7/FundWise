@@ -60,6 +60,7 @@ The product direction is now sharper:
 - Final empty-state and copy polish across Group screens
 - Responsive pass across landing, Group list, Group detail, Receipt, and modal surfaces
 - Consumer landing rewrite with product-first messaging, tighter CTAs, and consistent iconography
+- Public Story page added for the problem narrative, Settlement Request Link loop, and LI.FI cross-chain top-up angle
 - Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
 - Fund Mode vertical slice with invite-only creation support, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
 - LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
@@ -179,6 +180,9 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Fundy is the hosted Telegram bot that runs the FundWise Agent. It is not a separate product; it is a distribution surface for the same wallet-bound engine.
 - The Agent Skill Endpoint (`/skill.md`) is a public machine-readable discovery document for autonomous agents. It does not require auth and does not expose private data.
 - Scoped Agent Access is the permission model for autonomous agents: capabilities tied to Member wallet, Group, and action type, not broad permanent API keys.
+- Payable Settlement Requests are now documented as a planned research direction for x402 / MPP / pay.sh-style agent payments. They extend Settlement Request Links for approved agents, but remain post-MVP and require scoped `settlement:pay` authority, idempotency, live Balance resolution, and verified payment proof before any Receipt is created.
+- Agent Spending Policies are now documented as a required prerequisite for payable settlement. They define per-Settlement caps, daily caps, Group scope, counterparty scope, expiry, revocation, and human fallback behavior.
+- Group ownership currently has limited power. In Split Mode, creator ownership is mostly a label; in Fund Mode, `created_by` can initialize Treasury addresses. Future ownership transfer must stay administrative and must not grant power over Balances or Receipts.
 - Telegram scope should stay read-only and draft-safe plus comments/history. **Proposal approve/reject** may run from Fundy when those actions are database-only; **on-chain** Settlement, Contribution, and Proposal execution remain app-and-wallet confirmed (deep-link back; reuse **Settlement Request Links** for settle intents).
 - Telegram identity should stay simple: one Telegram account links to one active wallet at a time, with an explicit relink flow later if needed.
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
@@ -306,7 +310,7 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 - All settlement buttons (hero card, balances list, request link) now route through preview dialog
 - Post-settlement success toast with creditor name and "View your receipt →"
 - Activity Feed header shows expense/settlement count badge
-- Hero headline rewritten: "Splitwise, but you actually get paid."
+- Hero headline rewritten: "Group money, done right."
 - CTA section rewritten: "Stop chasing. Start settling."
 - Archival of ADR-0018 (Agent Skill + Fundy) and ADR-0014 (Phantom Connect) to `docs/archive/`
 - Landing page hero badge updated to mention Solana + USDC settlement

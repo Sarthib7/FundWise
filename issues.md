@@ -19,6 +19,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-007 | Ready | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
 | FW-008 | Deferred | P3 | HITL | Fund Mode Proposal lifecycle | Post-hackathon |
 | FW-009 | Deferred | P3 | HITL | Fundy, Agent Skill Endpoint, and Scoped Agent Access | Post-hackathon |
+| FW-010 | Deferred | P3 | HITL | Payable Settlement Requests and Agent Spending Policies | Post-hackathon |
 
 ## Handoff Queue For Claude / Lot
 
@@ -26,6 +27,14 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 2. **Resolve FW-007 with the owner.** Do not partially ship Source Currency or Expense Proof unless the ledger/storage implications are handled end-to-end. The likely hackathon-safe answer is to keep both as future or explicitly mocked in submission copy.
 3. **Keep commits sequential.** Commit feature/code first, then docs/status updates. Do not add co-author trailers.
 4. **Quality gate after code changes:** run `pnpm build`. Known warnings from previous runs: workspace-root inference from another lockfile, two unused eslint-disable directives, and `bigint` pure-JS fallback.
+
+### FW-010 Planning Notes (deferred)
+
+- Payable Settlement Requests should extend Settlement Request Links for payment-aware agents, not replace the human wallet flow.
+- Add Agent Spending Policies before any agent can pay: per-Settlement cap, daily cap, Group scope, counterparty scope, USDC-only asset scope, expiry, revocation, and human fallback threshold.
+- Planned endpoints: `POST /api/agent/spending-policies`, `GET /api/agent/spending-policies`, `PATCH /api/agent/spending-policies/{policyId}`, `POST /api/agent/settlement-requests`, `GET /api/agent/settlement-requests/{requestId}`, `POST /api/agent/settlement-requests/{requestId}/pay`, and `POST /api/agent/settlement-requests/{requestId}/verify`.
+- Group ownership should stay administrative. Add ownership transfer/recovery before agent-created Groups become first-class.
+- See `docs/agentic-settlement-endpoint.md` and `docs/agent-payment-policy.md`.
 
 ### FW-005 Implementation Notes (shipped 2026-05-04)
 

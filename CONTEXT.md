@@ -43,6 +43,14 @@ Avoid: Payment
 A shareable deep link back into the Group that opens the debtor's current settleable state, including the live pending amount and related ledger context. The amount is resolved from the live Group Balance when the link is opened, but the Settlement is never auto-sent.
 Avoid: Invoice, static payment link
 
+**Payable Settlement Request**:
+A planned agent-readable extension of a Settlement Request Link. It represents one exact, live debtor-to-creditor settlement intent and may expose an x402 / MPP-style payment challenge for an approved agent. It is not a confirmed Settlement and does not create a Receipt until FundWise verifies the payment proof or on-chain transfer.
+Avoid: Auto-settle endpoint, generic payment endpoint
+
+**Spending Policy**:
+A Member-granted policy that defines how much payment capacity an agent has. It scopes agent payment authority by Member wallet, agent identity, Group, action, asset, counterparty, per-Settlement cap, daily or weekly cap, expiry, and revocation. Anything outside the policy must fall back to a Settlement Request Link for human wallet confirmation.
+Avoid: Unlimited approval, broad API key
+
 **Contribution**:
 A deposit of USDC into a Fund Mode Treasury by a Member.
 Avoid: Deposit, payment
@@ -76,7 +84,7 @@ A public URL on the production FundWise host (`https://fundwise.kairen.xyz/skill
 Avoid: API docs, developer portal
 
 **Scoped Agent Access**:
-The permission model for autonomous agents interacting with FundWise on behalf of a Member. Agents receive scoped capabilities tied to the Member wallet, specific Group, and action type — not broad permanent API keys. Actions that move money still require direct wallet confirmation.
+The permission model for autonomous agents interacting with FundWise on behalf of a Member. Agents receive scoped capabilities tied to the Member wallet, specific Group, and action type — not broad permanent API keys. Actions that move money still require direct wallet confirmation unless a later Payable Settlement Request flow grants explicit, narrow, revocable payment authority for a specific Member, Group, asset, limit, and expiry.
 Avoid: API keys, bot tokens
 
 **Treasury**:
@@ -113,6 +121,7 @@ Avoid: Optimized debts, minimum transfers
 - A Group has many Members.
 - A Member joins a Group by invite link or QR after connecting a Solana wallet and explicitly confirming the Join action in the Group context.
 - A Member has one wallet identity and one global profile display name in the MVP.
+- A Group creator is recorded in `groups.created_by`, but ownership is administrative metadata rather than financial authority. It must not grant power to rewrite Balances, create fake Receipts, or bypass Settlement verification.
 - In Split Mode, a Group has many Expenses and many Settlements.
 - An Expense belongs to one Group, has one payer Member, and can be created by any Member in the Group.
 - The payer on an Expense can be different from the Member who created the record.
@@ -166,7 +175,8 @@ Avoid: Optimized debts, minimum transfers
 - The Agent Skill Endpoint (`/skill.md`) is a public machine-readable discovery document at `https://fundwise.kairen.xyz/skill.md`. It does not require authentication and does not expose private Member data.
 - Autonomous agents interact with FundWise through Scoped Agent Access, not broad API keys. Capabilities are tied to Member wallet, Group, and action type.
 - Scoped Agent Access supports two auth paths: (1) user-generated agent tokens from the web app profile page (`/profile/agents`) with rotate/delete/renew/scope management, and (2) wallet-signed challenge-response for agents that can sign Solana messages.
-- Money-moving actions (Settlement execution, Contribution execution, Proposal execution) remain wallet-confirmed even when initiated through Fundy or an autonomous agent. Fundy deep-links back to the web app using existing Settlement Request Links and action parameters.
+- Money-moving actions (Settlement execution, Contribution execution, Proposal execution) remain wallet-confirmed even when initiated through Fundy or an autonomous agent. Fundy deep-links back to the web app using existing Settlement Request Links and action parameters. A later Payable Settlement Request flow may allow agent-paid Settlement only through explicit `settlement:pay` authority, exact USDC amounts, short expiry, idempotency, and verified payment proof before Receipt creation.
+- Spending Policies are required before any autonomous agent can pay. A policy must include per-Settlement and time-window caps, allowed Groups, allowed asset, expiry, revocation, and a human fallback threshold.
 - Database-only mutations (Proposal approve/reject, draft Expense creation) may be executed directly by Fundy without bouncing to the web app.
 - Telegram-to-wallet linking uses web-app-generated short-lived codes (`FW-XXXXXX`). The user generates the code in the authenticated web app, then pastes it in Fundy's DM with `/link FW-XXXXXX`.
 - One Telegram account maps to one active wallet at a time. Re-linking soft-deletes the old link and creates a new one.
@@ -203,7 +213,10 @@ Avoid: Optimized debts, minimum transfers
 > Domain expert: "Yes. Expenses are off-chain Group records. Any Member can log the Expense, and the payer can be any Member in the Group."
 
 > Dev: "Can an autonomous agent settle a debt on behalf of a Member?"
-> Domain expert: "No. The agent can draft the settlement intent and show the debtor what they owe, but the actual on-chain Settlement requires direct wallet confirmation from the Member. Agents get scoped read and draft access, not execution authority over money movement."
+> Domain expert: "Not by default. In the MVP, the agent can draft the settlement intent and show the debtor what they owe, but the on-chain Settlement requires direct wallet confirmation from the Member. A later Payable Settlement Request can support agent-paid settlement only if the Member grants narrow `settlement:pay` authority with amount, Group, asset, expiry, and revocation limits."
+
+> Dev: "What power does the Group owner have?"
+> Domain expert: "Today, almost none in Split Mode. `created_by` is mostly the creator label; Fund Mode currently uses it to initialize Treasury addresses. Future ownership can manage metadata and transfer the title, but it must not override Member balances, Expense ownership, Settlement verification, or Receipt integrity."
 
 ## Fundy (planned): commands and group chat linking
 

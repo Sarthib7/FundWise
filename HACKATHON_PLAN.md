@@ -145,6 +145,8 @@ Low fit for the current product direction.
 - Use Zerion CLI as the implementation surface for the sponsor-track demo
 - Frame assistant behavior as FundWise Agent capability, not a Telegram-specific product
 - **Fundy (later):** Zerion CLI from the Railway bot for `/analyze`, `/readiness`, `/verify`; start with a free **`ZERION_API_KEY`**, optional **x402** on Solana for pay-per-call demos
+- **Payable Settlement Requests (research):** x402 / MPP / pay.sh-style agent-paid settlement is promising, but should stay post-MVP unless implemented end-to-end with Scoped Agent Access, exact USDC amounts, idempotency, payment verification, and normal Receipt generation.
+- **Agent Spending Policies (research):** before any agent-paid Settlement ships, Members need configurable payment caps and human fallback. This is a future safety story, not a hackathon demo claim.
 
 ---
 
@@ -203,6 +205,8 @@ Avoid these claims in the main pitch unless they are actually shipped:
 - AI-native expense entry
 - Fundy as a shipped product (it is planned, not shipped)
 - Autonomous agent integration as a shipped feature (Agent Skill Endpoint and Scoped Agent Access are planned, not shipped)
+- Payable Settlement Requests or autonomous money movement as shipped features. They are documented research, not part of the current demo path.
+- Unlimited agent spending, broad API keys, or prompt-only authorization for financial actions.
 
 For future expansion after the core demo path is solid:
 

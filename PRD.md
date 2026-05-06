@@ -8,13 +8,13 @@
 
 Shared-expense apps solve the bookkeeping problem, but not the settlement problem. Friends can see who owes whom, yet they still have to chase each other across messaging apps and payment rails to actually get paid. Crypto users face an extra layer of friction: balances may sit on the wrong chain, wallet UX is confusing for newcomers, and a settlement flow becomes fragile if it asks users to choose assets, chains, or custom amounts at the moment of payment.
 
-FundWise should make shared expenses feel like Splitwise, but with actual settlement finality. The MVP needs to make one thing work extremely well: a private Group where Members log Expenses, see live Balances, and settle exact USDC amounts on Solana with a clean Receipt. Members should be able to enter an Expense in the currency that was actually paid, while FundWise converts it into a stable USD/USDC ledger value before Balance and Settlement math runs.
+FundWise should make shared expenses feel familiar while adding actual settlement finality. The MVP needs to make one thing work extremely well: a private Group where Members log Expenses, see live Balances, and settle exact USDC amounts on Solana with a clean Receipt. Members should be able to enter an Expense in the currency that was actually paid, while FundWise converts it into a stable USD/USDC ledger value before Balance and Settlement math runs.
 
 ## Solution
 
 FundWise is a web app with wallet-native identity and two product modes:
 
-- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with Splitwise-style split methods, attach optional Expense Proof, compute live net Balances, and settle with on-chain USDC transfers on Solana.
+- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, attach optional Expense Proof, compute live net Balances, and settle with on-chain USDC transfers on Solana.
 - Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. This remains part of the product direction, but it is not the primary hackathon demo path.
 
 For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users top up a debtor's Solana wallet with USDC through `Add funds` / `Top up to settle` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
@@ -45,7 +45,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 4. As a Member, I want to edit my global profile display name later, so that I can fix or improve how I appear in the app.
 5. As a Member, I want to log an Expense for a Group, so that the Group ledger reflects what happened.
 6. As a Member, I want to mark any Group Member as the payer on an Expense, so that the ledger matches reality even if someone else is entering the record.
-7. As a Member, I want to choose the same split methods people expect from Splitwise, so that the app feels familiar and flexible.
+7. As a Member, I want to choose familiar split methods, so that the app feels flexible without requiring new mental models.
 8. As a Member, I want to split an Expense equally, so that common cases are fast.
 9. As a Member, I want to split an Expense by exact amounts, so that uneven bills can be recorded precisely.
 10. As a Member, I want to split an Expense by percentage, so that proportional splits are supported.
@@ -89,6 +89,11 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 48. As a Telegram user, I want Fundy to run Zerion-backed `/analyze` and `/readiness`, so that I can see wallet readiness and settlement context without leaving the chat.
 49. As a Telegram user, I want Fundy to support `/verify` against on-chain history, so that I can confirm a Settlement or counterparty payment when coordinating in a group.
 50. As a user with a personal AI agent, I want to mint and revoke scoped agent tokens from my FundWise profile, so that I can control what my agent can do without sharing my browser session.
+51. As a user with a payment-aware personal agent, I want the agent to receive a Payable Settlement Request for an exact Group Balance, so that it can prepare or complete settlement through a machine-readable payment flow when I have explicitly allowed that.
+52. As a user delegating payment authority to an agent, I want hard limits by Group, asset, amount, counterparty, and expiry, so that agent-paid settlement cannot become broad wallet control.
+53. As a creditor Member, I want agent-paid settlement to produce the same FundWise Receipt as a human wallet-confirmed Settlement, so that the final record stays consistent.
+54. As a Member, I want to set Spending Policies for each payment-aware agent, so that small Settlements can be automated while larger Settlements fall back to my wallet confirmation.
+55. As a Group owner, I want ownership to be transferable and mostly administrative, so that a disappeared owner does not trap the Group or gain financial power over other Members.
 
 ## Implementation Decisions
 
@@ -104,6 +109,9 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Agent access should not rely on broad raw API keys. Later agent surfaces should use scoped capabilities tied to the Member wallet, Group, and action type.
 - The Agent Skill Endpoint (`/skill.md`) is a public URL at **`https://fundwise.kairen.xyz/skill.md`** that returns a machine-readable markdown document describing FundWise capabilities, supported actions, authentication flow, and explicit guardrails (what not to call). Fetching the document does not require authentication and the document must not expose private Member data.
 - Scoped Agent Access is the permission model for autonomous agents. Agents receive scoped capabilities tied to the Member wallet, specific Group, and action type. Money-moving actions (Settlement execution, Contribution execution, Proposal execution) still require direct wallet confirmation from the Member, even when an agent initiates the intent.
+- Payable Settlement Requests are a post-MVP research direction for x402 / MPP-style agent payment flows. They must be separate from normal Settlement Request Links, must resolve the live Group Balance, must be idempotent, and must never create a Receipt until payment verification succeeds.
+- Spending Policies are required before an agent can pay a Payable Settlement Request. The backend must enforce caps and scopes; the LLM or agent prompt is not an authorization source.
+- Group ownership is administrative metadata, not financial authority. The owner may later manage metadata or transfer ownership, but must not bypass Member checks, Expense creator checks, Settlement verification, or Receipt rules.
 - Fundy is the hosted Telegram bot that runs the FundWise Agent. It is a distribution surface, not a separate product. Users authenticate by linking their Telegram account to their FundWise wallet address via **short-lived codes** issued from the authenticated web app (`/link FW-…` in DM with Fundy).
 - Fundy v1 is **command-based** (fixed commands); the end goal is an **LLM-backed** assistant (e.g. OpenRouter) with the same underlying tools. Fundy runs on **Railway** as a separate service from the Next.js app, under **`services/fundy/`** in the **monorepo**, using **`grammy`**. It calls FundWise through the **same HTTP API** as other clients, using **`FUNDWISE_SERVICE_API_KEY`** and **`X-Fundy-Wallet`** (not ad-hoc direct Supabase access from the bot).
 - Fundy supports read-only views (Balances, Expenses, Settlements, Receipts), draft-safe actions (draft Expense, upload proof), comments, and history. **Proposal approve/reject** may run from Fundy when those updates are **database-only**; **on-chain** Settlement, Contribution, and Proposal **execution** bounce the Member to the web app with **Settlement Request Links** used for settle intents where applicable.

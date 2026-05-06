@@ -13,7 +13,7 @@ export function buildApiDocsMarkdown(baseUrl?: string) {
 
   return `# FundWise HTTP API
 
-Public API contract for FundWise, the Splitwise-on-Solana app. Fundy and other agent clients should use this page as the endpoint reference and fetch \`${origin}/skill.md\` first for capability and safety rules.
+Public API contract for FundWise, the Group money app for on-chain settlement. Fundy and other agent clients should use this page as the endpoint reference and fetch \`${origin}/skill.md\` first for capability and safety rules.
 
 Base URL: \`${origin}\`
 
@@ -288,6 +288,38 @@ Load a protected Receipt view.
 
 Auth: browser wallet session or Fundy service auth. Authenticated wallet must be allowed to read the Receipt.
 
+### Planned Agent Payment Endpoints
+
+These endpoints are not live yet. They are listed so agents and developers do not confuse current FundWise APIs with planned payable settlement support.
+
+#### POST /api/agent/spending-policies
+
+Planned. Create a Member-granted Spending Policy after direct wallet confirmation. Policy fields must include agent identity, scopes, Group scope, USDC asset scope, per-Settlement cap, daily cap, counterparty policy, expiry, and revocation support.
+
+#### GET /api/agent/spending-policies
+
+Planned. List active Spending Policies for the authenticated Member.
+
+#### PATCH /api/agent/spending-policies/{policyId}
+
+Planned. Lower limits, renew, or revoke a Spending Policy. Raising limits must require fresh direct wallet confirmation.
+
+#### POST /api/agent/settlement-requests
+
+Planned. Create or fetch a Payable Settlement Request for one exact live debtor-to-creditor Settlement intent. Must resolve the live Group Balance and expose a human Settlement Request Link fallback.
+
+#### GET /api/agent/settlement-requests/{requestId}
+
+Planned. Inspect amount, expiry, selected payment rail, and status for a Payable Settlement Request.
+
+#### POST /api/agent/settlement-requests/{requestId}/pay
+
+Planned. Pay only when the authenticated agent has a valid Spending Policy. If the amount is above policy, return the human Settlement Request Link instead of attempting payment.
+
+#### POST /api/agent/settlement-requests/{requestId}/verify
+
+Planned. Verify x402 / MPP / on-chain proof, then create the normal Settlement and Receipt only if the proof matches the request.
+
 ### Contributions
 
 #### POST /api/contributions
@@ -343,7 +375,7 @@ export function buildAgentSkillMarkdown(baseUrl?: string) {
 
   return `# FundWise Agent Skill
 
-FundWise is Splitwise on Solana: Members create private Groups, log Expenses, see live Balances, and settle exact USDC amounts on Solana with clear Receipts.
+FundWise is Group money, done right: Members create private Groups, log Expenses, see live Balances, and settle exact USDC amounts on Solana with clear Receipts.
 
 This is the public Agent Skill Endpoint for FundWise. It is safe to fetch without authentication and does not expose private Member data.
 
@@ -404,6 +436,10 @@ The web app uses wallet-signed session cookies through:
 
 Scoped Agent Access is the planned auth model for third-party autonomous agents. It will use Member-granted tokens scoped to wallet, Group, action type, expiration, and revocation. Do not ask users for the Fundy service key.
 
+### Spending Policies
+
+Spending Policies are planned and required before any agent can pay a Settlement. They cap agent payment capacity by Member wallet, agent identity, Group, asset, counterparty, per-Settlement amount, daily amount, expiry, and revocation. Anything outside policy must fall back to a Settlement Request Link for human wallet confirmation.
+
 ## Main API entry points
 
 Fetch ${origin}/api/docs for full request and response examples.
@@ -429,6 +465,16 @@ Receipt-recording only after wallet-confirmed on-chain action:
 - \`POST /api/settlements\` — record a verified Settlement signature.
 - \`POST /api/contributions\` — record a verified Contribution signature.
 
+Planned payable settlement endpoints:
+
+- \`POST /api/agent/spending-policies\` — create a Spending Policy after wallet confirmation.
+- \`GET /api/agent/spending-policies\` — list current Spending Policies.
+- \`PATCH /api/agent/spending-policies/{policyId}\` — lower, renew, or revoke policy limits.
+- \`POST /api/agent/settlement-requests\` — create a Payable Settlement Request.
+- \`GET /api/agent/settlement-requests/{requestId}\` — inspect a Payable Settlement Request.
+- \`POST /api/agent/settlement-requests/{requestId}/pay\` — pay only if policy permits; otherwise return a human Settlement Request Link.
+- \`POST /api/agent/settlement-requests/{requestId}/verify\` — verify payment proof and create the normal Receipt.
+
 ## Deep-link rules
 
 For Settlements, agents should reuse the existing Settlement Request Link pattern:
@@ -441,6 +487,7 @@ Rules:
 - The Settlement is never auto-sent.
 - The debtor reviews the state and confirms in their wallet.
 - Fundy may send or remind with this link, but must not sign or submit the transfer.
+- Planned Payable Settlement Requests use the same live Balance and Receipt rules, but add Spending Policy checks and payment proof verification.
 
 ## Fundy command mapping
 
@@ -463,6 +510,8 @@ Rules:
 
 ## Safety and terms
 
-FundWise is financial software. Agents are assistants, not signers. Any action that moves USDC or changes on-chain state must return the Member to the FundWise web app and wallet confirmation flow.
+FundWise is financial software. In the current product, agents are assistants, not signers. Any action that moves USDC or changes on-chain state must return the Member to the FundWise web app and wallet confirmation flow.
+
+Future Payable Settlement Requests may allow under-limit agent payment only after Spending Policies, idempotency, payment proof verification, and normal Receipt generation are implemented. Never treat a prompt or natural-language request as payment authorization.
 `
 }

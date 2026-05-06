@@ -19,7 +19,7 @@ The repo phases below describe engineering scope; this section is the order in w
 
 ## Phase 0 - Pivot cleanup (April 25-26) ✅
 
-**Goal:** remove prediction-market baggage and reframe the product as Splitwise on Solana.
+**Goal:** remove prediction-market baggage and reframe the product around Group money with on-chain settlement.
 
 **Completed:**
 
@@ -42,7 +42,7 @@ The repo phases below describe engineering scope; this section is the order in w
 - Group CRUD UI
 - Zero-state Group creation with Split Mode preselected
 - Invite link and QR join flow
-- Expense entry with Splitwise-style split methods:
+- Expense entry with familiar split methods:
   equal, exact amounts, percentage, and shares
 - Balance computation
 - Simplified settlement graph
@@ -263,6 +263,9 @@ Recommended FundWise framing for the Visa Frontier submission: lead with USDC-on
 
 - **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.kairen.xyz/skill.md`** — purpose, allowed vs forbidden calls, auth (profile tokens + optional wallet-signed), limits, errors; any agent can `curl` it. Fundy is the first consumer.
 - **Scoped Agent Access API**: permission model for autonomous agents — scoped capabilities tied to Member wallet, Group, and action type (read, draft, comment), not broad permanent API keys. Money-moving action types still require direct wallet confirmation. Supports capability grants with expiration and revocation.
+- **Payable Settlement Request research**: evaluate x402, MPP, and pay.sh-style flows for agent-paid Settlement Requests. The first prototype should be USDC-only, exact amount, short expiry, idempotent, and Receipt-producing only after verified payment proof. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
+- **Agent Spending Policy**: define Member-configured payment caps, Group scope, asset scope, counterparty scope, expiry, revocation, and human fallback before any agent-paid Settlement ships. See [docs/agent-payment-policy.md](./docs/agent-payment-policy.md).
+- **Ownership transfer**: define Group ownership as administrative metadata and add a transfer/recovery rule before agent-created Groups become first-class.
 - Backend schema additions before Fundy can ship: Telegram-to-wallet links, agent-access grants, Proposal comments and proof attachments, Proposal edit history, and later agent capability grants.
 
 **Exit criterion:** an individual user can DM Fundy, link their FundWise account, see personal finance and Group context, draft Expenses, get tax-advisory summaries, and add Fundy to a friends' Telegram group where every Member authenticates and uses Fundy without leaving the chat (except for on-chain confirmations).
