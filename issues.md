@@ -47,6 +47,9 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 - Payable Settlement Requests should extend Settlement Request Links for payment-aware agents, not replace the human wallet flow.
 - The planned agent endpoint needs crisp language around unpaid **invoice/request**, x402 / MPP **payment challenge**, verification, and final **Receipt**. A Receipt must only be created after verified payment proof or a confirmed on-chain transfer.
+- x402 TODO: evaluate `@x402/next` middleware for payable agent routes that return HTTP `402` with payment requirements, facilitator URL, and FundWise-controlled wallet address. Do not add this to normal free Split Mode routes.
+- MPP TODO: publish `x-payment-info` OpenAPI extensions only on payable operations after the payable Settlement Request interface exists. Candidate fields: intent, method, amount, currency, and session/request expiry.
+- ACP TODO: publish `/.well-known/acp.json` only if FundWise exposes an actual commerce API. If added, it must describe protocol name/version, API base URL, transports, and service capabilities without creating checkout behavior ahead of policy enforcement.
 - Add Agent Spending Policies before any agent can pay: per-Settlement cap, daily cap, Group scope, counterparty scope, USDC-only asset scope, expiry, revocation, and human fallback threshold.
 - Planned endpoints to evaluate: `POST /api/agent/spending-policies`, `GET /api/agent/spending-policies`, `PATCH /api/agent/spending-policies/{policyId}`, `POST /api/agent/settlement-requests`, `GET /api/agent/settlement-requests/{requestId}`, `POST /api/agent/settlement-requests/{requestId}/pay`, `POST /api/agent/settlement-requests/{requestId}/verify`, plus a dedicated invoice / Receipt retrieval endpoint if it is meaningfully separate from Settlement Request status.
 - Group ownership should stay administrative. Add ownership transfer/recovery before agent-created Groups become first-class.
@@ -338,7 +341,9 @@ Design and implement the agent-payable endpoint surface for x402 / MPP-style Set
 - [ ] Payable requests resolve live Group Balance and expire quickly to avoid stale amounts.
 - [ ] Agent Spending Policies enforce per-Settlement cap, daily cap, Group scope, counterparty scope, USDC-only asset scope, expiry, revocation, and human fallback.
 - [ ] Endpoint candidates from the planning notes are validated or replaced with a tighter interface.
-- [ ] x402 and MPP behavior is documented without implying broad wallet control.
+- [ ] x402 middleware behavior is documented and limited to payable agent routes.
+- [ ] MPP `x-payment-info` OpenAPI extensions are documented for payable operations only.
+- [ ] ACP discovery is either published for a real commerce API or explicitly deferred as not applicable to the current free Split Mode surface.
 
 ### User Stories Covered
 
