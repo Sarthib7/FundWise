@@ -56,7 +56,7 @@ create table public.expenses (
   group_id uuid not null references public.groups(id) on delete cascade,
   payer text not null, -- wallet address
   created_by text not null, -- wallet address that owns edit/delete
-  amount bigint not null, -- in smallest token unit
+  amount bigint not null check (amount > 0), -- in smallest token unit
   mint text not null,
   memo text,
   category text default 'general',
@@ -78,7 +78,7 @@ create table public.expense_splits (
   id uuid primary key default uuid_generate_v4(),
   expense_id uuid not null references public.expenses(id) on delete cascade,
   wallet text not null,
-  share bigint not null -- in smallest token unit
+  share bigint not null check (share >= 0) -- in smallest token unit
 );
 
 create or replace function public.update_expense_with_splits(
