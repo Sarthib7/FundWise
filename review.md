@@ -9,7 +9,7 @@
 
 ## Verdict
 
-FundWise has a real crypto-native wedge — Group ledger + USDC Settlement + shared Treasury + agent-readable Receipts — but the product story is still trying to be Splitwise, a pooled treasury, an agent payments network, a Telegram finance bot, Visa top-up rails, mini-games, and tax software before proving one beachhead can retain users.
+FundWise has a real crypto-native thesis, but right now it is trying to sell the roadmap as the moat. The shipped product is Split Mode; the strongest product is probably Fund Mode plus agents — and that is not fully real yet.
 
 ---
 
@@ -47,9 +47,9 @@ Those corrections improve the product’s ceiling. They do not remove the main r
 
 ## The Worst Issues
 
-### 1. The roadmap has a strong thesis, but the shipped story is still too noisy
+### 1. You are confusing “roadmap” with “product”
 
-**What's wrong:** FundWise has at least six stories competing for attention: Split Mode, Fund Mode, Fundy, Agent Skill, x402 payable endpoints, and Visa / IBAN onboarding. Each is plausible. Together, they make the product feel unfocused.
+**What's wrong:** Fund Mode, Fundy, x402 invoices, Visa / IBAN top-ups, Altitude, mini-games, and tax are not equal to shipped product. Each is plausible; together they make the shipped Split Mode path feel smaller than the roadmap around it.
 
 **Why it matters:** Judges, users, and future contributors need to know what is live now. If everything is presented as part of the pitch, the strongest shipped path gets diluted.
 
@@ -120,6 +120,6 @@ Those corrections improve the product’s ceiling. They do not remove the main r
 
 ## Fix These Now
 
-1. **Highest impact:** Update docs and submission language into a shipped/planned matrix. Split Mode is live/primary; Fund Mode is invite-only/incomplete; Agent Skill baseline exists; Scoped Agent Access and x402 payable Receipts are planned; Visa / Altitude onboarding is future.
-2. **Easiest win:** Create a monetization issue with concrete options: free Split Mode, optional Settlement fee, Fund Mode paid tier / percentage, Fundy wallet top-up commission, and partner/card revenue.
-3. **Existential fix:** Decide the first beachhead and stop pitching beyond it. Recommended: **crypto-native Groups first**, then **Fund Mode for shared Treasuries**, then **Fundy/agents**, then **non-crypto top-up rails**.
+1. **Highest impact:** Create a public shipped/planned matrix and make every doc obey it. Split Mode is live/primary; Fund Mode is invite-only/incomplete; Agent Skill baseline exists; Scoped Agent Access and x402 payable Receipts are planned; Visa / Altitude onboarding is future.
+2. **Easiest win:** Write a one-page monetization model with numbers: free Split Mode, optional Settlement fee, Fund Mode paid tier / percentage, Fundy wallet top-up commission, and partner/card revenue.
+3. **Existential fix:** Finish either Split Mode mainnet acquisition or the Fund Mode Proposal loop before touching mini-games, tax, or autonomous agent payments.
