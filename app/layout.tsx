@@ -23,7 +23,8 @@ export const metadata: Metadata = {
     "Split expenses, settle on-chain, and build toward group treasuries. FundWise helps groups move from awkward IOUs to final USDC receipts.",
   generator: "Next.js",
   icons: {
-    icon: "/icon.png",
+    icon: [{ url: "/brand-strata/svg/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/brand-strata/svg/app-icon-1024.svg", type: "image/svg+xml" }],
   },
 }
 

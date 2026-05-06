@@ -16,6 +16,7 @@ import {
   Wallet,
 } from "lucide-react"
 import { AppEntryButton } from "@/components/app-entry-button"
+import { FundWiseLogoMark } from "@/components/fundwise-logo"
 import { cn } from "@/lib/utils"
 
 type DemoExpense = {
@@ -290,27 +291,38 @@ export function HeroSection() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(45,184,112,0.1) 0%, transparent 70%)",
+            background: "linear-gradient(180deg, rgba(230,247,238,0.82) 0%, rgba(255,255,255,0) 52%), radial-gradient(ellipse 86% 54% at 50% -8%, rgba(45,184,112,0.15) 0%, transparent 72%)",
           }}
           aria-hidden="true"
         />
+        <FundWiseLogoMark
+          size={520}
+          className="pointer-events-none absolute left-1/2 top-6 h-[260px] w-[260px] -translate-x-1/2 opacity-[0.045] sm:top-1 sm:h-[380px] sm:w-[380px] md:h-[460px] md:w-[460px]"
+          aria-hidden="true"
+        />
 
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
+        <div className="relative z-10 mb-5 flex justify-center">
+          <div className="rounded-[24px] border border-brand-border-c bg-background/86 p-3 shadow-[0_18px_40px_rgba(13,31,20,0.08)] backdrop-blur-sm">
+            <FundWiseLogoMark size={76} title="FundWise" />
+          </div>
+        </div>
+
+        <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
           Group money, done right
         </div>
 
-        <h1 className="font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
+        <h1 className="relative z-10 font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
           Group money,
           <br />
           <em className="not-italic text-brand-grad font-serif">done right.</em>
         </h1>
 
-        <p className="mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
+        <p className="relative z-10 mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
           Trips, dinners, shared tabs. FundWise keeps the Group ledger clear and turns awkward IOUs into final on-chain Receipts.
         </p>
 
-        <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative z-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <AppEntryButton
             disconnectedLabel="Start splitting"
             connectedLabel="Open your Groups"

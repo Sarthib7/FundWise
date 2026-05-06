@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Wallet, Home } from "lucide-react"
+import { FundWiseLogo } from "@/components/fundwise-logo"
 import { WalletButton } from "@/components/wallet-button"
 import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
 import { cn } from "@/lib/utils"
@@ -52,18 +53,7 @@ export function Header() {
             href="/"
             className="flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <svg width="26" height="26" viewBox="0 0 80 80" fill="none" aria-hidden="true">
-              <rect width="80" height="80" rx="22" fill="url(#nav-grad)" />
-              <path d="M18 28 L28 52 L40 34 L52 52 L62 28" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              <circle cx="40" cy="61" r="4.5" fill="white" opacity="0.8" />
-              <defs>
-                <linearGradient id="nav-grad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#0d6b3a" />
-                  <stop offset="1" stopColor="#2db870" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <span className="font-serif text-xl tracking-tight text-foreground">FundWise</span>
+            <FundWiseLogo markSize={40} wordmarkClassName="text-2xl" />
           </Link>
 
           {isMarketingRoute ? (

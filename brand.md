@@ -1,15 +1,31 @@
-# Brand — FundWise
+# Brand - FundWise
 
-_Status: deferred_
+_Status: active_
 
-The user chose to defer brand setup. This project is currently using shadcn's default neutral palette and no custom typography. The `frontend-design-guidelines` skill will quietly use defaults and will not prompt again.
+FundWise uses the **Strata** logo system from [`brand-strata/`](./brand-strata/). The mark is three stacked, slightly angled rounded slabs in the FundWise green gradient. It represents layered Group money: expenses, settlements, and future treasuries.
 
-To set up a real brand palette, typography, and voice at any time, run:
+## Logo
 
-    /brand-design
+- Primary mark: Strata gradient mark.
+- Header lockup: Strata mark plus `FundWise` wordmark in DM Serif Display.
+- Footer lockup: smaller Strata mark plus text wordmark.
+- Hero usage: show the Strata mark as a large first-viewport brand device with a subtle oversized layer watermark behind the main copy.
+- Favicon/app icon: Strata SVG assets copied to [`public/brand-strata/svg/`](./public/brand-strata/svg/).
 
-or say: "pick brand colors"
+Use [`components/fundwise-logo.tsx`](./components/fundwise-logo.tsx) for app UI instead of hand-drawing inline logos.
 
-When `brand-design` runs, it will detect this deferred state, skip the "confirm overwrite" step, and proceed directly to the full brand setup. The resulting palette will be applied to `app/globals.css` and this file will be replaced with the real brand documentation.
+## Palette
 
-_Deferred at: 2026-04-26T00:00:00Z_
+- Deep: `#0A4D2C`
+- Forest: `#0D6B3A`
+- Emerald: `#1A9151`
+- Jade: `#2DB870`
+- Mint: `#4EC98A`
+- Ink: `#0D1F14`
+
+## Rules
+
+- Do not stretch or recolor the mark outside the palette.
+- Do not add drop shadows to the mark.
+- Keep at least half the mark height as clear space where possible.
+- Use the simplified favicon SVG below 24px.
