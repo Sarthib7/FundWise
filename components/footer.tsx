@@ -39,6 +39,12 @@ export function Footer() {
             Features
           </Link>
           <Link
+            href="/story"
+            className="inline-flex min-h-10 items-center rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            Story
+          </Link>
+          <Link
             href="/groups"
             className="inline-flex min-h-10 items-center rounded-sm text-[13px] text-brand-text-3 transition-colors hover:text-brand-text-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >

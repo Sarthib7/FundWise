@@ -78,6 +78,12 @@ export function Header() {
                   {item.label}
                 </a>
               ))}
+              <Link
+                href="/story"
+                className="rounded-sm text-sm font-medium text-brand-text-2 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Story
+              </Link>
             </nav>
           ) : (
             <nav className="hidden items-center gap-2 lg:flex">
@@ -125,6 +131,12 @@ export function Header() {
                 {item.label}
               </a>
             ))}
+            <Link
+              href="/story"
+              className="inline-flex min-h-10 items-center rounded-full border border-brand-border-c bg-brand-surface px-3.5 text-sm font-medium text-brand-text-2 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              Story
+            </Link>
           </nav>
         ) : (
           <div className="mt-3 flex items-center gap-3 lg:hidden">

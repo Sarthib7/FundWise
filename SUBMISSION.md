@@ -1,12 +1,12 @@
 # FundWise Submission Brief
 
 **Deadline:** 2026-05-11 Colosseum Frontier  
-**Primary story:** Split Mode web app with USDC Settlement on Solana  
+**Primary story:** Group money, done right
 **Current evidence:** devnet rehearsal passed, responsive QA passed, `pnpm build` passing
 
 ## One-Line Pitch
 
-FundWise is Splitwise on Solana: friends create a private Group, log shared Expenses, see live Balances, and settle the exact amount owed in USDC with a verifiable on-chain Receipt.
+Group money, done right. FundWise helps friends create a private Group, log shared Expenses, see live Balances, and settle the exact amount owed in USDC with a verifiable on-chain Receipt.
 
 ## Demo Script
 
@@ -22,7 +22,8 @@ Target length: 90-120 seconds.
 
 ## Screenshot Checklist
 
-- Landing page hero: product name, `Start splitting`, `Try demo`.
+- Landing page hero: product name, `Start splitting`, `Try demo`, `Read the story`.
+- Story page: problem narrative, Settlement Request Link loop, and LI.FI cross-chain top-up angle.
 - `/groups` disconnected state: wallet-first entry with `Connect Wallet`.
 - Group dashboard: Expense list, Balances, Suggested Settlements.
 - Settlement preview: sender, recipient, USDC amount, Solana fee note.

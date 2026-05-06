@@ -4,13 +4,13 @@ export function ModesSection() {
   return (
     <section id="modes" className="px-4 pb-24 pt-24 sm:px-6 sm:pt-28 lg:px-[max(24px,calc(50%-660px))]">
       <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-mid mb-3">
-        Two modes, one app
+        Split now, fund later
       </div>
       <h2 className="font-serif text-[clamp(1.75rem,4vw,2.875rem)] tracking-tight leading-[1.1] mb-3.5 text-foreground text-balance">
-        Pick your flow
+        Split expenses. Settle on-chain. Build group treasuries.
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        Whether you&apos;re splitting the restaurant bill or pooling funds for a group trip, FundWise has the right primitive.
+        Split Mode handles today&apos;s shared expenses. Fund Mode grows the same Group money model into proposal-based treasuries.
       </p>
 
       <div className="grid gap-5 md:grid-cols-2">
@@ -22,9 +22,9 @@ export function ModesSection() {
             Split Mode
           </div>
           <h3 className="mb-3 font-serif text-[24px] leading-[1.2] tracking-tight text-foreground sm:text-[26px]">
-            Splitwise,
+            Shared expenses,
             <br />
-            on Solana.
+            actually settled.
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed mb-7">
             Log shared expenses, see who owes what, and settle up with a single on-chain transfer. Every settlement is permanent, auditable, and costs less than a cent.
@@ -69,9 +69,9 @@ export function ModesSection() {
             Invite-only beta
           </div>
           <h3 className="mb-3 font-serif text-[24px] leading-[1.2] tracking-tight text-foreground sm:text-[26px]">
-            Reverse Splitwise —
+            Pool first,
             <br />
-            pool first, spend after.
+            spend after.
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed mb-7">
             Everyone contributes upfront to a shared treasury. Treasury setup and Contributions exist today, but the public flow stays invite-only until proposal creation, approvals, and execution are ready for broader use.

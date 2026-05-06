@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { WalletAvatar } from "@/components/avatar"
 import {
@@ -163,9 +164,9 @@ export function SplitModeDashboard({
               </div>
               {!connected ? (
                 <>
-                  <h2 className="text-lg font-semibold">Connect your wallet to open this request</h2>
+                  <h2 className="text-lg font-semibold">A Settlement request is waiting</h2>
                   <p className="text-sm text-muted-foreground">
-                    This link resolves against the Group&apos;s current live Balance state, not a fixed amount.
+                    Connect your wallet to see the live amount, settle in USDC, and close the loop with an on-chain Receipt.
                   </p>
                   <Button
                     type="button"
@@ -180,14 +181,14 @@ export function SplitModeDashboard({
                 <>
                   <h2 className="text-lg font-semibold">Verify your wallet to open this request</h2>
                   <p className="text-sm text-muted-foreground">
-                    FundWise only reveals the live settlement state after your connected wallet is verified for this browser session.
+                    FundWise reveals Member-only Balance context after one signed message confirms this browser session.
                   </p>
                 </>
               ) : !isMember ? (
                 <>
                   <h2 className="text-lg font-semibold">Join {groupName} to view the live settlement state</h2>
                   <p className="text-sm text-muted-foreground">
-                    Once you join, FundWise will show whether this debtor still owes this creditor and the current settleable amount.
+                    You&apos;re seeing FundWise from a shared link. Join the Group to see what changed and create your own Group later.
                   </p>
                 </>
               ) : requestedTransfer ? (
@@ -196,7 +197,7 @@ export function SplitModeDashboard({
                     {requestedDebtorLabel} currently owes {requestedCreditorLabel}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    The request resolves from the live simplified settlement graph for this Group.
+                    This request resolves from the live Group Balance. Settle once, then the Receipt makes it final.
                   </p>
                   <p className="text-2xl font-semibold">
                     {formatTokenAmount(requestedTransfer.amount)} {tokenName}
@@ -211,10 +212,15 @@ export function SplitModeDashboard({
                 <>
                   <h2 className="text-lg font-semibold">This Settlement Request Link is no longer active</h2>
                   <p className="text-sm text-muted-foreground">
-                    The live Group Balance no longer contains this exact debtor-to-creditor transfer edge.
+                    The Group Balance changed, so there is no longer anything to settle for this request.
                   </p>
                 </>
               )}
+              <div className="mt-4 grid gap-2 rounded-lg border border-accent/20 bg-background/70 p-3 text-xs text-muted-foreground sm:grid-cols-3">
+                <span>Live amount</span>
+                <span>Wallet-confirmed</span>
+                <span>Receipt on Solana</span>
+              </div>
             </div>
             <Button variant="ghost" size="sm" className="self-start" onClick={onClearSettlementRequest}>
               Dismiss
@@ -248,6 +254,9 @@ export function SplitModeDashboard({
                   Settle Now
                 </Button>
               )}
+              <Button asChild variant="ghost" className="w-full sm:w-auto">
+                <Link href="/groups">Create your own Group</Link>
+              </Button>
             </div>
           )}
         </Card>

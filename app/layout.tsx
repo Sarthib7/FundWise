@@ -18,9 +18,9 @@ const dmSerif = DM_Serif_Display({
 })
 
 export const metadata: Metadata = {
-  title: "FundWise — Shared expenses, settled simply.",
+  title: "FundWise — Group money, done right.",
   description:
-    "Splitwise on Solana. Split expenses with friends, top up from other chains when needed, and settle in USDC. Fund Mode treasury workflows remain a later product layer.",
+    "Split expenses, settle on-chain, and build toward group treasuries. FundWise helps groups move from awkward IOUs to final USDC receipts.",
   generator: "Next.js",
   icons: {
     icon: "/icon.png",

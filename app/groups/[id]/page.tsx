@@ -620,7 +620,7 @@ export default function GroupDashboard() {
                       ? "This invite returns you to the Group Treasury context after wallet connect. Join to start making Contributions."
                       : "Join to make Contributions and participate in this Group Treasury."
                     : isInviteLink
-                      ? "This invite returns you to the exact Group context after wallet connect. Join to start tracking Expenses and Settlements."
+                      ? "This is FundWise in action: a private Group ledger, exact Balances, and wallet-confirmed Settlements. Join to see how this Group works."
                       : "Join to start tracking Expenses and Settlements in this Group."}
                 </p>
               </div>
@@ -643,7 +643,7 @@ export default function GroupDashboard() {
                 </h2>
                 <p className="max-w-2xl text-sm text-muted-foreground">
                   {isInviteLink
-                    ? `FundWise is wallet-native. Connect first, then return to ${group.name} and choose Join ${group.name} from this exact Group context.`
+                    ? `Someone invited you to ${group.name}. Connect first, then join from this exact Group context and see the ledger before anything moves.`
                     : "FundWise is wallet-native. Connect first, then join this Group, view the live Balance state, and settle exact USDC amounts from the same screen."}
                 </p>
               </div>

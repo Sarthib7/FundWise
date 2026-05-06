@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.11.1",
-  "description": "FundWise — Splitwise on Solana. Split expenses and settle in stablecoins; pool shared treasuries with proposal-based spending.",
+  "description": "FundWise — Group money, done right. Split expenses and settle in stablecoins; pool shared treasuries with proposal-based spending.",
   "scripts": {
     "build": "next build",
     "build:pages": "next-on-pages",

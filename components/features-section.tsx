@@ -46,10 +46,10 @@ export function FeaturesSection() {
         Why FundWise
       </div>
       <h2 className="font-serif text-[clamp(1.75rem,4vw,2.875rem)] tracking-tight leading-[1.1] mb-3.5 text-foreground text-balance">
-        Built different
+        Built for the moments where IOUs fail
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        The familiar feel of Splitwise, rebuilt for instant digital settlement.
+        FundWise turns Group bookkeeping into wallet-confirmed settlement, with cross-chain top-ups when a friend&apos;s funds are somewhere else.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

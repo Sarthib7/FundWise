@@ -6,7 +6,7 @@ This file is the shared instruction set for all AI agents (Claude Codex, GLM, Cu
 
 ## Project Summary
 
-**FundWise** is Splitwise on Solana — a two-mode consumer expense app:
+**FundWise** is a group-money app on Solana — a two-mode consumer expense app:
 
 1. **Split Mode** (MVP): Track expenses, compute who owes whom, and settle exact USDC amounts on Solana.
 2. **Fund Mode** (Phase 2): Pool stablecoins into a shared treasury with proposal-based spending.

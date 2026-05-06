@@ -206,6 +206,9 @@ export default function SettlementReceiptPage() {
                 <div>
                   <h1 className="text-2xl font-semibold sm:text-3xl">{group.name}</h1>
                   <p className="mt-2 text-sm text-muted-foreground">
+                    Settled on Solana. This is done.
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Confirmed on {new Date(settlement.confirmed_at).toLocaleString()}
                   </p>
                 </div>
@@ -241,7 +244,7 @@ export default function SettlementReceiptPage() {
                   <div>
                     <p className="text-sm font-medium">Proof of settlement</p>
                     <p className="text-xs text-muted-foreground">
-                      This is the on-chain transaction recorded for the group settlement.
+                      This is the on-chain transaction recorded for the Group Settlement.
                     </p>
                   </div>
                 </div>
@@ -260,6 +263,9 @@ export default function SettlementReceiptPage() {
                   </Button>
                   <Button asChild variant="outline" className="min-h-11 w-full sm:w-auto">
                     <Link href={groupHref}>Return To Group</Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="min-h-11 w-full sm:w-auto">
+                    <Link href="/groups">Create your own Group</Link>
                   </Button>
                 </div>
               </Card>

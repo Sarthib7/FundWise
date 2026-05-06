@@ -1,3 +1,3 @@
 # Pivot from Fund Flow to FundWise
 
-The project started as a prediction-market + group-fundraising hackathon app (Fund Flow) with Kalshi integration, ZK compression, and Meteora LP yield. After the hackathon ended, we pivoted to a two-mode consumer expense app with clearer day-one value: Split Mode (Splitwise on Solana) as MVP, Fund Mode (shared treasury with proposals) as phase 2. All prediction-market code was removed.
+The project started as a prediction-market + group-fundraising hackathon app (Fund Flow) with Kalshi integration, ZK compression, and Meteora LP yield. After the hackathon ended, we pivoted to a two-mode consumer expense app with clearer day-one value: Split Mode for shared expenses and on-chain settlement as MVP, Fund Mode (shared treasury with proposals) as phase 2. All prediction-market code was removed.

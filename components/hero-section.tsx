@@ -28,17 +28,17 @@ export function HeroSection() {
 
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
-          Built on Solana · Instant USDC settlement
+          Group money, done right
         </div>
 
         <h1 className="font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
-          Splitwise, but you
+          Group money,
           <br />
-          <em className="not-italic text-brand-grad font-serif">actually get paid.</em>
+          <em className="not-italic text-brand-grad font-serif">done right.</em>
         </h1>
 
         <p className="mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
-          Track shared costs, see who owes what, and settle in USDC on Solana. No more chasing payments across apps.
+          Trips, dinners, shared tabs. FundWise keeps the Group ledger clear and turns awkward IOUs into final on-chain Receipts.
         </p>
 
         <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -56,10 +56,10 @@ export function HeroSection() {
             Try demo
           </Link>
           <Link
-            href="/#how"
+            href="/story"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
-            See how it works
+            Read the story
           </Link>
         </div>
       </section>

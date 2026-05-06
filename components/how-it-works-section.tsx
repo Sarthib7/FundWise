@@ -32,7 +32,7 @@ export function HowItWorksSection() {
             Create a group &amp; log expenses
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            Invite friends by wallet address. Log who paid what. FundWise computes the fewest transfers to zero out all debts.
+            Invite friends by link or QR. Log who paid what. FundWise computes the fewest Settlements to bring the Group back to zero.
           </p>
         </div>
 

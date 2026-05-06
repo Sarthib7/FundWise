@@ -2,14 +2,14 @@
 
 **Date:** 2026-04-30
 **Reviewer:** Pi Agent (roast-my-product skill)
-**Product:** FundWise — Splitwise on Solana
+**Product:** FundWise — Group money, done right
 **Stage:** Hackathon MVP (Colosseum Frontier, deadline May 11, 2026)
 
 ---
 
 ## Verdict
 
-FundWise is Splitwise for crypto people who already have USDC on Solana — a product for approximately 47 humans, built by a team that spent more words on ADRs, CONTEXT.md glossaries, and planned Telegram bots than on getting a single real user through the core loop on mainnet.
+FundWise is a Group money app for crypto people who already have USDC on Solana — a product for approximately 47 humans, built by a team that spent more words on ADRs, CONTEXT.md glossaries, and planned Telegram bots than on getting a single real user through the core loop on mainnet.
 
 ---
 
@@ -17,14 +17,14 @@ FundWise is Splitwise for crypto people who already have USDC on Solana — a pr
 
 | Dimension | Score | Justification |
 |---|---|---|
-| **Value Proposition** (2x) | **6/10** | "Splitwise on Solana" is genuinely clear. The problem is real — Splitwise doesn't settle. But "settle in USDC on Solana" narrows the addressable market to people who (a) use Splitwise, (b) are OK with crypto, (c) hold USDC on Solana, (d) want to settle debts that way. Niche of a niche of a niche. |
-| **Crypto Necessity** | **7/10** | One of the better crypto products for actual necessity. Splitwise doesn't do cross-border settlement. On-chain USDC transfer IS the settlement. Replace blockchain with Postgres and you're back to Splitwise — tracking debts but not closing them. |
+| **Value Proposition** (2x) | **6/10** | The problem is real: shared-expense tools handle bookkeeping but not final settlement. But "settle in USDC on Solana" narrows the addressable market to people who (a) split expenses, (b) are OK with crypto, (c) hold USDC on Solana, (d) want to settle debts that way. Niche of a niche of a niche. |
+| **Crypto Necessity** | **7/10** | One of the better crypto products for actual necessity. Existing shared-expense apps do not provide cross-border settlement finality. On-chain USDC transfer IS the settlement. Replace blockchain with Postgres and you're back to tracking debts but not closing them. |
 | **Target User Clarity** | **4/10** | Docs say "consumer payments" but UX requires: Solana wallet, USDC on Solana, SOL for gas, understanding of token accounts, and tolerance for devnet. Building for crypto-native expats and hackathon judges, not "consumers." |
 | **First-Time User Experience** | **3/10** | Landing page → Connect Wallet → figure out what to do. No demo. No "try it without a wallet." No onboarding walkthrough. The disconnected `/groups` page is decent but walls off ALL value behind wallet connect. |
 | **Core Loop** | **5/10** | Create Group → Add Expense → See Balance → Settle → Receipt. The loop exists and it's correct. But frequency is episodic (trips, dinners), not daily. No notifications. No push triggers to return. |
-| **Competitive Moat** | **2/10** | What stops Splitwise from adding "Settle with crypto"? Nothing. No network effects. No data lock-in. No liquidity moat. No user base. A funded competitor could replicate this in 2 weeks. |
+| **Competitive Moat** | **2/10** | What stops an incumbent shared-expense app from adding "Settle with crypto"? Nothing. No network effects. No data lock-in. No liquidity moat. No user base. A funded competitor could replicate this in 2 weeks. |
 | **Technical Execution** | **5/10** | Code compiles. Architecture is solid (Supabase + Solana + server-side mutations + RPC verification). But: **zero tests**, LI.FI is "groundwork" not shipped, Fund Mode Proposals don't exist, no mainnet deployment. Well-structured prototype, not production. |
-| **Naming & Messaging** | **6/10** | "FundWise" is fine. Tagline "Splitwise on Solana" is instantly clear. But landing page buries the lead under mode explanations, tech strips, and feature sections. Dual-mode confuses before anyone understands the first. |
+| **Naming & Messaging** | **6/10** | "FundWise" is fine. The positioning is clear when it owns Group money instead of borrowing competitor mind-share. But landing page buries the lead under mode explanations, tech strips, and feature sections. Dual-mode confuses before anyone understands the first. |
 | **Monetization Path** | **2/10** | No monetization plan. No fees, no premium tier, no protocol revenue. PRD, ROADMAP, STATUS — none mention revenue. Free tool hoping the hackathon leads somewhere. |
 | **Market Timing** | **5/10** | Stablecoin payments are having a moment. Visa IS interested in on-chain settlement. But Solana consumer apps have struggled to find PMF. Not riding a wave; hoping one forms. |
 
@@ -39,7 +39,7 @@ FundWise is Splitwise for crypto people who already have USDC on Solana — a pr
 
 ### 1. Ghost Market — Target User is Too Narrow
 
-**What's wrong:** Target user needs to (1) have a Solana wallet, (2) hold USDC on Solana, (3) have SOL for gas, (4) want to split expenses with friends, (5) have friends who also meet criteria 1-3, and (6) prefer this over Venmo/Zelle/Splitwise.
+**What's wrong:** Target user needs to (1) have a Solana wallet, (2) hold USDC on Solana, (3) have SOL for gas, (4) want to split expenses with friends, (5) have friends who also meet criteria 1-3, and (6) prefer this over familiar off-chain settlement rails.
 
 **Why it matters:** No users = no product. Hackathon judges will see a demo that works for the 3 people in the room with Phantom wallets.
 
@@ -84,7 +84,7 @@ FundWise is Splitwise for crypto people who already have USDC on Solana — a pr
 - **Wallet Gate (#3):** Zero product value without wallet connect. `/groups` is a beautiful wall. Textbook wallet gate.
 - **No Retention Loop (#5):** Add expenses, settle, done. No return trigger. "Check your Group balances" is not a loop.
 - **Bridge to Nowhere (#8):** LI.FI integration is "groundwork" — SDK installed but no user-facing flow. Stop selling what isn't shipped.
-- **Complexity Worship (#12):** Drowning in terminology for what is essentially Splitwise + Send USDC. Source Currency, Exchange Rate Snapshot, Simplified Settlement Graph, Scoped Agent Access — the conceptual overhead is enormous.
+- **Complexity Worship (#12):** Drowning in terminology for what is essentially a shared ledger plus Send USDC. Source Currency, Exchange Rate Snapshot, Simplified Settlement Graph, Scoped Agent Access — the conceptual overhead is enormous.
 - **Grant-Dependent (#10):** This is a hackathon project built for Colosseum Frontier. No revenue model. No sustainability plan beyond sponsor prizes.
 
 ---
@@ -103,7 +103,7 @@ FundWise is Splitwise for crypto people who already have USDC on Solana — a pr
 
 1. **Demo mode (highest impact):** ✅ SHIPPED — `/demo` route with 5-step walkthrough.
 2. **Cut docs, add tests (easiest win):** ✅ SHIPPED — 32 tests, ADR-0018/0014 archived.
-3. **Abstract crypto or own the niche (existential fix):** Partially addressed — hero copy now leads with "Splitwise, but you actually get paid." Full resolution requires embedded wallet integration (post-hackathon).
+3. **Abstract crypto or own the niche (existential fix):** Partially addressed — hero copy now leads with "Group money, done right." Full resolution requires embedded wallet integration (post-hackathon).
 
 ## Dependabot — 2026-04-30
 

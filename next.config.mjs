@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const repoRoot = dirname(fileURLToPath(import.meta.url))
+
 const nextConfig = {
+  outputFileTracingRoot: repoRoot,
   // Avoid SegmentViewNode / next-devtools RSC client manifest errors in dev (Next 15.5).
   experimental: {
     devtoolSegmentExplorer: false,
