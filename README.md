@@ -1,6 +1,6 @@
 # FundWise
 
-**Splitwise on Solana.** Create a private Group, log shared Expenses, see live Balances, and settle exact USDC amounts on Solana with a clear Receipt.
+**Group money, done right.** Create a private Group, log shared Expenses, see live Balances, and settle exact USDC amounts on Solana with a clear Receipt.
 
 FundWise also has a second mode, **Fund Mode**, for pooled USDC Treasuries. That remains part of the product direction, but proposal flows are still incomplete and the current MVP is optimized around **Split Mode**.
 
@@ -26,7 +26,10 @@ Quick links:
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
 - [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
 - [issues.md](./issues.md) - active indexed backlog for hackathon execution
+- [docs/README.md](./docs/README.md) - chunked documentation index by topic
 - [DECISIONS.md](./DECISIONS.md) - ADR index
+- [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md) - research note for Payable Settlement Requests, x402, MPP, and pay.sh
+- [docs/agent-payment-policy.md](./docs/agent-payment-policy.md) - spending capacity, safety policy, endpoint gaps, and Group ownership notes for payment-aware agents
 - [audit.md](./audit.md) - current security findings and mainnet blockers
 
 ## Current Product Shape
@@ -68,6 +71,8 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 - **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent. Fundy Lite (hackathon) is command-based with Zerion wallet analysis. Fundy Full (post-hackathon) adds LLM via OpenRouter for natural language, personal finance features, budgets, and proactive reminders. See ADR-0018.
 - **Agent Skill Endpoint** (`/skill.md`) is the public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, what to call vs avoid, supported actions, and how to authenticate through Scoped Agent Access. API reference markdown is available at **`https://fundwise.kairen.xyz/api/docs`**.
+- **Payable Settlement Requests** are a planned research direction for agent-paid settlement through x402 / MPP-style payment flows. They should extend Settlement Request Links for approved agents without bypassing scoped authority, live Balance checks, or Receipt verification. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
+- **Spending Policies** are required before any agent can pay a Settlement. They set per-Settlement caps, daily limits, Group scope, counterparty scope, expiry, and human fallback behavior. See [docs/agent-payment-policy.md](./docs/agent-payment-policy.md).
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.
 
@@ -100,8 +105,12 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 ├── issues.md
 ├── DECISIONS.md
 ├── docs/adr/
+├── docs/agentic-settlement-endpoint.md
+├── docs/agent-payment-policy.md
 ├── app/
 │   ├── page.tsx
+│   ├── story/
+│   │   └── page.tsx          ← public product narrative and PLG loop
 │   ├── demo/
 │   │   └── page.tsx          ← interactive 5-step product walkthrough
 │   └── groups/
