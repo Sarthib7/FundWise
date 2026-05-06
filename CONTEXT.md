@@ -84,7 +84,7 @@ The hosted Telegram bot that runs the FundWise Agent. It is command-first in v1 
 Avoid: FundWise Telegram, the bot
 
 **Agent Skill Endpoint** (`/skill.md`):
-A public URL on the production FundWise host (`https://fundwise.kairen.xyz/skill.md`) that returns a machine-readable markdown document describing what FundWise is for, what actions autonomous agents may call, what they must not call, how to authenticate, rate limits, errors, and terms of use. Any personal AI agent can `curl` this URL to discover FundWise capabilities and integrate without manual configuration.
+A public URL on the production FundWise host (`https://fundwise.fun/skill.md`) that returns a machine-readable markdown document describing what FundWise is for, what actions autonomous agents may call, what they must not call, how to authenticate, rate limits, errors, and terms of use. Any personal AI agent can `curl` this URL to discover FundWise capabilities and integrate without manual configuration.
 Avoid: API docs, developer portal
 
 **Scoped Agent Access**:
@@ -176,7 +176,7 @@ Avoid: Optimized debts, minimum transfers
 - Fundy starts as a **command-based bot** (fixed commands like `/balance`, `/owe`, `/draft`). The end goal is an AI agent with an LLM brain (OpenRouter), but the first version uses commands only.
 - Fundy runs as a **separate service on Railway**, not inside the Next.js Cloudflare Workers deployment. It uses `grammy` as the Telegram bot library and lives in a separate repository per ADR-0022.
 - Fundy authenticates against the FundWise API using service-to-service auth and later Scoped Agent Access, not direct Supabase access. This keeps one consistent API surface for Fundy, external agents, and the web app.
-- The Agent Skill Endpoint (`/skill.md`) is a shipped public machine-readable discovery document at `https://fundwise.kairen.xyz/skill.md`. It does not require authentication and does not expose private Member data.
+- The Agent Skill Endpoint (`/skill.md`) is a shipped public machine-readable discovery document at `https://fundwise.fun/skill.md`. It does not require authentication and does not expose private Member data.
 - Autonomous agents interact with FundWise through Scoped Agent Access, not broad API keys. Capabilities are tied to Member wallet, Group, and action type.
 - Scoped Agent Access supports two auth paths: (1) user-generated agent tokens from the web app profile page (`/profile/agents`) with rotate/delete/renew/scope management, and (2) wallet-signed challenge-response for agents that can sign Solana messages.
 - Money-moving actions (Settlement execution, Contribution execution, Proposal execution) remain wallet-confirmed even when initiated through Fundy or an autonomous agent. Fundy deep-links back to the web app using existing Settlement Request Links and action parameters. A later Payable Settlement Request flow may allow agent-paid Settlement only through explicit `settlement:pay` authority, exact USDC amounts, short expiry, idempotency, and verified payment proof before Receipt creation.

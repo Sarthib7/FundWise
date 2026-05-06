@@ -1,4 +1,4 @@
-const DEFAULT_BASE_URL = "https://fundwise.kairen.xyz"
+const DEFAULT_BASE_URL = "https://fundwise.fun"
 
 function normalizeBaseUrl(baseUrl?: string) {
   if (!baseUrl) {
