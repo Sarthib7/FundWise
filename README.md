@@ -27,6 +27,8 @@ Quick links:
 - [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
 - [issues.md](./issues.md) - active indexed backlog for hackathon execution
 - [docs/README.md](./docs/README.md) - chunked documentation index by topic
+- [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope product matrix
+- [docs/monetization.md](./docs/monetization.md) - launch monetization model and conservative first-year scenario
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md) - research note for Payable Settlement Requests, x402, MPP, and pay.sh
 - [docs/agent-payment-policy.md](./docs/agent-payment-policy.md) - spending capacity, safety policy, endpoint gaps, and Group ownership notes for payment-aware agents
@@ -50,8 +52,9 @@ The current MVP path is:
 - Invite link or QR join flow with an explicit `Join {GroupName}` confirmation after connect
 - Settlement Request Links open the live settleable state and context, but never auto-send a Settlement
 - USDC-only settlement asset
-- Planned multi-currency Expense entry converts a Source Currency amount into a stored USD/USDC ledger value using an Exchange Rate Snapshot
-- Planned Expense Proof upload lets Members attach a merchant receipt photo, PDF, or proof link to an Expense
+- Source Currency entry is future-only for the current public demo; it must not ship until every Expense stores the original amount, converted USD/USDC ledger value, and Exchange Rate Snapshot end to end
+- Expense Proof upload is future-only for the current public demo; it must not ship until storage, preview, size limits, and access rules are implemented
+- Split Mode stays free for launch, including normal USDC Settlements
 - Activity Feed, not chat
 - Current net Group Balance settlement, not per-Expense settlement
 
@@ -64,7 +67,7 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 - Intended long-term use: durable shared pools for friends, households, clubs, and recurring Groups
 - Public Group creation keeps Fund Mode invite-only for now; internal testing can be re-enabled with `FUNDWISE_FUND_MODE_INVITE_WALLETS`
 - Proposal / approval / execution flow still pending and not part of the current hackathon mainline
-- Future private Group activities or mini-games must stay behind Fund Mode safety work and must not reintroduce prediction-market scope into the Split Mode MVP
+- Private Group mini-games and prediction-market-like mechanics are out of scope for FundWise unless they are separately justified later outside the current Split Mode and Fund Mode roadmap
 
 ### Sponsor layers
 

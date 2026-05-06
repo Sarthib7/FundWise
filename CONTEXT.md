@@ -24,7 +24,7 @@ An off-chain record in a Split Mode Group describing who paid, how much, who par
 Avoid: Bill, charge, transaction
 
 **Source Currency**:
-The real-world currency a Member paid or enters for an Expense, such as EUR, USD, INR, or another supported fiat unit. FundWise may show and store this original amount, but it converts the Expense into the Group ledger's USD/USDC value for Balance and Settlement math.
+The real-world currency a Member paid or enters for an Expense, such as EUR, USD, INR, or another supported fiat unit. This is future-only for the current public demo. FundWise may show and store this original amount, but it converts the Expense into the Group ledger's USD/USDC value for Balance and Settlement math.
 Avoid: Settlement asset
 
 **Exchange Rate Snapshot**:
@@ -32,7 +32,7 @@ The conversion rate, quote time, and source used to convert a Source Currency am
 Avoid: Live balance repricing
 
 **Expense Proof**:
-An optional uploaded merchant receipt image, PDF, or external proof link attached to an Expense so Members can verify what was paid. This is different from a FundWise Receipt, which confirms a Settlement.
+A future optional uploaded merchant receipt image, PDF, or external proof link attached to an Expense so Members can verify what was paid. This is different from a FundWise Receipt, which confirms a Settlement.
 Avoid: Settlement Receipt
 
 **Settlement**:
@@ -131,7 +131,7 @@ Avoid: Optimized debts, minimum transfers
 - The payer on an Expense can be different from the Member who created the record.
 - An Expense may preserve its Source Currency and original amount, but the Group ledger must store the converted USD/USDC amount and Exchange Rate Snapshot used for Balance math.
 - Exchange rates should be fetched as close as possible to Expense creation or edit time, then snapshotted so historical Balances do not drift with later market movements.
-- An Expense may include one lightweight Expense Proof attachment or proof link.
+- An Expense may include one lightweight Expense Proof attachment or proof link in a future release.
 - Only the Member who created an Expense can edit or delete it.
 - Expense edits update the record in place and surface a simple "edited" signal in the Activity Feed.
 - Expense edits or deletes are blocked once later Settlements would make the ledger inconsistent.
@@ -186,12 +186,13 @@ Avoid: Optimized debts, minimum transfers
 - One Telegram account maps to one active wallet at a time. Re-linking soft-deletes the old link and creates a new one.
 - One Telegram chat maps to one FundWise Group at a time. Any Member may `/connect` a chat to a Group, but every participant must authenticate in a private DM before Fundy acts for them in the group.
 - Fundy uses Zerion CLI for wallet analysis via `/analyze` (portfolio overview), `/readiness` (FundWise balances + Zerion readiness), and `/verify` (on-chain history to confirm a Settlement or counterparty payment). Zerion CLI auth starts with a free **`ZERION_API_KEY`** (dev tier); optional **x402** pay-per-call on Solana later for demos (`SOLANA_PRIVATE_KEY` + `ZERION_X402`).
-- Fundy may later support private Fund Mode Group activities or mini-games, but only after Proposal safety, spending limits, and the prediction-market/gaming boundary are explicitly resolved. Mini-games are not Split Mode scope.
+- Mini-games and prediction-market-like mechanics are out of scope for FundWise. They are not Split Mode scope, Fund Mode beta scope, or hackathon submission scope.
 - Plain `/groups` with no existing Groups should open Group creation immediately after connect.
 - Plain `/groups` with existing Groups should remain a Group list after connect.
 - Group creation defaults to Split Mode, while the public create flow keeps Fund Mode visible as an invite-only beta until the Proposal lifecycle is ready.
 - Group mode choice is per Group only, never a global app-wide mode switch.
 - USDC is the only settlement asset in the MVP.
+- Split Mode stays free for launch, including normal USDC Settlements.
 - Multi-currency Expense entry does not mean multi-currency Settlement. Source Currency values convert into the USD/USDC ledger before Balance and Settlement logic.
 - SOL is required for gas on Solana mainnet-beta.
 - Split Mode is the primary product path for the hackathon MVP.

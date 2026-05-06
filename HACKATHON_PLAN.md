@@ -54,8 +54,7 @@ Everything else is a supporting layer:
 
 - Smooth web-app UX
 - Wallet connect that preserves context instead of dropping users into a generic app state
-- Expense entry that can preserve the original Source Currency while converting into a stable USD/USDC ledger value
-- Optional receipt-photo upload as Expense Proof
+- A clean Expense flow that does not imply Source Currency or Expense Proof are shipped before their ledger/storage paths are complete
 - Exact-amount Settlement
 - Clear Receipt
 - Mobile-friendly flow
@@ -206,6 +205,8 @@ Avoid these claims in the main pitch unless they are actually shipped:
 - Fundy as a shipped product (it is planned, not shipped)
 - Scoped Agent Access or autonomous agent payment as a shipped feature
 - Payable Settlement Requests or autonomous money movement as shipped features. They are documented research, not part of the current demo path.
+- Source Currency entry or Expense Proof upload as shipped features. They are future-only for the current public demo.
+- Mini-games, private games, or prediction-market-like mechanics as part of FundWise.
 - Unlimited agent spending, broad API keys, or prompt-only authorization for financial actions.
 
 For future expansion after the core demo path is solid:
