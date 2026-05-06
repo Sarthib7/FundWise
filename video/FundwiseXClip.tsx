@@ -30,6 +30,9 @@ const C = {
   green: "#179452",
   fresh: "#2db870",
   mint: "#dff5e8",
+  blue: "#2a4fa8",
+  red: "#d94f43",
+  amber: "#f6c84c",
   surface: "#f5faf6",
   line: "#bfdcc8",
   softLine: "#d7eadc",
@@ -248,6 +251,182 @@ function Pill({
   )
 }
 
+function Stamp({
+  children,
+  delay = 0,
+  x,
+  y,
+  rotate = -8,
+  color = C.red,
+}: {
+  children: React.ReactNode
+  delay?: number
+  x: number
+  y: number
+  rotate?: number
+  color?: string
+}) {
+  const frame = useCurrentFrame()
+  const progress = spring({ frame: frame - delay, fps: 30, config: SPRING.playful })
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        border: `4px solid ${color}`,
+        color,
+        borderRadius: 18,
+        padding: "12px 22px",
+        fontFamily: mono,
+        fontSize: 30,
+        fontWeight: 950,
+        letterSpacing: 1.8,
+        textTransform: "uppercase",
+        transform: `rotate(${rotate}deg) scale(${progress})`,
+        opacity: interpolate(progress, [0, 1], [0, 1], { extrapolateRight: "clamp" }),
+        background: "rgba(255,255,255,0.78)",
+        boxShadow: "0 18px 42px rgba(217, 79, 67, 0.14)",
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ChatBubble({
+  text,
+  delay,
+  x,
+  y,
+  rotate = 0,
+  mine = false,
+  compact,
+}: {
+  text: string
+  delay: number
+  x: number
+  y: number
+  rotate?: number
+  mine?: boolean
+  compact: boolean
+}) {
+  const frame = useCurrentFrame()
+  const progress = spring({ frame: frame - delay, fps: 30, config: SPRING.playful })
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        maxWidth: compact ? 620 : 520,
+        padding: compact ? "20px 24px" : "22px 26px",
+        borderRadius: mine ? "26px 26px 8px 26px" : "26px 26px 26px 8px",
+        background: mine ? C.green : C.white,
+        border: `1px solid ${mine ? C.green : C.softLine}`,
+        color: mine ? C.white : C.ink,
+        fontSize: compact ? 28 : 29,
+        fontWeight: 850,
+        lineHeight: 1.15,
+        boxShadow: "0 24px 64px rgba(6, 21, 12, 0.13)",
+        opacity: interpolate(progress, [0, 1], [0, 1], { extrapolateRight: "clamp" }),
+        transform: `rotate(${rotate}deg) scale(${progress})`,
+      }}
+    >
+      {text}
+    </div>
+  )
+}
+
+function ExpenseChip({
+  label,
+  amount,
+  delay,
+  x,
+  y,
+  color,
+  compact,
+}: {
+  label: string
+  amount: string
+  delay: number
+  x: number
+  y: number
+  color: string
+  compact: boolean
+}) {
+  const frame = useCurrentFrame()
+  const inProgress = spring({ frame: frame - delay, fps: 30, config: SPRING.playful })
+  const tidy = spring({ frame: frame - 96, fps: 30, config: SPRING.smooth })
+  const drift = Math.sin((frame + delay) * 0.045) * 8
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: interpolate(tidy, [0, 1], [x, compact ? 132 : 1020]),
+        top: interpolate(tidy, [0, 1], [y + drift, compact ? 650 + delay * 1.2 : 330 + delay * 0.9]),
+        width: compact ? 290 : 280,
+        padding: "18px 20px",
+        borderRadius: 22,
+        background: C.white,
+        border: `2px solid ${color}`,
+        boxShadow: "0 22px 58px rgba(6, 21, 12, 0.12)",
+        opacity: interpolate(inProgress, [0, 1], [0, 1], { extrapolateRight: "clamp" }),
+        transform: `scale(${interpolate(inProgress, [0, 1], [0.74, 1], {
+          extrapolateRight: "clamp",
+        })}) rotate(${interpolate(tidy, [0, 1], [-6 + delay * 0.25, 0])}deg)`,
+      }}
+    >
+      <div style={{ color: C.muted, fontSize: compact ? 22 : 21, fontWeight: 800 }}>
+        {label}
+      </div>
+      <div style={{ color: C.ink, fontSize: compact ? 36 : 34, fontWeight: 950 }}>
+        {amount}
+      </div>
+    </div>
+  )
+}
+
+function Confetti({ compact }: { compact: boolean }) {
+  const frame = useCurrentFrame()
+  const pieces = Array.from({ length: 34 }, (_, i) => i)
+
+  return (
+    <>
+      {pieces.map((i) => {
+        const start = 22 + (i % 9) * 2
+        const progress = interpolate(frame - start, [0, 64], [0, 1], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.out(Easing.cubic),
+        })
+        const colors = [C.green, C.fresh, C.amber, C.blue, C.red]
+        const baseX = compact ? 180 + (i * 71) % 740 : 340 + (i * 91) % 1180
+        const baseY = compact ? 210 : 170
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              left: baseX + Math.sin(i) * 34,
+              top: baseY + progress * (compact ? 640 : 570),
+              width: i % 2 === 0 ? 14 : 22,
+              height: i % 2 === 0 ? 32 : 12,
+              borderRadius: 4,
+              background: colors[i % colors.length],
+              opacity: interpolate(progress, [0, 0.12, 0.85, 1], [0, 1, 1, 0]),
+              transform: `rotate(${i * 29 + progress * 290}deg)`,
+            }}
+          />
+        )
+      })}
+    </>
+  )
+}
+
 function HookScene({ format }: { format: Format }) {
   const localFrame = useSceneFrame()
   const compact = format === "square"
@@ -259,42 +438,72 @@ function HookScene({ format }: { format: Format }) {
       <div
         style={{
           position: "absolute",
-          left: compact ? 70 : 150,
-          right: compact ? 70 : 150,
-          top: compact ? 220 : 250,
-          textAlign: "center",
+          left: compact ? 70 : 130,
+          right: compact ? 70 : 820,
+          top: compact ? 170 : 190,
+          textAlign: compact ? "center" : "left",
         }}
       >
         <div
           style={{
             ...title,
             fontFamily: serif,
-            fontSize: compact ? 92 : 118,
+            fontSize: compact ? 92 : 112,
             lineHeight: 0.96,
             color: C.ink,
           }}
         >
-          someone still owes you from that trip?
+          the real trip villain:
+          <br />
+          the unpaid $47
         </div>
         <div
           style={{
             ...sub,
             color: C.muted,
-            fontSize: compact ? 34 : 40,
+            fontSize: compact ? 34 : 38,
             lineHeight: 1.35,
             marginTop: 34,
           }}
         >
-          FundWise turns friend-group IOUs into clean Settlements.
+          Not the airport delay. Not the Airbnb sofa bed. This.
         </div>
       </div>
-      <Pill delay={40} x={compact ? 94 : 210} y={compact ? 720 : 780} rotate={-4}>
+      <div
+        style={{
+          ...entrance(localFrame, 28, 42),
+          position: "absolute",
+          right: compact ? 160 : 160,
+          top: compact ? 640 : 230,
+          width: compact ? 760 : 610,
+          borderRadius: 34,
+          background: C.white,
+          border: `1px solid ${C.line}`,
+          padding: compact ? 34 : 40,
+          boxShadow: "0 34px 110px rgba(6, 21, 12, 0.18)",
+        }}
+      >
+        <div style={{ color: C.muted, fontSize: compact ? 28 : 26, fontWeight: 850 }}>
+          Lisbon Trip
+        </div>
+        <div style={{ color: C.red, fontSize: compact ? 120 : 124, fontWeight: 950 }}>
+          $47
+        </div>
+        <div style={{ color: C.ink, fontSize: compact ? 30 : 30, fontWeight: 900 }}>
+          still hanging around
+        </div>
+      </div>
+      <Stamp delay={48} x={compact ? 180 : 1180} y={compact ? 870 : 610}>
+        3 months later
+      </Stamp>
+      {!compact && <Stamp delay={62} x={1120} y={755} rotate={6} color={C.blue}>not a vibe</Stamp>}
+      <Pill delay={42} x={compact ? 86 : 170} y={compact ? 900 : 820} rotate={-4}>
         Lisbon Trip
       </Pill>
       <Pill
         delay={48}
-        x={compact ? 390 : 620}
-        y={compact ? 770 : 820}
+        x={compact ? 380 : 560}
+        y={compact ? 935 : 865}
         tone="warm"
         rotate={3}
       >
@@ -302,8 +511,8 @@ function HookScene({ format }: { format: Format }) {
       </Pill>
       <Pill
         delay={56}
-        x={compact ? 710 : 1030}
-        y={compact ? 720 : 780}
+        x={compact ? 665 : 960}
+        y={compact ? 900 : 820}
         tone="white"
         rotate={-2}
       >
@@ -322,11 +531,6 @@ function MessyScene({ format }: { format: Format }) {
   const localFrame = useSceneFrame()
   const compact = format === "square"
   const headline = entrance(localFrame, 0, 34)
-  const cards = [
-    { text: "“who paid for dinner?”", x: compact ? 110 : 260, y: compact ? 440 : 450, r: -4 },
-    { text: "“wait, I sent my share”", x: compact ? 340 : 710, y: compact ? 540 : 560, r: 3 },
-    { text: "“can someone check the sheet?”", x: compact ? 185 : 1080, y: compact ? 655 : 440, r: -2 },
-  ]
 
   return (
     <Shell localFrame={localFrame} duration={scenes.messy.duration} format={format}>
@@ -334,8 +538,8 @@ function MessyScene({ format }: { format: Format }) {
         style={{
           position: "absolute",
           left: compact ? 80 : 140,
-          top: compact ? 220 : 220,
-          width: compact ? 920 : 760,
+          top: compact ? 165 : 185,
+          width: compact ? 920 : 690,
         }}
       >
         <div
@@ -343,68 +547,61 @@ function MessyScene({ format }: { format: Format }) {
             ...headline,
             fontFamily: serif,
             color: C.ink,
-            fontSize: compact ? 72 : 88,
+            fontSize: compact ? 76 : 92,
             lineHeight: 0.98,
           }}
         >
-          the spreadsheet knows.
+          the group chat
           <br />
-          the group chat knows.
+          becomes accounting.
         </div>
         <div
           style={{
             ...entrance(localFrame, 20, 26),
-            fontSize: compact ? 34 : 38,
+            fontSize: compact ? 33 : 37,
             lineHeight: 1.3,
             color: C.muted,
             marginTop: 26,
           }}
         >
-          nobody wants the awkward follow-up.
+          Friendly reminder: nobody joined the trip to audit tapas.
         </div>
       </div>
 
-      {cards.map((card, index) => {
-        const progress = spring({
-          frame: localFrame - 34 - index * 10,
-          fps: 30,
-          config: SPRING.playful,
-        })
-        const settle = spring({
-          frame: localFrame - 104,
-          fps: 30,
-          config: SPRING.smooth,
-        })
-        return (
-          <div
-            key={card.text}
-            style={{
-              position: "absolute",
-              left: card.x,
-              top: card.y,
-              width: compact ? 560 : 520,
-              padding: "26px 30px",
-              borderRadius: 24,
-              background: C.white,
-              border: `1px solid ${C.softLine}`,
-              color: C.ink,
-              fontSize: compact ? 30 : 32,
-              fontWeight: 800,
-              boxShadow: "0 22px 70px rgba(6, 21, 12, 0.12)",
-              transform: `rotate(${interpolate(
-                settle,
-                [0, 1],
-                [card.r, 0],
-              )}deg) scale(${progress}) translateY(${interpolate(settle, [0, 1], [0, compact ? -28 : -22])}px)`,
-              opacity: interpolate(progress, [0, 1], [0, 1], {
-                extrapolateRight: "clamp",
-              }),
-            }}
-          >
-            {card.text}
-          </div>
-        )
-      })}
+      <ChatBubble
+        text="who still owes for the Airbnb?"
+        delay={28}
+        x={compact ? 120 : 930}
+        y={compact ? 395 : 205}
+        rotate={-2}
+        compact={compact}
+      />
+      <ChatBubble
+        text="i think dinner was in the sheet?"
+        delay={40}
+        x={compact ? 300 : 1095}
+        y={compact ? 510 : 340}
+        rotate={3}
+        mine
+        compact={compact}
+      />
+      <ChatBubble
+        text="can we not do math in here"
+        delay={52}
+        x={compact ? 145 : 880}
+        y={compact ? 635 : 485}
+        rotate={-3}
+        compact={compact}
+      />
+      <ChatBubble
+        text="just send the FundWise link"
+        delay={76}
+        x={compact ? 330 : 1110}
+        y={compact ? 760 : 650}
+        rotate={2}
+        mine
+        compact={compact}
+      />
 
       <CleanLedger localFrame={localFrame} compact={compact} />
     </Shell>
@@ -418,7 +615,7 @@ function CleanLedger({ localFrame, compact }: { localFrame: number; compact: boo
       style={{
         position: "absolute",
         right: compact ? 95 : 170,
-        bottom: compact ? 90 : 120,
+        bottom: compact ? 70 : 92,
         width: compact ? 820 : 580,
         borderRadius: 28,
         background: C.surface,
@@ -432,7 +629,7 @@ function CleanLedger({ localFrame, compact }: { localFrame: number; compact: boo
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <Split color={C.green} size={compact ? 34 : 30} />
         <div style={{ color: C.ink, fontWeight: 900, fontSize: compact ? 34 : 30 }}>
-          clean Group ledger
+          FundWise cleans it up
         </div>
       </div>
       <div style={{ marginTop: 22, display: "grid", gap: 14 }}>
@@ -465,9 +662,9 @@ function DemoScene({ format }: { format: Format }) {
   const localFrame = useSceneFrame()
   const compact = format === "square"
   const items = [
-    { icon: Link, title: "Private Groups", text: "Trips, dinners, gifts, flatmates." },
-    { icon: Split, title: "Shared Expenses", text: "Log what happened, not a novel." },
-    { icon: ArrowRight, title: "Exact Settlements", text: "The app shows the next clean move." },
+    { icon: Link, title: "Group", text: "Lisbon Trip" },
+    { icon: Split, title: "Expenses", text: "Airbnb, dinner, taxis" },
+    { icon: ArrowRight, title: "Next move", text: "Settle Maya $40" },
   ]
 
   return (
@@ -476,7 +673,7 @@ function DemoScene({ format }: { format: Format }) {
         style={{
           position: "absolute",
           left: compact ? 78 : 130,
-          top: compact ? 190 : 190,
+          top: compact ? 150 : 170,
           right: compact ? 78 : 130,
         }}
       >
@@ -484,24 +681,60 @@ function DemoScene({ format }: { format: Format }) {
           style={{
             ...entrance(localFrame, 0),
             fontFamily: serif,
-            fontSize: compact ? 78 : 98,
+            fontSize: compact ? 80 : 96,
             lineHeight: 0.98,
             color: C.ink,
           }}
         >
-          make a Group.
+          throw expenses in.
           <br />
-          log the Expense.
+          FundWise finds
           <br />
-          see who owes what.
+          the clean way out.
         </div>
       </div>
+      <ExpenseChip
+        label="Airbnb"
+        amount="$184"
+        delay={26}
+        x={compact ? 130 : 210}
+        y={compact ? 500 : 620}
+        color={C.green}
+        compact={compact}
+      />
+      <ExpenseChip
+        label="Dinner"
+        amount="$96"
+        delay={38}
+        x={compact ? 500 : 460}
+        y={compact ? 585 : 745}
+        color={C.amber}
+        compact={compact}
+      />
+      <ExpenseChip
+        label="Taxi"
+        amount="$38"
+        delay={50}
+        x={compact ? 320 : 740}
+        y={compact ? 715 : 590}
+        color={C.blue}
+        compact={compact}
+      />
+      <Stamp
+        delay={104}
+        x={compact ? 600 : 1260}
+        y={compact ? 565 : 260}
+        rotate={5}
+        color={C.green}
+      >
+        netted
+      </Stamp>
       <div
         style={{
           position: "absolute",
           left: compact ? 78 : 130,
           right: compact ? 78 : 130,
-          bottom: compact ? 88 : 125,
+          bottom: compact ? 66 : 90,
           display: "grid",
           gridTemplateColumns: compact ? "1fr" : "repeat(3, 1fr)",
           gap: compact ? 18 : 28,
@@ -514,7 +747,7 @@ function DemoScene({ format }: { format: Format }) {
               key={item.title}
               style={{
                 ...entrance(localFrame, 30 + index * 12, 28),
-                minHeight: compact ? 146 : 250,
+                minHeight: compact ? 138 : 218,
                 borderRadius: 26,
                 padding: compact ? 26 : 32,
                 border: `1px solid ${C.line}`,
@@ -538,7 +771,7 @@ function DemoScene({ format }: { format: Format }) {
               </div>
               <div
                 style={{
-                  marginTop: compact ? 16 : 28,
+                  marginTop: compact ? 14 : 20,
                   fontSize: compact ? 31 : 34,
                   fontWeight: 900,
                   color: C.ink,
@@ -572,6 +805,11 @@ function SettleScene({ format }: { format: Format }) {
     fps: 30,
     config: SPRING.snappy,
   })
+  const ring = interpolate(localFrame, [64, 112], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  })
 
   return (
     <Shell localFrame={localFrame} duration={scenes.settle.duration} format={format}>
@@ -579,7 +817,7 @@ function SettleScene({ format }: { format: Format }) {
         style={{
           position: "absolute",
           left: compact ? 80 : 150,
-          top: compact ? 190 : 230,
+          top: compact ? 160 : 190,
           width: compact ? 900 : 720,
         }}
       >
@@ -588,11 +826,13 @@ function SettleScene({ format }: { format: Format }) {
             ...entrance(localFrame, 0),
             fontFamily: serif,
             color: C.ink,
-            fontSize: compact ? 84 : 104,
+            fontSize: compact ? 86 : 106,
             lineHeight: 0.96,
           }}
         >
-          then settle the exact amount.
+          tap the green button.
+          <br />
+          be done.
         </div>
         <div
           style={{
@@ -603,7 +843,7 @@ function SettleScene({ format }: { format: Format }) {
             marginTop: 28,
           }}
         >
-          USDC Settlement. Wallet confirmed. SOL only for gas.
+          No custom math. No "I'll send it later."
         </div>
       </div>
       <div
@@ -620,6 +860,18 @@ function SettleScene({ format }: { format: Format }) {
           ...entrance(localFrame, 28),
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: compact ? 40 : 44,
+            width: interpolate(ring, [0, 1], [280, compact ? 720 : 510]),
+            height: interpolate(ring, [0, 1], [88, compact ? 132 : 118]),
+            borderRadius: 999,
+            border: `4px solid rgba(45, 184, 112, ${interpolate(ring, [0, 1], [0, 0.34])})`,
+            transform: "translateX(-50%)",
+          }}
+        />
         <div
           style={{
             display: "flex",
@@ -652,7 +904,7 @@ function SettleScene({ format }: { format: Format }) {
             marginTop: 28,
             height: compact ? 92 : 82,
             borderRadius: 22,
-            background: C.green,
+            background: `linear-gradient(135deg, ${C.green}, ${C.fresh})`,
             color: C.white,
             display: "flex",
             alignItems: "center",
@@ -664,6 +916,8 @@ function SettleScene({ format }: { format: Format }) {
               extrapolateRight: "clamp",
             })})`,
             boxShadow: "0 22px 54px rgba(13, 107, 58, 0.22)",
+            position: "relative",
+            zIndex: 2,
           }}
         >
           <WalletCards size={compact ? 34 : 30} />
@@ -710,6 +964,7 @@ function ReceiptScene({ format }: { format: Format }) {
 
   return (
     <Shell localFrame={localFrame} duration={scenes.receipt.duration} format={format}>
+      <Confetti compact={compact} />
       <div
         style={{
           position: "absolute",
@@ -728,7 +983,11 @@ function ReceiptScene({ format }: { format: Format }) {
             lineHeight: 0.98,
           }}
         >
-          everyone gets a Receipt.
+          paid.
+          <br />
+          proven.
+          <br />
+          done.
         </div>
         <div
           style={{
@@ -738,7 +997,7 @@ function ReceiptScene({ format }: { format: Format }) {
             fontSize: compact ? 32 : 38,
           }}
         >
-          awkward follow-up: gone.
+          A Receipt your whole Group can trust.
         </div>
       </div>
       <div
@@ -773,7 +1032,7 @@ function ReceiptScene({ format }: { format: Format }) {
           </div>
           <div>
             <div style={{ color: C.ink, fontWeight: 950, fontSize: compact ? 34 : 32 }}>
-              Settlement Receipt
+              Receipt unlocked
             </div>
             <div style={{ color: C.muted, fontSize: compact ? 24 : 22, marginTop: 3 }}>
               USDC transfer confirmed
@@ -781,7 +1040,7 @@ function ReceiptScene({ format }: { format: Format }) {
           </div>
         </div>
         <div style={{ marginTop: 32, display: "grid", gap: 14 }}>
-          <ReceiptLine label="Amount" value="$40.00 USDC" compact={compact} />
+          <ReceiptLine label="Settled" value="$40.00 USDC" compact={compact} />
           <ReceiptLine label="From" value="You" compact={compact} />
           <ReceiptLine label="To" value="Maya" compact={compact} />
           <ReceiptLine label="Signature" value="8n3...Qp9" mono compact={compact} />
@@ -863,13 +1122,13 @@ function CtaScene({ format }: { format: Format }) {
             marginTop: 38,
             fontFamily: serif,
             color: C.ink,
-            fontSize: compact ? 84 : 110,
+            fontSize: compact ? 82 : 104,
             lineHeight: 0.95,
           }}
         >
-          Group money,
+          Send this to
           <br />
-          done right.
+          the group chat.
         </div>
         <div
           style={{
@@ -881,6 +1140,17 @@ function CtaScene({ format }: { format: Format }) {
           }}
         >
           fundwise.fun
+        </div>
+        <div
+          style={{
+            ...entrance(localFrame, 54),
+            marginTop: 18,
+            color: C.muted,
+            fontSize: compact ? 28 : 32,
+            fontWeight: 800,
+          }}
+        >
+          Group money, done right.
         </div>
       </div>
     </Shell>

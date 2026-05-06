@@ -1,23 +1,23 @@
 1
 00:00:00,000 --> 00:00:04,000
-someone still owes you from that trip?
+the real trip villain: the unpaid $47
 
 2
 00:00:04,000 --> 00:00:09,000
-the spreadsheet knows. the group chat knows. nobody wants the awkward follow-up.
+the group chat becomes accounting
 
 3
 00:00:09,000 --> 00:00:15,000
-make a Group. log the Expense. see who owes what.
+throw expenses in. FundWise finds the clean way out.
 
 4
 00:00:15,000 --> 00:00:22,000
-then settle the exact amount in USDC.
+tap the green button. be done.
 
 5
 00:00:22,000 --> 00:00:27,000
-everyone gets a Receipt. awkward follow-up: gone.
+paid. proven. done.
 
 6
 00:00:27,000 --> 00:00:30,000
-FundWise. Group money, done right. fundwise.fun
+Send this to the group chat. fundwise.fun

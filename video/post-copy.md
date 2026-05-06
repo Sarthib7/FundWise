@@ -1,19 +1,17 @@
 # FundWise X Post Copy
 
-Trips, dinners, gifts, flatmates.
+The real trip villain is the unpaid $47.
 
-Tracking who owes what is easy. Getting paid back is the broken part.
-
-FundWise turns Group IOUs into exact USDC Settlements with a clear Receipt.
+FundWise turns Group IOUs into clean USDC Settlements with a Receipt everyone can trust.
 
 fundwise.fun
 
 ---
 
-Someone still owes you from that trip.
+Send this to the friend who still owes from the trip.
 
-FundWise helps your Group log Expenses, see live Balances, and settle cleanly in USDC.
+Make a Group. Log the Expense. Settle the exact amount in USDC.
 
-No spreadsheet ceremony. No awkward follow-up.
+No spreadsheet ceremony. No awkward follow-up. Receipt included.
 
 fundwise.fun
