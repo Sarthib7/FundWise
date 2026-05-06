@@ -1,5 +1,10 @@
 import type { Database, Json } from "@/lib/database.types"
+import {
+  computeBalancesFromActivity,
+  simplifySettlements,
+} from "@/lib/expense-engine"
 import { FundWiseError } from "@/lib/server/fundwise-error"
+import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
   verifyContributionTransfer,
   verifySettlementTransfer,
@@ -10,6 +15,7 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
+type SettlementGraphActivity = Parameters<typeof computeBalancesFromActivity>[1]
 
 type SupabaseMutationError = {
   code?: string
@@ -68,6 +74,26 @@ export function validateExpenseLedgerInput(data: {
 
   if (splitTotal !== data.amount) {
     throw new FundWiseError("Expense split shares must add up to the full Expense amount.")
+  }
+}
+
+export function assertSettlementMatchesCurrentGraph(data: {
+  members: Database["public"]["Tables"]["members"]["Row"][]
+  activity: SettlementGraphActivity
+  fromWallet: string
+  toWallet: string
+  amount: number
+}) {
+  const balances = computeBalancesFromActivity(data.members, data.activity)
+  const matchingTransfer = simplifySettlements(balances).find(
+    (transfer) =>
+      transfer.from === data.fromWallet &&
+      transfer.to === data.toWallet &&
+      transfer.amount === data.amount
+  )
+
+  if (!matchingTransfer) {
+    throw new FundWiseError("Settlement does not match the current live Group Balance.", 409)
   }
 }
 
@@ -549,9 +575,27 @@ export async function addSettlementMutation(data: {
     throw new FundWiseError("This Settlement transaction has already been recorded.")
   }
 
+  const settlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
+  assertSettlementMatchesCurrentGraph({
+    members: settlementSnapshot.members,
+    activity: settlementSnapshot.activity,
+    fromWallet: data.fromWallet,
+    toWallet: data.toWallet,
+    amount: data.amount,
+  })
+
   await verifySettlementTransfer({
     txSig: data.txSig,
     mint: data.mint,
+    fromWallet: data.fromWallet,
+    toWallet: data.toWallet,
+    amount: data.amount,
+  })
+
+  const latestSettlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
+  assertSettlementMatchesCurrentGraph({
+    members: latestSettlementSnapshot.members,
+    activity: latestSettlementSnapshot.activity,
     fromWallet: data.fromWallet,
     toWallet: data.toWallet,
     amount: data.amount,
