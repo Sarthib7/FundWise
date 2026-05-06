@@ -47,6 +47,10 @@ Avoid: Invoice, static payment link
 A planned agent-readable extension of a Settlement Request Link. It represents one exact, live debtor-to-creditor settlement intent and may expose an x402 / MPP-style payment challenge for an approved agent. It is not a confirmed Settlement and does not create a Receipt until FundWise verifies the payment proof or on-chain transfer.
 Avoid: Auto-settle endpoint, generic payment endpoint
 
+**Invoice**:
+An unpaid, machine-readable request generated for a Payable Settlement Request. It may include the live amount, expiry, debtor, creditor, accepted rail, and x402 / MPP payment challenge data. It is not a Receipt.
+Avoid: Receipt, confirmed settlement
+
 **Spending Policy**:
 A Member-granted policy that defines how much payment capacity an agent has. It scopes agent payment authority by Member wallet, agent identity, Group, action, asset, counterparty, per-Settlement cap, daily or weekly cap, expiry, and revocation. Anything outside the policy must fall back to a Settlement Request Link for human wallet confirmation.
 Avoid: Unlimited approval, broad API key
@@ -76,7 +80,7 @@ The umbrella name for later assistant surfaces that help Members read Group stat
 Avoid: Telegram agent, generic AI agent
 
 **Fundy**:
-The hosted Telegram bot that runs the FundWise Agent. It is command-first in v1 (fixed commands, no natural-language parsing); the end goal is an LLM-backed agent (e.g. OpenRouter) on top of the same tools. Fundy runs as a **separate Node service on Railway** (library: `grammy`), lives in **`services/fundy/`** in the monorepo, and calls the **same FundWise HTTP API** as the web app using service-to-service auth (`FUNDWISE_SERVICE_API_KEY` + `X-Fundy-Wallet`), not direct Supabase writes from the bot process. Users link Telegram to wallet via **short-lived codes** generated in the authenticated web app (`/link FW-…` in DM). Users authenticate by linking their Telegram account to their FundWise wallet address, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe actions run in Telegram; **database-only** Proposal approve/reject may run in Telegram; **on-chain** Settlement, Contribution, and Proposal execution deep-link back to the web app (reuse **Settlement Request Links** for settle flows).
+The hosted Telegram bot that runs the FundWise Agent. It is command-first in v1 (fixed commands, no natural-language parsing); the end goal is an LLM-backed agent (e.g. OpenRouter) on top of the same tools. Fundy runs as a **separate Node service on Railway** (library: `grammy`) in a **separate repository** per ADR-0022, and calls the **same FundWise HTTP API** as the web app using service-to-service auth and later Scoped Agent Access, not direct Supabase writes from the bot process. Users link Telegram to wallet via **short-lived codes** generated in the authenticated web app (`/link FW-…` in DM). Users authenticate by linking their Telegram account to their FundWise wallet address, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe actions run in Telegram; **database-only** Proposal approve/reject may run in Telegram; **on-chain** Settlement, Contribution, and Proposal execution deep-link back to the web app (reuse **Settlement Request Links** for settle flows). Fundy later owns personal finance, tax guidance, and any Telegram-native companion workflows.
 Avoid: FundWise Telegram, the bot
 
 **Agent Skill Endpoint** (`/skill.md`):
@@ -170,9 +174,9 @@ Avoid: Optimized debts, minimum transfers
 - The later Telegram bot and Telegram mini app should be framed as FundWise Agent surfaces, not as a separate "Telegram agent" product.
 - Fundy is the hosted Telegram bot that runs the FundWise Agent. It is not a separate product; it is a distribution surface.
 - Fundy starts as a **command-based bot** (fixed commands like `/balance`, `/owe`, `/draft`). The end goal is an AI agent with an LLM brain (OpenRouter), but the first version uses commands only.
-- Fundy runs as a **separate service on Railway**, not inside the Next.js Cloudflare Workers deployment. It uses `grammy` as the Telegram bot library. Code lives in `services/fundy/` in the monorepo.
-- Fundy authenticates against the FundWise API using service-to-service auth (`FUNDWISE_SERVICE_API_KEY` + `X-Fundy-Wallet` header), not direct Supabase access. This keeps one consistent API surface for Fundy, external agents, and the web app.
-- The Agent Skill Endpoint (`/skill.md`) is a public machine-readable discovery document at `https://fundwise.kairen.xyz/skill.md`. It does not require authentication and does not expose private Member data.
+- Fundy runs as a **separate service on Railway**, not inside the Next.js Cloudflare Workers deployment. It uses `grammy` as the Telegram bot library and lives in a separate repository per ADR-0022.
+- Fundy authenticates against the FundWise API using service-to-service auth and later Scoped Agent Access, not direct Supabase access. This keeps one consistent API surface for Fundy, external agents, and the web app.
+- The Agent Skill Endpoint (`/skill.md`) is a shipped public machine-readable discovery document at `https://fundwise.kairen.xyz/skill.md`. It does not require authentication and does not expose private Member data.
 - Autonomous agents interact with FundWise through Scoped Agent Access, not broad API keys. Capabilities are tied to Member wallet, Group, and action type.
 - Scoped Agent Access supports two auth paths: (1) user-generated agent tokens from the web app profile page (`/profile/agents`) with rotate/delete/renew/scope management, and (2) wallet-signed challenge-response for agents that can sign Solana messages.
 - Money-moving actions (Settlement execution, Contribution execution, Proposal execution) remain wallet-confirmed even when initiated through Fundy or an autonomous agent. Fundy deep-links back to the web app using existing Settlement Request Links and action parameters. A later Payable Settlement Request flow may allow agent-paid Settlement only through explicit `settlement:pay` authority, exact USDC amounts, short expiry, idempotency, and verified payment proof before Receipt creation.
@@ -182,6 +186,7 @@ Avoid: Optimized debts, minimum transfers
 - One Telegram account maps to one active wallet at a time. Re-linking soft-deletes the old link and creates a new one.
 - One Telegram chat maps to one FundWise Group at a time. Any Member may `/connect` a chat to a Group, but every participant must authenticate in a private DM before Fundy acts for them in the group.
 - Fundy uses Zerion CLI for wallet analysis via `/analyze` (portfolio overview), `/readiness` (FundWise balances + Zerion readiness), and `/verify` (on-chain history to confirm a Settlement or counterparty payment). Zerion CLI auth starts with a free **`ZERION_API_KEY`** (dev tier); optional **x402** pay-per-call on Solana later for demos (`SOLANA_PRIVATE_KEY` + `ZERION_X402`).
+- Fundy may later support private Fund Mode Group activities or mini-games, but only after Proposal safety, spending limits, and the prediction-market/gaming boundary are explicitly resolved. Mini-games are not Split Mode scope.
 - Plain `/groups` with no existing Groups should open Group creation immediately after connect.
 - Plain `/groups` with existing Groups should remain a Group list after connect.
 - Group creation defaults to Split Mode, while the public create flow keeps Fund Mode visible as an invite-only beta until the Proposal lifecycle is ready.
@@ -192,6 +197,7 @@ Avoid: Optimized debts, minimum transfers
 - Split Mode is the primary product path for the hackathon MVP.
 - Fund Mode remains separate from Split Mode and uses Treasury plus Proposal concepts, not direct Settlements.
 - LI.FI is the primary sponsor support path when a Member's USDC is on another supported network. It belongs inside the Settlement path as `Route funds for Settlement`; the dashboard should not present a separate top-up task before the Member presses Settle.
+- The audience rollout is crypto-native Groups first, then agents, then non-crypto users through Visa/card, IBAN, and Altitude-style Solana banking rails once the core product is reliable.
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - FundWise Agent, Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 
