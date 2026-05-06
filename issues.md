@@ -2,7 +2,7 @@
 
 **Last indexed:** 2026-05-06
 **Deadline:** 2026-05-11 Colosseum Frontier submission
-**Current focus:** Resolve FW-007 Source Currency / Expense Proof demo scope, then clean the shipped-vs-planned product story and define a monetization model before the next public submission pass.
+**Current focus:** Keep the public product story centered on free Split Mode, then finish the next submission pass with Source Currency, Expense Proof, Fund Mode, Fundy, agent payments, rails, mini-games, and tax clearly separated from shipped behavior.
 
 This file is the local issue index for hackathon execution. Keep each issue as a vertical slice: a completed issue should be independently demoable, testable, or useful for submission.
 
@@ -16,21 +16,27 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-004 | Done | P1 | AFK | Polish LI.FI Top up to settle handoff | FW-002 |
 | FW-005 | Done | P1 | AFK | Add Zerion CLI wallet-readiness support demo | FW-002 |
 | FW-006 | Done | P0 | HITL | Prepare judge-facing demo script and submission assets | FW-001, FW-003 |
-| FW-007 | Ready | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
+| FW-007 | Done | P2 | HITL | Decide whether Source Currency and Expense Proof ship in the demo | FW-006 |
 | FW-008 | Deferred | P2 | HITL | Fund Mode Proposal lifecycle | Split Mode mainnet stability |
 | FW-009 | Deferred | P2 | HITL | Fundy, FundWise Agent, and Scoped Agent Access | Split Mode + API contract stability |
 | FW-010 | Deferred | P2 | HITL | Payable Settlement Requests, invoice/Receipt endpoint, and Agent Spending Policies | Scoped Agent Access |
-| FW-011 | Ready | P1 | HITL | Define monetization model and finance analysis | Owner decision |
-| FW-012 | Ready | P1 | AFK | Clean shipped-vs-planned docs and messaging drift | FW-007, FW-011 |
-| FW-013 | Ready | P2 | HITL | Decide Fund Mode mini-games scope and prediction-market boundary | FW-008 |
+| FW-011 | Done | P1 | HITL | Define monetization model and finance analysis | Owner decision |
+| FW-012 | Done | P1 | AFK | Clean shipped-vs-planned docs and messaging drift | FW-007, FW-011 |
+| FW-013 | Done | P2 | HITL | Decide Fund Mode mini-games scope and prediction-market boundary | FW-008 |
+| FW-014 | Ready | P0 | AFK | Lock down anonymous Supabase ledger access | None |
+| FW-015 | Ready | P0 | AFK | Validate Expense ledger amounts and split shares server-side | FW-014 |
+| FW-016 | Ready | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
+| FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
+| FW-018 | Ready | P3 | AFK | Add production browser security headers | FW-014 |
 
 ## Handoff Queue For Claude / Lot
 
-1. **Resolve FW-007 with the owner.** Do not partially ship Source Currency or Expense Proof unless the ledger/storage implications are handled end-to-end. The likely hackathon-safe answer is to keep both as future or explicitly mocked in submission copy.
-2. **Run FW-011 monetization planning.** Keep Split Mode free if that is the acquisition strategy, but model Settlement fees, Fund Mode fees, Fundy wallet top-up commissions, and partner/card revenue explicitly before claiming a business model.
-3. **Run FW-012 docs cleanup after FW-007/FW-011.** The current story needs a shipped/planned matrix and terminology cleanup: `Top up to settle` vs `Route funds for Settlement`, Fundy monorepo vs separate repo, Agent Skill baseline shipped vs Scoped Agent Access planned, and Altitude/Visa/IBAN roadmap positioning.
-4. **Keep commits sequential.** Commit feature/code first, then docs/status updates. Do not add co-author trailers.
-5. **Quality gate after code changes:** run `pnpm build`. Known warnings from previous runs: workspace-root inference from another lockfile, two unused eslint-disable directives, and `bigint` pure-JS fallback.
+1. **Keep FW-007 closed unless scope changes.** Source Currency and Expense Proof are future-only for the current public demo. Do not partially ship either without the full ledger/storage path.
+2. **Keep FW-011 closed unless pricing changes.** Split Mode stays free for launch; Fund Mode, Fundy premium, and partner rails are the plausible paid surfaces. See `docs/monetization.md`.
+3. **Use the shipped/planned matrix during submission edits.** See `docs/shipped-vs-planned.md`; canonical LI.FI language is `Route funds for Settlement`.
+4. **Keep Fund Mode mini-games out of FundWise.** FW-013 decided they are out of scope for this product unless separately justified later outside prediction-market-like mechanics.
+5. **Keep commits sequential.** Commit feature/code first, then docs/status updates. Do not add co-author trailers.
+6. **Quality gate after code changes:** run `pnpm build`. Known warnings from previous runs: workspace-root inference from another lockfile, two unused eslint-disable directives, and `bigint` pure-JS fallback.
 
 ### FW-010 Planning Notes (deferred)
 
@@ -234,7 +240,7 @@ Completed on 2026-05-04. See [SUBMISSION.md](./SUBMISSION.md) for the demo scrip
 
 ## FW-007 - Decide Whether Source Currency And Expense Proof Ship In The Demo
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P2  
 **Type:** HITL  
 **Blocked by:** FW-006
@@ -245,15 +251,15 @@ Decide whether Source Currency entry and Expense Proof upload are actual demo fe
 
 ### Acceptance Criteria
 
-- [ ] Source Currency scope is explicitly marked as shipped, mocked, or future.
-- [ ] Expense Proof scope is explicitly marked as shipped, mocked, or future.
-- [ ] If Source Currency ships, every Expense stores converted USD/USDC ledger value plus Exchange Rate Snapshot.
-- [ ] If Expense Proof ships, file/link storage, preview, and access rules are documented.
-- [ ] Submission copy matches the actual shipped state.
+- [x] Source Currency scope is explicitly marked as future.
+- [x] Expense Proof scope is explicitly marked as future.
+- [x] If Source Currency ships, every Expense stores converted USD/USDC ledger value plus Exchange Rate Snapshot.
+- [x] If Expense Proof ships, file/link storage, preview, and access rules are documented.
+- [x] Submission copy matches the actual shipped state.
 
 ### Notes
 
-Ready for owner / agent decision. Hackathon-safe default: do not ship either as real product behavior unless the next agent can complete the end-to-end ledger and storage path without risking Balance or Settlement correctness.
+Decision on 2026-05-06: keep both Source Currency and Expense Proof out of the current public demo as real product behavior. They stay future-only until Source Currency has end-to-end Exchange Rate Snapshot persistence and Expense Proof has storage, preview, limits, and access rules. The submission story should not imply either is shipped or clickable unless it is explicitly labeled as future direction.
 
 ### User Stories Covered
 
@@ -297,7 +303,7 @@ Build Fundy and agent surfaces only after the shared web app and wallet-bound ba
 
 ### Acceptance Criteria
 
-- [x] Baseline public `https://fundwise.kairen.xyz/skill.md` endpoint exists and returns machine-readable markdown.
+- [x] Baseline public `https://fundwise.fun/skill.md` endpoint exists and returns machine-readable markdown.
 - [ ] Docs distinguish the shipped Agent Skill Endpoint from planned Scoped Agent Access and planned payment authority.
 - [ ] Scoped Agent Access supports expiring, revocable capabilities tied to Member wallet, Group, and action type.
 - [ ] Fundy repo/runtime decision is consistent across docs: separate repo vs monorepo path must not conflict.
@@ -335,7 +341,7 @@ Design and implement the agent-payable endpoint surface for x402 / MPP-style Set
 
 ## FW-011 - Define Monetization Model And Finance Analysis
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P1  
 **Type:** HITL  
 **Blocked by:** Owner decision
@@ -346,17 +352,17 @@ Create a concrete monetization model that keeps Split Mode attractive as a free 
 
 ### Acceptance Criteria
 
-- [ ] Decide whether Split Mode Settlements stay free or include a tiny fee.
-- [ ] Model Fund Mode monetization: flat subscription, Treasury percentage, per-Proposal fee, or hybrid.
-- [ ] Model Fundy monetization: wallet top-up commission, agent wallet balance, premium personal-finance features, and tax-advisory upsell.
-- [ ] Estimate user tolerance for each fee type and identify which fees would hurt growth.
-- [ ] Define a “free forever” surface that can acquire early crypto-native users.
-- [ ] Add a simple first-year revenue scenario with conservative assumptions.
-- [ ] Update public docs/submission only after the model is chosen.
+- [x] Decide whether Split Mode Settlements stay free or include a tiny fee.
+- [x] Model Fund Mode monetization: flat subscription, Treasury percentage, per-Proposal fee, or hybrid.
+- [x] Model Fundy monetization: wallet top-up commission, agent wallet balance, premium personal-finance features, and tax-advisory upsell.
+- [x] Estimate user tolerance for each fee type and identify which fees would hurt growth.
+- [x] Define a “free forever” surface that can acquire early crypto-native users.
+- [x] Add a simple first-year revenue scenario with conservative assumptions.
+- [x] Update public docs/submission only after the model is chosen.
 
 ### Notes
 
-Owner preference as of 2026-05-06: keep Split Mode free for initial users if possible; explore Settlement fee only carefully. Fund Mode and Fundy are more plausible paid surfaces.
+Decision on 2026-05-06: Split Mode stays free for launch, including normal USDC Settlements. Do not ship a FundWise Settlement fee in the hackathon demo or first mainnet Split Mode launch. Fund Mode subscriptions, Fundy premium, and partner/top-up/card rails are the monetization surfaces to explore. See `docs/monetization.md`.
 
 ### User Stories Covered
 
@@ -364,7 +370,7 @@ Owner preference as of 2026-05-06: keep Split Mode free for initial users if pos
 
 ## FW-012 - Clean Shipped-vs-Planned Docs And Messaging Drift
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P1  
 **Type:** AFK  
 **Blocked by:** FW-007, FW-011
@@ -375,17 +381,17 @@ Create a docs cleanup pass that does not add new product scope. The goal is to m
 
 ### Acceptance Criteria
 
-- [ ] Add or update a shipped/planned matrix: Split Mode, Fund Mode, LI.FI, Zerion, Agent Skill Endpoint, Scoped Agent Access, Payable Settlement Requests, Fundy, Visa / IBAN / Altitude top-ups, mini-games, and tax.
-- [ ] Pick one canonical LI.FI phrase: `Top up to settle` or `Route funds for Settlement`, then make docs and UI copy consistent.
-- [ ] Resolve Fundy runtime/repo inconsistency: older docs mention `services/fundy/` monorepo; newer roadmap says separate repo.
-- [ ] Clarify that `/skill.md` baseline exists, while Scoped Agent Access and agent-paid Settlements remain planned unless implemented.
-- [ ] Clarify that Visa / IBAN / Altitude-style top-up is a future onboarding path for non-crypto users, not current MVP functionality.
-- [ ] Remove or archive stale claims that imply Fund Mode Proposals, Fundy, autonomous agent payments, or card/IBAN top-ups are shipped.
-- [ ] Keep the primary public story focused on Split Mode until mainnet launch.
+- [x] Add or update a shipped/planned matrix: Split Mode, Fund Mode, LI.FI, Zerion, Agent Skill Endpoint, Scoped Agent Access, Payable Settlement Requests, Fundy, Visa / IBAN / Altitude top-ups, mini-games, and tax.
+- [x] Pick one canonical LI.FI phrase: `Top up to settle` or `Route funds for Settlement`, then make docs and UI copy consistent.
+- [x] Resolve Fundy runtime/repo inconsistency: older docs mention `services/fundy/` monorepo; newer roadmap says separate repo.
+- [x] Clarify that `/skill.md` baseline exists, while Scoped Agent Access and agent-paid Settlements remain planned unless implemented.
+- [x] Clarify that Visa / IBAN / Altitude-style top-up is a future onboarding path for non-crypto users, not current MVP functionality.
+- [x] Remove or archive stale claims that imply Fund Mode Proposals, Fundy, autonomous agent payments, or card/IBAN top-ups are shipped.
+- [x] Keep the primary public story focused on Split Mode until mainnet launch.
 
 ### Notes
 
-This issue was created from the 2026-05-06 product roast follow-up. Only docs should change under this issue unless a stale doc claim exposes an actual product bug.
+Completed on 2026-05-06. The canonical state now lives in `docs/shipped-vs-planned.md`; README, STATUS, ROADMAP, PRD, HACKATHON_PLAN, and SUBMISSION were tightened around free Split Mode, future Source Currency / Expense Proof, planned Fundy / Scoped Agent Access / Payable Settlement Requests, future rails, and mini-games being out of scope for FundWise.
 
 ### User Stories Covered
 
@@ -393,23 +399,166 @@ This issue was created from the 2026-05-06 product roast follow-up. Only docs sh
 
 ## FW-013 - Decide Fund Mode Mini-Games Scope And Prediction-Market Boundary
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P2  
 **Type:** HITL  
 **Blocked by:** FW-008
 
 ### What to decide
 
-The owner wants future Fund Mode Groups to support private mini-games or Group activities funded from a shared pool, possibly including prediction-market-like mechanics. This must be explicitly scoped because the repo previously pivoted away from prediction-market code and the primary payments story should not be contaminated by speculative game mechanics.
+The owner considered future Fund Mode Groups with private mini-games or Group activities funded from a shared pool, possibly including prediction-market-like mechanics. This is now explicitly excluded from FundWise scope because the repo previously pivoted away from prediction-market code and the primary payments story should not be contaminated by speculative game mechanics.
 
 ### Acceptance Criteria
 
-- [ ] Decide whether mini-games are in scope at all for FundWise or belong in a separate product/module.
-- [ ] If retained, define the first harmless mini-game shape without regulated prediction-market or gambling risk.
-- [ ] Confirm that mini-games do not ship before Fund Mode Proposal safety is complete.
-- [ ] Keep mini-games out of Split Mode and out of the hackathon submission story.
-- [ ] Add a future ADR only if the decision is hard to reverse, surprising, and a real trade-off.
+- [x] Decide whether mini-games are in scope at all for FundWise or belong in a separate product/module.
+- [x] If retained, define the first harmless mini-game shape without regulated prediction-market or gambling risk.
+- [x] Confirm that mini-games do not ship before Fund Mode Proposal safety is complete.
+- [x] Keep mini-games out of Split Mode and out of the hackathon submission story.
+- [x] Add a future ADR only if the decision is hard to reverse, surprising, and a real trade-off.
+
+### Notes
+
+Decision on 2026-05-06: mini-games and prediction-market-like mechanics are out of scope for FundWise. Do not include them in Split Mode, Fund Mode beta, the hackathon submission, or near-term docs. If the owner revisits this, treat it as a separate product/module decision after Fund Mode Proposal safety is complete.
 
 ### User Stories Covered
 
 29, 30
+
+## FW-014 - Lock Down Anonymous Supabase Ledger Access
+
+**Status:** Ready  
+**Priority:** P0  
+**Type:** AFK  
+**Blocked by:** None
+
+### What to fix
+
+The CSO audit verified that the live Supabase REST API allows anonymous reads of private Group and Expense ledger rows with the public publishable key, and anonymous insert attempts reach database constraints instead of being rejected by RLS.
+
+### Acceptance Criteria
+
+- [ ] Public anon REST can no longer read private ledger tables: `groups`, `members`, `expenses`, `expense_splits`, `settlements`, `contributions`, `proposals`, and `proposal_approvals`.
+- [ ] Public anon REST insert/update attempts are denied by RLS before reaching table constraints.
+- [ ] The app still loads Groups, ledgers, Expenses, Receipts, Settlements, and Contributions through the protected HTTP API routes.
+- [ ] Invite-code lookup still works through `/api/groups?code=...` without exposing full ledger tables directly.
+- [ ] A Supabase migration captures the policy change.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from CSO finding `FW-CSO-001` on 2026-05-06. Treat this as a mainnet blocker and fix before further demo data is entered.
+
+### User Stories Covered
+
+1, 2, 12, 13, 15, 16, 31, 32, 33
+
+## FW-015 - Validate Expense Ledger Amounts And Split Shares Server-Side
+
+**Status:** Ready  
+**Priority:** P0  
+**Type:** AFK  
+**Blocked by:** FW-014
+
+### What to fix
+
+Expense create/update routes currently trust caller-supplied numeric `amount` and `splits`. A valid Member can submit mismatched, negative, unsafe, or otherwise ledger-corrupting values outside the UI.
+
+### Acceptance Criteria
+
+- [ ] Server-side create and update reject non-integer, unsafe, zero, or negative Expense amounts.
+- [ ] Server-side create and update reject negative or unsafe split shares.
+- [ ] Server-side create and update require split shares to sum exactly to the Expense amount.
+- [ ] Server-side create and update reject duplicate split wallets.
+- [ ] Expense mint must match the Group stablecoin mint.
+- [ ] Database constraints protect new rows from invalid positive/non-negative amounts.
+- [ ] Tests cover malformed Expense amount and split cases.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from CSO finding `FW-CSO-002` on 2026-05-06.
+
+### User Stories Covered
+
+5, 6, 7, 8, 9, 10, 11, 12, 13
+
+## FW-016 - Require Settlements To Match The Live Settlement Graph
+
+**Status:** Ready  
+**Priority:** P0  
+**Type:** AFK  
+**Blocked by:** FW-015
+
+### What to fix
+
+Settlement receipt recording verifies that a real USDC transfer happened, but it does not verify that the transfer corresponds to the debtor's current live Settlement edge in the Group.
+
+### Acceptance Criteria
+
+- [ ] `POST /api/settlements` recomputes the current Group Balance and simplified Settlement graph before recording a Receipt.
+- [ ] The route rejects transfers where sender, recipient, or amount do not exactly match a current suggested Settlement edge.
+- [ ] Stale Settlement Request Links cannot record overpayments, unrelated transfers, or transfers in the wrong direction.
+- [ ] On-chain transfer verification still runs before persistence.
+- [ ] Tests cover a valid edge and at least one invalid edge.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from CSO finding `FW-CSO-003` on 2026-05-06. If partial Settlements become product scope later, this issue must be revisited with explicit cap rules.
+
+### User Stories Covered
+
+14, 15, 16, 17, 18, 33
+
+## FW-017 - Triage Dependency Audit Advisories
+
+**Status:** Ready  
+**Priority:** P2  
+**Type:** AFK  
+**Blocked by:** FW-014
+
+### What to fix
+
+`pnpm audit --audit-level moderate` reports 26 advisories, including Solana transitive `bigint-buffer`, Vercel/Cloudflare tooling `tar` and `undici`, PostCSS, AJV, esbuild, and uuid advisories.
+
+### Acceptance Criteria
+
+- [ ] Update safe direct dependencies where patched versions are available.
+- [ ] Document advisories that are transitive with no patched path yet.
+- [ ] Confirm deploy/build tooling updates do not break Cloudflare Pages output.
+- [ ] `pnpm audit --audit-level moderate` is clean or remaining advisories are explicitly accepted with rationale.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from CSO finding `FW-CSO-004` on 2026-05-06. This is important but below the immediate ledger integrity fixes.
+
+### User Stories Covered
+
+26
+
+## FW-018 - Add Production Browser Security Headers
+
+**Status:** Ready  
+**Priority:** P3  
+**Type:** AFK  
+**Blocked by:** FW-014
+
+### What to fix
+
+The app does not currently configure browser hardening headers such as `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, or CSP.
+
+### Acceptance Criteria
+
+- [ ] Add baseline security headers in Next or Cloudflare configuration.
+- [ ] Do not break wallet-adapter, QR scanning, Supabase, LI.FI, or analytics behavior.
+- [ ] Roll out CSP only after testing required wallet and third-party domains.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Created from CSO finding `FW-CSO-005` on 2026-05-06.
+
+### User Stories Covered
+
+25, 26
