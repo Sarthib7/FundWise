@@ -1,17 +1,19 @@
 # FundWise X Post Copy
 
-The real trip villain is the unpaid $47.
+## Primary
 
-FundWise turns Group IOUs into clean USDC Settlements with a Receipt everyone can trust.
+"Who still owes the $47?" should not become a three-month group chat subplot.
 
-fundwise.fun
+FundWise turns shared expenses into a live Group Balance, exact USDC Settlement, and a Receipt everyone can trust.
 
----
+Try it: https://fundwise.fun
 
-Send this to the friend who still owes from the trip.
+## Short
 
-Make a Group. Log the Expense. Settle the exact amount in USDC.
+Send the Settlement link before the group chat becomes a spreadsheet.
 
-No spreadsheet ceremony. No awkward follow-up. Receipt included.
+https://fundwise.fun
 
-fundwise.fun
+## Alt Text
+
+A playful FundWise product video shows a messy group chat about an unpaid $47, then transitions into the live FundWise interface where a Lisbon Trip balance suggests a $40.00 USDC Settlement and ends with a confirmed Receipt.

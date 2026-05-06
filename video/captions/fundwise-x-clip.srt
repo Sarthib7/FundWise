@@ -1,23 +1,19 @@
 1
-00:00:00,000 --> 00:00:04,000
-the real trip villain: the unpaid $47
+00:00:00,000 --> 00:00:03,500
+"Who still owes the $47?" The trip chat becomes accounting.
 
 2
-00:00:04,000 --> 00:00:09,000
-the group chat becomes accounting
+00:00:03,500 --> 00:00:09,000
+FundWise sends one Settlement Request Link instead of another reminder.
 
 3
-00:00:09,000 --> 00:00:15,000
-throw expenses in. FundWise finds the clean way out.
+00:00:09,000 --> 00:00:19,000
+The Group Balance finds the cleanest next Settlement: You pay Asha $40.00.
 
 4
-00:00:15,000 --> 00:00:22,000
-tap the green button. be done.
+00:00:19,000 --> 00:00:24,500
+Settle in USDC. Get a wallet-confirmed Receipt everyone can trust.
 
 5
-00:00:22,000 --> 00:00:27,000
-paid. proven. done.
-
-6
-00:00:27,000 --> 00:00:30,000
-Send this to the group chat. fundwise.fun
+00:00:24,500 --> 00:00:30,000
+Send the link before it becomes a spreadsheet. fundwise.fun
