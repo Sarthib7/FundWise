@@ -23,7 +23,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-011 | Done | P1 | HITL | Define monetization model and finance analysis | Owner decision |
 | FW-012 | Done | P1 | AFK | Clean shipped-vs-planned docs and messaging drift | FW-007, FW-011 |
 | FW-013 | Done | P2 | HITL | Decide Fund Mode mini-games scope and prediction-market boundary | FW-008 |
-| FW-014 | Blocked | P0 | AFK | Lock down anonymous Supabase ledger access | Supabase project access |
+| FW-014 | Done | P0 | AFK | Lock down anonymous Supabase ledger access | None |
 | FW-015 | Done | P0 | AFK | Validate Expense ledger amounts and split shares server-side | FW-014 |
 | FW-016 | Done | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
 | FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
@@ -426,7 +426,7 @@ Decision on 2026-05-06: mini-games and prediction-market-like mechanics are out 
 
 ## FW-014 - Lock Down Anonymous Supabase Ledger Access
 
-**Status:** Blocked  
+**Status:** Done  
 **Priority:** P0  
 **Type:** AFK  
 **Blocked by:** None
@@ -437,18 +437,18 @@ The CSO audit verified that the live Supabase REST API allows anonymous reads of
 
 ### Acceptance Criteria
 
-- [ ] Public anon REST can no longer read private ledger tables: `groups`, `members`, `expenses`, `expense_splits`, `settlements`, `contributions`, `proposals`, and `proposal_approvals`.
-- [ ] Public anon REST insert/update attempts are denied by RLS before reaching table constraints.
-- [ ] The app still loads Groups, ledgers, Expenses, Receipts, Settlements, and Contributions through the protected HTTP API routes.
-- [ ] Invite-code lookup still works through `/api/groups?code=...` without exposing full ledger tables directly.
-- [ ] A Supabase migration captures the policy change.
-- [ ] `pnpm build` passes.
+- [x] Public anon REST can no longer read private ledger tables: `groups`, `members`, `expenses`, `expense_splits`, `settlements`, `contributions`, `proposals`, and `proposal_approvals`.
+- [x] Public anon REST insert/update attempts are denied by RLS before reaching table constraints.
+- [x] The app still loads Groups, ledgers, Expenses, Receipts, Settlements, and Contributions through the protected HTTP API routes.
+- [x] Invite-code lookup still works through `/api/groups?code=...` without exposing full ledger tables directly.
+- [x] A Supabase migration captures the policy change.
+- [x] `pnpm build` passes.
 
 ### Notes
 
 Created from CSO finding `FW-CSO-001` on 2026-05-06. Treat this as a mainnet blocker and fix before further demo data is entered.
 
-Code migration added in `supabase/migrations/20260506223000_lock_down_public_ledger_rls.sql`, but live deployment is blocked: `supabase link --project-ref nurokwieqfhtsbiytjiu` failed because the current Supabase account lacks privileges for the project. The owner needs to apply the migration from an authorized Supabase account or grant CLI access, then verify anonymous REST reads/writes are denied.
+Completed on 2026-05-06 after the owner applied the SQL in the Supabase editor. Anonymous REST verification with the public publishable key now returns zero rows for `groups` and `expenses`, and an anonymous invalid `groups` insert is rejected with RLS error `42501` before table constraints.
 
 ### User Stories Covered
 
