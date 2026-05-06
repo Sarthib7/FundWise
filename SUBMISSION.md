@@ -18,29 +18,29 @@ Target length: 90-120 seconds.
 4. **Show live Balances.** Explain that FundWise nets the Group ledger and computes the simplest Settlement edge.
 5. **Settle in USDC.** As the debtor, open Settlement preview, confirm the exact USDC transfer, and mention SOL is only for gas.
 6. **Show the Receipt.** Land on the Receipt with amount, sender, recipient, timestamp, and on-chain signature.
-7. **Sponsor support, briefly.** If the debtor lacks Solana USDC, LI.FI can support `Top up to settle`; Zerion can support wallet-readiness guidance. These support the core flow, not replace it.
+7. **Sponsor support, briefly.** If the debtor lacks Solana USDC, LI.FI can support `Route funds for Settlement`; Zerion can support wallet-readiness guidance. These support the core flow, not replace it.
 
 ## Screenshot Checklist
 
 - Landing page hero: product name, `Start splitting`, `Read the story`, and the interactive Group preview.
-- Story page: problem narrative, Settlement Request Link loop, and LI.FI cross-chain top-up angle.
+- Story page: problem narrative, Settlement Request Link loop, and LI.FI cross-chain routing angle.
 - `/groups` disconnected state: wallet-first entry with `Connect Wallet`.
 - Group dashboard: Expense list, Balances, Suggested Settlements.
 - Settlement preview: sender, recipient, USDC amount, Solana fee note.
 - Receipt: confirmed USDC Settlement and transaction signature.
-- Optional support shot: `Top up to settle` entry point if LI.FI is shown.
+- Optional support shot: `Route funds for Settlement` entry point if LI.FI is shown.
 
 ## Submission Copy
 
 FundWise is a wallet-native shared-expense app for groups that want settlement finality, not just bookkeeping. Members create a private Group, log shared Expenses, see live Balances, and settle exact net amounts in USDC on Solana. Each Settlement produces a clear Receipt with the on-chain transaction signature, so the awkward "did you pay?" follow-up disappears.
 
-The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> Settlement -> Receipt`. LI.FI is used as a support layer for EVM-first debtors who need to top up their Solana wallet before settling. Zerion is framed as wallet-readiness and guidance around the same core flow. Fund Mode, Fundy, the Agent Skill Endpoint, and Scoped Agent Access remain future direction unless separately shipped.
+The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> Settlement -> Receipt`. LI.FI is used as a support layer for EVM-first debtors who need to route funds into Solana USDC before settling. Zerion is framed as wallet-readiness and guidance around the same core flow. Fund Mode is shown only as future-direction evidence until the Proposal lifecycle is complete. The Agent Skill Endpoint baseline is live, but Scoped Agent Access, Fundy, x402 / MPP payable invoices, and agent-paid Receipts remain planned.
 
 ## Track Framing
 
 **Visa Frontier:** FundWise is a consumer payments product. The strongest story is exact USDC Settlement for real shared expenses, with a clear Receipt and mobile-friendly wallet confirmation.
 
-**LI.FI:** LI.FI helps a debtor reach Solana USDC when their funds sit on another chain. The user-facing language should be `Top up to settle`, not bridge management.
+**LI.FI:** LI.FI helps a debtor reach Solana USDC when their funds sit on another chain. The user-facing language should be `Route funds for Settlement`, not bridge management.
 
 **Zerion:** Zerion supports wallet-readiness analysis and next-action guidance. It is not a wallet-auth replacement and does not sit inside the core Settlement path.
 
@@ -49,7 +49,8 @@ The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> 
 - Mainnet-beta is live unless a fresh mainnet rehearsal proves it.
 - Fund Mode Proposal lifecycle is complete.
 - Fundy is shipped.
-- Agent Skill Endpoint or Scoped Agent Access is shipped.
+- Scoped Agent Access, x402 / MPP payable Settlement Requests, or agent-paid Receipts are shipped.
+- Visa, IBAN, Altitude-style top-ups, or card funding are live in the app.
 - Settlement is gasless.
 - FundWise supports multi-stablecoin Settlement.
 - LI.FI directly pays creditors cross-chain.
