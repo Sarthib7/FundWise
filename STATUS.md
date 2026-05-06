@@ -296,7 +296,7 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 **Actions taken:**
 - Added interactive demo at `/demo` (5-step walkthrough: Group → Expenses → Balances → Settle → Receipt)
 - Added 32 unit tests for `expense-engine.ts` (splits, balances, settlement graph, formatting)
-- Added "Try demo" CTA on landing page hero
+- Added interactive homepage Group preview on landing page hero
 - Created GitHub issues #4–#9 for all remaining fixes
 
 **Remaining issues (from roast):**

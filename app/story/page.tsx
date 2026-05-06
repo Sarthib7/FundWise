@@ -64,9 +64,6 @@ export default function StoryPage() {
                 <Button asChild className="min-h-11 bg-accent hover:bg-accent/90">
                   <Link href="/groups">Create a Group</Link>
                 </Button>
-                <Button asChild variant="outline" className="min-h-11">
-                  <Link href="/demo">Try demo</Link>
-                </Button>
               </div>
             </div>
 

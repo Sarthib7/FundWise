@@ -22,7 +22,7 @@ Target length: 90-120 seconds.
 
 ## Screenshot Checklist
 
-- Landing page hero: product name, `Start splitting`, `Try demo`, `Read the story`.
+- Landing page hero: product name, `Start splitting`, `Read the story`, and the interactive Group preview.
 - Story page: problem narrative, Settlement Request Link loop, and LI.FI cross-chain top-up angle.
 - `/groups` disconnected state: wallet-first entry with `Connect Wallet`.
 - Group dashboard: Expense list, Balances, Suggested Settlements.
