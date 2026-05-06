@@ -286,19 +286,19 @@ Only pursue these after the core Group ledger, USDC settlement flow, and Fundy c
 - Gas abstraction / gasless settlement
 - Stablecoin-only user experience where fees and bridging are abstracted away from the end user
 - Easier web2 onboarding and offboarding:
-  bank-transfer style funding, fiat-to-stablecoin ramps, and later card or account-style interfaces for non-crypto users
+  bank-transfer style funding, fiat-to-stablecoin ramps, Visa/card top-ups, IBAN-like funding, and later Altitude-style Solana banking interfaces for non-crypto users
 - FundWise Agent as the umbrella assistant layer for drafting Expenses, attaching proof, reminders, Group summaries, and Proposal support (the in-app counterpart to Fundy)
 - Telegram mini app as an additional FundWise Agent distribution surface
 - Wallet mini dapp distribution
 - Native mobile app once the shared engine and secondary surfaces are stable
 - AI bill parsing beyond basic receipt-photo upload and natural-language Expense entry beyond draft-safe FundWise Agent flows
-- **Visa-rail card partnerships in production**: graduate the partner research from Phase 3 into a real "settle → spend" handoff. Near-term partners: **KAST** and **Avici** (consumer Solana cards, USDC funding); production-grade issuer path: **Rain** (developer-facing card-issuing API with native Solana support) for FundWise-branded Group cards. Frame Germany / EU presence around the Visa Frontier track relationship.
+- **Visa-rail card partnerships in production**: graduate the partner research from Phase 3 into a real "settle -> spend" and "top up -> settle" handoff. Near-term partners: **KAST** and **Avici** (consumer Solana cards, USDC funding); production-grade issuer path: **Rain** (developer-facing card-issuing API with native Solana support) for FundWise-branded Group cards. Keep Altitude-style Solana banking rails on the research list for card and IBAN-like top-ups. Frame Germany / EU presence around the Visa Frontier track relationship.
 
 **Channel strategy:**
 
 - Keep one core product engine: wallet-bound ledger APIs, proposal rules, and settlement logic must be shared across every surface. Fundy reuses the existing Group model rather than redefining it.
 - Expand surfaces in this order:
-  web app → Fundy (hosted Telegram bot) → Agent Skill Endpoint + Scoped Agent Access → Telegram mini app → wallet mini dapp → native mobile app
+  web app -> Fundy (hosted Telegram bot) -> Scoped Agent Access + Payable Settlement Requests -> Telegram mini app -> wallet mini dapp -> native mobile app
 - The Agent Skill Endpoint should be the first thing an autonomous agent fetches when discovering FundWise. It should describe all available actions, the Scoped Agent Access auth model, and link to the API surface.
 - For long-range onboarding and fee abstraction research, Bridge is the more direct infrastructure candidate today; Altitude is better treated as UX and operating-model inspiration unless its consumer surface changes materially.
 
@@ -306,6 +306,7 @@ Only pursue these after the core Group ledger, USDC settlement flow, and Fundy c
 
 - Better treasury UX
 - Refund / closeout flow
+- Private Group activities or mini-games only after Proposal safety is complete and prediction-market/gaming boundaries are resolved
 - Yield integrations if user demand justifies them
 - Custom Anchor vault if Squads UX becomes the bottleneck
 
