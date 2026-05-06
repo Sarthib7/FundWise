@@ -509,78 +509,6 @@ export default function GroupDashboard() {
       <Header />
 
       <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
-              <Badge className="bg-accent/10 text-accent border-accent/20">
-                {isFundMode ? "Fund Mode · Invite only" : "Split Mode"}
-              </Badge>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-              <button
-                onClick={copyGroupCode}
-                className="inline-flex min-h-10 items-center gap-1 rounded-md px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? "Copied!" : group.code}
-              </button>
-              <span>·</span>
-              <span>{tokenName}</span>
-              <span>·</span>
-              <span>
-                {memberCount} Member{memberCount !== 1 ? "s" : ""}
-              </span>
-              {!isFundMode && totalSettledVolume > 0 && (
-                <>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <Receipt className="h-3.5 w-3.5" />
-                    {formatTokenAmount(totalSettledVolume)} {tokenName} settled
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="min-h-11 sm:min-h-10"
-              onClick={() => setShowInviteDialog(true)}
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Invite
-            </Button>
-            {!isFundMode && isMember && (
-              <Button
-                size="sm"
-                className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
-                onClick={openCreateExpenseDialog}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Expense
-              </Button>
-            )}
-            {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
-              <Button
-                size="sm"
-                className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
-                onClick={() => void createTreasury()}
-                disabled={isCreatingTreasury || missingMembersForTreasury > 0}
-              >
-                {isCreatingTreasury ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Landmark className="h-4 w-4 mr-2" />
-                )}
-                Initialize Treasury
-              </Button>
-            )}
-          </div>
-        </div>
-
         {connected && !isWalletVerified && (
           <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -659,89 +587,171 @@ export default function GroupDashboard() {
           </Card>
         )}
 
-        <div className="grid gap-6 xl:grid-cols-3">
-          <div className="space-y-6 xl:col-span-2">
-            {!isFundMode && (
-              <SplitModeDashboard
-                connected={connected}
-                isWalletVerified={isWalletVerified}
-                isMember={isMember}
-                walletAddress={walletAddress}
-                groupName={group.name}
-                tokenName={tokenName}
-                requestedFromWallet={requestedFromWallet}
-                requestedToWallet={requestedToWallet}
-                requestedDebtorLabel={requestedDebtorLabel}
-                requestedCreditorLabel={requestedCreditorLabel}
-                requestedTransfer={requestedTransfer}
-                sharingTransferKey={sharingTransferKey}
-                isSettling={isSettling}
-                settlingTransfer={settlingTransfer}
-                isSubmitting={isSubmitting}
-                deletingExpenseId={deletingExpenseId}
-                balances={balances}
-                transfers={transfers}
-                activity={activity}
-                viewerBalance={viewerBalance}
-                viewerOutgoingTransfers={viewerOutgoingTransfers}
-                viewerIncomingTransfers={viewerIncomingTransfers}
-                memberNameByWallet={memberNameByWallet}
-                onConnectWallet={connectWallet}
-                onJoin={joinGroup}
-                onClearSettlementRequest={clearSettlementRequest}
-                onShareSettlementRequest={shareSettlementRequest}
-                onSettle={settle}
-                onOpenCreateExpenseDialog={openCreateExpenseDialog}
-                onOpenEditExpenseDialog={openEditExpenseDialog}
-                onDeleteExpense={deleteExpense}
-                onInvite={() => setShowInviteDialog(true)}
-                canDeleteExpense={canDeleteExpense}
-              />
-            )}
-
-            {isFundMode && (
-              <FundModeDashboard
-                tokenName={tokenName}
-                treasuryAddress={group.treasury_address}
-                multisigAddress={group.multisig_address}
-                fundingGoal={group.funding_goal}
-                treasuryBalance={treasuryBalance}
-                contributionTotal={contributionTotal}
-                fundingProgress={fundingProgress}
-                approvalThreshold={approvalThreshold}
-                membersCount={memberCount}
-                contributorCount={contributorCount}
-                missingMembersForTreasury={missingMembersForTreasury}
-                contributions={contributions}
-                memberNameByWallet={memberNameByWallet}
-                isGroupCreator={isGroupCreator}
-                isMember={isMember}
-                connected={connected}
-                isWalletVerified={isWalletVerified}
-                isCreatingTreasury={isCreatingTreasury}
-                isContributing={isContributing}
-                contributionAmount={contributionAmount}
-                onContributionAmountChange={setContributionAmount}
-                onCreateTreasury={createTreasury}
-                onContribute={handleContribute}
-                onJoin={joinGroup}
-              />
-            )}
+        <div className="overflow-hidden rounded-[22px] border border-brand-border-c bg-card shadow-[0_0_0_1px_#d5e8da,0_32px_72px_rgba(13,31,20,0.08),0_12px_24px_rgba(13,31,20,0.05)]">
+          <div className="flex items-center gap-[7px] border-b border-brand-border-c bg-brand-surface px-[18px] py-3">
+            <div className="h-[11px] w-[11px] rounded-full bg-[#ff5f57]" />
+            <div className="h-[11px] w-[11px] rounded-full bg-[#febc2e]" />
+            <div className="h-[11px] w-[11px] rounded-full bg-[#28c840]" />
           </div>
 
-          <GroupSidebar
-            isFundMode={isFundMode}
-            isMember={isMember}
-            walletAddress={walletAddress}
-            lifiSupported={lifiSupported}
-            clusterLabel={clusterLabel}
-            memberCount={memberCount}
-            members={members}
-            groupCreatorWallet={group.created_by}
-            onOpenBridge={() => setShowBridge(true)}
-            onInvite={() => setShowInviteDialog(true)}
-            onEditProfile={openProfileDialog}
-          />
+          <div className="grid xl:grid-cols-[320px_1fr]">
+            <aside className="order-2 border-t border-brand-border-c bg-brand-surface/70 p-4 sm:p-5 xl:order-1 xl:border-r xl:border-t-0">
+              <GroupSidebar
+                isFundMode={isFundMode}
+                isMember={isMember}
+                walletAddress={walletAddress}
+                lifiSupported={lifiSupported}
+                clusterLabel={clusterLabel}
+                memberCount={memberCount}
+                members={members}
+                groupCreatorWallet={group.created_by}
+                onOpenBridge={() => setShowBridge(true)}
+                onInvite={() => setShowInviteDialog(true)}
+                onEditProfile={openProfileDialog}
+              />
+            </aside>
+
+            <section className="order-1 min-w-0 space-y-6 p-4 sm:p-6 xl:order-2 xl:p-7">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
+                    <Badge className="bg-accent/10 text-accent border-accent/20">
+                      {isFundMode ? "Fund Mode · Invite only" : "Split Mode"}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                    <button
+                      onClick={copyGroupCode}
+                      className="inline-flex min-h-10 items-center gap-1 rounded-md px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copied ? "Copied!" : group.code}
+                    </button>
+                    <span>·</span>
+                    <span>{tokenName}</span>
+                    <span>·</span>
+                    <span>
+                      {memberCount} Member{memberCount !== 1 ? "s" : ""}
+                    </span>
+                    {!isFundMode && totalSettledVolume > 0 && (
+                      <>
+                        <span>·</span>
+                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                          <Receipt className="h-3.5 w-3.5" />
+                          {formatTokenAmount(totalSettledVolume)} {tokenName} settled
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11 sm:min-h-10"
+                    onClick={() => setShowInviteDialog(true)}
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Invite
+                  </Button>
+                  {!isFundMode && isMember && (
+                    <Button
+                      size="sm"
+                      className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
+                      onClick={openCreateExpenseDialog}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Expense
+                    </Button>
+                  )}
+                  {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
+                    <Button
+                      size="sm"
+                      className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
+                      onClick={() => void createTreasury()}
+                      disabled={isCreatingTreasury || missingMembersForTreasury > 0}
+                    >
+                      {isCreatingTreasury ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Landmark className="h-4 w-4 mr-2" />
+                      )}
+                      Initialize Treasury
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {!isFundMode && (
+                <SplitModeDashboard
+                  connected={connected}
+                  isWalletVerified={isWalletVerified}
+                  isMember={isMember}
+                  walletAddress={walletAddress}
+                  groupName={group.name}
+                  tokenName={tokenName}
+                  requestedFromWallet={requestedFromWallet}
+                  requestedToWallet={requestedToWallet}
+                  requestedDebtorLabel={requestedDebtorLabel}
+                  requestedCreditorLabel={requestedCreditorLabel}
+                  requestedTransfer={requestedTransfer}
+                  sharingTransferKey={sharingTransferKey}
+                  isSettling={isSettling}
+                  settlingTransfer={settlingTransfer}
+                  isSubmitting={isSubmitting}
+                  deletingExpenseId={deletingExpenseId}
+                  balances={balances}
+                  transfers={transfers}
+                  activity={activity}
+                  viewerBalance={viewerBalance}
+                  viewerOutgoingTransfers={viewerOutgoingTransfers}
+                  viewerIncomingTransfers={viewerIncomingTransfers}
+                  memberNameByWallet={memberNameByWallet}
+                  onConnectWallet={connectWallet}
+                  onJoin={joinGroup}
+                  onClearSettlementRequest={clearSettlementRequest}
+                  onShareSettlementRequest={shareSettlementRequest}
+                  onSettle={settle}
+                  onOpenCreateExpenseDialog={openCreateExpenseDialog}
+                  onOpenEditExpenseDialog={openEditExpenseDialog}
+                  onDeleteExpense={deleteExpense}
+                  onInvite={() => setShowInviteDialog(true)}
+                  canDeleteExpense={canDeleteExpense}
+                />
+              )}
+
+              {isFundMode && (
+                <FundModeDashboard
+                  tokenName={tokenName}
+                  treasuryAddress={group.treasury_address}
+                  multisigAddress={group.multisig_address}
+                  fundingGoal={group.funding_goal}
+                  treasuryBalance={treasuryBalance}
+                  contributionTotal={contributionTotal}
+                  fundingProgress={fundingProgress}
+                  approvalThreshold={approvalThreshold}
+                  membersCount={memberCount}
+                  contributorCount={contributorCount}
+                  missingMembersForTreasury={missingMembersForTreasury}
+                  contributions={contributions}
+                  memberNameByWallet={memberNameByWallet}
+                  isGroupCreator={isGroupCreator}
+                  isMember={isMember}
+                  connected={connected}
+                  isWalletVerified={isWalletVerified}
+                  isCreatingTreasury={isCreatingTreasury}
+                  isContributing={isContributing}
+                  contributionAmount={contributionAmount}
+                  onContributionAmountChange={setContributionAmount}
+                  onCreateTreasury={createTreasury}
+                  onContribute={handleContribute}
+                  onJoin={joinGroup}
+                />
+              )}
+            </section>
+          </div>
         </div>
       </main>
 
