@@ -12,6 +12,8 @@ This directory holds detailed product, API, and decision records. Start with the
 - [HACKATHON_PLAN](../HACKATHON_PLAN.md) - hackathon strategy and sponsor framing
 - [SUBMISSION](../SUBMISSION.md) - judge-facing script and submission checklist
 - [issues](../issues.md) - indexed local backlog
+- [Shipped vs Planned Product Matrix](./shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope status
+- [Monetization Model](./monetization.md) - free Split Mode launch and paid-surface hypotheses
 
 ## API And Agent Surfaces
 

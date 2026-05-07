@@ -34,7 +34,9 @@ Target length: 90-120 seconds.
 
 FundWise is a wallet-native shared-expense app for groups that want settlement finality, not just bookkeeping. Members create a private Group, log shared Expenses, see live Balances, and settle exact net amounts in USDC on Solana. Each Settlement produces a clear Receipt with the on-chain transaction signature, so the awkward "did you pay?" follow-up disappears.
 
-The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> Settlement -> Receipt`. LI.FI is used as a support layer for EVM-first debtors who need to route funds into Solana USDC before settling. Zerion is framed as wallet-readiness and guidance around the same core flow. Fund Mode is shown only as future-direction evidence until the Proposal lifecycle is complete. The Agent Skill Endpoint baseline is live, but Scoped Agent Access, Fundy, x402 / MPP payable invoices, and agent-paid Receipts remain planned.
+The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> Settlement -> Receipt`. Settlement Request Links are the shareable loop: a debtor opens the current Group Balance state, reviews the exact amount, signs the USDC Settlement, and lands on a Receipt. Split Mode is free at launch, including normal USDC Settlements. LI.FI is used as a support layer for EVM-first debtors who need to route funds into Solana USDC before settling. Zerion is framed as wallet-readiness and guidance around the same core flow. Fund Mode is shown only as future-direction evidence until the Proposal lifecycle is complete. Source Currency, Expense Proof, Fundy, Scoped Agent Access, x402 / MPP payable invoices, and agent-paid Receipts remain planned.
+
+The positioning is not "first crypto Splitwise." The honest wedge is verified USDC Settlement for real private Groups, with live Settlement Request Links and verifiable Receipts.
 
 ## Track Framing
 
@@ -51,6 +53,9 @@ The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> 
 - Fundy is shipped.
 - Scoped Agent Access, x402 / MPP payable Settlement Requests, or agent-paid Receipts are shipped.
 - Visa, IBAN, Altitude-style top-ups, or card funding are live in the app.
+- FundWise is the first or only crypto bill-splitting app.
 - Settlement is gasless.
 - FundWise supports multi-stablecoin Settlement.
 - LI.FI directly pays creditors cross-chain.
+- Source Currency entry or Expense Proof upload are shipped.
+- Mini-games or prediction-market-like mechanics are part of FundWise.

@@ -56,7 +56,7 @@ create table public.expenses (
   group_id uuid not null references public.groups(id) on delete cascade,
   payer text not null, -- wallet address
   created_by text not null, -- wallet address that owns edit/delete
-  amount bigint not null, -- in smallest token unit
+  amount bigint not null check (amount > 0), -- in smallest token unit
   mint text not null,
   memo text,
   category text default 'general',
@@ -78,7 +78,7 @@ create table public.expense_splits (
   id uuid primary key default uuid_generate_v4(),
   expense_id uuid not null references public.expenses(id) on delete cascade,
   wallet text not null,
-  share bigint not null -- in smallest token unit
+  share bigint not null check (share >= 0) -- in smallest token unit
 );
 
 create or replace function public.update_expense_with_splits(
@@ -236,107 +236,8 @@ alter table public.contributions enable row level security;
 alter table public.proposals enable row level security;
 alter table public.proposal_approvals enable row level security;
 
--- Groups: anyone can read, only creator can insert/update
-create policy "Groups are viewable by everyone"
-  on public.groups for select
-  using (true);
-
-create policy "Anyone can create groups"
-  on public.groups for insert
-  with check (true);
-
-create policy "Only creator can update groups"
-  on public.groups for update
-  using (created_by = auth.uid()::text);
-
--- Wallet-only MVP: Group metadata updates currently come from the public client,
--- so Treasury initialization needs an open update policy until wallet auth is added.
-create policy "Wallet-only MVP can update groups"
-  on public.groups for update
-  using (true)
-  with check (true);
-
--- Profiles: anyone can read; wallet-only MVP keeps writes open until authenticated wallet-bound mutations ship
-create policy "Profiles are viewable by everyone"
-  on public.profiles for select
-  using (true);
-
-create policy "Wallet-only MVP can create profiles"
-  on public.profiles for insert
-  with check (true);
-
-create policy "Wallet-only MVP can update profiles"
-  on public.profiles for update
-  using (true)
-  with check (true);
-
--- Members: anyone can read, anyone can join
-create policy "Members are viewable by everyone"
-  on public.members for select
-  using (true);
-
-create policy "Anyone can add members"
-  on public.members for insert
-  with check (true);
-
--- Expenses: anyone can read, any member can create
-create policy "Expenses are viewable by everyone"
-  on public.expenses for select
-  using (true);
-
-create policy "Anyone can create expenses"
-  on public.expenses for insert
-  with check (true);
-
-create policy "Anyone can update expenses"
-  on public.expenses for update
-  using (true);
-
--- Expense splits: anyone can read/insert
-create policy "Splits are viewable by everyone"
-  on public.expense_splits for select
-  using (true);
-
-create policy "Anyone can create splits"
-  on public.expense_splits for insert
-  with check (true);
-
--- Settlements: anyone can read/insert
-create policy "Settlements are viewable by everyone"
-  on public.settlements for select
-  using (true);
-
-create policy "Anyone can create settlements"
-  on public.settlements for insert
-  with check (true);
-
--- Contributions: anyone can read/insert
-create policy "Contributions are viewable by everyone"
-  on public.contributions for select
-  using (true);
-
-create policy "Anyone can create contributions"
-  on public.contributions for insert
-  with check (true);
-
--- Proposals: anyone can read/insert
-create policy "Proposals are viewable by everyone"
-  on public.proposals for select
-  using (true);
-
-create policy "Anyone can create proposals"
-  on public.proposals for insert
-  with check (true);
-
-create policy "Anyone can update proposals"
-  on public.proposals for update
-  using (true);
-
--- Proposal approvals: anyone can read/insert
-create policy "Approvals are viewable by everyone"
-  on public.proposal_approvals for select
-  using (true);
-
-create policy "Anyone can create approvals"
-  on public.proposal_approvals for insert
-  with check (true);
+-- Direct public Supabase access is intentionally closed.
+-- The app uses wallet-session-protected HTTP routes plus the server-side service role
+-- for reads and mutations. Leaving these tables without anon policies makes RLS
+-- deny public REST reads/writes by default while service-role API handlers continue
+-- to work.

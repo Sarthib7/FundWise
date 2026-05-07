@@ -166,7 +166,7 @@ services/fundy/
 # Required (Fundy Lite)
 TELEGRAM_BOT_TOKEN=
 FUNDWISE_SERVICE_API_KEY=
-FUNDWISE_API_BASE_URL=https://fundwise.kairen.xyz
+FUNDWISE_API_BASE_URL=https://fundwise.fun
 ZERION_API_KEY=
 
 # Optional (Fundy Full, later)

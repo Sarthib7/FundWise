@@ -1,5 +1,10 @@
 import type { Database, Json } from "@/lib/database.types"
+import {
+  computeBalancesFromActivity,
+  simplifySettlements,
+} from "@/lib/expense-engine"
 import { FundWiseError } from "@/lib/server/fundwise-error"
+import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
   verifyContributionTransfer,
   verifySettlementTransfer,
@@ -10,6 +15,7 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
+type SettlementGraphActivity = Parameters<typeof computeBalancesFromActivity>[1]
 
 type SupabaseMutationError = {
   code?: string
@@ -25,6 +31,70 @@ type ExpenseUpdateRpcSplit = Json
 
 function getAdmin() {
   return getSupabaseAdmin()
+}
+
+export function validateExpenseLedgerInput(data: {
+  amount: number
+  mint: string
+  expectedMint: string
+  splits: ExpenseSplitInput[]
+}) {
+  if (!Number.isSafeInteger(data.amount) || data.amount <= 0) {
+    throw new FundWiseError("Expense amount must be a positive integer token amount.")
+  }
+
+  if (data.mint !== data.expectedMint) {
+    throw new FundWiseError("Expense mint does not match this Group stablecoin.")
+  }
+
+  if (data.splits.length === 0) {
+    throw new FundWiseError("Expense must include at least one split.")
+  }
+
+  const seenWallets = new Set<string>()
+  let splitTotal = 0
+
+  for (const split of data.splits) {
+    if (!split.wallet) {
+      throw new FundWiseError("Every Expense split must include a Member wallet.")
+    }
+
+    if (seenWallets.has(split.wallet)) {
+      throw new FundWiseError("Expense split wallets must be unique.")
+    }
+
+    seenWallets.add(split.wallet)
+
+    if (!Number.isSafeInteger(split.share) || split.share < 0) {
+      throw new FundWiseError("Expense split shares must be non-negative integer token amounts.")
+    }
+
+    splitTotal += split.share
+  }
+
+  if (splitTotal !== data.amount) {
+    throw new FundWiseError("Expense split shares must add up to the full Expense amount.")
+  }
+}
+
+export function assertSettlementMatchesCurrentGraph(data: {
+  members: Database["public"]["Tables"]["members"]["Row"][]
+  activity: SettlementGraphActivity
+  fromWallet: string
+  toWallet: string
+  amount: number
+}) {
+  const balances = computeBalancesFromActivity(data.members, data.activity)
+  const matchingTransfer = simplifySettlements(balances).find(
+    (transfer) =>
+      transfer.from === data.fromWallet &&
+      transfer.to === data.toWallet &&
+      transfer.amount === data.amount
+  )
+
+  if (!matchingTransfer) {
+    throw new FundWiseError("Settlement does not match the current live Group Balance.", 409)
+  }
 }
 
 function isMissingExpenseCurrencyColumnError(error: SupabaseMutationError | null) {
@@ -262,6 +332,13 @@ export async function addExpenseMutation(data: {
     throw new FundWiseError("Expenses can only be added to Split Mode Groups.")
   }
 
+  validateExpenseLedgerInput({
+    amount: data.amount,
+    mint: data.mint,
+    expectedMint: group.stablecoin_mint,
+    splits: data.splits,
+  })
+
   await assertWalletIsMember(
     data.groupId,
     data.createdBy,
@@ -347,6 +424,14 @@ export async function updateExpenseMutation(data: {
   exchangeRateAt?: string
 }) {
   const expense = await getExpenseOrThrow(data.expenseId)
+  const group = await getGroupOrThrow(expense.group_id)
+
+  validateExpenseLedgerInput({
+    amount: data.amount,
+    mint: data.mint,
+    expectedMint: group.stablecoin_mint,
+    splits: data.splits,
+  })
 
   await assertWalletsAreMembers(
     expense.group_id,
@@ -490,9 +575,27 @@ export async function addSettlementMutation(data: {
     throw new FundWiseError("This Settlement transaction has already been recorded.")
   }
 
+  const settlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
+  assertSettlementMatchesCurrentGraph({
+    members: settlementSnapshot.members,
+    activity: settlementSnapshot.activity,
+    fromWallet: data.fromWallet,
+    toWallet: data.toWallet,
+    amount: data.amount,
+  })
+
   await verifySettlementTransfer({
     txSig: data.txSig,
     mint: data.mint,
+    fromWallet: data.fromWallet,
+    toWallet: data.toWallet,
+    amount: data.amount,
+  })
+
+  const latestSettlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
+  assertSettlementMatchesCurrentGraph({
+    members: latestSettlementSnapshot.members,
+    activity: latestSettlementSnapshot.activity,
     fromWallet: data.fromWallet,
     toWallet: data.toWallet,
     amount: data.amount,

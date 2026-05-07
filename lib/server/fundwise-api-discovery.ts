@@ -1,12 +1,4 @@
-const DEFAULT_BASE_URL = "https://fundwise.kairen.xyz"
-
-function normalizeBaseUrl(baseUrl?: string) {
-  if (!baseUrl) {
-    return DEFAULT_BASE_URL
-  }
-
-  return baseUrl.replace(/\/$/, "")
-}
+import { normalizeBaseUrl } from "@/lib/server/fundwise-discovery"
 
 export function buildApiDocsMarkdown(baseUrl?: string) {
   const origin = normalizeBaseUrl(baseUrl)
@@ -69,6 +61,60 @@ Auth: none.
 #### GET /api/docs
 
 This document.
+
+Auth: none.
+
+#### GET /sitemap.xml
+
+Public XML sitemap listing canonical public FundWise URLs.
+
+Auth: none.
+
+#### GET /robots.txt
+
+Crawler policy with a \`Sitemap:\` reference to \`/sitemap.xml\`.
+
+Auth: none.
+
+#### GET /.well-known/api-catalog
+
+RFC 9727 API catalog in \`application/linkset+json\` format. Links to the OpenAPI service description, service documentation, Agent Skill Endpoint, and public health endpoint.
+
+Auth: none.
+
+#### GET /api/openapi.json
+
+OpenAPI 3.1 service description for the current FundWise HTTP API.
+
+Auth: none.
+
+#### GET /openapi.json
+
+Root-level alias for agents that discover OpenAPI documents outside the \`/api\` path.
+
+Auth: none.
+
+#### GET /.well-known/agent-skills/index.json
+
+Agent Skills discovery index with a SHA-256 digest for \`/skill.md\`.
+
+Auth: none.
+
+#### GET /.well-known/oauth-authorization-server
+
+OAuth-style discovery metadata for FundWise's current wallet-signature auth endpoints and planned Scoped Agent Access scopes.
+
+Auth: none.
+
+#### GET /.well-known/oauth-protected-resource
+
+Protected Resource Metadata for the FundWise API resource.
+
+Auth: none.
+
+#### GET /.well-known/mcp/server-card.json
+
+MCP Server Card describing FundWise's agent discovery resources and browser-provided WebMCP tools.
 
 Auth: none.
 
@@ -292,6 +338,12 @@ Auth: browser wallet session or Fundy service auth. Authenticated wallet must be
 
 These endpoints are not live yet. They are listed so agents and developers do not confuse current FundWise APIs with planned payable settlement support.
 
+Planned payment protocols to evaluate:
+
+- x402 HTTP 402 payment challenges for payable agent routes.
+- Machine Payment Protocol (MPP) discovery through OpenAPI \`x-payment-info\` extensions for payable operations.
+- Agentic Commerce Protocol (ACP) discovery at \`/.well-known/acp.json\` only if FundWise exposes a commerce API.
+
 #### POST /api/agent/spending-policies
 
 Planned. Create a Member-granted Spending Policy after direct wallet confirmation. Policy fields must include agent identity, scopes, Group scope, USDC asset scope, per-Settlement cap, daily cap, counterparty policy, expiry, and revocation support.
@@ -381,6 +433,10 @@ This is the public Agent Skill Endpoint for FundWise. It is safe to fetch withou
 
 - Production app: ${origin}
 - API docs: ${origin}/api/docs
+- API catalog: ${origin}/.well-known/api-catalog
+- OpenAPI service description: ${origin}/api/openapi.json
+- Agent Skills index: ${origin}/.well-known/agent-skills/index.json
+- MCP Server Card: ${origin}/.well-known/mcp/server-card.json
 - Primary product path: Group -> Expense -> Balance -> Settlement -> Receipt
 - Settlement asset: USDC on Solana
 - Identity: Solana wallet public key
@@ -439,6 +495,10 @@ Scoped Agent Access is the planned auth model for third-party autonomous agents.
 ### Spending Policies
 
 Spending Policies are planned and required before any agent can pay a Settlement. They cap agent payment capacity by Member wallet, agent identity, Group, asset, counterparty, per-Settlement amount, daily amount, expiry, and revocation. Anything outside policy must fall back to a Settlement Request Link for human wallet confirmation.
+
+### Agent-native payment protocols
+
+FundWise does not currently expose paid API access or commerce checkout routes. Planned Payable Settlement Requests should evaluate x402, MPP, and ACP only after Scoped Agent Access and Spending Policies exist. Until then, agents must treat these protocols as TODOs, not available payment rails.
 
 ## Main API entry points
 
