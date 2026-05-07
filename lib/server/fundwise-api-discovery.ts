@@ -20,9 +20,11 @@ Most routes accept the same wallet-signed browser session used by the web app:
 3. \`POST /api/auth/wallet/verify\` with \`{ "wallet": "<solana-pubkey>", "signature": "<base64-signature>" }\`.
 4. Send the returned HTTP-only cookie on protected API calls.
 
-### Fundy service auth
+### Fundy service auth - planned
 
-Fundy may call protected routes as a linked Member wallet with service-to-service auth:
+Fundy service-to-service auth is planned, not enabled on the current FundWise API routes. Until that work ships, protected routes require the browser wallet-session flow above.
+
+Planned headers:
 
 \`\`\`http
 Authorization: Bearer <FUNDWISE_SERVICE_API_KEY>
@@ -30,7 +32,7 @@ X-Fundy-Wallet: <linked-solana-wallet>
 Content-Type: application/json
 \`\`\`
 
-Rules:
+Planned rules:
 
 - \`FUNDWISE_SERVICE_API_KEY\` must be configured on the FundWise web app deployment.
 - \`X-Fundy-Wallet\` is the linked Member wallet Fundy is acting for.
@@ -178,15 +180,15 @@ Auth: none.
 
 #### GET /api/groups?wallet=<wallet>
 
-List Groups for the authenticated or Fundy service wallet.
+List Groups for the authenticated wallet.
 
-Auth: browser wallet session or Fundy service auth. If \`wallet\` is provided, it must match the authenticated wallet.
+Auth: browser wallet session. If \`wallet\` is provided, it must match the authenticated wallet.
 
 #### POST /api/groups
 
 Create a Group.
 
-Auth: browser wallet session or Fundy service auth. \`createdBy\` must match the authenticated wallet.
+Auth: browser wallet session. \`createdBy\` must match the authenticated wallet.
 
 Request:
 
@@ -205,19 +207,19 @@ Request:
 
 Load a Group dashboard snapshot. Private ledger fields are included only when the authenticated wallet matches the requested Member wallet.
 
-Auth: optional for public Group shell; browser wallet session or Fundy service auth for Member-specific view.
+Auth: optional for public Group shell; browser wallet session for Member-specific view.
 
 #### GET /api/groups/{groupId}/ledger
 
 Load protected Split Mode ledger data, including Balances, suggested Settlements, Activity Feed, and total settled volume.
 
-Auth: browser wallet session or Fundy service auth. Authenticated wallet must be a Group Member.
+Auth: browser wallet session. Authenticated wallet must be a Group Member.
 
 #### POST /api/groups/{groupId}/members
 
 Join a Group as a Member.
 
-Auth: browser wallet session or Fundy service auth. \`wallet\` must match the authenticated wallet.
+Auth: browser wallet session. \`wallet\` must match the authenticated wallet.
 
 Request:
 
@@ -229,7 +231,7 @@ Request:
 
 Persist Fund Mode Treasury addresses after Treasury initialization.
 
-Auth: browser wallet session or Fundy service auth. \`creatorWallet\` must match the authenticated wallet.
+Auth: browser wallet session. \`creatorWallet\` must match the authenticated wallet.
 
 Request:
 
@@ -247,15 +249,17 @@ Request:
 
 List Expenses for a Group.
 
-Auth: browser wallet session or Fundy service auth. Authenticated wallet must be allowed to read the Group.
+Auth: browser wallet session. Authenticated wallet must be allowed to read the Group.
 
 #### POST /api/expenses
 
 Create a real Expense record.
 
-Auth: browser wallet session or Fundy service auth. \`createdBy\` must match the authenticated wallet.
+Auth: browser wallet session. \`createdBy\` must match the authenticated wallet.
 
-Fundy note: use this only when the Member explicitly wants to create a real Expense. A separate draft Expense API is still planned for \`/draft\`-style commands.
+Fundy note: after service auth ships, use this only when the Member explicitly wants to create a real Expense. A separate draft Expense API is still planned for \`/draft\`-style commands.
+
+Amounts are integer token units, not decimal USDC display amounts. For a 6-decimal USDC mint, \`42500000\` means 42.5 USDC.
 
 Request:
 
@@ -264,17 +268,17 @@ Request:
   "groupId": "<group-id>",
   "payer": "<payer-wallet>",
   "createdBy": "<creator-wallet>",
-  "amount": 42.5,
+  "amount": 42500000,
   "mint": "<usdc-mint>",
   "memo": "Dinner",
   "category": "food",
   "splitMethod": "equal",
   "splits": [
-    { "wallet": "<member-a>", "share": 1 },
-    { "wallet": "<member-b>", "share": 1 }
+    { "wallet": "<member-a>", "share": 21250000 },
+    { "wallet": "<member-b>", "share": 21250000 }
   ],
   "sourceCurrency": "USD",
-  "sourceAmount": 42.5,
+  "sourceAmount": 42500000,
   "exchangeRate": 1,
   "exchangeRateSource": "manual",
   "exchangeRateAt": "2026-05-04T00:00:00.000Z"
@@ -285,19 +289,19 @@ Request:
 
 Load one Expense.
 
-Auth: browser wallet session or Fundy service auth.
+Auth: browser wallet session.
 
 #### PATCH /api/expenses/{expenseId}
 
 Update an Expense before later Settlements make the ledger unsafe.
 
-Auth: browser wallet session or Fundy service auth. \`actorWallet\` must match the authenticated wallet and the Expense creator.
+Auth: browser wallet session. \`actorWallet\` must match the authenticated wallet and the Expense creator.
 
 #### DELETE /api/expenses/{expenseId}
 
 Delete an Expense before later Settlements make the ledger unsafe.
 
-Auth: browser wallet session or Fundy service auth. \`actorWallet\` must match the authenticated wallet and the Expense creator.
+Auth: browser wallet session. \`actorWallet\` must match the authenticated wallet and the Expense creator.
 
 Request:
 
@@ -311,7 +315,7 @@ Request:
 
 Record a Settlement receipt after the debtor signs an on-chain USDC transfer.
 
-Auth: browser wallet session or Fundy service auth. \`fromWallet\` must match the authenticated wallet.
+Auth: browser wallet session. \`fromWallet\` must match the authenticated wallet.
 
 Important: this route does not initiate an on-chain transfer. It verifies and persists the transaction signature. Fundy should deep-link the debtor back to the app for wallet confirmation instead of trying to settle in Telegram.
 
@@ -322,7 +326,7 @@ Request:
   "groupId": "<group-id>",
   "fromWallet": "<debtor-wallet>",
   "toWallet": "<creditor-wallet>",
-  "amount": 23.5,
+  "amount": 23500000,
   "mint": "<usdc-mint>",
   "txSig": "<solana-signature>"
 }
@@ -332,7 +336,7 @@ Request:
 
 Load a protected Receipt view.
 
-Auth: browser wallet session or Fundy service auth. Authenticated wallet must be allowed to read the Receipt.
+Auth: browser wallet session. Authenticated wallet must be allowed to read the Receipt.
 
 ### Planned Agent Payment Endpoints
 
@@ -378,7 +382,7 @@ Planned. Verify x402 / MPP / on-chain proof, then create the normal Settlement a
 
 Record a Fund Mode Contribution receipt after a Member signs an on-chain USDC transfer into the Treasury.
 
-Auth: browser wallet session or Fundy service auth. \`memberWallet\` must match the authenticated wallet.
+Auth: browser wallet session. \`memberWallet\` must match the authenticated wallet.
 
 Important: this route does not initiate an on-chain transfer. Fundy should deep-link the Member back to the app for wallet confirmation.
 
@@ -400,7 +404,7 @@ Request:
 
 Update a Member's global Profile Display Name.
 
-Auth: browser wallet session or Fundy service auth. \`wallet\` must match the authenticated wallet.
+Auth: browser wallet session. \`wallet\` must match the authenticated wallet.
 
 Request:
 
@@ -408,17 +412,17 @@ Request:
 { "wallet": "<member-wallet>", "displayName": "Sarthi" }
 \`\`\`
 
-## Current Fundy-safe calls
+## Current browser-session calls
 
-Recommended Fundy v1 calls:
+Current protected calls require a browser wallet session:
 
 - Read Group list: \`GET /api/groups?wallet=<wallet>\`
 - Read Group ledger: \`GET /api/groups/{groupId}/ledger\`
 - Read Expenses: \`GET /api/expenses?groupId=<groupId>\`
 - Read Receipts: \`GET /api/settlements/{settlementId}\`
-- Generate Settlement links in Fundy itself using the existing web URL: \`${origin}/groups/{groupId}?settle=<debtor-wallet>\`
+- Generate Settlement links in the client using the existing web URL: \`${origin}/groups/{groupId}?settle=<debtor-wallet>\`
 
-Use mutation routes only for explicit Member-directed actions. Money-moving actions still deep-link to the web app for wallet signing.
+Use mutation routes only for explicit Member-directed actions. Money-moving actions still deep-link to the web app for wallet signing. Fundy service auth is planned and should not be treated as available until the API routes implement it.
 `
 }
 
@@ -450,7 +454,7 @@ Agents may help Members with read-only and draft-safe workflows:
 - Summarize who owes whom in a Group.
 - Suggest next actions, reminders, and Settlement Request Links.
 - Draft Expenses or proof-upload intents when a draft API is available.
-- For Fundy only, call FundWise APIs with service-to-service auth for linked Telegram users.
+- For Fundy later, call FundWise APIs with service-to-service auth for linked Telegram users after that auth path ships.
 
 ## What agents must not do
 
@@ -466,11 +470,11 @@ Agents must not:
 
 ## Auth model
 
-### Fundy service auth
+### Fundy service auth - planned
 
-Fundy is the hosted Telegram bot that runs the FundWise Agent. Fundy links a Telegram user to one active Solana wallet, then calls the FundWise HTTP API as that wallet.
+Fundy is the planned hosted Telegram bot that runs the FundWise Agent. Fundy will link a Telegram user to one active Solana wallet, then call the FundWise HTTP API as that wallet. This service-auth path is not enabled on the current API routes; protected routes currently require browser wallet sessions.
 
-Headers:
+Planned headers:
 
 \`\`\`http
 Authorization: Bearer <FUNDWISE_SERVICE_API_KEY>
@@ -478,7 +482,7 @@ X-Fundy-Wallet: <linked-solana-wallet>
 Content-Type: application/json
 \`\`\`
 
-The FundWise server treats \`X-Fundy-Wallet\` as the acting Member wallet only after the service key is verified. Group membership, creator ownership, and wallet-match checks still apply.
+When implemented, the FundWise server will treat \`X-Fundy-Wallet\` as the acting Member wallet only after the service key is verified. Group membership, creator ownership, and wallet-match checks will still apply.
 
 ### Browser wallet session
 
@@ -504,7 +508,7 @@ FundWise does not currently expose paid API access or commerce checkout routes. 
 
 Fetch ${origin}/api/docs for full request and response examples.
 
-Read-only and safe for Fundy:
+Current browser-session read APIs:
 
 - \`GET /api/groups?wallet=<wallet>\` — list Groups for the acting wallet.
 - \`GET /api/groups/{groupId}/ledger\` — read protected Group ledger, Balances, suggested Settlements, and Activity Feed.

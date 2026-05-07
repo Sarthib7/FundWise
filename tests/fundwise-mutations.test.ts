@@ -116,6 +116,20 @@ describe("validateExpenseLedgerInput", () => {
     ).toThrow("Expense split shares must add up to the full Expense amount.")
   })
 
+  it("rejects split totals that exceed the safe integer range", () => {
+    expect(() =>
+      validateExpenseLedgerInput({
+        amount: Number.MAX_SAFE_INTEGER,
+        mint: expectedMint,
+        expectedMint,
+        splits: [
+          { wallet: "alice", share: Number.MAX_SAFE_INTEGER },
+          { wallet: "bob", share: 1 },
+        ],
+      })
+    ).toThrow("Expense split shares total exceeds the safe integer range.")
+  })
+
   it("rejects negative, unsafe, empty, or duplicate split shares", () => {
     expect(() =>
       validateExpenseLedgerInput({
