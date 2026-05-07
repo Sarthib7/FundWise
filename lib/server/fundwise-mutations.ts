@@ -70,6 +70,10 @@ export function validateExpenseLedgerInput(data: {
     }
 
     splitTotal += split.share
+
+    if (!Number.isSafeInteger(splitTotal)) {
+      throw new FundWiseError("Expense split shares total exceeds the safe integer range.")
+    }
   }
 
   if (splitTotal !== data.amount) {
