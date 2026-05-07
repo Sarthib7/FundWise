@@ -110,7 +110,7 @@ If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the lates
 | `app/page.tsx`                          | Landing page                                          |
 | `app/groups/[id]/page.tsx`              | Group dashboard                                       |
 | `app/groups/[id]/settlements/[settlementId]/page.tsx` | Settlement receipt view                    |
-| `app/skill.md/route.ts`                | Agent Skill Endpoint (planned) — `https://fundwise.fun/skill.md` |
+| `app/skill.md/route.ts`                | Agent Skill Endpoint (planned) — `https://fundwise.kairen.xyz/skill.md` |
 | `services/fundy/`                     | Fundy Telegram bot (planned) — Railway, `grammy`, calls FundWise HTTP API |
 | `lib/server/` (extend)                  | Scoped Agent Access + bot auth validation (planned)   |
 
@@ -259,11 +259,11 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 - **On-chain** Settlement, Contribution, and Proposal **execution** still require wallet confirmation in the app — deep-link; use existing **Settlement Request Links** for settle intents
 - **Zerion CLI** from the bot: `/analyze`, `/readiness`, `/verify` — prefer **`ZERION_API_KEY`**; optional **x402** on Solana later
 - One Telegram account maps to one active wallet at a time; one Telegram chat maps to one FundWise Group; DM auth before group actions
-- **Env (Fundy service):** `TELEGRAM_BOT_TOKEN`, `FUNDWISE_SERVICE_API_KEY`, `FUNDWISE_API_BASE_URL` (e.g. `https://fundwise.fun`), `ZERION_API_KEY` (and optionally `SOLANA_PRIVATE_KEY` + `ZERION_X402`), `OPENROUTER_API_KEY` (optional, later), `NEXT_PUBLIC_SOLANA_RPC_URL` if needed for direct reads
+- **Env (Fundy service):** `TELEGRAM_BOT_TOKEN`, `FUNDWISE_SERVICE_API_KEY`, `FUNDWISE_API_BASE_URL` (e.g. `https://fundwise.kairen.xyz`), `ZERION_API_KEY` (and optionally `SOLANA_PRIVATE_KEY` + `ZERION_X402`), `OPENROUTER_API_KEY` (optional, later), `NEXT_PUBLIC_SOLANA_RPC_URL` if needed for direct reads
 
 ### Agent Skill Endpoint (Planned — Post-Hackathon)
 
-- Public URL: **`https://fundwise.fun/skill.md`** — `Content-Type: text/markdown`
+- Public URL: **`https://fundwise.kairen.xyz/skill.md`** — `Content-Type: text/markdown`
 - Any autonomous agent can `curl` it; document **purpose**, **what to call / what not to call**, auth (**profile agent tokens** + optional wallet-signed), rate limits, errors, safety
 - Does not require authentication to fetch the document and does not expose private Member data in the skill file itself
 - Implementation: `app/skill.md/route.ts` (planned)

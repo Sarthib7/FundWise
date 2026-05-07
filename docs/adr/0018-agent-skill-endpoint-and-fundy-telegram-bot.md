@@ -27,7 +27,7 @@ Both Fundy and external agents authenticate against the same API routes. Two pat
 2. **Scoped Agent Access tokens** (external agents): user-generated tokens from the web app profile page (`/profile/agents`), with rotate/delete/renew/scope management. Also supports wallet-signed challenge-response for agents that can sign Solana messages.
 
 ### Skill endpoint (Q5, Q6)
-`https://fundwise.fun/skill.md` — root level, returns `Content-Type: text/markdown`. Comprehensive machine-readable document describing what FundWise is, what actions are available, how to authenticate, what to call, what not to call, rate limits, error handling, and terms of use.
+`https://fundwise.kairen.xyz/skill.md` — root level, returns `Content-Type: text/markdown`. Comprehensive machine-readable document describing what FundWise is, what actions are available, how to authenticate, what to call, what not to call, rate limits, error handling, and terms of use.
 
 ### New Supabase tables (Q7)
 - `telegram_wallet_links` — one Telegram ID -> one active wallet, soft-delete on re-link

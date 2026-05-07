@@ -38,6 +38,6 @@ Fundy will live in its own repository as a sibling product to FundWise, not in `
 
 ## What this repo still owes Fundy
 
-- The **Agent Skill Endpoint** (`/skill.md`) at `https://fundwise.fun/skill.md`.
+- The **Agent Skill Endpoint** (`/skill.md`) at `https://fundwise.kairen.xyz/skill.md`.
 - The **Scoped Agent Access API** with capability grants scoped to Member wallet, Group, and action type, with expiration and revocation.
 - Backend schema additions before Fundy can ship: Telegram-to-wallet links, agent-access grants, Proposal comments, proof attachments / links, Proposal edit history, agent capability grants.

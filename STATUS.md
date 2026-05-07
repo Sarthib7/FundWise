@@ -4,7 +4,7 @@
 **Phase:** Split Mode MVP hardening on Solana devnet
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
 **Active issue index:** [issues.md](./issues.md)
-**Handoff:** Product scope is now tightened for the next submission pass: Source Currency and Expense Proof are future-only, Split Mode stays free at launch, shipped/planned state is canonicalized, mini-games are out of FundWise scope, and the forward plan is Split Mode -> Fundy -> Fund Mode beta -> scoped agents/rails.
+**Handoff:** Review and issue docs were updated for the product-roast corrections. Next: run FW-012 docs cleanup through the remaining public docs, then resolve FW-007 and FW-011.
 
 ---
 
@@ -18,27 +18,20 @@ FundWise is still a two-mode product:
 The product direction is now sharper:
 
 - The primary hackathon demo is Split Mode, not Fund Mode.
-- The market is not empty. Crypto-native bill-splitting competitors already exist, so FundWise should position around verified USDC Settlement for real Groups, not "first crypto Splitwise."
 - The web app is the source of truth for the MVP.
 - Core UI for landing, Groups, Group detail, and receipts is in place; **targeted frontend polish and refactors** (navigation, CTAs, component extraction) continue in parallel with backend trust work.
 - Solana devnet is the active execution environment for now. Mainnet-beta remains a later target after devnet hardening and rehearsal.
 - **Identity:** Solana pubkey via `@solana/wallet-adapter-*` is the default. Optional **Phantom Connect** may be added alongside it (Portal App ID required); see ADR-0014 and [CONTEXT.md](./CONTEXT.md).
 - USDC is the only settlement asset in the MVP.
-- Source Currency entry is future-only for the current public demo. It must not ship as real behavior until each Expense stores the original amount, converted USD/USDC ledger value, and Exchange Rate Snapshot end to end.
-- Expense Proof upload is future-only for the current public demo. It must not ship as real behavior until storage, preview, limits, and access rules are implemented.
-- Split Mode stays free for launch, including normal USDC Settlements. Monetization belongs first to Fund Mode, Fundy premium, and later partner rails.
+- Expenses may later be entered in other Source Currencies, but they must convert into a stored USD/USDC ledger value using an Exchange Rate Snapshot before Balance and Settlement math runs.
+- Receipt-photo upload belongs in the product plan as Expense Proof, stored off-chain as Expense metadata.
 - `LI.FI` is now the highest-priority sponsor support layer after Split Mode hardening. It should appear inside the Settlement path as `Route funds for Settlement` when a Member's USDC is on another supported network, not as a standalone dashboard top-up task.
 - **Zerion** remains a later CLI/analysis layer, not a replacement for Solana wallet connect.
 - The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
 - **Fundy** is the name of the hosted Telegram bot that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Fundy handles read-only and draft-safe actions; money movement still requires wallet confirmation in the app.
-- The **Agent Skill Endpoint** (`/skill.md`) is live as a public discovery document on the production host (`https://fundwise.fun/skill.md`). Public API reference markdown is also exposed at `https://fundwise.fun/api/docs`. Scoped Agent Access and agent-paid Settlements remain planned.
+- The **Agent Skill Endpoint** (`/skill.md`) is live as a public discovery document on the production host (`https://fundwise.kairen.xyz/skill.md`). Public API reference markdown is also exposed at `https://fundwise.kairen.xyz/api/docs`. Scoped Agent Access and agent-paid Settlements remain planned.
 - The audience rollout is crypto-native Groups first, then agents, then non-crypto users through Visa/card, IBAN, and Altitude-style Solana banking rails after the core flow is reliable.
 - Fund Mode is still incomplete. Treasury initialization and Contributions exist, but Proposal flows are not yet ready to be presented as fully shipped product behavior.
-- Settlement Request Links are the primary growth loop: a Member shares a live settle intent, the debtor opens the current Balance state, signs the exact USDC Settlement, and both sides get a Receipt.
-- Fundy comes before open Fund Mode because it creates distribution where Groups already coordinate and turns FundWise data into reminders, drafts, wallet-readiness checks, and personal-finance workflows.
-- Visa/card/IBAN rails remain partner-dependent future work. They can support a settle-to-spend story later, but they should not be claimed or built as core product until a concrete provider path exists.
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise and must stay out of the hackathon story.
-- Canonical product-state and monetization references: [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) and [docs/monetization.md](./docs/monetization.md).
 
 ---
 
@@ -115,9 +108,14 @@ Completed:
 
 Next:
 
-1. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): Split Mode is the product, LI.FI and Zerion are support layers, and planned surfaces stay labeled as planned.
-2. Continue devnet/mainnet hardening for the free Split Mode launch.
-3. Treat Source Currency, Expense Proof, Fund Mode Proposals, Fundy, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as post-demo work unless separately implemented end to end.
+1. **FW-007:** Decide whether Source Currency and Expense Proof ship in the demo, remain clickable mockups, or stay roadmap-only.
+   - Hackathon-safe default: keep them future or explicitly mocked unless the next agent can complete the ledger/storage path end-to-end.
+2. **FW-011:** Define the monetization model and finance analysis.
+   - Owner preference: keep Split Mode free for acquisition if possible; evaluate fees around Fund Mode, Fundy top-ups, card/rail revenue, and carefully scoped Settlement fees.
+3. **FW-012:** Clean shipped-vs-planned docs and messaging drift.
+   - Canonical LI.FI wording is `Route funds for Settlement`.
+   - Fundy lives in a separate repo per ADR-0022, not `services/fundy/`.
+   - `/skill.md` baseline is live; Scoped Agent Access and agent-paid payment authority are planned.
 
 Deferred:
 
@@ -131,8 +129,8 @@ FW-005 was completed on 2026-05-04: feature commit landed first (`feat(zerion): 
 
 Next:
 
-1. Keep [SUBMISSION.md](./SUBMISSION.md) and public copy aligned with FW-007: Source Currency and Expense Proof are future-only for the current demo.
-2. Keep [docs/monetization.md](./docs/monetization.md) as the working business-model reference: free Split Mode launch, paid Fund Mode / Fundy / partner rails later.
+1. Help the owner resolve **FW-007 (Source Currency / Expense Proof ship decision)**. Hackathon-safe default is to keep both as future or explicitly mocked unless the ledger/storage path is end-to-end complete.
+2. Update [SUBMISSION.md](./SUBMISSION.md) copy to match whatever FW-007 lands on, so the demo claims and the shipped state are consistent.
 
 Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 
@@ -140,21 +138,17 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 
 1. Finish backend trust hardening and devnet UX hardening for Split Mode.
 2. Heavily test the core web product on devnet:
-   create, invite, join, Expense, Balance, Settlement, and Receipt.
+   create, invite, join, Expense, Balance, Settlement, Receipt, Treasury init, and Contribution.
 3. Finish the LI.FI support layer for EVM-first users:
    `Route funds for Settlement`, route execution, and clean return into the same Group Settlement flow.
-4. Use Settlement Request Links as the acquisition loop and polish the exact debtor flow:
-   shared link -> live Balance -> wallet-confirmed Settlement -> Receipt.
-5. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
+4. Add Zerion and Telegram support layers only after the shared wallet-bound engine is stable:
    wallet analysis, reminders, FundWise Agent, **Fundy** (hosted Telegram bot with wallet linking and read-only/draft-safe Group interactions), and later scoped agent access.
-6. Return to Fund Mode as an invite-only beta after Split Mode is stable and Fundy is in users' hands:
-   Treasury init, Contributions, Proposal creation, approval, execution, comments, and proof.
-7. Extend the now-public Agent Skill/API docs with Scoped Agent Access API after the backend is stable:
+5. Extend the now-public Agent Skill/API docs with Scoped Agent Access API after the backend is stable:
    scoped agent capability grants and authenticated agent-to-FundWise interactions.
-8. Add the missing Supabase data model for later Fund Mode and channel expansion:
+6. Add the missing Supabase data model for later Fund Mode and channel expansion:
    Telegram-to-wallet links, Telegram chat–Group links, short-lived link codes, draft expenses, agent-access grants, Expense Proof attachments, Proposal comments, Proposal proof attachments / external links, Proposal edit history, and later scoped agent-access records.
-9. Treat Visa/card/IBAN rails as partner-dependent expansion after the crypto-native and agent surfaces are reliable.
-10. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
+7. Return to Fund Mode proposals only after the Split Mode plus LI.FI story is coherent under devnet rehearsal.
+8. Move to mainnet-beta only after the web app and shared backend are stable under devnet rehearsal.
 
 ---
 
@@ -182,7 +176,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Each suggested edge in the simplified settlement graph maps to one debtor-to-creditor transfer.
 - Devnet is the active execution environment for now; mainnet-beta comes after devnet hardening and rehearsal evidence.
 - USDC is the only stablecoin in the MVP.
-- Multi-currency Expense entry is allowed as a future feature only if every Expense stores the Source Currency, original amount, converted USD/USDC ledger amount, and Exchange Rate Snapshot used at create or edit time.
+- Multi-currency Expense entry is allowed as a planned feature only if every Expense stores the Source Currency, original amount, converted USD/USDC ledger amount, and Exchange Rate Snapshot used at create or edit time.
 - Historical Balances should not float with live exchange-rate changes. Live exchange values are for quoting at entry/edit time, not for silently repricing old Expenses.
 - Expense Proof should support one lightweight receipt photo / PDF upload or proof link per Expense.
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
@@ -212,7 +206,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 
 ## Product decisions locked on 2026-04-30 (Fundy + Agent Skill grill)
 
-- **Production web host for agent discovery:** `https://fundwise.fun` — Agent Skill at **`/skill.md`** (root).
+- **Production web host for agent discovery:** `https://fundwise.kairen.xyz` — Agent Skill at **`/skill.md`** (root).
 - **Fundy hosting:** separate **Railway** service in a **separate repository** per ADR-0022; Telegram library **`grammy`**.
 - **Fundy ↔ FundWise data path:** HTTP **API routes only** (same surface as browsers/agents), with **`FUNDWISE_SERVICE_API_KEY`** + **`X-Fundy-Wallet`** for bot calls; extend routes for Scoped Agent Access (user tokens from **`/profile/agents`** + optional wallet-signed agent auth).
 - **Telegram ↔ wallet linking:** **Option A** — short-lived codes from the authenticated web app, pasted as `/link FW-…` in DM.
@@ -228,9 +222,9 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Keep the devnet quality gates green:
   `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-- Post-submission product/design pass for multi-currency Expense entry:
+- Product/design pass for multi-currency Expense entry:
   Source Currency selector, current exchange-rate quote, visible converted USD/USDC amount, stored Exchange Rate Snapshot, and edit behavior
-- Post-submission product/design pass for Expense Proof upload:
+- Product/design pass for Expense Proof upload:
   receipt photo / PDF upload, preview, storage limits, and access rules
 - Devnet settlement and Contribution rehearsal on real wallets after the new preflight checks:
   verify insufficient-USDC, insufficient-SOL, and recipient / Treasury token-account creation messaging against actual wallet prompts
@@ -252,7 +246,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 ## Secondary work kept out of the main path
 
 - **Fundy**: the hosted Telegram bot for the FundWise Agent, **command-first v1** on **Railway** (`grammy`), in a **separate repository**. Calls FundWise **HTTP APIs** with service-to-service auth and later Scoped Agent Access (not direct Supabase from the bot). Telegram–wallet linking uses **web-generated short codes** in DM. Zerion via **`/analyze`**, **`/readiness`**, **`/verify`** (Zerion CLI; start with **`ZERION_API_KEY`**, optional x402 later). End goal: LLM agent (e.g. OpenRouter), personal finance, and tax guidance on the same tools. See ADR-0018, ADR-0022, ADR-0023, and CONTEXT.md.
-- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.fun/skill.md`** — what to call, what not to call, auth, limits, errors. Does not require auth to fetch; does not expose private Member data. See ADR-0018.
+- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.kairen.xyz/skill.md`** — what to call, what not to call, auth, limits, errors. Does not require auth to fetch; does not expose private Member data. See ADR-0018.
 - **Scoped Agent Access**: the permission model for autonomous agents. Agents get scoped capabilities tied to Member wallet, Group, and action type — not broad permanent API keys.
 - FundWise Agent for reminders, draft Expenses, proof upload, wallet analysis, and scoped assistant-driven FundWise actions
 - Wallet-embedded mini dapp distribution
@@ -261,8 +255,8 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
   gas / fee abstraction, automatic routing paths, and easier web2 onboarding / offboarding into stablecoin balances
 - Long-range fiat bridge research:
   evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; keep Altitude-style Solana banking rails in the roadmap for Visa/card and IBAN-like top-up flows once non-crypto onboarding becomes a priority
-- Mini-games / prediction-market-like mechanics:
-  out of FundWise scope unless separately justified later; keep out of Split Mode, Fund Mode beta, and the hackathon story
+- Long-range Fund Mode mini-games / private Group activities:
+  keep out of Split Mode and out of the hackathon story until Proposal safety, spending boundaries, and prediction-market/gaming risk are explicitly resolved
 - AI bill parsing beyond basic receipt-photo upload, or natural-language expense entry beyond draft-safe FundWise Agent flows
 - **FundWise-native** email/password or social identity as the primary account system (optional Phantom Connect for wallet onboarding is a separate, additive path; see ADR-0014)
 - Gas abstraction / gasless settlement
@@ -346,8 +340,8 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 ## Planned, not yet built
 
 - **Dashboard + Expense UX overhaul** (ADR-0020): 7→4 sections on mobile, expense dialog simplified to 3 fields, category dropdown killed, photo button added. **Next to build.**
-- **Currency conversion** (ADR-0020): future-only; CoinGecko free tier, 5 currencies (USD/EUR/GBP/INR/AED), rate snapshot. Do not demo as shipped until ledger storage is complete.
-- **Photo upload** (ADR-0020): future-only; Supabase Storage, JPEG/PNG only, client-side compress, one per expense. Do not demo as shipped until storage/access rules are complete.
+- **Currency conversion** (ADR-0020): CoinGecko free tier, 5 currencies (USD/EUR/GBP/INR/AED), rate snapshot. After dashboard cleanup.
+- **Photo upload** (ADR-0020): Supabase Storage, JPEG/PNG only, client-side compress, one per expense. After currency conversion.
 - **Fundy Lite** (ADR-0018): Hackathon Telegram bot. Command-based, Zerion wallet analysis, draft expenses, settlement nudges. **Parallel track — second developer.**
 - **Fundy Full** (ADR-0018): Post-hackathon. LLM via OpenRouter, personal finance manager, budgets, spending patterns, receipt parsing, proactive reminders.
 - **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon.

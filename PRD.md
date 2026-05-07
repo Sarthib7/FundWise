@@ -10,13 +10,11 @@ Shared-expense apps solve the bookkeeping problem, but not the settlement proble
 
 FundWise should make shared expenses feel familiar while adding actual settlement finality. The MVP needs to make one thing work extremely well: a private Group where Members log Expenses, see live Balances, and settle exact USDC amounts on Solana with a clean Receipt. Members should be able to enter an Expense in the currency that was actually paid, while FundWise converts it into a stable USD/USDC ledger value before Balance and Settlement math runs.
 
-The competitive category is crowded. Splitwise, Venmo Groups, Spliit, tricount, Kittysplit, and multiple crypto-native bill splitters already train users to expect Groups, balances, receipt support, and debt simplification. FundWise should not depend on "crypto bill splitting" novelty. It should win on verified USDC Settlement for real Groups, live Settlement Request Links, Receipt integrity, cross-chain recovery only when needed, and later scoped agent access over the same wallet-bound ledger.
-
 ## Solution
 
 FundWise is a web app with wallet-native identity and two product modes:
 
-- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, compute live net Balances, and settle with on-chain USDC transfers on Solana. Source Currency entry and Expense Proof are future-only for the current public demo.
+- Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, attach optional Expense Proof, compute live net Balances, and settle with on-chain USDC transfers on Solana.
 - Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. It is the stronger long-term moat for durable Groups, but it remains invite-only until the full Proposal lifecycle is complete.
 
 For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users route funds during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
@@ -34,14 +32,11 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Current state over stale links. Settlement links resolve against the debtor's current Balance when opened.
 - Exact settlement over flexible settlement. The primary flow is settle the exact owed amount in one go.
 - Hide routing complexity. Users should think in terms of `Settle` first and `Route funds for Settlement` only when needed, not bridge selection and multi-step route logic.
-- Keep friend repayment free at launch. Split Mode should acquire Groups through free shared-expense tracking and normal USDC Settlements; paid surfaces come later through Fund Mode, Fundy, and partner rails.
 - Activity feed, not chat. The Group timeline should explain the ledger without becoming a general messaging product. If Fund Mode needs discussion later, prefer Proposal-scoped comments over full Group chat.
 - Sponsor integrations must support the main flow, not redefine it.
-- Settlement Request Links are the primary growth loop. They should take a debtor from a shared intent into the current live Balance, then through wallet-confirmed USDC Settlement and Receipt without stale amounts or automatic sending.
 - Distribution expansion should reuse the same wallet-native ledger model across web, FundWise Agent, Telegram, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
-- Fundy ships before public Fund Mode. The companion agent creates distribution where Groups already coordinate and turns FundWise ledger data into reminders, draft Expenses, wallet-readiness checks, personal-finance workflows, and later tax guidance.
 - The long-range end state is a stablecoin-first product where gas, fees, and bridging are abstracted away as much as possible for the end user, while the core ledger still stays wallet-verifiable underneath.
-- Roll out by audience in sequence: crypto-native Groups first, then Fundy and scoped agents, then Fund Mode beta, then non-crypto users through card, IBAN, or Altitude-style Solana banking rails once partner paths are concrete.
+- Roll out by audience in sequence: crypto-native Groups first, then agents, then non-crypto users through card, IBAN, or Altitude-style Solana banking rails.
 
 ## User Stories
 
@@ -113,7 +108,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - One Telegram group chat should map to one FundWise Group at a time. If multi-Group switching is allowed later, it should be an explicit chat-level flow rather than the default.
 - Any Group Member may add the bot to a Telegram chat, but each person must authenticate one-on-one with the bot in DM before the bot reads or drafts on their behalf.
 - Agent access should not rely on broad raw API keys. Later agent surfaces should use scoped capabilities tied to the Member wallet, Group, and action type.
-- The Agent Skill Endpoint (`/skill.md`) is a public URL at **`https://fundwise.fun/skill.md`** that returns a machine-readable markdown document describing FundWise capabilities, supported actions, authentication flow, and explicit guardrails (what not to call). Fetching the document does not require authentication and the document must not expose private Member data.
+- The Agent Skill Endpoint (`/skill.md`) is a public URL at **`https://fundwise.kairen.xyz/skill.md`** that returns a machine-readable markdown document describing FundWise capabilities, supported actions, authentication flow, and explicit guardrails (what not to call). Fetching the document does not require authentication and the document must not expose private Member data.
 - Scoped Agent Access is the permission model for autonomous agents. Agents receive scoped capabilities tied to the Member wallet, specific Group, and action type. Money-moving actions (Settlement execution, Contribution execution, Proposal execution) still require direct wallet confirmation from the Member, even when an agent initiates the intent.
 - Payable Settlement Requests are a post-MVP research direction for x402 / MPP-style agent payment flows. They must be separate from normal Settlement Request Links, must resolve the live Group Balance, must be idempotent, and must never create a Receipt until payment verification succeeds.
 - Spending Policies are required before an agent can pay a Payable Settlement Request. The backend must enforce caps and scopes; the LLM or agent prompt is not an authorization source.
@@ -122,9 +117,9 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Fundy v1 is **command-based** (fixed commands); the end goal is an **LLM-backed** assistant (e.g. OpenRouter) with the same underlying tools. Fundy runs on **Railway** as a separate service from the Next.js app and now lives in a **separate repository** per ADR-0022. It calls FundWise through the **same HTTP API** as other clients, using service-to-service auth and later Scoped Agent Access, not ad-hoc direct Supabase access from the bot.
 - Fundy supports read-only views (Balances, Expenses, Settlements, Receipts), draft-safe actions (draft Expense, upload proof), comments, and history. **Proposal approve/reject** may run from Fundy when those updates are **database-only**; **on-chain** Settlement, Contribution, and Proposal **execution** bounce the Member to the web app with **Settlement Request Links** used for settle intents where applicable.
 - Fundy integrates **Zerion CLI** for **`/analyze`**, **`/readiness`**, and **`/verify`** (wallet + transaction history). Prefer **`ZERION_API_KEY`** (free dev tier) for v1; optional **x402** pay-per-call on Solana later.
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise. They are not Split Mode scope, Fund Mode beta scope, or hackathon submission scope.
+- Fundy may later support private Group activities or mini-games for Fund Mode Treasuries, but those are not part of Split Mode and must not ship before Proposal safety, spending rules, and the prediction-market boundary are explicitly resolved.
 - Scoped Agent Access includes **user-generated agent tokens** managed from **`/profile/agents`** (rotate, delete, renew, scopes) plus optional **wallet-signed** agent authentication for agents that can sign Solana messages.
-- The Agent Skill document lives at **`https://fundwise.fun/skill.md`** and is the shipped public discovery baseline. Scoped tokens, agent payment authority, and agent-paid Settlement execution remain planned.
+- The Agent Skill document lives at **`https://fundwise.kairen.xyz/skill.md`** and is the shipped public discovery baseline. Scoped tokens, agent payment authority, and agent-paid Settlement execution remain planned.
 - Later onboarding work should help web2 users reach stablecoin balances with far less friction, potentially through Visa cards, IBAN/bank-transfer funding, fiat rails, and Altitude-style Solana banking flows, but only after the crypto-native core flow and agent surfaces are reliable.
 - A Member is keyed by wallet address and labeled with a global profile display name.
 - **Optional:** Phantom Connect (Google/Apple + embedded or extension via Phantom) may be offered **in addition to** `@solana/wallet-adapter-*`, with Phantom Portal configuration. It does not replace the adapter for users who use Solflare, Backpack, or other wallets. See [CONTEXT.md](./CONTEXT.md) and [docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md](./docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md).
@@ -136,12 +131,12 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Invite links should restore the exact Group context after connect and present an explicit `Join {GroupName}` action; the app should not silently join on wallet connect.
 - Creator approval, Group roles, and membership workflows beyond simple join/leave are out of the MVP.
 - The MVP settlement asset is USDC only.
-- Expense entry may support multiple Source Currencies in a future release, but this does not change the settlement asset. Every saved Expense must have a USD/USDC ledger amount.
+- Expense entry may support multiple Source Currencies, but this does not change the settlement asset. Every saved Expense must have a USD/USDC ledger amount.
 - Exchange-rate conversion should use a current quote at Expense create or edit time, then store an Exchange Rate Snapshot. Historical Balance math must use the stored snapshot instead of continuously repricing old Expenses. See [docs/adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md](./docs/adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md).
 - Mainnet-beta is the product target. Devnet is the test and rehearsal environment.
 - SOL remains necessary for gas in the MVP.
 - Expenses are off-chain records stored in the app data layer.
-- Expense Proof uploads are future-only off-chain metadata attached to Expenses. They may be images, PDFs, or external proof links, and should not be confused with Settlement Receipts.
+- Expense Proof uploads are off-chain metadata attached to Expenses. They may be images, PDFs, or external proof links, and should not be confused with Settlement Receipts.
 - Settlements are on-chain Solana USDC transfers.
 - The Group ledger is netted at the Group level, not at the individual Expense level.
 - Members settle current net Balance, not a custom amount and not an Expense-by-Expense bill.
@@ -198,15 +193,14 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Partial settlements
 - Installment or escrow-based settlements
 - Rewards, loyalty systems, or NFT reputation
-- Fund Mode mini-games or prediction-market-like mechanics in FundWise
+- Fund Mode mini-games or prediction-market-like mechanics in the MVP
 - Creator approval for Group joins
 - Advanced Group roles and permissions
 - Public Groups or Group discovery
 
 ## Further Notes
 
-- The main hackathon story should stay simple: private Group creation, structured Expense entry, live Balance view, one-click USDC settlement, and a clear Receipt. Source Currency and Expense Proof should be discussed only as future improvements unless implemented end to end.
-- Do not claim an empty market. The correct positioning is not "the first crypto Splitwise"; it is "wallet-native Group settlement with live USDC finality and verifiable Receipts."
+- The main hackathon story should stay simple: private Group creation, structured Expense entry with optional receipt photo and currency conversion, live Balance view, one-click USDC settlement, and a clear Receipt.
 - Sponsor integrations should be framed as supporting layers. LI.FI helps when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
-- Fund Mode is still part of the long-term product and should remain documented as Treasury plus Proposal functionality, but it should not displace Split Mode as the MVP story and should open after Fundy creates distribution and repeat Group usage.
+- Fund Mode is still part of the long-term product and should remain documented as Treasury plus Proposal functionality, but it should not displace Split Mode as the MVP story.
 - Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, FundWise Agent distribution surfaces, and broader mobile surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.

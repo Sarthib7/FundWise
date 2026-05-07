@@ -28,15 +28,13 @@ The product story for judges should stay simple:
 
 That is the primary demo path.
 
-The competitive frame should be honest: FundWise is not entering an empty category, and crypto bill-splitting clones already exist. The demo should therefore avoid "first crypto Splitwise" language and focus on the sharper wedge: live USDC Settlement from a private Group Balance, Settlement Request Links that never go stale, wallet-confirmed execution, and a verified Receipt.
-
 Everything else is a supporting layer:
 
 - `LI.FI` helps an EVM-first debtor route funds if their USDC is on another chain, ideally from inside the Settlement flow.
 - `Zerion CLI` helps with wallet analysis, reminders, and agent-style assistance around the same core flow.
 - `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
 - `Fundy` is the hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
-- The `Agent Skill Endpoint` (`/skill.md`) is a public URL at **`https://fundwise.fun/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and planned Scoped Agent Access; it must not expose private Member data.
+- The `Agent Skill Endpoint` (`/skill.md`) is a public URL at **`https://fundwise.kairen.xyz/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and planned Scoped Agent Access; it must not expose private Member data.
 - `Fund Mode` broadens the product story, but it is incomplete and should not be presented as the current mainline product path.
 
 ---
@@ -56,7 +54,8 @@ Everything else is a supporting layer:
 
 - Smooth web-app UX
 - Wallet connect that preserves context instead of dropping users into a generic app state
-- A clean Expense flow that does not imply Source Currency or Expense Proof are shipped before their ledger/storage paths are complete
+- Expense entry that can preserve the original Source Currency while converting into a stable USD/USDC ledger value
+- Optional receipt-photo upload as Expense Proof
 - Exact-amount Settlement
 - Clear Receipt
 - Mobile-friendly flow
@@ -129,7 +128,6 @@ Low fit for the current product direction.
 - Private Group creation
 - Fast Expense entry
 - Live Balances
-- Settlement Request Links as the shareable repayment loop
 - Exact USDC Settlement
 - Receipt view
 
@@ -208,8 +206,6 @@ Avoid these claims in the main pitch unless they are actually shipped:
 - Fundy as a shipped product (it is planned, not shipped)
 - Scoped Agent Access or autonomous agent payment as a shipped feature
 - Payable Settlement Requests or autonomous money movement as shipped features. They are documented research, not part of the current demo path.
-- Source Currency entry or Expense Proof upload as shipped features. They are future-only for the current public demo.
-- Mini-games, private games, or prediction-market-like mechanics as part of FundWise.
 - Unlimited agent spending, broad API keys, or prompt-only authorization for financial actions.
 
 For future expansion after the core demo path is solid:
@@ -219,9 +215,8 @@ For future expansion after the core demo path is solid:
 - The **Agent Skill Endpoint** (`/skill.md`) lets any autonomous agent curl the FundWise domain and discover what FundWise can do. Private data and durable agent actions still require planned Scoped Agent Access, not broad API keys.
 - Agent skills and personal-agent access are promising only if they operate through scoped capabilities instead of broad raw API keys.
 - FundWise Agent can eventually support Telegram reminders, draft-safe Expense creation, proof upload, and Group summaries, but money movement still returns to app-and-wallet confirmation.
-- Fundy should come before public Fund Mode because it gives FundWise distribution in existing Telegram groups and lets the product learn from real Expense, Settlement, Receipt, and wallet-readiness behavior.
 - Wallet mini apps and native mobile should come after the shared engine is stable enough to support multiple clients cleanly.
-- Stablecoin-only UX with fee abstraction, smoother on/off ramps, and web2-friendly funding rails is a strong long-range direction, but it should stay out of the core hackathon pitch until the main crypto-native path is solid and a concrete card/IBAN partner path exists.
+- Stablecoin-only UX with fee abstraction, smoother on/off ramps, and web2-friendly funding rails is a strong long-range direction, but it should stay out of the core hackathon pitch until the main crypto-native path is solid.
 
 ---
 

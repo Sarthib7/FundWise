@@ -15,8 +15,6 @@ The strategic rollout order is locked, even where individual phases run in paral
 
 The repo phases below describe engineering scope; this section is the order in which surfaces are exposed to users.
 
-Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise should not plan around novelty. The wedge is verified USDC Settlement for real private Groups, with Settlement Request Links as the acquisition loop. Fundy comes before open Fund Mode because it creates distribution and daily utility where Groups already coordinate; Visa/card rails come only after a concrete partner path exists.
-
 ---
 
 ## Phase 0 - Pivot cleanup (April 25-26) ✅
@@ -66,8 +64,8 @@ Planning thesis: the market already has strong web2 substitutes and several cryp
 
 - Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
 - Devnet settlement UX hardening around insufficient-USDC states, insufficient-SOL states, and clearer ATA-creation messaging
-- Post-submission Source Currency planning: Source Currency capture, current exchange-rate quote, Exchange Rate Snapshot storage, and USD/USDC ledger conversion without changing the USDC settlement asset
-- Post-submission Expense Proof planning: optional merchant receipt photo / PDF upload tied to Expense records
+- Multi-currency Expense entry planning: Source Currency capture, current exchange-rate quote, Exchange Rate Snapshot storage, and USD/USDC ledger conversion without changing the USDC settlement asset
+- Expense Proof planning: optional merchant receipt photo / PDF upload tied to Expense records
 - Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
 
 **Execution order inside Phase 1:**
@@ -186,11 +184,11 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 - Web app first
 - Private Group creation
 - Fast Expense entry
+- Optional receipt photo upload
+- Currency conversion into a stable USD/USDC ledger value
 - Live Group Balances
 - One-click USDC Settlement
 - Clear Receipt
-- Settlement Request Links as the shareable loop: live Balance, exact debtor context, wallet-confirmed Settlement, Receipt
-- Source Currency and Expense Proof only as future direction unless implemented end to end before recording
 
 **Submission work:**
 
@@ -233,7 +231,7 @@ Reference brief for the Visa-track narrative. Each entry is what we verified plu
 - **Reap (reap.global)** — USD/HKD Visa cards backed by stablecoin collateral, Circle/Solana/Visa partner. Same shape as Rain but more APAC-anchored; reasonable backup if Rain doesn't reply.
 - **Skip for hackathon scope:** Gnosis Pay (EVM-only, doesn't fit Solana narrative), Crypto.com / Bitpanda Card (closed consumer products, no partner-grade hackathon path), Holyheld (EVM-first, similar issue).
 
-Recommended FundWise framing for the Visa Frontier submission: lead with USDC-on-Solana group settlement. Treat "settle -> spend" through KAST, Avici, Rain, or another card partner as future partner work until there is a concrete integration path. Do not build or claim card funding as core product for the hackathon.
+Recommended FundWise framing for the Visa Frontier submission: lead with USDC-on-Solana group settlement, then show the "settle → spend" handoff to KAST or Avici as the consumer wedge, and name Rain as the production path for issuing FundWise-branded Group cards post-hackathon.
 
 ---
 
@@ -263,7 +261,7 @@ Recommended FundWise framing for the Visa Frontier submission: lead with USDC-on
 
 **FundWise repo prerequisites for Fundy:**
 
-- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.fun/skill.md`** — purpose, allowed vs forbidden calls, auth (profile tokens + optional wallet-signed), limits, errors; any agent can `curl` it. Fundy is the first consumer.
+- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.kairen.xyz/skill.md`** — purpose, allowed vs forbidden calls, auth (profile tokens + optional wallet-signed), limits, errors; any agent can `curl` it. Fundy is the first consumer.
 - **Scoped Agent Access API**: permission model for autonomous agents — scoped capabilities tied to Member wallet, Group, and action type (read, draft, comment), not broad permanent API keys. Money-moving action types still require direct wallet confirmation. Supports capability grants with expiration and revocation.
 - **Payable Settlement Request research**: evaluate x402, MPP, and pay.sh-style flows for agent-paid Settlement Requests. The first prototype should be USDC-only, exact amount, short expiry, idempotent, and Receipt-producing only after verified payment proof. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
 - **Agent Spending Policy**: define Member-configured payment caps, Group scope, asset scope, counterparty scope, expiry, revocation, and human fallback before any agent-paid Settlement ships. See [docs/agent-payment-policy.md](./docs/agent-payment-policy.md).
@@ -281,7 +279,7 @@ Only pursue these after the core Group ledger, USDC settlement flow, and Fundy c
 **Product expansion:**
 
 - Multi-stablecoin support
-- Broader Source Currency support for Expense entry, including exchange-rate provider redundancy and better display of original amount vs converted ledger amount. This remains future-only until Exchange Rate Snapshot storage is complete.
+- Broader Source Currency support for Expense entry, including exchange-rate provider redundancy and better display of original amount vs converted ledger amount
 - Cross-chain direct flows beyond Settlement routing
 - Embedded wallets
 - Social login
@@ -308,7 +306,7 @@ Only pursue these after the core Group ledger, USDC settlement flow, and Fundy c
 
 - Better treasury UX
 - Refund / closeout flow
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise unless separately justified later outside the current Split Mode and Fund Mode roadmap
+- Private Group activities or mini-games only after Proposal safety is complete and prediction-market/gaming boundaries are resolved
 - Yield integrations if user demand justifies them
 - Custom Anchor vault if Squads UX becomes the bottleneck
 

@@ -27,8 +27,6 @@ Quick links:
 - [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
 - [issues.md](./issues.md) - active indexed backlog for hackathon execution
 - [docs/README.md](./docs/README.md) - chunked documentation index by topic
-- [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope product matrix
-- [docs/monetization.md](./docs/monetization.md) - launch monetization model and conservative first-year scenario
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md) - research note for Payable Settlement Requests, x402, MPP, and pay.sh
 - [docs/agent-payment-policy.md](./docs/agent-payment-policy.md) - spending capacity, safety policy, endpoint gaps, and Group ownership notes for payment-aware agents
@@ -52,9 +50,8 @@ The current MVP path is:
 - Invite link or QR join flow with an explicit `Join {GroupName}` confirmation after connect
 - Settlement Request Links open the live settleable state and context, but never auto-send a Settlement
 - USDC-only settlement asset
-- Source Currency entry is future-only for the current public demo; it must not ship until every Expense stores the original amount, converted USD/USDC ledger value, and Exchange Rate Snapshot end to end
-- Expense Proof upload is future-only for the current public demo; it must not ship until storage, preview, size limits, and access rules are implemented
-- Split Mode stays free for launch, including normal USDC Settlements
+- Planned multi-currency Expense entry converts a Source Currency amount into a stored USD/USDC ledger value using an Exchange Rate Snapshot
+- Planned Expense Proof upload lets Members attach a merchant receipt photo, PDF, or proof link to an Expense
 - Activity Feed, not chat
 - Current net Group Balance settlement, not per-Expense settlement
 
@@ -67,7 +64,7 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 - Intended long-term use: durable shared pools for friends, households, clubs, and recurring Groups
 - Public Group creation keeps Fund Mode invite-only for now; internal testing can be re-enabled with `FUNDWISE_FUND_MODE_INVITE_WALLETS`
 - Proposal / approval / execution flow still pending and not part of the current hackathon mainline
-- Private Group mini-games and prediction-market-like mechanics are out of scope for FundWise unless they are separately justified later outside the current Split Mode and Fund Mode roadmap
+- Future private Group activities or mini-games must stay behind Fund Mode safety work and must not reintroduce prediction-market scope into the Split Mode MVP
 
 ### Sponsor layers
 
@@ -75,33 +72,34 @@ Fund Mode remains in the product and repo, but it is not the primary hackathon d
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 - **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent from a separate repository. Fundy starts command-first with Zerion wallet analysis, personal finance support, Group Expense drafting, and Telegram group interaction; later versions add an LLM layer, tax guidance, and richer personal-finance workflows. See ADR-0018, ADR-0022, and ADR-0023.
-- **Agent Skill Endpoint** (`/skill.md`) is already live as a public discovery document at **`https://fundwise.fun/skill.md`**. API reference markdown is available at **`https://fundwise.fun/api/docs`**. Scoped Agent Access tokens and agent-paid Settlements are still planned.
+- **Agent Skill Endpoint** (`/skill.md`) is already live as a public discovery document at **`https://fundwise.kairen.xyz/skill.md`**. API reference markdown is available at **`https://fundwise.kairen.xyz/api/docs`**. Scoped Agent Access tokens and agent-paid Settlements are still planned.
 - **Payable Settlement Requests** are a planned research direction for agent-paid settlement through x402 / MPP-style payment flows. They should expose unpaid invoice/request state, payment challenge data, verification status, and the final Receipt only after payment is verified. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
 - **Spending Policies** are required before any agent can pay a Settlement. They set per-Settlement caps, daily limits, Group scope, counterparty scope, expiry, and human fallback behavior. See [docs/agent-payment-policy.md](./docs/agent-payment-policy.md).
 - **Visa / IBAN / Altitude-style top-ups** are a future non-crypto onboarding path, not current MVP functionality. The rollout order is crypto-native Groups first, then agents, then non-crypto users through card, bank-transfer, or Solana banking rails.
 
 Neither sponsor integration should complicate the primary Split Mode settlement path.
 
-### Competitive posture
-
-The shared-expense category is crowded, and crypto-native bill-splitting competitors already exist. FundWise should not position itself as "the first crypto Splitwise" or rely on bill-splitting novelty. The wedge is narrower: verified USDC Settlement for real private Groups, live Settlement Request Links that resolve the current Balance, clear Receipts, and a support path for debtors whose funds are not already on Solana.
-
-The long-term moat is trust and distribution first, then data advantage from structured Expenses, Balances, Settlements, Receipts, Expense Proof, wallet-readiness signals, and scoped agent permissions. Fundy should ship before Fund Mode public beta because it creates distribution where Groups already coordinate and turns FundWise data into useful reminders, drafts, readiness checks, and personal-finance workflows.
-
 ### Shipped vs planned
 
-Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical product-state matrix. The short version:
-
-- Shipped/demoable: Split Mode devnet MVP, Zerion readiness script, public Agent Skill Endpoint baseline.
-- Support layer: LI.FI as `Route funds for Settlement`.
-- Future: Source Currency, Expense Proof, Fund Mode Proposal lifecycle, Fundy, Scoped Agent Access, Payable Settlement Requests, Visa / IBAN / Altitude-style rails, and tax guidance.
-- Out of scope for FundWise: mini-games and prediction-market-like mechanics.
+| Surface | Current state | Notes |
+| --- | --- | --- |
+| Split Mode | Shipped on devnet MVP path | Primary hackathon and mainnet launch path |
+| Fund Mode | Partial / invite-only | Treasury and Contributions exist; Proposal lifecycle is not complete |
+| LI.FI | Support layer groundwork | User-facing language should be `Route funds for Settlement` |
+| Zerion | Scripted readiness demo | Read-only wallet analysis, not wallet auth |
+| Agent Skill Endpoint | Shipped baseline | Public `/skill.md` and `/api/docs`; no scoped tokens yet |
+| Scoped Agent Access | Planned | Required before external agents can read private data with durable grants |
+| Payable Settlement Requests | Planned research | x402 / MPP invoice, payment challenge, verification, Receipt |
+| Fundy | Planned separate repo | Telegram + personal-finance agent, wallet-confirmed for money movement |
+| Visa / IBAN / Altitude top-ups | Future | Non-crypto onboarding after crypto-native and agent surfaces work |
+| Fund Mode mini-games | Future / undecided | Must stay isolated from Split Mode and prediction-market cleanup |
+| Tax guidance | Future Fundy surface | Belongs to Fundy, not the FundWise web MVP |
 
 ### Hosted app and agent discovery
 
-- Production web app: **`https://fundwise.fun`**
-- Agent Skill: **`https://fundwise.fun/skill.md`**
-- API docs: **`https://fundwise.fun/api/docs`**
+- Production web app: **`https://fundwise.kairen.xyz`**
+- Agent Skill: **`https://fundwise.kairen.xyz/skill.md`**
+- API docs: **`https://fundwise.kairen.xyz/api/docs`**
 
 ## Tech Stack
 
@@ -256,8 +254,8 @@ supabase db push --include-all
 - Members need SOL for gas even though Settlements use USDC.
 - FundWise now preflights stablecoin transfers before the wallet prompt so users see insufficient-USDC, insufficient-SOL, and token-account-creation guidance earlier.
 - The current rollout order is:
-  Split Mode devnet/mainnet hardening -> Fundy companion agent -> Fund Mode invite-only beta -> Scoped Agent Access and Payable Settlement Requests -> non-crypto top-up rails
-- Planned Expense entry expansion: allow Source Currency input, show a current exchange-rate quote, save the Exchange Rate Snapshot, and keep Balances / Settlements in the converted USD/USDC ledger value. This is future-only until the storage and ledger path is complete.
+  Split Mode devnet/mainnet hardening -> Fund Mode Proposal lifecycle -> Fundy companion agent -> Scoped Agent Access and Payable Settlement Requests -> non-crypto top-up rails
+- Planned Expense entry expansion: allow Source Currency input, show a current exchange-rate quote, save the Exchange Rate Snapshot, and keep Balances / Settlements in the converted USD/USDC ledger value.
 - Planned proof expansion: allow one lightweight receipt photo / PDF upload or proof link on an Expense.
 - The current docs source of truth is split across [STATUS.md](./STATUS.md), [CONTEXT.md](./CONTEXT.md), and [PRD.md](./PRD.md). If another doc disagrees, those three win.
 

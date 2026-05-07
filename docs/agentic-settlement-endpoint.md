@@ -81,7 +81,7 @@ Response:
   "amount": "47.00",
   "asset": "USDC",
   "expiresAt": "2026-05-06T12:15:00.000Z",
-  "settlementRequestUrl": "https://fundwise.fun/groups/...?...",
+  "settlementRequestUrl": "https://fundwise.kairen.xyz/groups/...?...",
   "payment": {
     "rail": "mpp",
     "status": "challenge",
