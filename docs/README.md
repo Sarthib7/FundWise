@@ -30,6 +30,7 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [issues](../issues.md) - indexed local backlog
 - [Shipped vs Planned Product Matrix](./shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope status
 - [Monetization Model](./monetization.md) - free Split Mode launch and paid-surface hypotheses
+- [Research Reports](./research/) - generated market and technology research; supporting context only, not source of truth
 
 ## API And Agent Surfaces
 
@@ -37,6 +38,12 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [Zerion readiness](./zerion-readiness.md) - wallet-readiness CLI support notes
 - [Agentic Settlement Endpoint Research](./agentic-settlement-endpoint.md) - Payable Settlement Request research and endpoint shape
 - [Agent Payment Policy](./agent-payment-policy.md) - Spending Policies, endpoint gaps, safety rules, and ownership notes
+
+## Research Reports
+
+- [Research index](./research/) - generated research artifacts kept out of the repo root
+- [Monetization and business model research](./research/monetization-business-model-research-2026-05-07.md) - supporting market context for Fund Mode, Fundy, paid endpoints, and revenue models
+- [Technology landscape research](./research/technology-landscape-research-2026-05-07.md) - supporting architecture context for treasury, agent payments, fee abstraction, rails, and receipt storage
 
 ## Architecture Decisions
 
@@ -58,6 +65,7 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [Squads multisig for Fund Mode](./adr/0005-squads-multisig-for-fund-mode.md)
 - [Store multisig and vault addresses](./adr/0010-store-multisig-and-vault-addresses-for-fund-mode.md)
 - [Prioritize Split Mode and hide cross-chain routing](./adr/0016-prioritize-split-mode-and-hide-cross-chain-routing.md)
+- [Research-informed Fund Mode infrastructure boundaries](./adr/0026-research-informed-fund-mode-infrastructure-boundaries.md)
 
 **Agent And Payments**
 
@@ -71,3 +79,4 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [Positioning](./positioning.md)
 - [GTM rollout order](./adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md)
 - [Visa Frontier track and card partnerships](./adr/0024-visa-frontier-track-and-card-partnerships.md)
+- [Keep Split Mode free and monetize later surfaces](./adr/0025-keep-split-mode-free-and-monetize-later-surfaces.md)

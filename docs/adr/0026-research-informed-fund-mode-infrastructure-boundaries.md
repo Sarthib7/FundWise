@@ -1,0 +1,3 @@
+# Research-informed Fund Mode infrastructure boundaries
+
+Compass technology research is now supporting context in `docs/research/`, not product truth, but it clarifies the next Fund Mode boundaries. Fund Mode stays on Squads-backed Treasury and Proposal flows first; yield, fee abstraction, fiat/card rails, and receipt storage are later layers that should prefer Solana-native or production-ready paths such as Meteora / yield-bearing stablecoins for yield, Kora for fee abstraction, CCTP / LI.FI / Bridge-style rails for funding, and IPFS / Arweave for proof storage. We will not build around unsupported or immature dependencies such as Aave-on-Solana, Morpho-on-Solana, archived Octane, or Shelby mainnet until primary-source docs and production usage make them credible.

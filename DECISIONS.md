@@ -38,3 +38,5 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-022 → [0022-fundy-moves-to-a-separate-repository.md](./docs/adr/0022-fundy-moves-to-a-separate-repository.md) (supersedes ADR-018 Q12)
 - ADR-023 → [0023-tax-advisory-and-filing-live-in-fundy.md](./docs/adr/0023-tax-advisory-and-filing-live-in-fundy.md)
 - ADR-024 → [0024-visa-frontier-track-and-card-partnerships.md](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)
+- ADR-025 → [0025-keep-split-mode-free-and-monetize-later-surfaces.md](./docs/adr/0025-keep-split-mode-free-and-monetize-later-surfaces.md)
+- ADR-026 → [0026-research-informed-fund-mode-infrastructure-boundaries.md](./docs/adr/0026-research-informed-fund-mode-infrastructure-boundaries.md)

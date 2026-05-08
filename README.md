@@ -31,6 +31,7 @@ Quick links:
 - [docs/README.md](./docs/README.md) - chunked documentation index by topic
 - [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope product matrix
 - [docs/monetization.md](./docs/monetization.md) - launch monetization model and conservative first-year scenario
+- [docs/research/](./docs/research/) - generated market and technology research, kept as supporting context only
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md) - research note for Payable Settlement Requests, x402, MPP, and pay.sh
 - [docs/agent-payment-policy.md](./docs/agent-payment-policy.md) - spending capacity, safety policy, endpoint gaps, and Group ownership notes for payment-aware agents
