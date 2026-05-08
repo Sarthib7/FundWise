@@ -1,9 +1,17 @@
 # FundWise
 
-A Solana-native expense-sharing app with two modes:
+FundWise is a shared-finance app for private Groups with two modes:
 
 1. Split Mode: track shared expenses in a Group, compute live balances, and settle debts with on-chain USDC transfers.
 2. Fund Mode: pool USDC into a shared Treasury and spend from it through Proposals and approvals.
+
+## Positioning
+
+**Canonical public tagline:** Split expenses. Earn together.
+
+Lead public copy with shared spending, live Balances, settle-up links, and clear Receipts. Keep Solana, USDC, wallets, and other crypto mechanics behind the user benefit unless the Member is in a wallet, Settlement, Receipt, or developer context.
+
+`Earn together` maps to Fund Mode direction. It should not imply live yield, automatic settlement, or a complete public Proposal lifecycle until those flows are implemented end to end.
 
 ## Language
 

@@ -1,6 +1,6 @@
 # FundWise
 
-**Group money, done right.** Create a private Group, log shared Expenses, see live Balances, and settle exact USDC amounts on Solana with a clear Receipt.
+**Split expenses. Earn together.** Start a private Group, log shared Expenses, see live Balances, and settle up with a clear Receipt.
 
 FundWise also has a second mode, **Fund Mode**, for pooled USDC Treasuries. That remains part of the product direction, but proposal flows are still incomplete and the current MVP is optimized around **Split Mode**.
 
@@ -11,16 +11,18 @@ Read these in order:
 1. [AGENTS.md](./AGENTS.md)
 2. [STATUS.md](./STATUS.md)
 3. [CONTEXT.md](./CONTEXT.md)
-4. [ROADMAP.md](./ROADMAP.md)
-5. [HACKATHON_PLAN.md](./HACKATHON_PLAN.md)
-6. [PRD.md](./PRD.md)
-7. [issues.md](./issues.md)
-8. [docs/adr/](./docs/adr/)
+4. [docs/positioning.md](./docs/positioning.md)
+5. [ROADMAP.md](./ROADMAP.md)
+6. [HACKATHON_PLAN.md](./HACKATHON_PLAN.md)
+7. [PRD.md](./PRD.md)
+8. [issues.md](./issues.md)
+9. [docs/adr/](./docs/adr/)
 
 Quick links:
 
 - [STATUS.md](./STATUS.md) - current repo state, locked decisions, next session
 - [CONTEXT.md](./CONTEXT.md) - domain language and product invariants
+- [docs/positioning.md](./docs/positioning.md) - canonical tagline, FundLabs positioning, messaging hierarchy, and claims guardrails
 - [PRD.md](./PRD.md) - MVP scope, user stories, implementation decisions
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing

@@ -2,6 +2,8 @@
 
 FundWise's public story stays centered on Split Mode until mainnet launch. This matrix is the canonical reference for what can be claimed as shipped, what can be shown as demo support, and what remains planned or speculative.
 
+Canonical tagline: **Split expenses. Earn together.** The first clause is the current Split Mode product; the second is Fund Mode direction until the Proposal and treasury-yield path ships.
+
 Competitive positioning: do not claim an empty category or "first crypto Splitwise." The market already includes mature web2 substitutes and several crypto-native bill-splitting attempts. FundWise should be positioned around verified USDC Settlement for private Groups, live Settlement Request Links, and Receipts.
 
 | Surface | Current state | Public positioning |

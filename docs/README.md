@@ -1,12 +1,28 @@
 # FundWise Docs
 
-This directory holds detailed product, API, and decision records. Start with the root docs first, then use this index for deeper topics.
+This directory holds detailed product, API, positioning, and decision records. Start with the root docs first, then use this index for deeper topics.
+
+## Fast Paths
+
+- **Current product truth:** [STATUS](../STATUS.md) -> [Shipped vs Planned Product Matrix](./shipped-vs-planned.md)
+- **Messaging and positioning:** [Positioning](./positioning.md) -> [SUBMISSION](../SUBMISSION.md)
+- **Domain language:** [CONTEXT](../CONTEXT.md) -> related ADRs in [docs/adr](./adr/)
+- **Build plan:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md)
+- **Agent and payment surfaces:** [Agentic Settlement Endpoint Research](./agentic-settlement-endpoint.md) -> [Agent Payment Policy](./agent-payment-policy.md)
+
+## Source Of Truth Rules
+
+- Use [Positioning](./positioning.md) for public copy, the canonical tagline, and claims to avoid.
+- Use [Shipped vs Planned Product Matrix](./shipped-vs-planned.md) for shipped/planned status.
+- Use [CONTEXT](../CONTEXT.md) for names, domain terms, and invariants.
+- Use [STATUS](../STATUS.md) for the latest execution handoff.
 
 ## Core Product Docs
 
 - [README](../README.md) - project overview and top-level documentation map
 - [STATUS](../STATUS.md) - current state, locked decisions, and next actions
 - [CONTEXT](../CONTEXT.md) - domain language and product invariants
+- [Positioning](./positioning.md) - FundLabs / FundWise positioning, canonical tagline, messaging hierarchy, and claims guardrails
 - [PRD](../PRD.md) - user stories and implementation decisions
 - [ROADMAP](../ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN](../HACKATHON_PLAN.md) - hackathon strategy and sponsor framing
@@ -52,5 +68,6 @@ This directory holds detailed product, API, and decision records. Start with the
 
 **Go-To-Market**
 
+- [Positioning](./positioning.md)
 - [GTM rollout order](./adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md)
 - [Visa Frontier track and card partnerships](./adr/0024-visa-frontier-track-and-card-partnerships.md)
