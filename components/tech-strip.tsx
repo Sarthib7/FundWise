@@ -61,9 +61,6 @@ export function TechStrip() {
           <h2 id="fundwise-stack-title" className="sr-only">
             FundWise infrastructure stack
           </h2>
-          <p className="max-w-xl text-sm leading-relaxed text-black/55">
-            FundWise keeps the experience focused on Groups, Balances, and Receipts while the settlement rails stay in the background.
-          </p>
           <div className="h-px w-16 bg-black/20" aria-hidden="true" />
         </div>
 
