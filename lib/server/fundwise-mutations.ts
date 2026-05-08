@@ -1,8 +1,11 @@
 import type { Database, Json } from "@/lib/database.types"
+import { Connection, PublicKey, type AccountInfo } from "@solana/web3.js"
+import * as multisig from "@sqds/multisig"
 import {
   computeBalancesFromActivity,
   simplifySettlements,
 } from "@/lib/expense-engine"
+import { getSolanaRpcUrl } from "@/lib/solana-cluster"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
@@ -28,6 +31,14 @@ type ExpenseSplitInput = {
 }
 
 type ExpenseUpdateRpcSplit = Json
+type SolanaAccountInfo = {
+  data: Buffer
+  owner: PublicKey
+  executable: boolean
+}
+type TreasuryAccountReader = {
+  getAccountInfo(address: PublicKey, commitment: "confirmed"): Promise<SolanaAccountInfo | null>
+}
 
 function getAdmin() {
   return getSupabaseAdmin()
@@ -128,6 +139,69 @@ function isFundModeInviteWallet(wallet: string) {
     .filter((value) => value.length > 0)
 
   return inviteWallets.includes(wallet)
+}
+
+function parsePublicKey(address: string, label: string) {
+  try {
+    return new PublicKey(address)
+  } catch {
+    throw new FundWiseError(`${label} is not a valid Solana address.`)
+  }
+}
+
+export async function verifyFundModeTreasuryAddresses(
+  data: {
+    creatorWallet?: string
+    multisigAddress: string
+    treasuryAddress: string
+  },
+  accountReader: TreasuryAccountReader = new Connection(getSolanaRpcUrl(), "confirmed")
+) {
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+  const treasuryPubkey = parsePublicKey(data.treasuryAddress, "Treasury address")
+  const [expectedTreasuryPda] = multisig.getVaultPda({
+    multisigPda: multisigPubkey,
+    index: 0,
+  })
+
+  if (!treasuryPubkey.equals(expectedTreasuryPda)) {
+    throw new FundWiseError("Treasury address does not match the Squads vault PDA for this Multisig.")
+  }
+
+  const multisigAccount = await accountReader.getAccountInfo(multisigPubkey, "confirmed")
+
+  if (!multisigAccount) {
+    throw new FundWiseError("Squads Multisig account is not confirmed on the configured Solana RPC.")
+  }
+
+  if (!multisigAccount.owner.equals(multisig.PROGRAM_ID)) {
+    throw new FundWiseError("Multisig account is not owned by the Squads program.")
+  }
+
+  if (multisigAccount.executable) {
+    throw new FundWiseError("Multisig address points to an executable account, not a Squads Multisig.")
+  }
+
+  if (data.creatorWallet) {
+    const creatorPubkey = parsePublicKey(data.creatorWallet, "Creator wallet")
+    let decodedMultisig: multisig.accounts.Multisig
+
+    try {
+      ;[decodedMultisig] = multisig.accounts.Multisig.fromAccountInfo(
+        multisigAccount as AccountInfo<Buffer>
+      )
+    } catch {
+      throw new FundWiseError("Multisig account data could not be decoded as a Squads Multisig.")
+    }
+
+    const creatorIsMultisigMember = decodedMultisig.members.some((member) =>
+      member.key.equals(creatorPubkey)
+    )
+
+    if (!creatorIsMultisigMember) {
+      throw new FundWiseError("Treasury creator wallet is not a configured Squads Multisig Member.")
+    }
+  }
 }
 
 async function getGroupOrThrow(groupId: string) {
@@ -708,6 +782,16 @@ export async function updateGroupTreasuryMutation(data: {
   if (group.mode !== "fund") {
     throw new FundWiseError("Only Fund Mode Groups can initialize a Treasury.")
   }
+
+  if (group.multisig_address || group.treasury_address) {
+    throw new FundWiseError("Treasury is already initialized for this Group.")
+  }
+
+  await verifyFundModeTreasuryAddresses({
+    creatorWallet: data.creatorWallet,
+    multisigAddress: data.multisigAddress,
+    treasuryAddress: data.treasuryAddress,
+  })
 
   const { data: updatedGroup, error } = await getAdmin()
     .from("groups")
