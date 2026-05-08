@@ -56,11 +56,14 @@ export function TechStrip() {
       <div className="mx-auto max-w-6xl text-center">
         <div className="mb-10 flex flex-col items-center gap-3">
           <div className="font-mono text-[11px] font-bold uppercase tracking-[0.34em] text-black/55">
-            FundWise stack
+            Built on reliable rails
           </div>
           <h2 id="fundwise-stack-title" className="sr-only">
-            FundWise stack
+            FundWise infrastructure stack
           </h2>
+          <p className="max-w-xl text-sm leading-relaxed text-black/55">
+            FundWise keeps the experience focused on Groups, Balances, and Receipts while the settlement rails stay in the background.
+          </p>
           <div className="h-px w-16 bg-black/20" aria-hidden="true" />
         </div>
 

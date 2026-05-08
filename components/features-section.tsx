@@ -1,5 +1,6 @@
 import {
   ArrowRightLeft,
+  Link2,
   ReceiptText,
   ShieldCheck,
   WalletCards,
@@ -9,33 +10,33 @@ import {
 const features = [
   {
     icon: Zap,
-    title: "Instant settlement",
-    desc: "Settle shared balances in seconds instead of waiting days for bank transfers to clear.",
+    title: "Exact settle-up",
+    desc: "Members settle the current net Balance instead of negotiating custom amounts in the group chat.",
   },
   {
-    icon: ShieldCheck,
-    title: "Non-custodial",
-    desc: "Your keys, your funds. FundWise never holds money — all transfers go wallet-to-wallet.",
+    icon: Link2,
+    title: "Live request links",
+    desc: "Share a settle-up link that resolves the live Balance instead of freezing a stale amount.",
   },
   {
     icon: WalletCards,
-    title: "Stable-value payments",
-    desc: "Pay and settle in stablecoins so group balances stay predictable from dinner to checkout.",
+    title: "Stable shared ledger",
+    desc: "Balances stay easy to read from the first Expense to the final Receipt.",
   },
   {
     icon: ArrowRightLeft,
-    title: "Cross-chain routing",
-    desc: "Use LI.FI from Settlement when the funds are on another chain, then finish in the same flow.",
+    title: "Funds-elsewhere support",
+    desc: "If someone needs to move funds first, routing stays behind the settle-up flow instead of becoming a separate task.",
   },
   {
     icon: ReceiptText,
-    title: "Built-in proof",
-    desc: "Every settlement keeps a verifiable receipt so the awkward “did you pay?” follow-up disappears.",
+    title: "Verifiable Receipts",
+    desc: "Each completed settle-up records who paid whom, how much moved, and the proof behind it.",
   },
   {
     icon: ShieldCheck,
-    title: "Wallet-aware guidance",
-    desc: "Zerion-powered wallet insights can help users understand balances and choose the next best move.",
+    title: "Private Groups",
+    desc: "Group ledgers stay scoped to invited Members, not public feeds or loose payment notes.",
   },
 ]
 
@@ -46,10 +47,10 @@ export function FeaturesSection() {
         Why FundWise
       </div>
       <h2 className="font-serif text-[clamp(1.75rem,4vw,2.875rem)] tracking-tight leading-[1.1] mb-3.5 text-foreground text-balance">
-        Built for the moments where IOUs fail
+        Built for the moment IOUs need to end
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        FundWise turns Group bookkeeping into wallet-confirmed settlement, with cross-chain routing when a friend&apos;s funds are somewhere else.
+        Expense trackers show what happened. FundWise helps the Group finish what is still owed.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

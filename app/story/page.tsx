@@ -3,7 +3,6 @@ import Link from "next/link"
 import {
   ArrowRightLeft,
   CheckCircle2,
-  Landmark,
   Link2,
   ReceiptText,
   WalletCards,
@@ -13,32 +12,32 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
-  title: "The FundWise Story — Group money, done right.",
+  title: "The FundWise Story - Split expenses. Earn together.",
   description:
-    "Why FundWise exists: split expenses, settle exact USDC amounts on-chain, and grow toward proposal-based Group treasuries.",
+    "Why FundWise exists: private Groups, live Balances, clean settle-up flows, and verifiable Receipts.",
 }
 
 const settlementLoop = [
-  "A Member shares a Settlement Request Link.",
-  "The debtor opens the live Group Balance, not a stale invoice.",
-  "They settle in USDC and everyone gets a verifiable Receipt.",
+  "A Member shares a settle-up link.",
+  "The person who owes opens the live Group Balance.",
+  "They settle once and everyone gets a verifiable Receipt.",
 ]
 
 const productPath = [
   {
     icon: ReceiptText,
-    title: "Split expenses",
-    body: "Log who paid, who participated, and how the Expense should be split. FundWise keeps the Group ledger readable.",
+    title: "Track the real spend",
+    body: "Log who paid, who participated, and how the Expense should be split. The Group ledger stays readable.",
   },
   {
     icon: CheckCircle2,
-    title: "Settle on-chain",
-    body: "Debtor Members settle exact net Balances in USDC. The Receipt includes the transaction signature, so the awkward follow-up ends.",
+    title: "Settle the Balance",
+    body: "Members settle the current net Balance instead of negotiating custom amounts across chat threads.",
   },
   {
-    icon: Landmark,
-    title: "Build treasuries",
-    body: "Fund Mode extends the same Group money model into pooled USDC Treasuries with proposal-based spending.",
+    icon: WalletCards,
+    title: "Recover when funds sit elsewhere",
+    body: "If someone needs to move funds first, routing supports the same settle-up path instead of becoming a separate workflow.",
   },
 ]
 
@@ -55,14 +54,14 @@ export default function StoryPage() {
                 The FundWise story
               </div>
               <h1 className="font-serif text-[clamp(2.4rem,6vw,4.6rem)] leading-[1.05] tracking-tight text-foreground text-balance">
-                The end of awkward Group IOUs.
+                The shared-expense app that helps Groups finish.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-brand-text-2 md:text-lg">
-                Someone pays for the Airbnb. Someone pays for the rental car. Three months later someone still owes someone $47. FundWise turns that loose IOU into a clear Group ledger, a wallet-confirmed Settlement, and a Receipt everyone can trust.
+                Someone pays for the Airbnb. Someone pays for the rental car. Three months later someone still owes someone $47. FundWise turns that loose IOU into a clear Group Balance, a focused settle-up flow, and a Receipt everyone can verify.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button asChild className="min-h-11 bg-accent hover:bg-accent/90">
-                  <Link href="/groups">Create a Group</Link>
+                  <Link href="/groups">Start a Group</Link>
                 </Button>
               </div>
             </div>
@@ -73,8 +72,8 @@ export default function StoryPage() {
                   <Link2 className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div>
-                  <h2 className="font-serif text-xl tracking-tight text-foreground">Settlement Request Links</h2>
-                  <p className="text-sm text-brand-text-2">The product demo your friends send for you.</p>
+                  <h2 className="font-serif text-xl tracking-tight text-foreground">Settle-up links</h2>
+                  <p className="text-sm text-brand-text-2">The repayment loop your Group can actually finish.</p>
                 </div>
               </div>
               <ol className="space-y-3">
@@ -113,26 +112,26 @@ export default function StoryPage() {
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
               <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-mid">
-                Cross-chain routing
+                Funds-elsewhere support
               </div>
               <h2 className="font-serif text-[clamp(1.8rem,4vw,3rem)] leading-[1.1] tracking-tight text-foreground text-balance">
-                Chain does not matter when your friends owe you money.
+                Funds can start elsewhere. The Group still settles cleanly.
               </h2>
             </div>
             <div className="space-y-4 text-sm leading-relaxed text-brand-text-2 md:text-base">
               <p>
-                Your Ethereum friend owes $35. Your Base friend owes $20. Your Solana friend owes $47. FundWise keeps the Settlement model simple: route funds when needed, then settle through the same Group flow.
+                Your friend owes $35, but their funds are not ready in the right place. FundWise keeps the model simple: route funds when needed, then return to the same Group flow.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[16px] border border-brand-border-c bg-brand-surface p-4">
                   <WalletCards className="mb-3 h-5 w-5 text-brand-deep" aria-hidden="true" />
-                  <h3 className="font-semibold text-foreground">Route funds for Settlement</h3>
-                  <p className="mt-1 text-sm text-brand-text-2">LI.FI helps EVM-first Members reach Solana USDC without turning Settlement into bridge management.</p>
+                  <h3 className="font-semibold text-foreground">Route funds when needed</h3>
+                  <p className="mt-1 text-sm text-brand-text-2">LI.FI can support Members who need to move funds first without turning settle-up into bridge management.</p>
                 </div>
                 <div className="rounded-[16px] border border-brand-border-c bg-brand-surface p-4">
                   <ArrowRightLeft className="mb-3 h-5 w-5 text-brand-deep" aria-hidden="true" />
                   <h3 className="font-semibold text-foreground">Same Receipt</h3>
-                  <p className="mt-1 text-sm text-brand-text-2">The route path supports the core flow. The actual Settlement still ends with one on-chain Receipt.</p>
+                  <p className="mt-1 text-sm text-brand-text-2">The route path supports the core flow. The Group still ends with one clear Receipt.</p>
                 </div>
               </div>
             </div>

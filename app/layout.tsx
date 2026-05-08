@@ -18,9 +18,9 @@ const dmSerif = DM_Serif_Display({
 })
 
 export const metadata: Metadata = {
-  title: "FundWise — Group money, done right.",
+  title: "FundWise - Split expenses. Earn together.",
   description:
-    "Split expenses, settle on-chain, and build toward group treasuries. FundWise helps groups move from awkward IOUs to final USDC receipts.",
+    "Start private Groups, track shared Expenses, resolve live Balances, and settle up with clear Receipts everyone can trust.",
   generator: "Next.js",
   icons: {
     icon: [{ url: "/brand-strata/svg/favicon.svg", type: "image/svg+xml" }],

@@ -98,7 +98,7 @@ const demoGroups: DemoGroup[] = [
       from: "You",
       to: "Asha",
       amount: "$40.00",
-      fee: "~0.000005 SOL",
+      fee: "Low",
       tx: "4Kt...mN7x",
       receiptId: "rcpt-lisbon-0042",
     },
@@ -107,49 +107,49 @@ const demoGroups: DemoGroup[] = [
     id: "gift",
     name: "Priya's Gift",
     memberCount: "6 friends",
-    mode: "Fund",
+    mode: "Split",
     icon: Gift,
-    iconClassName: "bg-brand-fund-blue-bg text-brand-fund-blue",
+    iconClassName: "bg-brand-pale text-brand-deep",
     title: "Priya's Gift",
-    subtitle: "6 friends · Pool first, spend after",
+    subtitle: "6 friends · Shared gift costs",
     metrics: [
-      { label: "You contribute", value: "$80.00", tone: "negative" },
-      { label: "Goal", value: "$500.00" },
-      { label: "Approvals", value: "4 of 6", tone: "positive" },
+      { label: "You owe", value: "$18.00", tone: "negative" },
+      { label: "Total expenses", value: "$612.00" },
+      { label: "Settled", value: "4 of 6", tone: "positive" },
     ],
     expenses: [
       {
         icon: Gift,
-        name: "Camera fund",
-        paidBy: "Treasury target",
+        name: "Camera deposit",
+        paidBy: "Paid by Maya",
         amount: "$500.00",
-        impact: "$80 left",
-        impactTone: "neutral",
+        impact: "you owe $83.33",
+        impactTone: "negative",
       },
       {
         icon: UtensilsCrossed,
         name: "Birthday dinner",
         paidBy: "Paid by Maya",
         amount: "$156.00",
-        impact: "proposal ready",
-        impactTone: "positive",
+        impact: "you owe $26",
+        impactTone: "negative",
       },
       {
         icon: CarTaxiFront,
         name: "Pickup ride",
-        paidBy: "Paid by Omar",
+        paidBy: "Paid by you",
         amount: "$34.00",
-        impact: "needs approval",
-        impactTone: "neutral",
+        impact: "you get $28.33",
+        impactTone: "positive",
       },
     ],
     settlement: {
       from: "You",
-      to: "Priya's Gift Treasury",
-      amount: "$80.00",
-      fee: "~0.000005 SOL",
+      to: "Maya",
+      amount: "$18.00",
+      fee: "Low",
       tx: "8Qp...fT2a",
-      receiptId: "rcpt-gift-0080",
+      receiptId: "rcpt-gift-0018",
     },
   },
   {
@@ -196,7 +196,7 @@ const demoGroups: DemoGroup[] = [
       from: "You",
       to: "Lina",
       amount: "$22.00",
-      fee: "~0.000005 SOL",
+      fee: "Low",
       tx: "3Lm...pV9s",
       receiptId: "rcpt-flat-0022",
     },
@@ -245,7 +245,7 @@ const demoGroups: DemoGroup[] = [
       from: "You",
       to: "Jonas",
       amount: "$72.00",
-      fee: "~0.000005 SOL",
+      fee: "Low",
       tx: "9Br...kH4q",
       receiptId: "rcpt-berlin-0072",
     },
@@ -303,22 +303,22 @@ export function HeroSection() {
 
         <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
-          Group money, done right
+          Shared expenses without the chase
         </div>
 
         <h1 className="relative z-10 font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
-          Group money,
+          Split expenses.
           <br />
-          <em className="not-italic text-brand-grad font-serif">done right.</em>
+          <em className="not-italic text-brand-grad font-serif">Earn together.</em>
         </h1>
 
         <p className="relative z-10 mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
-          Trips, dinners, shared tabs. FundWise keeps the Group ledger clear and turns awkward IOUs into final on-chain Receipts.
+          FundWise helps private Groups track shared spending, keep live Balances clear, and settle up without chasing across chat.
         </p>
 
         <div className="relative z-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <AppEntryButton
-            disconnectedLabel="Start splitting"
+            disconnectedLabel="Start a Group"
             connectedLabel="Open your Groups"
             navigateAfterConnect
             className="w-full sm:min-h-11 sm:w-auto"
@@ -327,7 +327,7 @@ export function HeroSection() {
             href="/story"
             className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
           >
-            Read the story
+            See how it works
           </Link>
         </div>
       </section>
@@ -487,19 +487,19 @@ export function HeroSection() {
                     <div className="rounded-[12px] border border-brand-border-2 bg-brand-pale/50 p-4">
                       <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.07em] text-brand-deep">
                         <Wallet className="h-3.5 w-3.5" />
-                        Settlement Preview
+                        Settle-up Preview
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between gap-4">
                           <span className="text-brand-text-2">You send</span>
-                          <span className="font-bold">{activeSettlement.amount} USDC</span>
+                          <span className="font-bold">{activeSettlement.amount}</span>
                         </div>
                         <div className="flex justify-between gap-4">
                           <span className="text-brand-text-2">To</span>
                           <span className="font-bold text-brand-mid">{activeSettlement.to}</span>
                         </div>
                         <div className="flex justify-between gap-4">
-                          <span className="text-brand-text-2">Network fee</span>
+                          <span className="text-brand-text-2">Fee estimate</span>
                           <span className="font-medium">{activeSettlement.fee}</span>
                         </div>
                       </div>
@@ -509,7 +509,7 @@ export function HeroSection() {
                       onClick={handleSettle}
                       className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-accent px-4 py-2.5 text-sm font-bold text-accent-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      Initiate Settlement
+                      Confirm settle-up
                     </button>
                     <button
                       type="button"
@@ -519,7 +519,7 @@ export function HeroSection() {
                       Back to Balance
                     </button>
                     <p className="text-center text-[11px] text-brand-text-2">
-                      In the real app, your wallet opens before any USDC moves.
+                      In the real app, you review and confirm before anything moves.
                     </p>
                   </div>
                 ) : null}
@@ -529,9 +529,9 @@ export function HeroSection() {
                     <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-pale text-brand-deep">
                       <Loader2 className="h-7 w-7 animate-spin" />
                     </div>
-                    <div className="font-serif text-xl tracking-tight text-foreground">Confirming on Solana</div>
+                    <div className="font-serif text-xl tracking-tight text-foreground">Confirming settle-up</div>
                     <p className="mt-2 text-sm text-brand-text-2">
-                      The wallet-signed USDC transfer is being verified.
+                      FundWise is checking the final proof.
                     </p>
                   </div>
                 ) : null}
@@ -543,14 +543,14 @@ export function HeroSection() {
                         <Receipt className="h-4 w-4" />
                       </div>
                       <div>
-                        <div className="text-sm font-semibold text-foreground">Settled on Solana. This is done.</div>
+                        <div className="text-sm font-semibold text-foreground">Settled. This is done.</div>
                         <div className="text-[11px] text-brand-text-2">{activeSettlement.receiptId}</div>
                       </div>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between gap-4">
                         <span className="text-brand-text-2">Amount</span>
-                        <span className="font-bold">{activeSettlement.amount} USDC</span>
+                        <span className="font-bold">{activeSettlement.amount}</span>
                       </div>
                       <div className="flex justify-between gap-4">
                         <span className="text-brand-text-2">From</span>

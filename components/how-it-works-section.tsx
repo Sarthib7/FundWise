@@ -5,10 +5,10 @@ export function HowItWorksSection() {
         How it works
       </div>
       <h2 className="font-serif text-[clamp(1.75rem,4vw,2.875rem)] tracking-tight leading-[1.1] mb-3.5 text-foreground text-balance">
-        Three steps to settled
+        From Group tab to done
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        Designed for people who want financial clarity without the friction.
+        Built for the moment a shared expense needs to stop being a reminder.
       </p>
 
       <div className="grid gap-8 md:grid-cols-3 md:gap-10">
@@ -17,10 +17,10 @@ export function HowItWorksSection() {
             01
           </div>
           <h3 className="font-serif text-xl tracking-tight mb-2.5 text-foreground">
-            Connect your wallet
+            Start with a private Group
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            Sign in with Phantom, Solflare, or Backpack. No email, no password — your wallet is your identity.
+            Create a Group for a trip, dinner, household, or shared tab. Invite Members by link or QR.
           </p>
         </div>
 
@@ -29,10 +29,10 @@ export function HowItWorksSection() {
             02
           </div>
           <h3 className="font-serif text-xl tracking-tight mb-2.5 text-foreground">
-            Create a group &amp; log expenses
+            Log Expenses and see Balances
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            Invite friends by link or QR. Log who paid what. FundWise computes the fewest Settlements to bring the Group back to zero.
+            Record who paid, who participated, and how to split it. FundWise keeps the live Group Balance clear.
           </p>
         </div>
 
@@ -41,10 +41,10 @@ export function HowItWorksSection() {
             03
           </div>
           <h3 className="font-serif text-xl tracking-tight mb-2.5 text-foreground">
-            Settle with one click
+            Settle up cleanly
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            Pay in USDC. Confirms on Solana in under 3 seconds. Permanently recorded on-chain — no disputes, no reversals.
+            The person who owes gets a clear next step. Once they settle, the Group gets a Receipt everyone can trust.
           </p>
         </div>
       </div>

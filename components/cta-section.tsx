@@ -12,14 +12,14 @@ export function CtaSection() {
         aria-hidden="true"
       />
       <h2 className="font-serif text-[clamp(1.875rem,5vw,3.375rem)] tracking-tight mb-4 text-foreground text-balance">
-        The next Group expense should end with a Receipt.
+        Split expenses. Earn together.
       </h2>
       <p className="mb-9 text-[17px] text-brand-text-2 sm:mb-11">
-        Create a Group, log Expenses, and settle exact USDC amounts without chasing across apps.
+        Start a private Group, log shared Expenses, and turn the live Balance into a clear settle-up flow.
       </p>
       <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <AppEntryButton
-          disconnectedLabel="Connect Wallet"
+          disconnectedLabel="Start a Group"
           connectedLabel="Open your Groups"
           navigateAfterConnect
           className="w-full sm:min-h-11 sm:w-auto"
@@ -28,7 +28,7 @@ export function CtaSection() {
           href="/story"
           className="inline-flex min-h-12 w-full items-center justify-center rounded-[10px] border-[1.5px] border-brand-border-2 bg-background px-7 py-3.5 text-base font-bold text-foreground transition-[transform,background-color] duration-150 ease-out hover:-translate-y-0.5 hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:min-h-11 sm:w-auto"
         >
-          Read the story
+          See how it works
         </Link>
       </div>
     </section>
