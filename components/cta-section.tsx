@@ -12,7 +12,7 @@ export function CtaSection() {
         aria-hidden="true"
       />
       <h2 className="font-serif text-[clamp(1.875rem,5vw,3.375rem)] tracking-tight mb-4 text-foreground text-balance">
-        Split expenses. Earn together.
+        Start with the next shared expense.
       </h2>
       <p className="mb-9 text-[17px] text-brand-text-2 sm:mb-11">
         Start a private Group, log shared Expenses, and turn the live Balance into a clear settle-up flow.

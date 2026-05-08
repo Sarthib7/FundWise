@@ -18,7 +18,7 @@ const dmSerif = DM_Serif_Display({
 })
 
 export const metadata: Metadata = {
-  title: "FundWise - Split expenses. Earn together.",
+  title: "FundWise - Shared expenses for real Groups",
   description:
     "Start private Groups, track shared Expenses, resolve live Balances, and settle up with clear Receipts everyone can trust.",
   generator: "Next.js",

@@ -2,8 +2,6 @@
 
 ## Primary
 
-Split expenses. Earn together.
-
 "Who still owes the $47?" should not become a three-month group chat subplot.
 
 FundWise turns shared expenses into a live Group Balance, a clear settle-up flow, and a Receipt everyone can trust.

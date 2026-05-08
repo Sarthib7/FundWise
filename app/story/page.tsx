@@ -12,7 +12,7 @@ import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
-  title: "The FundWise Story - Split expenses. Earn together.",
+  title: "The FundWise Story - Shared expenses for real Groups",
   description:
     "Why FundWise exists: private Groups, live Balances, clean settle-up flows, and verifiable Receipts.",
 }

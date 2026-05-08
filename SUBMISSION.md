@@ -6,7 +6,7 @@
 
 ## One-Line Pitch
 
-Split expenses. Earn together. FundWise helps friends start a private Group, log shared Expenses, see live Balances, and settle up with a verifiable Receipt. Fund Mode is the earn-together direction once shared Treasury Proposal flows are complete.
+FundWise helps friends start a private Group, log shared Expenses, see live Balances, and settle up with a verifiable Receipt. Fund Mode is the earn-together direction once shared Treasury Proposal flows are complete.
 
 ## Demo Script
 

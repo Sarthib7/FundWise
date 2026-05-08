@@ -123,7 +123,7 @@ export function CreateGroupDialog({
         <DialogHeader>
           <DialogTitle>Create a Group</DialogTitle>
           <DialogDescription>
-            Start in Split Mode for shared Expenses and Settlements. Fund Mode stays visible here as an invite-only beta while treasury Proposal flows are still being finished.
+            Choose Split Mode for shared Expenses, or Fund Mode for a shared Treasury if your wallet is enabled for the beta.
           </DialogDescription>
         </DialogHeader>
 
@@ -186,25 +186,28 @@ export function CreateGroupDialog({
 
               <button
                 type="button"
-                disabled
-                aria-disabled="true"
                 className={cn(
-                  "flex min-h-32 cursor-not-allowed flex-col rounded-xl border border-border/80 bg-muted/40 p-4 text-left opacity-100",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  "flex min-h-32 flex-col rounded-xl border p-4 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  mode === "fund"
+                    ? "border-brand-fund-blue-border bg-brand-fund-blue-bg shadow-sm"
+                    : "border-border bg-card hover:border-brand-fund-blue-border hover:bg-brand-fund-blue-bg/60"
                 )}
+                onClick={() => setMode("fund")}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-accent">
                     <Landmark className="h-4 w-4" />
                   </div>
-                  <Badge variant="outline">Invite only</Badge>
+                  <Badge variant="outline" className={cn(mode === "fund" ? "border-brand-fund-blue-border text-brand-fund-blue" : "")}>
+                    Fund Mode
+                  </Badge>
                 </div>
                 <p className="mt-4 text-base font-semibold">Fund Mode</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Treasury beta for controlled testing while Proposal creation, approvals, and execution are still being finished.
+                  Pool Contributions into a Group Treasury and prepare proposal-led spending.
                 </p>
                 <p className="mt-3 text-xs font-medium text-foreground/70">
-                  Soon: pooled Contributions, reimbursement Proposals, and explicit treasury execution.
+                  Beta access required while Proposal execution is completed.
                 </p>
               </button>
             </div>
@@ -212,13 +215,15 @@ export function CreateGroupDialog({
 
           <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">Fund Mode beta</Badge>
+              <Badge variant="outline">{mode === "fund" ? "Fund Mode beta" : "Split Mode"}</Badge>
               <p className="text-sm font-medium">
-                Public Group creation is Split Mode first while Fund Mode stays invite-only.
+                {mode === "fund" ? "Enabled wallets can create Treasury Groups today." : "Most Groups should start here."}
               </p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              The main hackathon path is shared Expenses, live Balances, Settlements, and later LI.FI routing from the Settlement flow. Treasury workflows remain in controlled testing until the Proposal lifecycle is ready.
+              {mode === "fund"
+                ? "If your wallet is not on the beta list, creation will stop before a Group is created."
+                : "Track shared Expenses first; move to Fund Mode when the Group needs a Treasury."}
             </p>
           </div>
 

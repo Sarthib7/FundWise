@@ -420,7 +420,7 @@ export default function GroupsPage() {
                         <h3 className="font-semibold text-lg truncate">{group.name}</h3>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
-                            {group.mode === "split" ? "Split Mode" : "Fund Mode · Invite only"}
+                            {group.mode === "split" ? "Split Mode" : "Fund Mode"}
                           </span>
                           <span>{getMintName(group.stablecoin_mint)}</span>
                           <span>Code: {group.code}</span>

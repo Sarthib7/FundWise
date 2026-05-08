@@ -10,7 +10,7 @@ Potential FundWise users scrolling X: people who have dealt with trip, dinner, r
 
 A playful product demo that opens with the familiar group-chat pain of "who still owes the $47?", then shows FundWise turning that loose IOU into a live Group Balance, clear settle-up flow, and trusted Receipt.
 
-Brand line: `Split expenses. Earn together.`
+Use the brand line once, on the homepage shot: `Split expenses. Earn together.`
 
 ## Production Rules
 

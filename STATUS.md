@@ -17,7 +17,7 @@ FundWise is still a two-mode product:
 
 The product direction is now sharper:
 
-- Canonical public positioning is **Split expenses. Earn together.** Lead consumer copy with Groups, shared Expenses, live Balances, settle-up links, and Receipts; keep crypto mechanics behind the user action until wallet or Settlement context requires them. See [docs/positioning.md](./docs/positioning.md).
+- Keep public copy aligned with [docs/positioning.md](./docs/positioning.md): lead with Groups, shared Expenses, live Balances, settle-up links, and Receipts; keep crypto mechanics behind the user action until wallet or Settlement context requires them.
 - The primary hackathon demo is Split Mode, not Fund Mode.
 - The market is not empty. Crypto-native bill-splitting competitors already exist, so FundWise should position around verified USDC Settlement for real Groups, not "first crypto Splitwise."
 - The web app is the source of truth for the MVP.
