@@ -1,12 +1,12 @@
 # FundWise Submission Brief
 
 **Deadline:** 2026-05-11 Colosseum Frontier  
-**Primary story:** Group money, done right
+**Primary story:** Split expenses. Earn together.
 **Current evidence:** devnet rehearsal passed, responsive QA passed, `pnpm build` passing
 
 ## One-Line Pitch
 
-Group money, done right. FundWise helps friends create a private Group, log shared Expenses, see live Balances, and settle the exact amount owed in USDC with a verifiable on-chain Receipt.
+Split expenses. Earn together. FundWise helps friends start a private Group, log shared Expenses, see live Balances, and settle up with a verifiable Receipt. Fund Mode is the earn-together direction once shared Treasury Proposal flows are complete.
 
 ## Demo Script
 
@@ -22,7 +22,7 @@ Target length: 90-120 seconds.
 
 ## Screenshot Checklist
 
-- Landing page hero: product name, `Start splitting`, `Read the story`, and the interactive Group preview.
+- Landing page hero: `Split expenses. Earn together.`, `Start a Group`, `See how it works`, and the interactive Group preview.
 - Story page: problem narrative, Settlement Request Link loop, and LI.FI cross-chain routing angle.
 - `/groups` disconnected state: wallet-first entry with `Connect Wallet`.
 - Group dashboard: Expense list, Balances, Suggested Settlements.
@@ -36,7 +36,7 @@ FundWise is a wallet-native shared-expense app for groups that want settlement f
 
 The hackathon MVP focuses on one coherent path: `Group -> Expense -> Balance -> Settlement -> Receipt`. Settlement Request Links are the shareable loop: a debtor opens the current Group Balance state, reviews the exact amount, signs the USDC Settlement, and lands on a Receipt. Split Mode is free at launch, including normal USDC Settlements. LI.FI is used as a support layer for EVM-first debtors who need to route funds into Solana USDC before settling. Zerion is framed as wallet-readiness and guidance around the same core flow. Fund Mode is shown only as future-direction evidence until the Proposal lifecycle is complete. Source Currency, Expense Proof, Fundy, Scoped Agent Access, x402 / MPP payable invoices, and agent-paid Receipts remain planned.
 
-The positioning is not "first crypto Splitwise." The honest wedge is verified USDC Settlement for real private Groups, with live Settlement Request Links and verifiable Receipts.
+The positioning is not "first crypto Splitwise." The honest wedge is a consumer-first shared-expense app with verified Settlement for real private Groups, live Settlement Request Links, and verifiable Receipts.
 
 ## Track Framing
 

@@ -8,7 +8,9 @@ Potential FundWise users scrolling X: people who have dealt with trip, dinner, r
 
 ## Concept
 
-A playful product demo that opens with the familiar group-chat pain of "who still owes the $47?", then shows FundWise turning that loose IOU into a live Group Balance, exact USDC Settlement, and wallet-confirmed Receipt.
+A playful product demo that opens with the familiar group-chat pain of "who still owes the $47?", then shows FundWise turning that loose IOU into a live Group Balance, clear settle-up flow, and trusted Receipt.
+
+Brand line: `Split expenses. Earn together.`
 
 ## Production Rules
 
@@ -21,7 +23,7 @@ A playful product demo that opens with the familiar group-chat pain of "who stil
 ## Storyboard
 
 1. 0.0-3.5s: Cold open on dark chat-style surface. Hook text: `"who still owes the $47?"`. Chat bubbles make the shared-expense pain feel familiar.
-2. 3.5-9.0s: Use the real FundWise story page screenshot. Annotate `Settlement Request Link`, `live Group Balance`, and `verifiable Receipt`.
-3. 9.0-19.0s: Use the real Lisbon Trip app mock screenshot. Highlight `you owe $40.00`, animate a cursor to `Settle $40.00`, then show `Group Balance -> USDC Settlement -> shared Receipt`.
-4. 19.0-24.5s: Show a receipt-style proof card over the groups page: From You, To Asha, Asset USDC, Amount $40.00, transaction confirmed.
-5. 24.5-30.0s: Use the homepage screenshot as proof of brand/product. CTA: `Send the link before it becomes a spreadsheet.` End on `fundwise.fun`.
+2. 3.5-9.0s: Use the real FundWise story page screenshot. Annotate `settle-up link`, `live Group Balance`, and `verifiable Receipt`.
+3. 9.0-19.0s: Use the real Lisbon Trip app mock screenshot. Highlight `you owe $40.00`, animate a cursor to `Settle $40.00`, then show `Group Balance -> settle-up -> shared Receipt`.
+4. 19.0-24.5s: Show a receipt-style proof card over the groups page: From You, To Asha, Amount $40.00, confirmed.
+5. 24.5-30.0s: Use the homepage screenshot as proof of brand/product. CTA: `Split expenses. Earn together.` End on `fundwise.fun`.
