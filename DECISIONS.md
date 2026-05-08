@@ -40,3 +40,4 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-024 → [0024-visa-frontier-track-and-card-partnerships.md](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)
 - ADR-025 → [0025-keep-split-mode-free-and-monetize-later-surfaces.md](./docs/adr/0025-keep-split-mode-free-and-monetize-later-surfaces.md)
 - ADR-026 → [0026-research-informed-fund-mode-infrastructure-boundaries.md](./docs/adr/0026-research-informed-fund-mode-infrastructure-boundaries.md)
+- ADR-027 → [0027-fund-mode-is-the-hero-product.md](./docs/adr/0027-fund-mode-is-the-hero-product.md)

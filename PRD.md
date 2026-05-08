@@ -17,7 +17,7 @@ The competitive category is crowded. Splitwise, Venmo Groups, Spliit, tricount, 
 FundWise is a web app with wallet-native identity and two product modes:
 
 - Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, compute live net Balances, and settle with on-chain USDC transfers on Solana. Source Currency entry and Expense Proof are future-only for the current public demo.
-- Fund Mode is the secondary mode. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. It is the stronger long-term moat for durable Groups, but it remains invite-only until the full Proposal lifecycle is complete.
+- Fund Mode is the hero product direction. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. Split Mode remains the shipped wedge and public proof, but the next product sprint should accelerate Fund Mode toward an invite-only beta with Proposals, proof, integrations, and execution.
 
 For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users route funds during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
 
@@ -41,7 +41,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Distribution expansion should reuse the same wallet-native ledger model across web, FundWise Agent, Telegram, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
 - Fundy ships before public Fund Mode. The companion agent creates distribution where Groups already coordinate and turns FundWise ledger data into reminders, draft Expenses, wallet-readiness checks, personal-finance workflows, and later tax guidance.
 - The long-range end state is a stablecoin-first product where gas, fees, and bridging are abstracted away as much as possible for the end user, while the core ledger still stays wallet-verifiable underneath.
-- Roll out by audience in sequence: crypto-native Groups first, then Fundy and scoped agents, then Fund Mode beta, then non-crypto users through card, IBAN, or Altitude-style Solana banking rails once partner paths are concrete.
+- Roll out by audience in sequence: crypto-native Groups first, then an accelerated Fund Mode invite-only beta, with Fundy and scoped agents growing beside it as distribution and automation surfaces. Non-crypto users through card, IBAN, or Altitude-style Solana banking rails come later once partner paths are concrete.
 
 ## User Stories
 
@@ -208,5 +208,5 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - The main hackathon story should stay simple: private Group creation, structured Expense entry, live Balance view, one-click USDC settlement, and a clear Receipt. Source Currency and Expense Proof should be discussed only as future improvements unless implemented end to end.
 - Do not claim an empty market. The correct positioning is not "the first crypto Splitwise"; it is "wallet-native Group settlement with live USDC finality and verifiable Receipts."
 - Sponsor integrations should be framed as supporting layers. LI.FI helps when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
-- Fund Mode is still part of the long-term product and should remain documented as Treasury plus Proposal functionality, but it should not displace Split Mode as the MVP story and should open after Fundy creates distribution and repeat Group usage.
+- Fund Mode is the north-star product and should be documented as Treasury plus Proposal functionality. It should not be claimed as complete until Proposal creation, approval/rejection, proof/history, and execution are implemented end to end.
 - Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, FundWise Agent distribution surfaces, and broader mobile surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.

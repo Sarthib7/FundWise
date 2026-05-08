@@ -6,16 +6,35 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 ## GTM and product order
 
-The strategic rollout order is locked, even where individual phases run in parallel for engineering. See [ADR-021](./docs/adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md) for the locked decision:
+The strategic rollout order is being tightened for the post-submission sprint. See [ADR-021](./docs/adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md) for the original public sequencing and [ADR-027](./docs/adr/0027-fund-mode-is-the-hero-product.md) for the current hero-product focus:
 
-1. **Split Mode on Solana mainnet** — the public, open product. Settlement asset is **USDC** ([ADR-011](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)). This is what hackathon judges and early users see, and what we test in production.
-2. **Fundy companion agent** — a personalized finance Telegram agent built in a **separate repository** ([ADR-022](./docs/adr/0022-fundy-moves-to-a-separate-repository.md)) on a **PI agent framework**, using the **Zerion CLI** for wallet intelligence. Fundy manages personal finance for an individual user, plugs into FundWise to manage Group expenses, can be added to friends' Telegram groups, and grows a **tax filing / tax advisory** surface owned by Fundy ([ADR-023](./docs/adr/0023-tax-advisory-and-filing-live-in-fundy.md)). Fundy is a sibling product, not a feature of the FundWise repo.
-3. **Fund Mode — invite-only closed beta** — pooled USDC treasuries with proposal-based spending. Launched after Split Mode is stable in production and Fundy is in users' hands; access is gated to invited cohorts before any open release.
-4. **Visa-rail card partnerships** — settled USDC reaches Visa merchants through partners (KAST, Avici, Rain). Targeting the **Visa Frontier hackathon track (Germany)** as the first wedge ([ADR-024](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)); see the partner research brief inside Phase 3.
+1. **Split Mode on Solana mainnet** — the public, open wedge. Settlement asset is **USDC** ([ADR-011](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)). This proves wallet-native Groups, verified transfers, session-gated ledger access, and Receipts.
+2. **Fund Mode invite-only beta** — the hero product direction. Pooled USDC Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, and execution are the next one-month sprint.
+3. **Fundy companion agent** — a personalized finance Telegram agent built in a **separate repository** ([ADR-022](./docs/adr/0022-fundy-moves-to-a-separate-repository.md)) on a **PI agent framework**, using the **Zerion CLI** for wallet intelligence. Fundy manages personal finance for an individual user, plugs into FundWise to manage Group expenses, can be added to friends' Telegram groups, and grows a **tax filing / tax advisory** surface owned by Fundy ([ADR-023](./docs/adr/0023-tax-advisory-and-filing-live-in-fundy.md)). Fundy is a sibling product, not a feature of the FundWise repo.
+4. **Visa-rail card partnerships** — settled or Treasury-held USDC reaches Visa merchants through partners (KAST, Avici, Rain). Targeting the **Visa Frontier hackathon track (Germany)** as the first wedge ([ADR-024](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)); see the partner research brief inside Phase 3.
 
 The repo phases below describe engineering scope; this section is the order in which surfaces are exposed to users.
 
-Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise should not plan around novelty. The wedge is verified USDC Settlement for real private Groups, with Settlement Request Links as the acquisition loop. Fundy comes before open Fund Mode because it creates distribution and daily utility where Groups already coordinate; Visa/card rails come only after a concrete partner path exists.
+Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise should not plan around novelty. The wedge is verified USDC Settlement for real private Groups, with Settlement Request Links as the acquisition loop. The hero product is Fund Mode because durable Groups eventually need shared Treasuries, governed spending, proof, and integrations. Visa/card rails come only after a concrete partner path exists.
+
+## One-month Fund Mode sprint - May 8 to June 8, 2026
+
+**Goal:** make Fund Mode credible as the hero product in invite-only beta, not just a visible mode selector.
+
+**Build order:**
+
+1. Remove legacy SOL vault helpers and keep Fund Mode stablecoin-only.
+2. Rehearse Treasury initialization and Contributions on devnet with real wallets.
+3. Build reimbursement Proposal creation with recipient restricted to Member wallets.
+4. Build approval and rejection with proposer-self-approval blocked.
+5. Add Proposal proof, comments, edit history, and visible rejection history without turning the Group into chat.
+6. Add explicit execution after threshold approval, callable by any Member, with Squads-backed Treasury movement.
+7. Add LI.FI support for Fund Mode Contributions when a Member needs Solana USDC.
+8. Add Zerion readiness context for Members and Treasuries.
+9. Prepare FundWise Agent / Fundy API surfaces for read-only, draft-safe, and database-only Proposal actions.
+10. Run invite-only beta rehearsal and keep shipped/planned docs honest.
+
+**Exit criterion:** an invited Group can initialize a Treasury, make Contributions, create a reimbursement Proposal, approve or reject it, execute an approved Treasury reimbursement, and understand every action from history, proof, and receipts.
 
 ---
 
@@ -145,9 +164,9 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 
 ## Phase 2 - Fund Mode MVP (invite-only closed beta)
 
-**Goal:** support pooled USDC Treasury flows without polluting the Split Mode plus LI.FI hackathon story.
+**Goal:** support pooled USDC Treasury flows as the hero product beta while keeping the shipped Split Mode proof stable.
 
-**Release model:** Fund Mode is **not** part of the open Split Mode rollout. After Split Mode is stable on mainnet and Fundy is shipping to users, Fund Mode opens as an **invite-only closed beta** to a curated cohort. Public availability is deferred until the Proposal lifecycle is genuinely complete and the treasury surface has been stress-tested with real groups.
+**Release model:** Fund Mode is the hero product but remains **invite-only closed beta** until the Proposal lifecycle is genuinely complete and the treasury surface has been stress-tested with real groups. Engineering starts now; open public availability waits for proof.
 
 **Already present in the repo:**
 
@@ -156,7 +175,7 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 - Contribution history and on-chain Treasury balance are surfaced
 - Multisig and vault addresses are both stored
 
-**Still to build:**
+**Still to build in the one-month sprint:**
 
 - Proposal creation UI
 - Approval UI
@@ -172,8 +191,11 @@ This phase starts only after the frontend pass, backend trust pass, and on-chain
 - Signer-management rules after Treasury initialization
 - Treasury policy design: keep MVP on strict proposal-based spending, then evaluate Squads permissions / spending limits for trusted low-value withdrawals
 - Better Contribution UX
+- LI.FI Contribution funding path for Members whose USDC is not on Solana
+- Zerion readiness context for Members before Contributions and Proposal execution
+- FundWise Agent / Fundy API support for read-only and draft-safe Proposal workflows
 
-**Exit criterion:** a Fund Mode Group can initialize a Treasury, accept Contributions, create a Proposal, approve it, and execute it through the stored Squads identities.
+**Exit criterion:** a Fund Mode Group can initialize a Treasury, accept Contributions, create a reimbursement Proposal, approve or reject it, and execute an approved reimbursement through the stored Squads identities.
 
 ---
 

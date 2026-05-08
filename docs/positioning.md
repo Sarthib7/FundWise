@@ -12,7 +12,7 @@ Use this as the FundWise hero tagline, submission headline, deck line, and top-l
 
 FundLabs builds the financial layer for groups, human or AI.
 
-FundWise is the first product in that strategy. It starts with shared expenses because that is the everyday group-money problem users already understand.
+FundWise is the first product in that strategy. It starts with shared expenses because that is the everyday group-money problem users already understand, then moves Groups into shared Treasuries through Fund Mode.
 
 ## FundWise Positioning
 
@@ -24,11 +24,11 @@ The public story should feel like a better shared-expense app first. Wallets, st
 
 **Split expenses** is the current product truth. Split Mode is the demoable MVP: Group, Expense, Balance, Settlement, Receipt.
 
-**Earn together** is the product direction. It maps to Fund Mode: shared Treasuries, Contributions, Proposals, and later yield-bearing treasury strategy. Do not present yield or Proposal execution as shipped until the full flow is implemented.
+**Earn together** is the hero product direction. It maps to Fund Mode: shared Treasuries, Contributions, Proposals, and later yield-bearing treasury strategy. Do not present yield or Proposal execution as shipped until the full flow is implemented.
 
 ## Product Family
 
-**FundWise** is the consumer shared-finance app. Split Mode is live for the MVP; Fund Mode remains invite-only or planned until Treasury Proposal workflows are complete.
+**FundWise** is the consumer shared-finance app. Split Mode is live as the wedge; Fund Mode is the hero product beta and remains invite-only until Treasury Proposal workflows are complete.
 
 **Fundy** is the planned Telegram and personal-finance companion that runs the FundWise Agent. It starts read-only and draft-safe; money movement deep-links back to the web app.
 

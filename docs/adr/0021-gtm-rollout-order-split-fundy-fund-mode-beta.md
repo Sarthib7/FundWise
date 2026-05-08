@@ -1,5 +1,7 @@
 # Lock GTM rollout order — Split Mode → Fundy → Fund Mode invite-only beta
 
+**Amended by ADR-0027:** Fund Mode is now the hero product and one-month engineering priority, while Split Mode remains the shipped public wedge and Fund Mode remains invite-only until the Proposal lifecycle is complete.
+
 The order in which FundWise surfaces are exposed to users is fixed, even where engineering work runs in parallel. This is hard to reverse without re-pitching the product story and would surprise contributors who assume Fund Mode is part of the open Split Mode launch.
 
 ## Decisions

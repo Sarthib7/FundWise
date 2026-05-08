@@ -5,6 +5,7 @@ This directory holds detailed product, API, positioning, and decision records. S
 ## Fast Paths
 
 - **Current product truth:** [STATUS](../STATUS.md) -> [Shipped vs Planned Product Matrix](./shipped-vs-planned.md)
+- **Fund Mode sprint:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md) -> [ADR-027](./adr/0027-fund-mode-is-the-hero-product.md)
 - **Messaging and positioning:** [Positioning](./positioning.md) -> [SUBMISSION](../SUBMISSION.md)
 - **Domain language:** [CONTEXT](../CONTEXT.md) -> related ADRs in [docs/adr](./adr/)
 - **Build plan:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md)
@@ -66,6 +67,7 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [Store multisig and vault addresses](./adr/0010-store-multisig-and-vault-addresses-for-fund-mode.md)
 - [Prioritize Split Mode and hide cross-chain routing](./adr/0016-prioritize-split-mode-and-hide-cross-chain-routing.md)
 - [Research-informed Fund Mode infrastructure boundaries](./adr/0026-research-informed-fund-mode-infrastructure-boundaries.md)
+- [Fund Mode is the hero product](./adr/0027-fund-mode-is-the-hero-product.md)
 
 **Agent And Payments**
 

@@ -2,7 +2,7 @@
 
 **Split expenses. Earn together.** Start a private Group, log shared Expenses, see live Balances, and settle up with a clear Receipt.
 
-FundWise also has a second mode, **Fund Mode**, for pooled USDC Treasuries. That remains part of the product direction, but proposal flows are still incomplete and the current MVP is optimized around **Split Mode**.
+FundWise also has **Fund Mode** for pooled USDC Treasuries. Split Mode is the shipped wedge and current public proof, but Fund Mode is the hero product direction for the next build sprint: shared Treasuries, Contributions, reimbursement Proposals, approvals, proof, and integrations.
 
 ## Documentation Map
 
@@ -63,13 +63,14 @@ The current MVP path is:
 
 ### Fund Mode
 
-Fund Mode remains in the product and repo, but it is not the primary hackathon demo path.
+Fund Mode is the hero product direction and the next one-month beta focus, while still staying invite-only until the Proposal lifecycle is complete.
 
 - Group-owned Treasury using Squads primitives
 - Contributions into Treasury
-- Intended long-term use: durable shared pools for friends, households, clubs, and recurring Groups
+- Intended use: durable shared pools for friends, households, clubs, and recurring Groups
 - Public Group creation keeps Fund Mode invite-only for now; internal testing can be re-enabled with `FUNDWISE_FUND_MODE_INVITE_WALLETS`
-- Proposal / approval / execution flow still pending and not part of the current hackathon mainline
+- Proposal / approval / execution flow is the highest-priority Fund Mode beta gap
+- LI.FI, Zerion, FundWise Agent / Fundy, and later card / IBAN rails should support Treasury Contributions, Proposal readiness, and reimbursement workflows without bypassing wallet-confirmed money movement
 - Private Group mini-games and prediction-market-like mechanics are out of scope for FundWise unless they are separately justified later outside the current Split Mode and Fund Mode roadmap
 
 ### Sponsor layers

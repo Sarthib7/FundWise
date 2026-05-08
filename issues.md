@@ -1,8 +1,8 @@
 # FundWise Issues
 
-**Last indexed:** 2026-05-06
+**Last indexed:** 2026-05-08
 **Deadline:** 2026-05-11 Colosseum Frontier submission
-**Current focus:** Keep the public product story centered on free Split Mode, then finish the next submission pass with Source Currency, Expense Proof, Fund Mode, Fundy, agent payments, rails, mini-games, and tax clearly separated from shipped behavior.
+**Current focus:** Keep shipped/planned claims honest while accelerating Fund Mode as the hero product for the next one-month beta sprint.
 
 This file is the local issue index for hackathon execution. Keep each issue as a vertical slice: a completed issue should be independently demoable, testable, or useful for submission.
 
@@ -28,11 +28,29 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-016 | Done | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
 | FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
 | FW-018 | Ready | P3 | AFK | Add production browser security headers | FW-014 |
-| FW-019 | Ready | P1 | AFK | Verify Fund Mode Treasury addresses on-chain before persistence | FW-014 |
+| FW-019 | Done | P1 | AFK | Verify Fund Mode Treasury addresses on-chain before persistence | FW-014 |
 | FW-020 | Ready | P2 | AFK | Remove legacy SOL vault helpers from Squads Fund Mode code | FW-019 |
 | FW-021 | Ready | P2 | AFK | Validate LI.FI top-up amount parsing before quote execution | FW-004 |
 | FW-022 | Ready | P2 | AFK | Retire direct browser Supabase ledger helpers after RLS lockdown | FW-014 |
 | FW-023 | Ready | P3 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
+| FW-024 | Done | P1 | AFK | Index Compass research ADRs and add scripted devnet agent rehearsal | None |
+| FW-025 | Done | P1 | AFK | Index Fund Mode hero-product sprint and integration backlog | Owner direction |
+| FW-026 | Ready | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
+| FW-027 | Ready | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
+| FW-028 | Ready | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
+| FW-029 | Ready | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
+| FW-030 | Ready | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
+| FW-031 | Ready | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
+| FW-032 | Ready | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | FW-028 |
+
+## Pick Queue
+
+1. **FW-020:** Remove legacy SOL vault helpers from Squads Fund Mode code after FW-019 closes.
+2. **FW-026:** Build reimbursement Proposal creation for Fund Mode.
+3. **FW-027:** Build Proposal approval and rejection lifecycle.
+4. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
+5. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+6. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
 ## Handoff Queue For Claude / Lot
 
@@ -42,6 +60,164 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 4. **Keep Fund Mode mini-games out of FundWise.** FW-013 decided they are out of scope for this product unless separately justified later outside prediction-market-like mechanics.
 5. **Keep commits sequential.** Commit feature/code first, then docs/status updates. Do not add co-author trailers.
 6. **Quality gate after code changes:** run `pnpm build`. Known warnings from previous runs: workspace-root inference from another lockfile, two unused eslint-disable directives, and `bigint` pure-JS fallback.
+
+### FW-024 Implementation Notes (shipped 2026-05-08)
+
+- Compass research artifacts were moved into `docs/research/` and indexed in `docs/research/README.md`.
+- The useful Compass findings were captured as ADR-0025 and ADR-0026 instead of leaving unindexed artifacts at the repo root.
+- `scripts/devnet-agent-rehearsal.mjs` was added for an agent-driven Split Mode rehearsal path.
+- Latest rehearsal result: Group `80dc13a8-9b06-4d71-a7ba-68dea8d4a4ea`, Receipt `7d997c46-b665-470f-b16d-d448f1ef74c7`, devnet transaction `PkdHBESndA38yChKJHpkFYpGbfd1wQ13NXpTCtZwQrFfh5LgdLS143crW5TJ14yzZiGqb2poLiRV3e93D3KhP6p`.
+- Caveat: the run used a temporary SPL stablecoin mint because the public devnet faucet was rate-limited. It proves the FundWise Settlement and Receipt machinery, not final mainnet USDC readiness.
+
+### FW-025 Implementation Notes (shipped 2026-05-08)
+
+- Owner clarified that Fund Mode is the hero product and needs a one-month acceleration sprint.
+- ADR-0027 now records the distinction: Split Mode is the shipped wedge; Fund Mode is the north-star beta product.
+- `ROADMAP.md`, `STATUS.md`, `PRD.md`, `README.md`, `docs/positioning.md`, `docs/shipped-vs-planned.md`, and the docs index were updated to keep that direction visible.
+- New indexed Fund Mode work starts at FW-026 and covers reimbursement Proposals, approval/rejection, execution, proof/history, LI.FI, Zerion, and beta rehearsal.
+
+## FW-026 - Build Reimbursement Proposal Creation For Fund Mode
+
+**Status:** Ready
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** FW-020
+
+### What to build
+
+Create the first Fund Mode Proposal shape: reimbursement to a Member wallet from the Group Treasury after approval.
+
+### Acceptance Criteria
+
+- [ ] Proposal creation is available only in Fund Mode Groups with initialized Treasury addresses.
+- [ ] Recipient must be a current Group Member wallet.
+- [ ] Amount must be positive, USDC-denominated, and validated server-side.
+- [ ] Proposal records memo, proposer wallet, recipient wallet, amount, status, and created timestamp.
+- [ ] Proposer cannot create a Proposal that bypasses the approval threshold.
+- [ ] UI clearly labels the flow as reimbursement, not generic external payout.
+- [ ] `pnpm build` passes.
+
+## FW-027 - Build Proposal Approval And Rejection Lifecycle
+
+**Status:** Ready
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** FW-026
+
+### What to build
+
+Add database-backed approval and rejection behavior for Fund Mode reimbursement Proposals.
+
+### Acceptance Criteria
+
+- [ ] Proposer cannot approve their own Proposal.
+- [ ] Each Member can approve or reject a Proposal at most once.
+- [ ] Rejection closes the Proposal and requires a new Proposal for retry.
+- [ ] Threshold approval marks the Proposal ready for execution but does not auto-send funds.
+- [ ] UI shows pending, rejected, approved-ready, and executed states distinctly.
+- [ ] `pnpm build` passes.
+
+## FW-028 - Execute Approved Fund Mode Reimbursements Through Squads
+
+**Status:** Ready
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** FW-027
+
+### What to build
+
+Execute approved reimbursement Proposals through the stored Squads Multisig and Treasury addresses.
+
+### Acceptance Criteria
+
+- [ ] Execution is a separate explicit action after the approval threshold is met.
+- [ ] Any current Member can trigger execution for an approved Proposal.
+- [ ] Treasury movement targets only the approved Member recipient wallet.
+- [ ] Execution uses the approved amount and stablecoin mint without client-side mutation.
+- [ ] Server verifies the resulting on-chain transfer before marking the Proposal executed.
+- [ ] Duplicate execution attempts are rejected idempotently.
+- [ ] `pnpm build` passes.
+
+## FW-029 - Add Proposal Proof, Comments, And Edit History Model
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-026
+
+### What to build
+
+Add the lightweight audit trail needed for a real Fund Mode beta without turning Groups into chat.
+
+### Acceptance Criteria
+
+- [ ] Proposal supports one lightweight proof file or one external proof link.
+- [ ] Proposal comments are scoped to the Proposal, not a Group-wide chat surface.
+- [ ] Proposal edits are allowed only before the first non-proposer approval.
+- [ ] Proposal edit history shows what changed.
+- [ ] Rejections remain visible in Proposal history.
+- [ ] Storage and access rules are documented before file upload ships.
+
+## FW-030 - Add LI.FI Funding Path For Fund Mode Contributions
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-020
+
+### What to build
+
+Extend the existing LI.FI support layer so a Member can route funds for a Fund Mode Contribution when they do not already have Solana USDC.
+
+### Acceptance Criteria
+
+- [ ] Contribution preflight can offer `Route funds for Contribution` when LI.FI is available.
+- [ ] Copy avoids bridge jargon and does not imply LI.FI executes the Contribution itself.
+- [ ] Route completion returns the Member to the same Fund Mode Group and Contribution context.
+- [ ] The Contribution ledger and Receipt model remain unchanged.
+- [ ] `pnpm build` passes.
+
+## FW-031 - Add Zerion Readiness Context For Fund Mode Members And Treasuries
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-020
+
+### What to build
+
+Use the existing Zerion readiness boundary to support Fund Mode Contribution and Proposal readiness.
+
+### Acceptance Criteria
+
+- [ ] Readiness output distinguishes Member Contribution readiness from Split Mode Settlement readiness.
+- [ ] Output includes Solana USDC and SOL-for-gas readiness where Zerion data supports it.
+- [ ] Fund Mode use stays read-only and never becomes signing, wallet connection, or Treasury execution.
+- [ ] Docs explain required Zerion CLI setup and optional x402 without inventing secrets.
+- [ ] `pnpm build` passes.
+
+## FW-032 - Run Invite-Only Fund Mode Beta Rehearsal And Integration QA
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-028
+
+### What to verify
+
+Run the one-month beta path with real wallets on devnet before public claims change.
+
+### Acceptance Criteria
+
+- [ ] Fund Mode Group creation works for an invite-enabled wallet.
+- [ ] Second Member joins by invite link.
+- [ ] Treasury initialization succeeds and persists verified Squads addresses.
+- [ ] Member makes a Contribution and the Treasury balance updates.
+- [ ] Member creates a reimbursement Proposal.
+- [ ] Other Member approves or rejects.
+- [ ] Approved Proposal executes through the Treasury.
+- [ ] LI.FI and Zerion support paths are checked where available.
+- [ ] Findings are either fixed or split into new indexed issues.
 
 ### FW-010 Planning Notes (deferred)
 
@@ -67,7 +243,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 ## FW-001 - Run Full Split Mode Devnet Rehearsal And Capture Blockers
 
-**Status:** Done  
+**Status:** Done
 **Priority:** P0  
 **Type:** AFK  
 **Blocked by:** None
@@ -156,9 +332,9 @@ Completed on 2026-05-04. Browser QA covered landing, disconnected `/groups`, wal
 
 ## FW-004 - Polish LI.FI Top Up To Settle Handoff
 
-**Status:** Done  
-**Priority:** P1  
-**Type:** AFK  
+**Status:** Done
+**Priority:** P1
+**Type:** AFK
 **Blocked by:** FW-002
 
 ### What to build
@@ -577,9 +753,9 @@ Created from CSO finding `FW-CSO-005` on 2026-05-06.
 
 ## FW-019 - Verify Fund Mode Treasury Addresses On-Chain Before Persistence
 
-**Status:** Ready  
-**Priority:** P1  
-**Type:** AFK  
+**Status:** Done
+**Priority:** P1
+**Type:** AFK
 **Blocked by:** FW-014
 
 ### What to fix
@@ -588,17 +764,19 @@ The pentest pass found that `PATCH /api/groups/{groupId}/treasury` requires the 
 
 ### Acceptance Criteria
 
-- [ ] Treasury initialization API accepts a creation transaction signature or equivalent proof, not just raw addresses.
-- [ ] Server verifies the Squads multisig account exists on the configured Solana cluster.
-- [ ] Server derives vault index `0` from the verified multisig PDA and rejects mismatched `treasuryAddress` values.
-- [ ] Server verifies the submitted creator wallet participated in the creation path or is a configured Squads Member.
-- [ ] Contributions continue to verify SPL transfers to the verified Treasury token account owner.
-- [ ] Tests cover forged Treasury addresses, nonexistent multisigs, and the valid initialization path.
-- [ ] `pnpm build` passes.
+- [x] Treasury initialization API accepts a creation transaction signature or equivalent proof, not just raw addresses.
+- [x] Server verifies the Squads multisig account exists on the configured Solana cluster.
+- [x] Server derives vault index `0` from the verified multisig PDA and rejects mismatched `treasuryAddress` values.
+- [x] Server verifies the submitted creator wallet participated in the creation path or is a configured Squads Member.
+- [x] Contributions continue to verify SPL transfers to the verified Treasury token account owner.
+- [x] Tests cover forged Treasury addresses, nonexistent multisigs, and the valid initialization path.
+- [x] `pnpm build` passes.
 
 ### Notes
 
-Created from AI pentest / blockchain audit on 2026-05-06. Evidence: `app/api/groups/[groupId]/treasury/route.ts` lines 21-34 checks presence and wallet-session match only; `lib/server/fundwise-mutations.ts` lines 696-726 updates both addresses without RPC verification. The UI calls `createSquadsMultisig`, but this is not a security boundary because the API is directly callable.
+Created from AI pentest / blockchain audit on 2026-05-06. Evidence: `app/api/groups/[groupId]/treasury/route.ts` lines 21-34 checked presence and wallet-session match only; `lib/server/fundwise-mutations.ts` lines 696-726 updated both addresses without RPC verification. The UI calls `createSquadsMultisig`, but this is not a security boundary because the API is directly callable.
+
+Completed on 2026-05-08. `updateGroupTreasuryMutation` now rejects invalid public keys, rejects re-initialization, derives Squads vault index `0`, verifies the submitted Treasury address matches that PDA, requires the Multisig account to exist on the configured RPC, requires Squads program ownership, rejects executable accounts, decodes the Squads Multisig account data, and confirms the authenticated creator wallet is a configured Squads Member before persisting the addresses. This is the equivalent on-chain proof used instead of requiring the client to submit a separate creation transaction signature. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed with 13 tests. Full gate: `pnpm build` passed.
 
 ### User Stories Covered
 

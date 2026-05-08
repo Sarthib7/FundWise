@@ -13,6 +13,8 @@ Lead public copy with shared spending, live Balances, settle-up links, and clear
 
 `Earn together` maps to Fund Mode direction. It should not imply live yield, automatic settlement, or a complete public Proposal lifecycle until those flows are implemented end to end.
 
+Fund Mode is now the hero product direction for the next build sprint. Split Mode remains the shipped wedge and public proof, but durable Group value should converge on shared Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, and integrations.
+
 ## Language
 
 **Group**:
@@ -209,6 +211,7 @@ Avoid: Optimized debts, minimum transfers
 - The audience rollout is crypto-native Groups first, then agents, then non-crypto users through Visa/card, IBAN, and Altitude-style Solana banking rails once the core product is reliable.
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - FundWise Agent, Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
+- Fund Mode is the north-star product surface for the next one-month sprint. It remains invite-only until Proposal creation, approval/rejection, proof/history, and execution work end to end.
 
 ## Example dialogue
 

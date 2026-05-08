@@ -10,7 +10,7 @@ Competitive positioning: do not claim an empty category or "first crypto Splitwi
 | Settlement Request Links | Shipped / core loop | Shareable debtor flow that resolves the live Balance, requires wallet confirmation, and never auto-sends |
 | Source Currency entry | Future | Do not demo as real behavior until Exchange Rate Snapshots and converted USD/USDC ledger values are stored end to end |
 | Expense Proof upload | Future | Do not demo as real behavior until storage, preview, size limits, and access rules are implemented |
-| Fund Mode | Partial / invite-only | Treasury and Contributions exist; Proposal lifecycle is not shipped |
+| Fund Mode | Partial / invite-only, accelerated beta build | Hero product direction: Treasury and Contributions exist; Proposal lifecycle and integrations must ship before it is claimed as complete |
 | LI.FI | Support layer groundwork | Use only as `Route funds for Settlement` when the debtor needs Solana USDC before normal Settlement |
 | Zerion | Scripted readiness demo | Read-only wallet-readiness support; not wallet connection, identity, signing, or Settlement execution |
 | Agent Skill Endpoint | Shipped baseline | Public `/skill.md` and `/api/docs` discovery/reference only |

@@ -1,7 +1,7 @@
 # FundWise - Hackathon Track Plan
 
 **Owner:** Sarthi
-**Last updated:** 2026-04-30
+**Last updated:** 2026-05-08
 **Hackathon:** Colosseum Frontier
 **Primary submission deadline:** May 11, 2026
 **Demo Day:** May 12, 2026
@@ -37,7 +37,7 @@ Everything else is a supporting layer:
 - `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
 - `Fundy` is the hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
 - The `Agent Skill Endpoint` (`/skill.md`) is a public URL at **`https://fundwise.fun/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and planned Scoped Agent Access; it must not expose private Member data.
-- `Fund Mode` broadens the product story, but it is incomplete and should not be presented as the current mainline product path.
+- `Fund Mode` is the hero product direction and the post-submission beta sprint, but it is incomplete today and should not be presented as fully shipped until Proposal creation, approval/rejection, proof/history, and execution work end to end.
 
 ---
 
@@ -88,7 +88,7 @@ The strongest LI.FI story is not "FundWise is a generic multichain app." The str
 - Return the user to the normal FundWise Group Settlement path
 - Keep the Receipt and ledger model unchanged
 
-**Secondary story, if time allows:**
+**Secondary story and next-month priority:**
 
 - LI.FI support for Fund Mode Contributions
 
@@ -168,7 +168,7 @@ Low fit for the current product direction.
 - Tighten on-chain settlement behavior and devnet wiring
 - Add LI.FI Settlement routing branch
 - Add Zerion CLI support around wallet readiness and guidance
-- Keep Fund Mode in maintenance-only status unless the core Split Mode plus LI.FI path is already coherent
+- Keep Fund Mode claims honest for the submission, but index and start the one-month Fund Mode beta sprint immediately after the shipped Split Mode proof is stable
 - Prepare judge-friendly demo script
 
 ### Final stretch before May 11, 2026
@@ -219,7 +219,7 @@ For future expansion after the core demo path is solid:
 - The **Agent Skill Endpoint** (`/skill.md`) lets any autonomous agent curl the FundWise domain and discover what FundWise can do. Private data and durable agent actions still require planned Scoped Agent Access, not broad API keys.
 - Agent skills and personal-agent access are promising only if they operate through scoped capabilities instead of broad raw API keys.
 - FundWise Agent can eventually support Telegram reminders, draft-safe Expense creation, proof upload, and Group summaries, but money movement still returns to app-and-wallet confirmation.
-- Fundy should come before public Fund Mode because it gives FundWise distribution in existing Telegram groups and lets the product learn from real Expense, Settlement, Receipt, and wallet-readiness behavior.
+- Fundy still gives FundWise distribution in existing Telegram groups, but Fund Mode engineering now moves first as the hero-product beta. Public Fund Mode claims still wait until Proposal execution is real.
 - Wallet mini apps and native mobile should come after the shared engine is stable enough to support multiple clients cleanly.
 - Stablecoin-only UX with fee abstraction, smoother on/off ramps, and web2-friendly funding rails is a strong long-range direction, but it should stay out of the core hackathon pitch until the main crypto-native path is solid and a concrete card/IBAN partner path exists.
 
