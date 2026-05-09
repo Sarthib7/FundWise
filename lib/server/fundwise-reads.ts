@@ -9,6 +9,7 @@ type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 
 type ActivityItem =
   | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
@@ -206,6 +207,20 @@ async function listContributions(groupId: string): Promise<ContributionRow[]> {
   return (data || []) as ContributionRow[]
 }
 
+async function listProposals(groupId: string): Promise<ProposalRow[]> {
+  const { data, error } = await getAdmin()
+    .from("proposals")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposals: ${error.message}`)
+  }
+
+  return (data || []) as ProposalRow[]
+}
+
 async function buildActivityFeed(groupId: string): Promise<ActivityItem[]> {
   const expenses = await listExpenses(groupId)
   const expenseSplits = await listExpenseSplits(expenses.map((expense) => expense.id))
@@ -336,6 +351,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
       members: [] as MemberRow[],
       activity: [] as ActivityItem[],
       contributions: [] as ContributionRow[],
+      proposals: [] as ProposalRow[],
     }
   }
 
@@ -350,6 +366,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
       members,
       activity: await buildActivityFeed(groupId),
       contributions: [] as ContributionRow[],
+      proposals: [] as ProposalRow[],
     }
   }
 
@@ -361,6 +378,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
     members,
     activity: [] as ActivityItem[],
     contributions: await listContributions(groupId),
+    proposals: await listProposals(groupId),
   }
 }
 

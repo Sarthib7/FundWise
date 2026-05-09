@@ -8,6 +8,7 @@ import { PublicKey } from "@solana/web3.js"
 import {
   addContribution as dbAddContribution,
   addMember,
+  addProposal as dbAddProposal,
   addSettlement as dbAddSettlement,
   deleteExpense as dbDeleteExpense,
   getGroupDashboardSnapshot,
@@ -45,6 +46,7 @@ import { ensureWalletSession } from "@/lib/wallet-session-client"
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 32
@@ -91,6 +93,7 @@ export function useGroupDashboard() {
   const [transfers, setTransfers] = useState<SettlementTransfer[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [contributions, setContributions] = useState<ContributionRow[]>([])
+  const [proposals, setProposals] = useState<ProposalRow[]>([])
   const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [memberCount, setMemberCount] = useState(0)
@@ -100,6 +103,7 @@ export function useGroupDashboard() {
   const [isSavingProfileName, setIsSavingProfileName] = useState(false)
   const [isCreatingTreasury, setIsCreatingTreasury] = useState(false)
   const [isContributing, setIsContributing] = useState(false)
+  const [isCreatingProposal, setIsCreatingProposal] = useState(false)
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
@@ -141,12 +145,14 @@ export function useGroupDashboard() {
         setTransfers([])
         setActivity([])
         setContributions([])
+        setProposals([])
         setTreasuryBalance(0)
         return
       }
 
       if (groupData.mode === "split") {
         setContributions([])
+        setProposals([])
         setTreasuryBalance(0)
 
         if (snapshot.isMember) {
@@ -170,6 +176,7 @@ export function useGroupDashboard() {
 
       if (!snapshot.isMember) {
         setContributions([])
+        setProposals([])
         setTreasuryBalance(0)
         return
       }
@@ -179,6 +186,7 @@ export function useGroupDashboard() {
         : 0
 
       setContributions(snapshot.contributions)
+      setProposals(snapshot.proposals)
       setTreasuryBalance(nextTreasuryBalance)
     } catch (error) {
       console.error("[FundWise] Failed to load group:", error)
@@ -742,6 +750,66 @@ export function useGroupDashboard() {
     walletAddress,
   ])
 
+  const handleCreateProposal = useCallback(async (data: {
+    recipientWallet: string
+    amount: string
+    memo?: string
+  }) => {
+    if (!group || group.mode !== "fund" || !connected || !walletAddress) {
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before creating a Proposal")
+      return false
+    }
+
+    if (!group.multisig_address || !group.treasury_address) {
+      toast.error("Initialize the Treasury before creating reimbursement Proposals")
+      return false
+    }
+
+    if (!data.recipientWallet) {
+      toast.error("Choose a Member to reimburse")
+      return false
+    }
+
+    setIsCreatingProposal(true)
+
+    try {
+      await ensureWalletWriteAccess()
+      const trimmedAmount = data.amount.trim()
+
+      if (!/^\d+(\.\d{1,6})?$/.test(trimmedAmount)) {
+        throw new Error("Enter a valid Proposal amount")
+      }
+
+      const tokenAmount = parseTokenAmount(trimmedAmount)
+
+      if (!Number.isSafeInteger(tokenAmount) || tokenAmount <= 0) {
+        throw new Error("Enter a valid Proposal amount")
+      }
+
+      await dbAddProposal({
+        groupId,
+        proposerWallet: walletAddress,
+        recipientWallet: data.recipientWallet,
+        amount: tokenAmount,
+        mint: group.stablecoin_mint,
+        memo: data.memo,
+      })
+
+      toast.success("Reimbursement Proposal created")
+      await loadData()
+      return true
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to create Proposal"))
+      return false
+    } finally {
+      setIsCreatingProposal(false)
+    }
+  }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, walletAddress])
+
   const clearSettlementRequest = useCallback(() => {
     router.replace(`/groups/${groupId}`, { scroll: false })
   }, [groupId, router])
@@ -812,6 +880,7 @@ export function useGroupDashboard() {
     transfers,
     activity,
     contributions,
+    proposals,
     treasuryBalance,
     isLoading,
     isMember,
@@ -820,6 +889,7 @@ export function useGroupDashboard() {
     isSavingProfileName,
     isCreatingTreasury,
     isContributing,
+    isCreatingProposal,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -857,6 +927,7 @@ export function useGroupDashboard() {
     deleteExpense: handleDeleteExpense,
     createTreasury: handleCreateTreasury,
     contribute: handleContribute,
+    createProposal: handleCreateProposal,
     clearSettlementRequest,
     shareSettlementRequest: handleShareSettlementRequest,
   }

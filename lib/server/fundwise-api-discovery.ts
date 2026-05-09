@@ -398,6 +398,29 @@ Request:
 }
 \`\`\`
 
+### Proposals
+
+#### POST /api/proposals
+
+Create a Fund Mode reimbursement Proposal for a current Group Member.
+
+Auth: browser wallet session. \`proposerWallet\` must match the authenticated wallet. The Group must be a Fund Mode Group with an initialized Treasury. The recipient must be a current Group Member.
+
+Important: this route creates an off-chain Proposal only. It does not approve, reject, or execute Treasury movement.
+
+Request:
+
+\`\`\`json
+{
+  "groupId": "<group-id>",
+  "proposerWallet": "<member-wallet>",
+  "recipientWallet": "<member-wallet>",
+  "amount": 100,
+  "mint": "<usdc-mint>",
+  "memo": "Hotel deposit reimbursement"
+}
+\`\`\`
+
 ### Profile
 
 #### POST /api/profile/display-name
@@ -522,6 +545,7 @@ Mutations requiring explicit Member intent:
 - \`POST /api/expenses\` — create a real Expense.
 - \`PATCH /api/expenses/{expenseId}\` — edit an Expense as its creator.
 - \`DELETE /api/expenses/{expenseId}\` — delete an Expense as its creator.
+- \`POST /api/proposals\` — create a Fund Mode reimbursement Proposal.
 - \`POST /api/profile/display-name\` — update Profile Display Name.
 
 Receipt-recording only after wallet-confirmed on-chain action:

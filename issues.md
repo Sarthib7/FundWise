@@ -35,7 +35,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-023 | Ready | P3 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
 | FW-024 | Done | P1 | AFK | Index Compass research ADRs and add scripted devnet agent rehearsal | None |
 | FW-025 | Done | P1 | AFK | Index Fund Mode hero-product sprint and integration backlog | Owner direction |
-| FW-026 | Ready | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
+| FW-026 | Done | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
 | FW-027 | Ready | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
 | FW-028 | Ready | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
 | FW-029 | Ready | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
@@ -45,11 +45,10 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 ## Pick Queue
 
-1. **FW-026:** Build reimbursement Proposal creation for Fund Mode.
-2. **FW-027:** Build Proposal approval and rejection lifecycle.
-3. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
-4. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
-5. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
+1. **FW-027:** Build Proposal approval and rejection lifecycle.
+2. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
+3. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+4. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
 ## Handoff Queue For Claude / Lot
 
@@ -77,7 +76,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 ## FW-026 - Build Reimbursement Proposal Creation For Fund Mode
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P0
 **Type:** AFK
 **Blocked by:** FW-020
@@ -88,13 +87,17 @@ Create the first Fund Mode Proposal shape: reimbursement to a Member wallet from
 
 ### Acceptance Criteria
 
-- [ ] Proposal creation is available only in Fund Mode Groups with initialized Treasury addresses.
-- [ ] Recipient must be a current Group Member wallet.
-- [ ] Amount must be positive, USDC-denominated, and validated server-side.
-- [ ] Proposal records memo, proposer wallet, recipient wallet, amount, status, and created timestamp.
-- [ ] Proposer cannot create a Proposal that bypasses the approval threshold.
-- [ ] UI clearly labels the flow as reimbursement, not generic external payout.
-- [ ] `pnpm build` passes.
+- [x] Proposal creation is available only in Fund Mode Groups with initialized Treasury addresses.
+- [x] Recipient must be a current Group Member wallet.
+- [x] Amount must be positive, USDC-denominated, and validated server-side.
+- [x] Proposal records memo, proposer wallet, recipient wallet, amount, status, and created timestamp.
+- [x] Proposer cannot create a Proposal that bypasses the approval threshold.
+- [x] UI clearly labels the flow as reimbursement, not generic external payout.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-09. Fund Mode now has a reimbursement Proposal creation path: authenticated browser route `POST /api/proposals`, server-side Fund Mode / initialized Treasury / Member-recipient validation, pending-only Proposal insertion, dashboard snapshot reads, and a Fund Mode UI form plus Proposal list. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed with 15 tests. Full gate: `pnpm build` passed.
 
 ## FW-027 - Build Proposal Approval And Rejection Lifecycle
 

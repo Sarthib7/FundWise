@@ -259,6 +259,12 @@ export function buildOpenApiSpec(baseUrl?: string) {
           responses: { "200": { description: "Recorded Contribution." } },
         },
       },
+      "/api/proposals": {
+        post: {
+          summary: "Create a Fund Mode reimbursement Proposal for a current Group Member.",
+          responses: { "200": { description: "Created Proposal." } },
+        },
+      },
       "/api/profile/display-name": {
         post: {
           summary: "Update a Member's global Profile Display Name.",
@@ -286,6 +292,7 @@ export function buildOAuthAuthorizationServerMetadata(baseUrl?: string) {
       "expenses:write",
       "profile:write",
       "settlements:record",
+      "proposals:write",
     ],
     service_documentation: `${origin}/api/docs`,
     fundwise_auth_note:

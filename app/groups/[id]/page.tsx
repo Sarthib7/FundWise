@@ -228,6 +228,7 @@ export default function GroupDashboard() {
     transfers,
     activity,
     contributions,
+    proposals,
     treasuryBalance,
     isLoading,
     isMember,
@@ -236,6 +237,7 @@ export default function GroupDashboard() {
     isSavingProfileName,
     isCreatingTreasury,
     isContributing,
+    isCreatingProposal,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -273,6 +275,7 @@ export default function GroupDashboard() {
     deleteExpense,
     createTreasury,
     contribute,
+    createProposal,
     clearSettlementRequest,
     shareSettlementRequest,
   } = dashboard
@@ -788,17 +791,22 @@ export default function GroupDashboard() {
                   contributorCount={contributorCount}
                   missingMembersForTreasury={missingMembersForTreasury}
                   contributions={contributions}
+                  proposals={proposals}
+                  members={members}
                   memberNameByWallet={memberNameByWallet}
+                  walletAddress={walletAddress}
                   isGroupCreator={isGroupCreator}
                   isMember={isMember}
                   connected={connected}
                   isWalletVerified={isWalletVerified}
                   isCreatingTreasury={isCreatingTreasury}
                   isContributing={isContributing}
+                  isCreatingProposal={isCreatingProposal}
                   contributionAmount={contributionAmount}
                   onContributionAmountChange={setContributionAmount}
                   onCreateTreasury={createTreasury}
                   onContribute={handleContribute}
+                  onCreateProposal={createProposal}
                   onJoin={joinGroup}
                 />
               )}

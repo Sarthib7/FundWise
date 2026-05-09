@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { WalletAvatar } from "@/components/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -7,11 +8,21 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import type { Database } from "@/lib/database.types"
 import { formatTokenAmount } from "@/lib/expense-engine"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import {
   ExternalLink,
+  FileText,
+  HandCoins,
   Landmark,
   Loader2,
   ShieldCheck,
@@ -20,8 +31,12 @@ import {
 } from "lucide-react"
 
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
+type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 
 const CONTRIBUTION_INPUT_ID = "contribution-amount"
+const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
+const PROPOSAL_MEMO_INPUT_ID = "proposal-memo"
 
 type FundModeDashboardProps = {
   tokenName: string
@@ -36,17 +51,26 @@ type FundModeDashboardProps = {
   contributorCount: number
   missingMembersForTreasury: number
   contributions: ContributionRow[]
+  proposals: ProposalRow[]
+  members: MemberRow[]
   memberNameByWallet: Map<string, string>
+  walletAddress: string
   isGroupCreator: boolean
   isMember: boolean
   connected: boolean
   isWalletVerified: boolean
   isCreatingTreasury: boolean
   isContributing: boolean
+  isCreatingProposal: boolean
   contributionAmount: string
   onContributionAmountChange: (value: string) => void
   onCreateTreasury: () => void | Promise<void>
   onContribute: () => void | Promise<void>
+  onCreateProposal: (data: {
+    recipientWallet: string
+    amount: string
+    memo?: string
+  }) => boolean | Promise<boolean>
   onJoin: () => void | Promise<void>
 }
 
@@ -67,19 +91,28 @@ export function FundModeDashboard({
   contributorCount,
   missingMembersForTreasury,
   contributions,
+  proposals,
+  members,
   memberNameByWallet,
+  walletAddress,
   isGroupCreator,
   isMember,
   connected,
   isWalletVerified,
   isCreatingTreasury,
   isContributing,
+  isCreatingProposal,
   contributionAmount,
   onContributionAmountChange,
   onCreateTreasury,
   onContribute,
+  onCreateProposal,
   onJoin,
 }: FundModeDashboardProps) {
+  const [proposalRecipientWallet, setProposalRecipientWallet] = useState("")
+  const [proposalAmount, setProposalAmount] = useState("")
+  const [proposalMemo, setProposalMemo] = useState("")
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -243,6 +276,141 @@ export function FundModeDashboard({
           )}
         </Card>
       )}
+
+      <Card className="p-6">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Reimbursement Proposals</h2>
+            <p className="text-sm text-muted-foreground">
+              Request Treasury reimbursement to a current Member wallet after someone pays out of pocket.
+            </p>
+          </div>
+          <Badge variant="outline">
+            {proposals.length} Proposal{proposals.length === 1 ? "" : "s"}
+          </Badge>
+        </div>
+
+        {treasuryAddress && isMember ? (
+          <form
+            className="mb-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_auto]"
+            aria-busy={isCreatingProposal}
+            onSubmit={async (event) => {
+              event.preventDefault()
+              const created = await onCreateProposal({
+                recipientWallet: proposalRecipientWallet,
+                amount: proposalAmount,
+                memo: proposalMemo,
+              })
+
+              if (created) {
+                setProposalRecipientWallet("")
+                setProposalAmount("")
+                setProposalMemo("")
+              }
+            }}
+          >
+            <div className="space-y-2">
+              <Label>Member to reimburse</Label>
+              <Select value={proposalRecipientWallet} onValueChange={setProposalRecipientWallet}>
+                <SelectTrigger className="min-h-11 w-full sm:min-h-10">
+                  <SelectValue placeholder="Choose a Group Member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {members.map((member) => (
+                    <SelectItem key={member.id} value={member.wallet}>
+                      {memberNameByWallet.get(member.wallet) || shortWallet(member.wallet)}
+                      {member.wallet === walletAddress ? " (you)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={PROPOSAL_AMOUNT_INPUT_ID}>Amount ({tokenName})</Label>
+              <Input
+                id={PROPOSAL_AMOUNT_INPUT_ID}
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="42.00"
+                value={proposalAmount}
+                onChange={(event) => setProposalAmount(event.target.value)}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 lg:self-end"
+              disabled={isCreatingProposal || !proposalRecipientWallet || !proposalAmount}
+            >
+              {isCreatingProposal ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <HandCoins className="h-4 w-4 mr-2" />
+              )}
+              Create Proposal
+            </Button>
+
+            <div className="space-y-2 lg:col-span-3">
+              <Label htmlFor={PROPOSAL_MEMO_INPUT_ID}>Memo</Label>
+              <Textarea
+                id={PROPOSAL_MEMO_INPUT_ID}
+                placeholder="Hotel deposit, grocery run, venue booking..."
+                value={proposalMemo}
+                onChange={(event) => setProposalMemo(event.target.value)}
+                maxLength={240}
+              />
+            </div>
+          </form>
+        ) : (
+          <div className="mb-6 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            {!treasuryAddress
+              ? "Initialize the Treasury before creating reimbursement Proposals."
+              : "Join this Group before creating reimbursement Proposals."}
+          </div>
+        )}
+
+        {proposals.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="font-medium text-foreground">No Proposals yet</p>
+            <p className="mt-1 text-xs">
+              Reimbursement Proposals will appear here before approval and execution.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {proposals.map((proposal) => (
+              <div
+                key={proposal.id}
+                className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-sm">
+                      Reimburse {memberNameByWallet.get(proposal.recipient_wallet) || shortWallet(proposal.recipient_wallet)}
+                    </p>
+                    <Badge variant="outline" className="capitalize">
+                      {proposal.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Proposed by {memberNameByWallet.get(proposal.proposer_wallet) || shortWallet(proposal.proposer_wallet)} · {new Date(proposal.created_at).toLocaleDateString()}
+                  </p>
+                  {proposal.memo && (
+                    <p className="mt-2 text-sm text-muted-foreground">{proposal.memo}</p>
+                  )}
+                </div>
+                <p className="font-mono font-semibold tabular-nums">
+                  {formatTokenAmount(proposal.amount)} {tokenName}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card className="p-6">
         <div className="flex items-center justify-between gap-4 mb-4">

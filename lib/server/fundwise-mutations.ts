@@ -18,6 +18,7 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
+type ProposalInsert = Database["public"]["Tables"]["proposals"]["Insert"]
 type SettlementGraphActivity = Parameters<typeof computeBalancesFromActivity>[1]
 
 type SupabaseMutationError = {
@@ -90,6 +91,29 @@ export function validateExpenseLedgerInput(data: {
   if (splitTotal !== data.amount) {
     throw new FundWiseError("Expense split shares must add up to the full Expense amount.")
   }
+}
+
+export function validateProposalInput(data: {
+  amount: number
+  mint: string
+  expectedMint: string
+  memo?: string | null
+}) {
+  if (!Number.isSafeInteger(data.amount) || data.amount <= 0) {
+    throw new FundWiseError("Proposal amount must be a positive integer token amount.")
+  }
+
+  if (data.mint !== data.expectedMint) {
+    throw new FundWiseError("Proposal mint does not match this Group stablecoin.")
+  }
+
+  const memo = data.memo?.trim() || null
+
+  if (memo && memo.length > 240) {
+    throw new FundWiseError("Proposal memo must be 240 characters or fewer.")
+  }
+
+  return { memo }
 }
 
 export function assertSettlementMatchesCurrentGraph(data: {
@@ -769,6 +793,68 @@ export async function addContributionMutation(data: {
   }
 
   return contribution
+}
+
+export async function addProposalMutation(data: {
+  groupId: string
+  proposerWallet: string
+  recipientWallet: string
+  amount: number
+  mint: string
+  memo?: string | null
+}) {
+  const group = await getGroupOrThrow(data.groupId)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Proposals can only be created for Fund Mode Groups.")
+  }
+
+  if (!group.multisig_address || !group.treasury_address) {
+    throw new FundWiseError("Treasury must be initialized before creating reimbursement Proposals.")
+  }
+
+  const { memo } = validateProposalInput({
+    amount: data.amount,
+    mint: data.mint,
+    expectedMint: group.stablecoin_mint,
+    memo: data.memo,
+  })
+
+  await assertWalletIsMember(
+    data.groupId,
+    data.proposerWallet,
+    "Only Group Members can create reimbursement Proposals."
+  )
+
+  await assertWalletIsMember(
+    data.groupId,
+    data.recipientWallet,
+    "Reimbursement recipient must be a current Group Member."
+  )
+
+  const insert: ProposalInsert = {
+    group_id: data.groupId,
+    proposer_wallet: data.proposerWallet,
+    recipient_wallet: data.recipientWallet,
+    amount: data.amount,
+    mint: data.mint,
+    memo,
+    status: "pending",
+    tx_sig: null,
+    executed_at: null,
+  }
+
+  const { data: proposal, error } = await getAdmin()
+    .from("proposals")
+    .insert(insert)
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to create Proposal: ${error.message}`)
+  }
+
+  return proposal
 }
 
 export async function updateGroupTreasuryMutation(data: {
