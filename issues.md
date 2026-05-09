@@ -29,7 +29,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
 | FW-018 | Ready | P3 | AFK | Add production browser security headers | FW-014 |
 | FW-019 | Done | P1 | AFK | Verify Fund Mode Treasury addresses on-chain before persistence | FW-014 |
-| FW-020 | Ready | P2 | AFK | Remove legacy SOL vault helpers from Squads Fund Mode code | FW-019 |
+| FW-020 | Done | P2 | AFK | Remove legacy SOL vault helpers from Squads Fund Mode code | FW-019 |
 | FW-021 | Ready | P2 | AFK | Validate LI.FI top-up amount parsing before quote execution | FW-004 |
 | FW-022 | Ready | P2 | AFK | Retire direct browser Supabase ledger helpers after RLS lockdown | FW-014 |
 | FW-023 | Ready | P3 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
@@ -45,12 +45,11 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 ## Pick Queue
 
-1. **FW-020:** Remove legacy SOL vault helpers from Squads Fund Mode code after FW-019 closes.
-2. **FW-026:** Build reimbursement Proposal creation for Fund Mode.
-3. **FW-027:** Build Proposal approval and rejection lifecycle.
-4. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
-5. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
-6. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
+1. **FW-026:** Build reimbursement Proposal creation for Fund Mode.
+2. **FW-027:** Build Proposal approval and rejection lifecycle.
+3. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
+4. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+5. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
 ## Handoff Queue For Claude / Lot
 
@@ -784,7 +783,7 @@ Completed on 2026-05-08. `updateGroupTreasuryMutation` now rejects invalid publi
 
 ## FW-020 - Remove Legacy SOL Vault Helpers From Squads Fund Mode Code
 
-**Status:** Ready  
+**Status:** Done
 **Priority:** P2  
 **Type:** AFK  
 **Blocked by:** FW-019
@@ -795,14 +794,16 @@ Completed on 2026-05-08. `updateGroupTreasuryMutation` now rejects invalid publi
 
 ### Acceptance Criteria
 
-- [ ] Remove unused SOL vault payment and withdrawal helpers, or move them to clearly non-shipped archive code outside the app bundle.
-- [ ] Remaining Fund Mode Treasury helpers only handle stablecoin Contributions and stablecoin balance reads.
-- [ ] No app, hook, or API route imports SOL vault payment or withdrawal helpers.
-- [ ] `pnpm build` passes.
+- [x] Remove unused SOL vault payment and withdrawal helpers, or move them to clearly non-shipped archive code outside the app bundle.
+- [x] Remaining Fund Mode Treasury helpers only handle stablecoin Contributions and stablecoin balance reads.
+- [x] No app, hook, or API route imports SOL vault payment or withdrawal helpers.
+- [x] `pnpm build` passes.
 
 ### Notes
 
 Created from AI pentest / blockchain audit on 2026-05-06. Evidence: `lib/squads-multisig.ts` lines 172-258 transfers SOL to the vault; lines 299-484 create SOL withdrawal proposals and auto-execute for `1/1` multisigs. `rg` found no current caller for these helpers, so this is not an active exploit path today.
+
+Completed on 2026-05-09. `lib/squads-multisig.ts` now exposes Squads Multisig creation, stablecoin Contribution transfer, and stablecoin Treasury balance reads only. The legacy SOL vault payment, SOL withdrawal proposal, SOL vault balance, and SOL/lamport conversion exports were removed from the app bundle. Verification: `rg` found no remaining imports of those removed helpers, and `pnpm build` passed.
 
 ### User Stories Covered
 

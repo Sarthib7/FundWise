@@ -119,17 +119,17 @@ Completed:
 - **FW-004:** LI.FI handoff copy now uses `Route funds for Settlement`, returns to the Group after route submission, and preserves the normal Settlement / Receipt path.
 - **FW-005:** Zerion CLI wallet-readiness support shipped as `scripts/zerion-readiness.mjs` plus `pnpm zerion:readiness` and `docs/zerion-readiness.md`. Wraps `zerion analyze <address>`, summarizes USDC/SOL/broader context, prints a `READY` / `NOT READY` verdict with reasons, and falls back to a clear install message if the CLI is missing. Auth is pass-through (`ZERION_API_KEY`); optional x402 is documented, not required. `pnpm build` green.
 - **FW-019:** Fund Mode Treasury addresses now require on-chain Squads verification before persistence.
+- **FW-020:** Legacy SOL vault payment, withdrawal, balance, and lamport conversion helpers were removed from `lib/squads-multisig.ts`; Fund Mode Treasury helpers now stay stablecoin-only. `pnpm build` green.
 
 Next pick:
 
-- **FW-020:** Remove legacy SOL vault helpers from Squads Fund Mode code.
-- **FW-025:** Lock the one-month Fund Mode beta execution plan and keep it indexed.
+- **FW-026:** Build reimbursement Proposal creation for Fund Mode.
 
 Next:
 
 1. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero product sprint, and planned surfaces stay labeled as planned.
 2. Continue devnet/mainnet hardening for the free Split Mode launch because Fund Mode reuses the same wallet, session, receipt, and transfer trust boundaries.
-3. Finish the Fund Mode beta foundation: remove legacy SOL vault helpers, rehearse Treasury initialization and Contributions, then build reimbursement Proposals, approval/rejection, and execution.
+3. Finish the Fund Mode beta foundation: rehearse Treasury initialization and Contributions, then build reimbursement Proposals, approval/rejection, and execution.
 4. Add integrations only where they help Fund Mode: LI.FI for Contribution funding, Zerion for Treasury / Member readiness, FundWise Agent / Fundy for read-only and draft-safe Proposal workflows, and card / IBAN rails only after a concrete partner path exists.
 5. Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as planned unless separately implemented end to end.
 
@@ -148,7 +148,7 @@ Next:
 1. Keep [SUBMISSION.md](./SUBMISSION.md) and public copy aligned with FW-007: Source Currency and Expense Proof are future-only for the current demo.
 2. Keep [docs/positioning.md](./docs/positioning.md) as the working FundLabs/FundWise strategy reference: FundLabs umbrella, FundWise wedge/product direction, Fundy distribution, Receipt Endpoint infrastructure, and claims guardrails.
 3. Keep [docs/monetization.md](./docs/monetization.md) as the working business-model reference: free Split Mode launch, paid Fund Mode / Fundy / Receipt Endpoint / partner rails later.
-4. Pick FW-020 before any additional Fund Mode UI: remove legacy SOL vault helpers so Fund Mode stays stablecoins-only.
+4. Pick FW-026 next: build reimbursement Proposal creation now that the legacy SOL vault helpers are gone.
 
 Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 
