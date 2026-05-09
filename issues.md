@@ -107,7 +107,7 @@ Completed on 2026-05-09. Fund Mode now has a reimbursement Proposal creation pat
 
 ### What to build
 
-Add database-backed approval and rejection behavior for Fund Mode reimbursement Proposals.
+Add wallet-confirmed Squads approval and rejection behavior for Fund Mode reimbursement Proposals, with FundWise storing review metadata as an index of on-chain governance state.
 
 ### Acceptance Criteria
 
@@ -120,7 +120,7 @@ Add database-backed approval and rejection behavior for Fund Mode reimbursement 
 
 ### Notes
 
-Completed on 2026-05-09. Proposal reviews now use database-backed approval/rejection decisions with one review per Member, proposer self-review blocked, rejection closing the Proposal, and threshold approval moving status to `approved` without execution. The Fund Mode dashboard shows review counts, rejection history, and pending review controls. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed with 15 tests. Full gate: `pnpm build` passed.
+Completed on 2026-05-09. Proposal reviews originally shipped as database-backed approval/rejection decisions; the follow-up Squads governance correction now requires wallet-confirmed Squads review transactions and stores the review signature plus mirrored Squads status in FundWise. One review per Member, proposer self-review blocking, rejection closure, and threshold-ready status remain, but Squads is the authority layer. The Fund Mode dashboard shows review counts, rejection history, and pending review controls. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed with 15 tests. Full gate: `pnpm build` passed.
 
 ## FW-028 - Execute Approved Fund Mode Reimbursements Through Squads
 
@@ -131,14 +131,14 @@ Completed on 2026-05-09. Proposal reviews now use database-backed approval/rejec
 
 ### What to build
 
-Execute approved reimbursement Proposals through the stored Squads Multisig and Treasury addresses.
+Execute approved Squads reimbursement Proposals through the stored Squads Multisig and Treasury addresses.
 
 ### Acceptance Criteria
 
 - [ ] Execution is a separate explicit action after the approval threshold is met.
 - [ ] Any current Member can trigger execution for an approved Proposal.
 - [ ] Treasury movement targets only the approved Member recipient wallet.
-- [ ] Execution uses the approved amount and stablecoin mint without client-side mutation.
+- [ ] Execution uses the approved Squads transaction message without client-side mutation.
 - [ ] Server verifies the resulting on-chain transfer before marking the Proposal executed.
 - [ ] Duplicate execution attempts are rejected idempotently.
 - [ ] `pnpm build` passes.

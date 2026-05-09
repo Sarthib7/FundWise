@@ -196,6 +196,10 @@ create table public.proposals (
   mint text not null,
   memo text,
   status text not null default 'pending' check (status in ('pending', 'approved', 'executed', 'rejected', 'cancelled')),
+  squads_transaction_index bigint,
+  squads_proposal_address text,
+  squads_transaction_address text,
+  squads_create_tx_sig text,
   tx_sig text, -- filled when executed
   created_at timestamptz not null default now(),
   executed_at timestamptz
@@ -209,6 +213,7 @@ create table public.proposal_approvals (
   proposal_id uuid not null references public.proposals(id) on delete cascade,
   member_wallet text not null,
   decision text not null check (decision in ('approved', 'rejected')),
+  tx_sig text not null,
   reviewed_at timestamptz not null default now(),
   unique(proposal_id, member_wallet)
 );

@@ -406,7 +406,7 @@ Create a Fund Mode reimbursement Proposal for a current Group Member.
 
 Auth: browser wallet session. \`proposerWallet\` must match the authenticated wallet. The Group must be a Fund Mode Group with an initialized Treasury. The recipient must be a current Group Member.
 
-Important: this route creates an off-chain Proposal only. It does not approve, reject, or execute Treasury movement.
+Important: the browser creates the Squads vault transaction and Squads Proposal first. This route verifies and stores the Squads Proposal mapping for FundWise UX/history; the database is not the approval authority and this route does not execute Treasury movement.
 
 Request:
 
@@ -417,6 +417,10 @@ Request:
   "recipientWallet": "<member-wallet>",
   "amount": 100,
   "mint": "<usdc-mint>",
+  "squadsTransactionIndex": 1,
+  "squadsProposalAddress": "<squads-proposal-pda>",
+  "squadsTransactionAddress": "<squads-transaction-pda>",
+  "squadsCreateTxSig": "<solana-signature>",
   "memo": "Hotel deposit reimbursement"
 }
 \`\`\`
@@ -427,14 +431,15 @@ Approve or reject a pending Fund Mode reimbursement Proposal.
 
 Auth: browser wallet session. \`memberWallet\` must match the authenticated wallet. The Proposal creator cannot review their own Proposal. Each Member can approve or reject at most once.
 
-Important: threshold approval marks a Proposal ready for execution. It does not execute Treasury movement.
+Important: the browser signs the Squads approve/reject action first. This route verifies the Squads Proposal state and records the review signature; threshold approval comes from Squads status and does not execute Treasury movement.
 
 Request:
 
 \`\`\`json
 {
   "memberWallet": "<member-wallet>",
-  "decision": "approved"
+  "decision": "approved",
+  "txSig": "<solana-signature>"
 }
 \`\`\`
 

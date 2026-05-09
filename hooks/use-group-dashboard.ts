@@ -39,8 +39,10 @@ import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
 import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
 import {
   contributeStablecoinToTreasury,
+  createSquadsReimbursementProposal,
   createSquadsMultisig,
   getTreasuryStablecoinBalance,
+  reviewSquadsProposal,
 } from "@/lib/squads-multisig"
 import { toast } from "sonner"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
@@ -780,6 +782,11 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
+      const signingWallet = getSigningWallet(wallet?.adapter)
+      if (!signingWallet) {
+        throw new Error("No wallet found")
+      }
+
       const trimmedAmount = data.amount.trim()
 
       if (!/^\d+(\.\d{1,6})?$/.test(trimmedAmount)) {
@@ -792,12 +799,26 @@ export function useGroupDashboard() {
         throw new Error("Enter a valid Proposal amount")
       }
 
+      const squadsProposal = await createSquadsReimbursementProposal(
+        signingWallet,
+        walletAddress,
+        group.multisig_address,
+        group.treasury_address,
+        data.recipientWallet,
+        group.stablecoin_mint,
+        tokenAmount
+      )
+
       await dbAddProposal({
         groupId,
         proposerWallet: walletAddress,
         recipientWallet: data.recipientWallet,
         amount: tokenAmount,
         mint: group.stablecoin_mint,
+        squadsTransactionIndex: squadsProposal.transactionIndex,
+        squadsProposalAddress: squadsProposal.proposalAddress,
+        squadsTransactionAddress: squadsProposal.transactionAddress,
+        squadsCreateTxSig: squadsProposal.signature,
         memo: data.memo,
       })
 
@@ -810,7 +831,7 @@ export function useGroupDashboard() {
     } finally {
       setIsCreatingProposal(false)
     }
-  }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, walletAddress])
+  }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, wallet?.adapter, walletAddress])
 
   const handleReviewProposal = useCallback(async (
     proposalId: string,
@@ -829,10 +850,30 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
+      const proposal = proposals.find((item) => item.id === proposalId)
+      const signingWallet = getSigningWallet(wallet?.adapter)
+
+      if (!proposal || proposal.squads_transaction_index === null || !group.multisig_address) {
+        throw new Error("Proposal is missing Squads governance metadata")
+      }
+
+      if (!signingWallet) {
+        throw new Error("No wallet found")
+      }
+
+      const { signature } = await reviewSquadsProposal(
+        signingWallet,
+        walletAddress,
+        group.multisig_address,
+        proposal.squads_transaction_index,
+        decision
+      )
+
       await dbReviewProposal({
         proposalId,
         memberWallet: walletAddress,
         decision,
+        txSig: signature,
       })
 
       toast.success(decision === "approved" ? "Proposal approved" : "Proposal rejected")
@@ -844,7 +885,7 @@ export function useGroupDashboard() {
     } finally {
       setReviewingProposalId(null)
     }
-  }, [connected, ensureWalletWriteAccess, group, isMember, loadData, walletAddress])
+  }, [connected, ensureWalletWriteAccess, group, isMember, loadData, proposals, wallet?.adapter, walletAddress])
 
   const clearSettlementRequest = useCallback(() => {
     router.replace(`/groups/${groupId}`, { scroll: false })

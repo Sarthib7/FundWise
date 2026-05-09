@@ -41,6 +41,9 @@ type SolanaAccountInfo = {
 type TreasuryAccountReader = {
   getAccountInfo(address: PublicKey, commitment: "confirmed"): Promise<SolanaAccountInfo | null>
 }
+type SquadsProposalReader = {
+  getAccountInfo(address: PublicKey, commitment: "confirmed"): Promise<SolanaAccountInfo | null>
+}
 
 function getAdmin() {
   return getSupabaseAdmin()
@@ -227,6 +230,112 @@ export async function verifyFundModeTreasuryAddresses(
       throw new FundWiseError("Treasury creator wallet is not a configured Squads Multisig Member.")
     }
   }
+}
+
+async function loadSquadsProposal(
+  proposalAddress: string,
+  accountReader: SquadsProposalReader = new Connection(getSolanaRpcUrl(), "confirmed")
+) {
+  const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
+  const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")
+
+  if (!proposalAccount) {
+    throw new FundWiseError("Squads Proposal account is not confirmed on the configured Solana RPC.")
+  }
+
+  if (!proposalAccount.owner.equals(multisig.PROGRAM_ID)) {
+    throw new FundWiseError("Squads Proposal account is not owned by the Squads program.")
+  }
+
+  try {
+    const [proposal] = multisig.accounts.Proposal.fromAccountInfo(
+      proposalAccount as AccountInfo<Buffer>
+    )
+    return proposal
+  } catch {
+    throw new FundWiseError("Squads Proposal account data could not be decoded.")
+  }
+}
+
+async function verifySquadsProposalMetadata(data: {
+  multisigAddress: string
+  transactionIndex: number
+  proposalAddress: string
+  transactionAddress: string
+}) {
+  if (!Number.isSafeInteger(data.transactionIndex) || data.transactionIndex < 1) {
+    throw new FundWiseError("Squads transaction index must be a positive safe integer.")
+  }
+
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+  const proposalPubkey = parsePublicKey(data.proposalAddress, "Squads Proposal address")
+  const transactionPubkey = parsePublicKey(data.transactionAddress, "Squads transaction address")
+  const transactionIndex = BigInt(data.transactionIndex)
+  const [expectedProposalPda] = multisig.getProposalPda({
+    multisigPda: multisigPubkey,
+    transactionIndex,
+  })
+  const [expectedTransactionPda] = multisig.getTransactionPda({
+    multisigPda: multisigPubkey,
+    index: transactionIndex,
+  })
+
+  if (!proposalPubkey.equals(expectedProposalPda)) {
+    throw new FundWiseError("Squads Proposal address does not match the expected PDA.")
+  }
+
+  if (!transactionPubkey.equals(expectedTransactionPda)) {
+    throw new FundWiseError("Squads transaction address does not match the expected PDA.")
+  }
+
+  const proposal = await loadSquadsProposal(data.proposalAddress)
+
+  if (!proposal.multisig.equals(multisigPubkey)) {
+    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
+  }
+
+  if (BigInt(proposal.transactionIndex.toString()) !== transactionIndex) {
+    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
+  }
+}
+
+async function verifySquadsProposalReview(data: {
+  multisigAddress: string
+  transactionIndex: number
+  proposalAddress: string
+  memberWallet: string
+  decision: "approved" | "rejected"
+}) {
+  const proposal = await loadSquadsProposal(data.proposalAddress)
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+  const memberPubkey = parsePublicKey(data.memberWallet, "Reviewer wallet")
+
+  if (!proposal.multisig.equals(multisigPubkey)) {
+    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
+  }
+
+  if (BigInt(proposal.transactionIndex.toString()) !== BigInt(data.transactionIndex)) {
+    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
+  }
+
+  const reviewedWallets = data.decision === "approved" ? proposal.approved : proposal.rejected
+  const hasReview = reviewedWallets.some((wallet) => wallet.equals(memberPubkey))
+
+  if (!hasReview) {
+    throw new FundWiseError("Squads Proposal does not include this wallet review yet.")
+  }
+
+  return proposal.pretty().status
+}
+
+function mapSquadsStatusToFundWiseStatus(
+  status: "Draft" | "Active" | "Rejected" | "Approved" | "Executing" | "Executed" | "Cancelled"
+) {
+  if (status === "Approved") return "approved"
+  if (status === "Rejected") return "rejected"
+  if (status === "Executed") return "executed"
+  if (status === "Cancelled") return "cancelled"
+  return "pending"
 }
 
 async function getGroupOrThrow(groupId: string) {
@@ -820,6 +929,10 @@ export async function addProposalMutation(data: {
   recipientWallet: string
   amount: number
   mint: string
+  squadsTransactionIndex: number
+  squadsProposalAddress: string
+  squadsTransactionAddress: string
+  squadsCreateTxSig: string
   memo?: string | null
 }) {
   const group = await getGroupOrThrow(data.groupId)
@@ -851,6 +964,13 @@ export async function addProposalMutation(data: {
     "Reimbursement recipient must be a current Group Member."
   )
 
+  await verifySquadsProposalMetadata({
+    multisigAddress: group.multisig_address,
+    transactionIndex: data.squadsTransactionIndex,
+    proposalAddress: data.squadsProposalAddress,
+    transactionAddress: data.squadsTransactionAddress,
+  })
+
   const insert: ProposalInsert = {
     group_id: data.groupId,
     proposer_wallet: data.proposerWallet,
@@ -859,6 +979,10 @@ export async function addProposalMutation(data: {
     mint: data.mint,
     memo,
     status: "pending",
+    squads_transaction_index: data.squadsTransactionIndex,
+    squads_proposal_address: data.squadsProposalAddress,
+    squads_transaction_address: data.squadsTransactionAddress,
+    squads_create_tx_sig: data.squadsCreateTxSig,
     tx_sig: null,
     executed_at: null,
   }
@@ -880,6 +1004,7 @@ export async function reviewProposalMutation(data: {
   proposalId: string
   memberWallet: string
   decision: "approved" | "rejected"
+  txSig: string
 }) {
   if (data.decision !== "approved" && data.decision !== "rejected") {
     throw new FundWiseError("Proposal review decision must be approved or rejected.")
@@ -896,6 +1021,14 @@ export async function reviewProposalMutation(data: {
     throw new FundWiseError("Only pending Proposals can be reviewed.")
   }
 
+  if (
+    !group.multisig_address ||
+    proposal.squads_transaction_index === null ||
+    !proposal.squads_proposal_address
+  ) {
+    throw new FundWiseError("Proposal is missing Squads governance metadata.")
+  }
+
   await assertWalletIsMember(
     proposal.group_id,
     data.memberWallet,
@@ -906,12 +1039,22 @@ export async function reviewProposalMutation(data: {
     throw new FundWiseError("Proposal creator cannot review their own Proposal.")
   }
 
+  const squadsStatus = await verifySquadsProposalReview({
+    multisigAddress: group.multisig_address,
+    transactionIndex: proposal.squads_transaction_index,
+    proposalAddress: proposal.squads_proposal_address,
+    memberWallet: data.memberWallet,
+    decision: data.decision,
+  })
+  const nextStatus = mapSquadsStatusToFundWiseStatus(squadsStatus)
+
   const { error: reviewError } = await getAdmin()
     .from("proposal_approvals")
     .insert({
       proposal_id: data.proposalId,
       member_wallet: data.memberWallet,
       decision: data.decision,
+      tx_sig: data.txSig,
     })
 
   if (reviewError?.code === "23505") {
@@ -921,34 +1064,6 @@ export async function reviewProposalMutation(data: {
   if (reviewError) {
     throw new FundWiseError(`Failed to record Proposal review: ${reviewError.message}`)
   }
-
-  if (data.decision === "rejected") {
-    const { data: rejectedProposal, error } = await getAdmin()
-      .from("proposals")
-      .update({ status: "rejected" })
-      .eq("id", data.proposalId)
-      .select("*")
-      .single()
-
-    if (error) {
-      throw new FundWiseError(`Failed to reject Proposal: ${error.message}`)
-    }
-
-    return rejectedProposal
-  }
-
-  const { data: approvalRows, error: approvalCountError } = await getAdmin()
-    .from("proposal_approvals")
-    .select("id")
-    .eq("proposal_id", data.proposalId)
-    .eq("decision", "approved")
-
-  if (approvalCountError) {
-    throw new FundWiseError(`Failed to count Proposal approvals: ${approvalCountError.message}`)
-  }
-
-  const approvalThreshold = group.approval_threshold ?? 1
-  const nextStatus = (approvalRows || []).length >= approvalThreshold ? "approved" : "pending"
 
   const { data: reviewedProposal, error } = await getAdmin()
     .from("proposals")

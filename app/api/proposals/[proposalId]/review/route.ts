@@ -15,9 +15,10 @@ export async function POST(
     const body = (await request.json()) as {
       memberWallet?: string
       decision?: "approved" | "rejected"
+      txSig?: string
     }
 
-    if (!proposalId || !body.memberWallet || !body.decision) {
+    if (!proposalId || !body.memberWallet || !body.decision || !body.txSig) {
       throw new FundWiseError("Missing required Proposal review fields.")
     }
 
@@ -29,6 +30,7 @@ export async function POST(
       proposalId,
       memberWallet: body.memberWallet,
       decision: body.decision,
+      txSig: body.txSig,
     })
 
     return NextResponse.json(proposal)

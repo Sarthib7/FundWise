@@ -14,6 +14,10 @@ export async function POST(request: Request) {
       recipientWallet?: string
       amount?: number
       mint?: string
+      squadsTransactionIndex?: number
+      squadsProposalAddress?: string
+      squadsTransactionAddress?: string
+      squadsCreateTxSig?: string
       memo?: string
     }
 
@@ -22,7 +26,11 @@ export async function POST(request: Request) {
       !body.proposerWallet ||
       !body.recipientWallet ||
       typeof body.amount !== "number" ||
-      !body.mint
+      !body.mint ||
+      typeof body.squadsTransactionIndex !== "number" ||
+      !body.squadsProposalAddress ||
+      !body.squadsTransactionAddress ||
+      !body.squadsCreateTxSig
     ) {
       throw new FundWiseError("Missing required Proposal fields.")
     }
@@ -37,6 +45,10 @@ export async function POST(request: Request) {
       recipientWallet: body.recipientWallet,
       amount: body.amount,
       mint: body.mint,
+      squadsTransactionIndex: body.squadsTransactionIndex,
+      squadsProposalAddress: body.squadsProposalAddress,
+      squadsTransactionAddress: body.squadsTransactionAddress,
+      squadsCreateTxSig: body.squadsCreateTxSig,
       memo: body.memo,
     })
 

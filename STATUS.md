@@ -121,7 +121,7 @@ Completed:
 - **FW-019:** Fund Mode Treasury addresses now require on-chain Squads verification before persistence.
 - **FW-020:** Legacy SOL vault payment, withdrawal, balance, and lamport conversion helpers were removed from `lib/squads-multisig.ts`; Fund Mode Treasury helpers now stay stablecoin-only. `pnpm build` green.
 - **FW-026:** Fund Mode reimbursement Proposal creation shipped with authenticated `POST /api/proposals`, server-side Treasury / Member / USDC validation, dashboard reads, and UI creation/listing. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
-- **FW-027:** Proposal approval/rejection lifecycle shipped with one review per Member, proposer self-review blocked, rejection closure, threshold-ready status, and visible review history. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-027:** Proposal approval/rejection lifecycle now uses Squads-backed governance: Members sign Squads review transactions, FundWise stores signatures and mirrored status, and the database no longer acts as the approval authority. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 
 Next pick:
 
@@ -215,7 +215,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Payable Settlement Requests are now documented as a planned research direction for x402 / MPP / pay.sh-style agent payments. They extend Settlement Request Links for approved agents, but remain post-MVP and require scoped `settlement:pay` authority, idempotency, live Balance resolution, and verified payment proof before any Receipt is created.
 - Agent Spending Policies are now documented as a required prerequisite for payable settlement. They define per-Settlement caps, daily caps, Group scope, counterparty scope, expiry, revocation, and human fallback behavior.
 - Group ownership currently has limited power. In Split Mode, creator ownership is mostly a label; in Fund Mode, `created_by` can initialize Treasury addresses. Future ownership transfer must stay administrative and must not grant power over Balances or Receipts.
-- Telegram scope should stay read-only and draft-safe plus comments/history. **Proposal approve/reject** may run from Fundy when those actions are database-only; **on-chain** Settlement, Contribution, and Proposal execution remain app-and-wallet confirmed (deep-link back; reuse **Settlement Request Links** for settle intents).
+- Telegram scope should stay read-only and draft-safe plus comments/history. **Proposal approve/reject** is wallet-confirmed Squads governance for Fund Mode, so Fundy should deep-link Members back to the app for review signing rather than treat approvals as database-only bot actions. **On-chain** Settlement, Contribution, Proposal review, and Proposal execution remain app-and-wallet confirmed.
 - Telegram identity should stay simple: one Telegram account links to one active wallet at a time, with an explicit relink flow later if needed.
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
 - Telegram bot attachment may be initiated by any Member, but each person must authenticate privately in DM before the bot acts for them in the shared chat.

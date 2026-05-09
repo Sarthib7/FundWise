@@ -9,9 +9,12 @@ import {
   Connection,
   PublicKey,
   Transaction,
+  TransactionMessage,
   Keypair,
 } from "@solana/web3.js"
 import {
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token"
@@ -21,6 +24,48 @@ import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
 const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
 
 export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
+
+type WalletSigner = {
+  sendTransaction?: (transaction: Transaction, connection: Connection, options?: unknown) => Promise<string>
+  signAndSendTransaction?: (transaction: Transaction) => Promise<string | { signature: string }>
+  signTransaction?: (transaction: Transaction) => Promise<Transaction>
+}
+
+async function sendWalletTransaction(
+  wallet: WalletSigner,
+  transaction: Transaction,
+  blockhash: string,
+  lastValidBlockHeight: number
+) {
+  let signature: string
+
+  if (wallet.sendTransaction) {
+    signature = await wallet.sendTransaction(transaction, connection)
+  } else if (wallet.signAndSendTransaction) {
+    const result = await wallet.signAndSendTransaction(transaction)
+    signature = typeof result === "string" ? result : result.signature
+  } else if (wallet.signTransaction) {
+    const signed = await wallet.signTransaction(transaction)
+    signature = await connection.sendRawTransaction(signed.serialize(), {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    })
+  } else {
+    throw new Error("Wallet does not support transaction signing")
+  }
+
+  const confirmation = await connection.confirmTransaction({
+    signature,
+    blockhash,
+    lastValidBlockHeight,
+  }, "confirmed")
+
+  if (confirmation.value.err) {
+    throw new Error("Squads transaction failed: " + JSON.stringify(confirmation.value.err))
+  }
+
+  return signature
+}
 
 /**
  * Create a new Squads multisig for a group
@@ -188,4 +233,144 @@ export async function getTreasuryStablecoinBalance(
   } catch {
     return 0
   }
+}
+
+export async function createSquadsReimbursementProposal(
+  wallet: WalletSigner,
+  creatorAddress: string,
+  multisigAddress: string,
+  treasuryAddress: string,
+  recipientAddress: string,
+  mintAddress: string,
+  amount: number
+): Promise<{
+  signature: string
+  transactionIndex: number
+  proposalAddress: string
+  transactionAddress: string
+}> {
+  const creator = new PublicKey(creatorAddress)
+  const multisigPda = new PublicKey(multisigAddress)
+  const treasuryPda = new PublicKey(treasuryAddress)
+  const recipient = new PublicKey(recipientAddress)
+  const mint = new PublicKey(mintAddress)
+
+  const [expectedTreasuryPda] = multisig.getVaultPda({
+    multisigPda,
+    index: 0,
+  })
+
+  if (!treasuryPda.equals(expectedTreasuryPda)) {
+    throw new Error("Treasury address does not match the Squads vault PDA")
+  }
+
+  const multisigInfo = await multisig.accounts.Multisig.fromAccountAddress(
+    connection,
+    multisigPda
+  )
+  const nextTransactionIndex = BigInt(Number(multisigInfo.transactionIndex) + 1)
+  const [proposalPda] = multisig.getProposalPda({
+    multisigPda,
+    transactionIndex: nextTransactionIndex,
+  })
+  const [transactionPda] = multisig.getTransactionPda({
+    multisigPda,
+    index: nextTransactionIndex,
+  })
+
+  const treasuryAta = await getAssociatedTokenAddress(mint, treasuryPda, true)
+  const recipientAta = await getAssociatedTokenAddress(mint, recipient)
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+  const transaction = new Transaction()
+
+  try {
+    await getAccount(connection, recipientAta)
+  } catch {
+    transaction.add(
+      createAssociatedTokenAccountInstruction(creator, recipientAta, recipient, mint)
+    )
+  }
+
+  const transferInstruction = createTransferInstruction(
+    treasuryAta,
+    recipientAta,
+    treasuryPda,
+    BigInt(amount)
+  )
+
+  transaction.add(
+    multisig.instructions.vaultTransactionCreate({
+      multisigPda,
+      transactionIndex: nextTransactionIndex,
+      creator,
+      rentPayer: creator,
+      vaultIndex: 0,
+      ephemeralSigners: 0,
+      transactionMessage: new TransactionMessage({
+        payerKey: treasuryPda,
+        recentBlockhash: blockhash,
+        instructions: [transferInstruction],
+      }),
+    }),
+    multisig.instructions.proposalCreate({
+      multisigPda,
+      transactionIndex: nextTransactionIndex,
+      creator,
+      isDraft: false,
+    })
+  )
+
+  transaction.recentBlockhash = blockhash
+  transaction.feePayer = creator
+
+  const signature = await sendWalletTransaction(
+    wallet,
+    transaction,
+    blockhash,
+    lastValidBlockHeight
+  )
+
+  return {
+    signature,
+    transactionIndex: Number(nextTransactionIndex),
+    proposalAddress: proposalPda.toString(),
+    transactionAddress: transactionPda.toString(),
+  }
+}
+
+export async function reviewSquadsProposal(
+  wallet: WalletSigner,
+  memberAddress: string,
+  multisigAddress: string,
+  transactionIndex: number,
+  decision: "approved" | "rejected"
+): Promise<{ signature: string }> {
+  const member = new PublicKey(memberAddress)
+  const multisigPda = new PublicKey(multisigAddress)
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+  const instruction =
+    decision === "approved"
+      ? multisig.instructions.proposalApprove({
+          multisigPda,
+          transactionIndex: BigInt(transactionIndex),
+          member,
+        })
+      : multisig.instructions.proposalReject({
+          multisigPda,
+          transactionIndex: BigInt(transactionIndex),
+          member,
+        })
+
+  const transaction = new Transaction().add(instruction)
+  transaction.recentBlockhash = blockhash
+  transaction.feePayer = member
+
+  const signature = await sendWalletTransaction(
+    wallet,
+    transaction,
+    blockhash,
+    lastValidBlockHeight
+  )
+
+  return { signature }
 }

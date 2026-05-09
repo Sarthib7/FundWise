@@ -250,6 +250,10 @@ export interface Database {
           mint: string
           memo: string | null
           status: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          squads_transaction_index: number | null
+          squads_proposal_address: string | null
+          squads_transaction_address: string | null
+          squads_create_tx_sig: string | null
           tx_sig: string | null
           created_at: string
           executed_at: string | null
@@ -263,6 +267,10 @@ export interface Database {
           mint: string
           memo?: string | null
           status?: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          squads_transaction_index?: number | null
+          squads_proposal_address?: string | null
+          squads_transaction_address?: string | null
+          squads_create_tx_sig?: string | null
           tx_sig?: string | null
           created_at?: string
           executed_at?: string | null
@@ -276,6 +284,10 @@ export interface Database {
           mint?: string
           memo?: string | null
           status?: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          squads_transaction_index?: number | null
+          squads_proposal_address?: string | null
+          squads_transaction_address?: string | null
+          squads_create_tx_sig?: string | null
           tx_sig?: string | null
           created_at?: string
           executed_at?: string | null
@@ -288,6 +300,7 @@ export interface Database {
           proposal_id: string
           member_wallet: string
           decision: "approved" | "rejected"
+          tx_sig: string
           reviewed_at: string
         }
         Insert: {
@@ -295,6 +308,7 @@ export interface Database {
           proposal_id: string
           member_wallet: string
           decision: "approved" | "rejected"
+          tx_sig: string
           reviewed_at?: string
         }
         Update: {
@@ -302,6 +316,7 @@ export interface Database {
           proposal_id?: string
           member_wallet?: string
           decision?: "approved" | "rejected"
+          tx_sig?: string
           reviewed_at?: string
         }
         Relationships: []

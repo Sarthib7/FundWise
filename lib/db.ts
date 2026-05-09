@@ -324,6 +324,10 @@ export async function addProposal(data: {
   recipientWallet: string
   amount: number
   mint: string
+  squadsTransactionIndex: number
+  squadsProposalAddress: string
+  squadsTransactionAddress: string
+  squadsCreateTxSig: string
   memo?: string
 }) {
   return requestJson<ProposalRow>("/api/proposals", {
@@ -341,12 +345,14 @@ export async function reviewProposal(data: {
   proposalId: string
   memberWallet: string
   decision: "approved" | "rejected"
+  txSig: string
 }) {
   return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}/review`, {
     method: "POST",
     body: JSON.stringify({
       memberWallet: data.memberWallet,
       decision: data.decision,
+      txSig: data.txSig,
     }),
   })
 }
