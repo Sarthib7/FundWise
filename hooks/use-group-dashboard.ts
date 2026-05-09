@@ -294,14 +294,14 @@ export function useGroupDashboard() {
 
       if (preview.sourceTokenAccountExists) {
         if (lifiSupported) {
-          return `This ${actionLabel} needs ${formatTokenAmount(shortfall)} more ${tokenName}. Open the Settlement again and route funds from another supported network if that is where your USDC is.`
+          return `This ${actionLabel} needs ${formatTokenAmount(shortfall)} more ${tokenName}. Route funds from another supported network if that is where your USDC is, then retry the ${actionLabel}.`
         }
 
         return `This ${actionLabel} needs ${formatTokenAmount(shortfall)} more ${tokenName} in the connected wallet.`
       }
 
       if (lifiSupported) {
-        return `This wallet does not hold ${tokenName} for the Settlement yet. Open the Settlement again and route funds from another supported network if that is where your USDC is.`
+        return `This wallet does not hold ${tokenName} for the ${actionLabel} yet. Route funds from another supported network if that is where your USDC is, then retry the ${actionLabel}.`
       }
 
       return `This wallet does not hold ${tokenName} on ${clusterLabel}. Add ${tokenName} to the connected wallet first, then retry the ${actionLabel}.`

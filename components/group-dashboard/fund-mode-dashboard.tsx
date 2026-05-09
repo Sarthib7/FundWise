@@ -62,6 +62,7 @@ type FundModeDashboardProps = {
   isMember: boolean
   connected: boolean
   isWalletVerified: boolean
+  lifiSupported: boolean
   isCreatingTreasury: boolean
   isContributing: boolean
   isCreatingProposal: boolean
@@ -71,6 +72,7 @@ type FundModeDashboardProps = {
   commentingProposalId: string | null
   contributionAmount: string
   onContributionAmountChange: (value: string) => void
+  onOpenContributionFundingRoute: (amount: string) => void
   onCreateTreasury: () => void | Promise<void>
   onContribute: () => void | Promise<void>
   onCreateProposal: (data: {
@@ -133,6 +135,7 @@ export function FundModeDashboard({
   isMember,
   connected,
   isWalletVerified,
+  lifiSupported,
   isCreatingTreasury,
   isContributing,
   isCreatingProposal,
@@ -142,6 +145,7 @@ export function FundModeDashboard({
   commentingProposalId,
   contributionAmount,
   onContributionAmountChange,
+  onOpenContributionFundingRoute,
   onCreateTreasury,
   onContribute,
   onCreateProposal,
@@ -280,7 +284,7 @@ export function FundModeDashboard({
 
           {isMember ? (
             <form
-              className="flex flex-col gap-3 sm:flex-row"
+              className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
               aria-busy={isContributing}
               onSubmit={(event) => {
                 event.preventDefault()
@@ -312,6 +316,16 @@ export function FundModeDashboard({
                 )}
                 Contribute
               </Button>
+              {lifiSupported && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 sm:min-h-10 sm:self-end"
+                  onClick={() => onOpenContributionFundingRoute(contributionAmount)}
+                >
+                  Route funds for Contribution
+                </Button>
+              )}
             </form>
           ) : (
             <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">

@@ -124,10 +124,11 @@ Completed:
 - **FW-027:** Proposal approval/rejection lifecycle now uses Squads-backed governance: Members sign Squads review transactions, FundWise stores signatures and mirrored status, and the database no longer acts as the approval authority. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-028:** Approved reimbursement Proposals now execute through Squads vault transactions, then FundWise verifies the executed Squads status and Treasury-to-recipient stablecoin transfer before marking the Proposal executed. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-029:** Proposal audit trail now supports one external proof link, Proposal-scoped comments, creator-only memo/proof edits before first outside approval, and visible edit history. Native file-upload storage rules are documented before upload ships. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-030:** LI.FI routing is now available as `Route funds for Contribution` inside Fund Mode. It routes USDC to the Member wallet, returns to the same Group Contribution context, and leaves the Contribution ledger/receipt path unchanged. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 
 Next pick:
 
-- **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+- **FW-031:** Add Zerion readiness context for Fund Mode Members and Treasuries.
 
 Next:
 

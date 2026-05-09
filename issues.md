@@ -39,13 +39,13 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-027 | Done | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
 | FW-028 | Done | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
 | FW-029 | Done | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
-| FW-030 | Ready | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
+| FW-030 | Done | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
 | FW-031 | Ready | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
 | FW-032 | Ready | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | FW-028 |
 
 ## Pick Queue
 
-1. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+1. **FW-031:** Add Zerion readiness context for Fund Mode Members and Treasuries.
 2. **FW-032:** Run invite-only Fund Mode beta rehearsal and integration QA.
 3. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
@@ -173,7 +173,7 @@ Completed on 2026-05-09. Proposal proof now ships as one external HTTP/HTTPS pro
 
 ## FW-030 - Add LI.FI Funding Path For Fund Mode Contributions
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** FW-020
@@ -184,10 +184,14 @@ Extend the existing LI.FI support layer so a Member can route funds for a Fund M
 
 ### Acceptance Criteria
 
-- [ ] Contribution preflight can offer `Route funds for Contribution` when LI.FI is available.
-- [ ] Copy avoids bridge jargon and does not imply LI.FI executes the Contribution itself.
-- [ ] Route completion returns the Member to the same Fund Mode Group and Contribution context.
-- [ ] The Contribution ledger and Receipt model remain unchanged.
+- [x] Contribution preflight can offer `Route funds for Contribution` when LI.FI is available.
+- [x] Copy avoids bridge jargon and does not imply LI.FI executes the Contribution itself.
+- [x] Route completion returns the Member to the same Fund Mode Group and Contribution context.
+- [x] The Contribution ledger and Receipt model remain unchanged.
+
+### Notes
+
+Completed on 2026-05-09. Fund Mode Contributions now expose `Route funds for Contribution` when LI.FI is available, reusing the existing route modal with Contribution-specific copy. Funds route to the Member wallet, then the normal wallet-confirmed Contribution still moves USDC into the Squads Treasury and records the unchanged Contribution ledger entry. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed. Full gate: `pnpm build` passed.
 - [ ] `pnpm build` passes.
 
 ## FW-031 - Add Zerion Readiness Context For Fund Mode Members And Treasuries

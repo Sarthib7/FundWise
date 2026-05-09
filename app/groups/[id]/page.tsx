@@ -289,6 +289,7 @@ export default function GroupDashboard() {
   } = dashboard
   const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
+  const [bridgeFlow, setBridgeFlow] = useState<"settlement" | "contribution">("settlement")
   const [bridgeInitialAmount, setBridgeInitialAmount] = useState("")
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -346,7 +347,14 @@ export default function GroupDashboard() {
   }, [contribute, contributionAmount])
 
   const openSettlementFundingRoute = useCallback((transfer: SettlementTransfer) => {
+    setBridgeFlow("settlement")
     setBridgeInitialAmount(formatEditableTokenAmount(transfer.amount))
+    setShowBridge(true)
+  }, [])
+
+  const openContributionFundingRoute = useCallback((amount: string) => {
+    setBridgeFlow("contribution")
+    setBridgeInitialAmount(amount)
     setShowBridge(true)
   }, [])
 
@@ -807,6 +815,7 @@ export default function GroupDashboard() {
                   isMember={isMember}
                   connected={connected}
                   isWalletVerified={isWalletVerified}
+                  lifiSupported={lifiSupported}
                   isCreatingTreasury={isCreatingTreasury}
                   isContributing={isContributing}
                   isCreatingProposal={isCreatingProposal}
@@ -816,6 +825,7 @@ export default function GroupDashboard() {
                   commentingProposalId={commentingProposalId}
                   contributionAmount={contributionAmount}
                   onContributionAmountChange={setContributionAmount}
+                  onOpenContributionFundingRoute={openContributionFundingRoute}
                   onCreateTreasury={createTreasury}
                   onContribute={handleContribute}
                   onCreateProposal={createProposal}
@@ -865,10 +875,15 @@ export default function GroupDashboard() {
         onOpenChange={setShowBridge}
         destinationAddress={walletAddress}
         groupName={group.name}
+        flow={bridgeFlow}
         initialAmount={bridgeInitialAmount}
         onSuccess={(txHash, amount) => {
+          if (bridgeFlow === "contribution") {
+            setContributionAmount(amount)
+          }
+
           toast.success(
-            isFundMode
+            bridgeFlow === "contribution"
               ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
               : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
             {
