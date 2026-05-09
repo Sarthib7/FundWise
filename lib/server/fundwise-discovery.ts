@@ -271,6 +271,18 @@ export function buildOpenApiSpec(baseUrl?: string) {
           responses: { "200": { description: "Reviewed Proposal." } },
         },
       },
+      "/api/proposals/{proposalId}": {
+        patch: {
+          summary: "Update editable off-chain Proposal metadata before outside approval.",
+          responses: { "200": { description: "Updated Proposal." } },
+        },
+      },
+      "/api/proposals/{proposalId}/comments": {
+        post: {
+          summary: "Add a Proposal-scoped Fund Mode comment.",
+          responses: { "200": { description: "Created Proposal comment." } },
+        },
+      },
       "/api/proposals/{proposalId}/execute": {
         post: {
           summary: "Record a wallet-confirmed Squads execution for an approved Fund Mode Proposal.",

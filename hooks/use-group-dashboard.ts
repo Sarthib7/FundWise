@@ -7,6 +7,7 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { PublicKey } from "@solana/web3.js"
 import {
   addContribution as dbAddContribution,
+  addProposalComment as dbAddProposalComment,
   addMember,
   addProposal as dbAddProposal,
   addSettlement as dbAddSettlement,
@@ -16,6 +17,7 @@ import {
   reviewProposal as dbReviewProposal,
   type ActivityItem,
   type ProposalWithReviews,
+  updateProposalMetadata as dbUpdateProposalMetadata,
   updateGroupTreasury,
   updateProfileDisplayName,
 } from "@/lib/db"
@@ -111,6 +113,8 @@ export function useGroupDashboard() {
   const [isCreatingProposal, setIsCreatingProposal] = useState(false)
   const [reviewingProposalId, setReviewingProposalId] = useState<string | null>(null)
   const [executingProposalId, setExecutingProposalId] = useState<string | null>(null)
+  const [editingProposalId, setEditingProposalId] = useState<string | null>(null)
+  const [commentingProposalId, setCommentingProposalId] = useState<string | null>(null)
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
@@ -760,6 +764,7 @@ export function useGroupDashboard() {
   const handleCreateProposal = useCallback(async (data: {
     recipientWallet: string
     amount: string
+    proofUrl?: string
     memo?: string
   }) => {
     if (!group || group.mode !== "fund" || !connected || !walletAddress) {
@@ -822,6 +827,7 @@ export function useGroupDashboard() {
         squadsProposalAddress: squadsProposal.proposalAddress,
         squadsTransactionAddress: squadsProposal.transactionAddress,
         squadsCreateTxSig: squadsProposal.signature,
+        proofUrl: data.proofUrl,
         memo: data.memo,
       })
 
@@ -835,6 +841,79 @@ export function useGroupDashboard() {
       setIsCreatingProposal(false)
     }
   }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, wallet?.adapter, walletAddress])
+
+  const handleUpdateProposalMetadata = useCallback(async (
+    proposalId: string,
+    data: { memo?: string; proofUrl?: string }
+  ) => {
+    if (!connected || !walletAddress) {
+      setWalletModalVisible(true)
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before editing Proposals")
+      return false
+    }
+
+    setEditingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      await dbUpdateProposalMetadata({
+        proposalId,
+        editorWallet: walletAddress,
+        memo: data.memo,
+        proofUrl: data.proofUrl,
+      })
+
+      toast.success("Proposal updated")
+      await loadData()
+      return true
+    } catch (error) {
+      console.error("[FundWise] Failed to update Proposal:", error)
+      toast.error(getErrorMessage(error, "Failed to update Proposal"))
+      return false
+    } finally {
+      setEditingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, isMember, loadData, walletAddress, setWalletModalVisible])
+
+  const handleAddProposalComment = useCallback(async (
+    proposalId: string,
+    body: string
+  ) => {
+    if (!connected || !walletAddress) {
+      setWalletModalVisible(true)
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before commenting on Proposals")
+      return false
+    }
+
+    setCommentingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      await dbAddProposalComment({
+        proposalId,
+        memberWallet: walletAddress,
+        body,
+      })
+
+      toast.success("Comment added")
+      await loadData()
+      return true
+    } catch (error) {
+      console.error("[FundWise] Failed to add Proposal comment:", error)
+      toast.error(getErrorMessage(error, "Failed to add Proposal comment"))
+      return false
+    } finally {
+      setCommentingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, isMember, loadData, walletAddress, setWalletModalVisible])
 
   const handleReviewProposal = useCallback(async (
     proposalId: string,
@@ -1028,6 +1107,8 @@ export function useGroupDashboard() {
     isCreatingProposal,
     reviewingProposalId,
     executingProposalId,
+    editingProposalId,
+    commentingProposalId,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -1066,6 +1147,8 @@ export function useGroupDashboard() {
     createTreasury: handleCreateTreasury,
     contribute: handleContribute,
     createProposal: handleCreateProposal,
+    updateProposalMetadata: handleUpdateProposalMetadata,
+    addProposalComment: handleAddProposalComment,
     reviewProposal: handleReviewProposal,
     executeProposal: handleExecuteProposal,
     clearSettlementRequest,

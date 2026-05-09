@@ -21,6 +21,7 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
 type ProposalInsert = Database["public"]["Tables"]["proposals"]["Insert"]
 type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
+type ProposalEditInsert = Database["public"]["Tables"]["proposal_edits"]["Insert"]
 type SettlementGraphActivity = Parameters<typeof computeBalancesFromActivity>[1]
 
 type SupabaseMutationError = {
@@ -103,6 +104,7 @@ export function validateProposalInput(data: {
   mint: string
   expectedMint: string
   memo?: string | null
+  proofUrl?: string | null
 }) {
   if (!Number.isSafeInteger(data.amount) || data.amount <= 0) {
     throw new FundWiseError("Proposal amount must be a positive integer token amount.")
@@ -118,7 +120,46 @@ export function validateProposalInput(data: {
     throw new FundWiseError("Proposal memo must be 240 characters or fewer.")
   }
 
-  return { memo }
+  return { memo, proofUrl: normalizeProofUrl(data.proofUrl) }
+}
+
+function normalizeProofUrl(proofUrl?: string | null) {
+  const trimmedProofUrl = proofUrl?.trim() || null
+
+  if (!trimmedProofUrl) {
+    return null
+  }
+
+  if (trimmedProofUrl.length > 500) {
+    throw new FundWiseError("Proposal proof link must be 500 characters or fewer.")
+  }
+
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(trimmedProofUrl)
+  } catch {
+    throw new FundWiseError("Proposal proof link must be a valid URL.")
+  }
+
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    throw new FundWiseError("Proposal proof link must use HTTP or HTTPS.")
+  }
+
+  return parsedUrl.toString()
+}
+
+function normalizeProposalComment(body?: string | null) {
+  const trimmedBody = body?.trim() || ""
+
+  if (!trimmedBody) {
+    throw new FundWiseError("Proposal comment cannot be empty.")
+  }
+
+  if (trimmedBody.length > 1000) {
+    throw new FundWiseError("Proposal comment must be 1000 characters or fewer.")
+  }
+
+  return trimmedBody
 }
 
 export function assertSettlementMatchesCurrentGraph(data: {
@@ -955,6 +996,7 @@ export async function addProposalMutation(data: {
   squadsProposalAddress: string
   squadsTransactionAddress: string
   squadsCreateTxSig: string
+  proofUrl?: string | null
   memo?: string | null
 }) {
   const group = await getGroupOrThrow(data.groupId)
@@ -967,11 +1009,12 @@ export async function addProposalMutation(data: {
     throw new FundWiseError("Treasury must be initialized before creating reimbursement Proposals.")
   }
 
-  const { memo } = validateProposalInput({
+  const { memo, proofUrl } = validateProposalInput({
     amount: data.amount,
     mint: data.mint,
     expectedMint: group.stablecoin_mint,
     memo: data.memo,
+    proofUrl: data.proofUrl,
   })
 
   await assertWalletIsMember(
@@ -1000,6 +1043,7 @@ export async function addProposalMutation(data: {
     amount: data.amount,
     mint: data.mint,
     memo,
+    proof_url: proofUrl,
     status: "pending",
     squads_transaction_index: data.squadsTransactionIndex,
     squads_proposal_address: data.squadsProposalAddress,
@@ -1182,6 +1226,136 @@ export async function executeProposalMutation(data: {
   }
 
   return executedProposal
+}
+
+export async function updateProposalMetadataMutation(data: {
+  proposalId: string
+  editorWallet: string
+  memo?: string | null
+  proofUrl?: string | null
+}) {
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can be edited.")
+  }
+
+  if (proposal.status !== "pending") {
+    throw new FundWiseError("Only pending Proposals can be edited.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.editorWallet,
+    "Only Group Members can edit Proposals."
+  )
+
+  if (proposal.proposer_wallet !== data.editorWallet) {
+    throw new FundWiseError("Only the Proposal creator can edit Proposal metadata.")
+  }
+
+  const { data: outsideApprovals, error: outsideApprovalsError } = await getAdmin()
+    .from("proposal_approvals")
+    .select("id")
+    .eq("proposal_id", data.proposalId)
+    .eq("decision", "approved")
+    .neq("member_wallet", proposal.proposer_wallet)
+
+  if (outsideApprovalsError) {
+    throw new FundWiseError(`Failed to check Proposal approval history: ${outsideApprovalsError.message}`)
+  }
+
+  if ((outsideApprovals || []).length > 0) {
+    throw new FundWiseError("Proposal cannot be edited after the first outside approval.")
+  }
+
+  const memo = data.memo?.trim() || null
+  if (memo && memo.length > 240) {
+    throw new FundWiseError("Proposal memo must be 240 characters or fewer.")
+  }
+
+  const proofUrl = normalizeProofUrl(data.proofUrl)
+  const changedFields: Record<string, { from: string | null; to: string | null }> = {}
+
+  if ((proposal.memo || null) !== memo) {
+    changedFields.memo = { from: proposal.memo, to: memo }
+  }
+
+  if ((proposal.proof_url || null) !== proofUrl) {
+    changedFields.proof_url = { from: proposal.proof_url, to: proofUrl }
+  }
+
+  if (Object.keys(changedFields).length === 0) {
+    throw new FundWiseError("Proposal metadata did not change.")
+  }
+
+  const { data: updatedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({
+      memo,
+      proof_url: proofUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.proposalId)
+    .eq("status", "pending")
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to update Proposal metadata: ${error.message}`)
+  }
+
+  const editInsert: ProposalEditInsert = {
+    proposal_id: data.proposalId,
+    editor_wallet: data.editorWallet,
+    changed_fields: changedFields,
+  }
+  const { error: editError } = await getAdmin()
+    .from("proposal_edits")
+    .insert(editInsert)
+
+  if (editError) {
+    throw new FundWiseError(`Failed to record Proposal edit history: ${editError.message}`)
+  }
+
+  return updatedProposal
+}
+
+export async function addProposalCommentMutation(data: {
+  proposalId: string
+  memberWallet: string
+  body: string
+}) {
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can have comments.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.memberWallet,
+    "Only Group Members can comment on Proposals."
+  )
+
+  const body = normalizeProposalComment(data.body)
+  const { data: comment, error } = await getAdmin()
+    .from("proposal_comments")
+    .insert({
+      proposal_id: data.proposalId,
+      member_wallet: data.memberWallet,
+      body,
+    })
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to add Proposal comment: ${error.message}`)
+  }
+
+  return comment
 }
 
 export async function updateGroupTreasuryMutation(data: {

@@ -38,15 +38,15 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-026 | Done | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
 | FW-027 | Done | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
 | FW-028 | Done | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
-| FW-029 | Ready | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
+| FW-029 | Done | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
 | FW-030 | Ready | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
 | FW-031 | Ready | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
 | FW-032 | Ready | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | FW-028 |
 
 ## Pick Queue
 
-1. **FW-029:** Add Proposal proof, comments, and edit history model.
-2. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+1. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+2. **FW-032:** Run invite-only Fund Mode beta rehearsal and integration QA.
 3. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
 ## Handoff Queue For Claude / Lot
@@ -149,7 +149,7 @@ Completed on 2026-05-09. Approved Proposals now expose a separate Execute action
 
 ## FW-029 - Add Proposal Proof, Comments, And Edit History Model
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** FW-026
@@ -160,12 +160,16 @@ Add the lightweight audit trail needed for a real Fund Mode beta without turning
 
 ### Acceptance Criteria
 
-- [ ] Proposal supports one lightweight proof file or one external proof link.
-- [ ] Proposal comments are scoped to the Proposal, not a Group-wide chat surface.
-- [ ] Proposal edits are allowed only before the first non-proposer approval.
-- [ ] Proposal edit history shows what changed.
-- [ ] Rejections remain visible in Proposal history.
-- [ ] Storage and access rules are documented before file upload ships.
+- [x] Proposal supports one lightweight proof file or one external proof link.
+- [x] Proposal comments are scoped to the Proposal, not a Group-wide chat surface.
+- [x] Proposal edits are allowed only before the first non-proposer approval.
+- [x] Proposal edit history shows what changed.
+- [x] Rejections remain visible in Proposal history.
+- [x] Storage and access rules are documented before file upload ships.
+
+### Notes
+
+Completed on 2026-05-09. Proposal proof now ships as one external HTTP/HTTPS proof link, comments are Proposal-scoped, creator metadata edits are limited to memo/proof link while pending and before the first outside approval, edit history records changed fields, and storage/access rules are documented in `docs/fund-mode-proposal-audit.md` before native file upload. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed. Full gate: `pnpm build` passed.
 
 ## FW-030 - Add LI.FI Funding Path For Fund Mode Contributions
 

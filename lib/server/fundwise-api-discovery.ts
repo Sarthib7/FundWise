@@ -421,7 +421,41 @@ Request:
   "squadsProposalAddress": "<squads-proposal-pda>",
   "squadsTransactionAddress": "<squads-transaction-pda>",
   "squadsCreateTxSig": "<solana-signature>",
+  "proofUrl": "https://example.com/receipt.pdf",
   "memo": "Hotel deposit reimbursement"
+}
+\`\`\`
+
+#### PATCH /api/proposals/{proposalId}
+
+Update editable off-chain Proposal metadata.
+
+Auth: browser wallet session. \`editorWallet\` must match the authenticated wallet, be the Proposal creator, and still be a current Group Member.
+
+Important: only \`memo\` and \`proofUrl\` are editable. Recipient, amount, mint, and Squads transaction details are immutable because they are anchored in the Squads transaction. Edits are blocked after the first outside approval.
+
+Request:
+
+\`\`\`json
+{
+  "editorWallet": "<member-wallet>",
+  "memo": "Updated memo",
+  "proofUrl": "https://example.com/receipt.pdf"
+}
+\`\`\`
+
+#### POST /api/proposals/{proposalId}/comments
+
+Add a Proposal-scoped comment.
+
+Auth: browser wallet session. \`memberWallet\` must match the authenticated wallet and be a current Group Member.
+
+Request:
+
+\`\`\`json
+{
+  "memberWallet": "<member-wallet>",
+  "body": "Looks good to me."
 }
 \`\`\`
 
@@ -585,6 +619,8 @@ Mutations requiring explicit Member intent:
 - \`PATCH /api/expenses/{expenseId}\` — edit an Expense as its creator.
 - \`DELETE /api/expenses/{expenseId}\` — delete an Expense as its creator.
 - \`POST /api/proposals\` — create a Fund Mode reimbursement Proposal.
+- \`PATCH /api/proposals/{proposalId}\` — update editable off-chain Proposal metadata before outside approval.
+- \`POST /api/proposals/{proposalId}/comments\` — add a Proposal-scoped comment.
 - \`POST /api/proposals/{proposalId}/review\` — approve or reject a pending Proposal.
 - \`POST /api/proposals/{proposalId}/execute\` — record a verified Squads execution for an approved Proposal.
 - \`POST /api/profile/display-name\` — update Profile Display Name.

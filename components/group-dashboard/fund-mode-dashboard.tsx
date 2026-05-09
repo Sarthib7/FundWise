@@ -67,6 +67,8 @@ type FundModeDashboardProps = {
   isCreatingProposal: boolean
   reviewingProposalId: string | null
   executingProposalId: string | null
+  editingProposalId: string | null
+  commentingProposalId: string | null
   contributionAmount: string
   onContributionAmountChange: (value: string) => void
   onCreateTreasury: () => void | Promise<void>
@@ -74,8 +76,17 @@ type FundModeDashboardProps = {
   onCreateProposal: (data: {
     recipientWallet: string
     amount: string
+    proofUrl?: string
     memo?: string
   }) => boolean | Promise<boolean>
+  onUpdateProposalMetadata: (
+    proposalId: string,
+    data: { memo?: string; proofUrl?: string }
+  ) => boolean | Promise<boolean>
+  onAddProposalComment: (
+    proposalId: string,
+    body: string
+  ) => boolean | Promise<boolean>
   onReviewProposal: (
     proposalId: string,
     decision: "approved" | "rejected"
@@ -86,6 +97,19 @@ type FundModeDashboardProps = {
 
 function shortWallet(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
+
+function getEditFieldLabels(changedFields: unknown) {
+  if (!changedFields || typeof changedFields !== "object" || Array.isArray(changedFields)) {
+    return "metadata"
+  }
+
+  const labels = Object.keys(changedFields).map((field) => {
+    if (field === "proof_url") return "proof link"
+    return field
+  })
+
+  return labels.length > 0 ? labels.join(", ") : "metadata"
 }
 
 export function FundModeDashboard({
@@ -114,11 +138,15 @@ export function FundModeDashboard({
   isCreatingProposal,
   reviewingProposalId,
   executingProposalId,
+  editingProposalId,
+  commentingProposalId,
   contributionAmount,
   onContributionAmountChange,
   onCreateTreasury,
   onContribute,
   onCreateProposal,
+  onUpdateProposalMetadata,
+  onAddProposalComment,
   onReviewProposal,
   onExecuteProposal,
   onJoin,
@@ -126,6 +154,11 @@ export function FundModeDashboard({
   const [proposalRecipientWallet, setProposalRecipientWallet] = useState("")
   const [proposalAmount, setProposalAmount] = useState("")
   const [proposalMemo, setProposalMemo] = useState("")
+  const [proposalProofUrl, setProposalProofUrl] = useState("")
+  const [editingLocalProposalId, setEditingLocalProposalId] = useState<string | null>(null)
+  const [editMemo, setEditMemo] = useState("")
+  const [editProofUrl, setEditProofUrl] = useState("")
+  const [proposalCommentBodies, setProposalCommentBodies] = useState<Record<string, string>>({})
 
   return (
     <>
@@ -313,12 +346,14 @@ export function FundModeDashboard({
               const created = await onCreateProposal({
                 recipientWallet: proposalRecipientWallet,
                 amount: proposalAmount,
+                proofUrl: proposalProofUrl,
                 memo: proposalMemo,
               })
 
               if (created) {
                 setProposalRecipientWallet("")
                 setProposalAmount("")
+                setProposalProofUrl("")
                 setProposalMemo("")
               }
             }}
@@ -377,6 +412,20 @@ export function FundModeDashboard({
                 maxLength={240}
               />
             </div>
+            <div className="space-y-2 lg:col-span-3">
+              <Label htmlFor="proposal-proof-url">Proof link</Label>
+              <Input
+                id="proposal-proof-url"
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                spellCheck={false}
+                placeholder="https://..."
+                value={proposalProofUrl}
+                onChange={(event) => setProposalProofUrl(event.target.value)}
+                maxLength={500}
+              />
+            </div>
           </form>
         ) : (
           <div className="mb-6 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
@@ -401,6 +450,10 @@ export function FundModeDashboard({
                 const approvalCount = proposal.reviews.filter((review) => review.decision === "approved").length
                 const rejectionReviews = proposal.reviews.filter((review) => review.decision === "rejected")
                 const viewerReview = proposal.reviews.find((review) => review.member_wallet === walletAddress)
+                const canEdit =
+                  proposal.status === "pending" &&
+                  proposal.proposer_wallet === walletAddress &&
+                  approvalCount === 0
                 const canReview =
                   proposal.status === "pending" &&
                   isMember &&
@@ -409,6 +462,10 @@ export function FundModeDashboard({
                 const canExecute = proposal.status === "approved" && isMember
                 const isReviewing = reviewingProposalId === proposal.id
                 const isExecuting = executingProposalId === proposal.id
+                const isSavingEdit = editingProposalId === proposal.id
+                const isAddingComment = commentingProposalId === proposal.id
+                const commentBody = proposalCommentBodies[proposal.id] || ""
+                const isEditing = editingLocalProposalId === proposal.id
 
                 return (
                   <div
@@ -433,6 +490,70 @@ export function FundModeDashboard({
                       {proposal.memo && (
                         <p className="mt-2 text-sm text-muted-foreground">{proposal.memo}</p>
                       )}
+                      {proposal.proof_url && (
+                        <a
+                          href={proposal.proof_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-2 inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                        >
+                          Proof link
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                      {isEditing && (
+                        <div className="mt-3 space-y-3 rounded-lg border p-3">
+                          <div className="space-y-2">
+                            <Label htmlFor={`proposal-edit-memo-${proposal.id}`}>Memo</Label>
+                            <Textarea
+                              id={`proposal-edit-memo-${proposal.id}`}
+                              value={editMemo}
+                              onChange={(event) => setEditMemo(event.target.value)}
+                              maxLength={240}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`proposal-edit-proof-${proposal.id}`}>Proof link</Label>
+                            <Input
+                              id={`proposal-edit-proof-${proposal.id}`}
+                              type="url"
+                              value={editProofUrl}
+                              onChange={(event) => setEditProofUrl(event.target.value)}
+                              maxLength={500}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="min-h-10 bg-accent hover:bg-accent/90"
+                              disabled={isSavingEdit}
+                              onClick={async () => {
+                                const updated = await onUpdateProposalMetadata(proposal.id, {
+                                  memo: editMemo,
+                                  proofUrl: editProofUrl,
+                                })
+                                if (updated) {
+                                  setEditingLocalProposalId(null)
+                                }
+                              }}
+                            >
+                              {isSavingEdit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                              Save
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="min-h-10"
+                              disabled={isSavingEdit}
+                              onClick={() => setEditingLocalProposalId(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                       {viewerReview && (
                         <p className="mt-2 text-xs text-muted-foreground">
                           You {viewerReview.decision === "approved" ? "approved" : "rejected"} this Proposal.
@@ -452,11 +573,74 @@ export function FundModeDashboard({
                           ))}
                         </div>
                       )}
+                      {(proposal.comments.length > 0 || proposal.edits.length > 0) && (
+                        <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                          {proposal.edits.map((edit) => (
+                            <p key={edit.id}>
+                              Changed {getEditFieldLabels(edit.changed_fields)} by {memberNameByWallet.get(edit.editor_wallet) || shortWallet(edit.editor_wallet)}
+                            </p>
+                          ))}
+                          {proposal.comments.map((comment) => (
+                            <p key={comment.id}>
+                              {memberNameByWallet.get(comment.member_wallet) || shortWallet(comment.member_wallet)}: {comment.body}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      {isMember && (
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                          <Input
+                            value={commentBody}
+                            onChange={(event) =>
+                              setProposalCommentBodies((current) => ({
+                                ...current,
+                                [proposal.id]: event.target.value,
+                              }))
+                            }
+                            placeholder="Add a Proposal comment"
+                            maxLength={1000}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="min-h-10 sm:w-auto"
+                            disabled={isAddingComment || !commentBody.trim()}
+                            onClick={async () => {
+                              const added = await onAddProposalComment(proposal.id, commentBody)
+                              if (added) {
+                                setProposalCommentBodies((current) => ({
+                                  ...current,
+                                  [proposal.id]: "",
+                                }))
+                              }
+                            }}
+                          >
+                            {isAddingComment && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Comment
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-col items-start gap-3 sm:items-end">
                       <p className="font-mono font-semibold tabular-nums">
                         {formatTokenAmount(proposal.amount)} {tokenName}
                       </p>
+                      {canEdit && !isEditing && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="min-h-10"
+                          onClick={() => {
+                            setEditingLocalProposalId(proposal.id)
+                            setEditMemo(proposal.memo || "")
+                            setEditProofUrl(proposal.proof_url || "")
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      )}
                       {canReview && (
                         <div className="flex gap-2">
                           <Button

@@ -195,6 +195,7 @@ create table public.proposals (
   amount bigint not null,
   mint text not null,
   memo text,
+  proof_url text,
   status text not null default 'pending' check (status in ('pending', 'approved', 'executed', 'rejected', 'cancelled')),
   squads_transaction_index bigint,
   squads_proposal_address text,
@@ -202,6 +203,7 @@ create table public.proposals (
   squads_create_tx_sig text,
   tx_sig text, -- filled when executed
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   executed_at timestamptz
 );
 
@@ -219,6 +221,28 @@ create table public.proposal_approvals (
 );
 
 -- =============================================
+-- PROPOSAL COMMENTS (Fund Mode)
+-- =============================================
+create table public.proposal_comments (
+  id uuid primary key default uuid_generate_v4(),
+  proposal_id uuid not null references public.proposals(id) on delete cascade,
+  member_wallet text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+-- =============================================
+-- PROPOSAL EDITS (Fund Mode)
+-- =============================================
+create table public.proposal_edits (
+  id uuid primary key default uuid_generate_v4(),
+  proposal_id uuid not null references public.proposals(id) on delete cascade,
+  editor_wallet text not null,
+  changed_fields jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+-- =============================================
 -- INDEXES
 -- =============================================
 create index idx_members_group on public.members(group_id);
@@ -228,6 +252,8 @@ create index idx_expense_splits_expense on public.expense_splits(expense_id);
 create index idx_settlements_group on public.settlements(group_id);
 create index idx_contributions_group on public.contributions(group_id);
 create index idx_proposals_group on public.proposals(group_id);
+create index idx_proposal_comments_proposal on public.proposal_comments(proposal_id);
+create index idx_proposal_edits_proposal on public.proposal_edits(proposal_id);
 
 -- =============================================
 -- ROW LEVEL SECURITY

@@ -11,8 +11,14 @@ type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 type ProposalReviewRow = Database["public"]["Tables"]["proposal_approvals"]["Row"]
+type ProposalCommentRow = Database["public"]["Tables"]["proposal_comments"]["Row"]
+type ProposalEditRow = Database["public"]["Tables"]["proposal_edits"]["Row"]
 
-export type ProposalWithReviews = ProposalRow & { reviews: ProposalReviewRow[] }
+export type ProposalWithReviews = ProposalRow & {
+  reviews: ProposalReviewRow[]
+  comments: ProposalCommentRow[]
+  edits: ProposalEditRow[]
+}
 
 export type ActivityItem =
   | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
@@ -328,6 +334,7 @@ export async function addProposal(data: {
   squadsProposalAddress: string
   squadsTransactionAddress: string
   squadsCreateTxSig: string
+  proofUrl?: string
   memo?: string
 }) {
   return requestJson<ProposalRow>("/api/proposals", {
@@ -367,6 +374,36 @@ export async function executeProposal(data: {
     body: JSON.stringify({
       executorWallet: data.executorWallet,
       txSig: data.txSig,
+    }),
+  })
+}
+
+export async function updateProposalMetadata(data: {
+  proposalId: string
+  editorWallet: string
+  memo?: string
+  proofUrl?: string
+}) {
+  return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      editorWallet: data.editorWallet,
+      memo: data.memo,
+      proofUrl: data.proofUrl,
+    }),
+  })
+}
+
+export async function addProposalComment(data: {
+  proposalId: string
+  memberWallet: string
+  body: string
+}) {
+  return requestJson<ProposalCommentRow>(`/api/proposals/${data.proposalId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({
+      memberWallet: data.memberWallet,
+      body: data.body,
     }),
   })
 }

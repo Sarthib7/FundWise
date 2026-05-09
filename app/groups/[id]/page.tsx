@@ -240,6 +240,8 @@ export default function GroupDashboard() {
     isCreatingProposal,
     reviewingProposalId,
     executingProposalId,
+    editingProposalId,
+    commentingProposalId,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -278,6 +280,8 @@ export default function GroupDashboard() {
     createTreasury,
     contribute,
     createProposal,
+    updateProposalMetadata,
+    addProposalComment,
     reviewProposal,
     executeProposal,
     clearSettlementRequest,
@@ -808,11 +812,15 @@ export default function GroupDashboard() {
                   isCreatingProposal={isCreatingProposal}
                   reviewingProposalId={reviewingProposalId}
                   executingProposalId={executingProposalId}
+                  editingProposalId={editingProposalId}
+                  commentingProposalId={commentingProposalId}
                   contributionAmount={contributionAmount}
                   onContributionAmountChange={setContributionAmount}
                   onCreateTreasury={createTreasury}
                   onContribute={handleContribute}
                   onCreateProposal={createProposal}
+                  onUpdateProposalMetadata={updateProposalMetadata}
+                  onAddProposalComment={addProposalComment}
                   onReviewProposal={reviewProposal}
                   onExecuteProposal={executeProposal}
                   onJoin={joinGroup}

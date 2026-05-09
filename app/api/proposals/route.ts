@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       squadsProposalAddress?: string
       squadsTransactionAddress?: string
       squadsCreateTxSig?: string
+      proofUrl?: string
       memo?: string
     }
 
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
       squadsProposalAddress: body.squadsProposalAddress,
       squadsTransactionAddress: body.squadsTransactionAddress,
       squadsCreateTxSig: body.squadsCreateTxSig,
+      proofUrl: body.proofUrl,
       memo: body.memo,
     })
 

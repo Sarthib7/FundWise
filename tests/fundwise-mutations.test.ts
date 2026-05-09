@@ -222,11 +222,12 @@ describe("validateProposalInput", () => {
         mint: expectedMint,
         expectedMint,
         memo: "  Hotel deposit  ",
+        proofUrl: " https://example.com/receipt ",
       })
-    ).toEqual({ memo: "Hotel deposit" })
+    ).toEqual({ memo: "Hotel deposit", proofUrl: "https://example.com/receipt" })
   })
 
-  it("rejects invalid Proposal amounts, mints, and long memos", () => {
+  it("rejects invalid Proposal amounts, mints, long memos, and invalid proof links", () => {
     expect(() =>
       validateProposalInput({
         amount: 0,
@@ -251,6 +252,15 @@ describe("validateProposalInput", () => {
         memo: "x".repeat(241),
       })
     ).toThrow("Proposal memo must be 240 characters or fewer.")
+
+    expect(() =>
+      validateProposalInput({
+        amount: 2500,
+        mint: expectedMint,
+        expectedMint,
+        proofUrl: "javascript:alert(1)",
+      })
+    ).toThrow("Proposal proof link must use HTTP or HTTPS.")
   })
 })
 
