@@ -17,8 +17,10 @@ FundWise is still a two-mode product:
 
 The product direction is now sharper:
 
+- FundWise sits under the broader FundLabs umbrella: FundLabs builds the financial layer for groups, human or AI. FundWise is the shared-finance product, Fundy is the Telegram / personal-agent distribution product, and Receipt Endpoint is the planned agent-commerce audit-trail product.
 - Keep public copy aligned with [docs/positioning.md](./docs/positioning.md): lead with Groups, shared Expenses, live Balances, settle-up links, and Receipts; keep crypto mechanics behind the user action until wallet or Settlement context requires them.
 - The primary shipped proof is Split Mode, but Fund Mode is the hero product direction and the next one-month beta focus.
+- The investor story should be ambitious, but the product-state boundary must stay strict: yield-bearing Treasuries, automatic settlement, any-chain settlement, Fundy execution, Scoped Agent Access, Receipt Endpoint, and gas abstraction are future or planned unless implemented end to end.
 - The market is not empty. Crypto-native bill-splitting competitors already exist, so FundWise should position around verified USDC Settlement for real Groups, not "first crypto Splitwise."
 - The web app is the source of truth for the MVP.
 - Core UI for landing, Groups, Group detail, and receipts is in place; **targeted frontend polish and refactors** (navigation, CTAs, component extraction) continue in parallel with backend trust work.
@@ -144,8 +146,9 @@ FW-024 was completed on 2026-05-08: Compass research was moved into `docs/resear
 Next:
 
 1. Keep [SUBMISSION.md](./SUBMISSION.md) and public copy aligned with FW-007: Source Currency and Expense Proof are future-only for the current demo.
-2. Keep [docs/monetization.md](./docs/monetization.md) as the working business-model reference: free Split Mode launch, paid Fund Mode / Fundy / partner rails later.
-3. Pick FW-020 before any additional Fund Mode UI: remove legacy SOL vault helpers so Fund Mode stays stablecoins-only.
+2. Keep [docs/positioning.md](./docs/positioning.md) as the working FundLabs/FundWise strategy reference: FundLabs umbrella, FundWise wedge/product direction, Fundy distribution, Receipt Endpoint infrastructure, and claims guardrails.
+3. Keep [docs/monetization.md](./docs/monetization.md) as the working business-model reference: free Split Mode launch, paid Fund Mode / Fundy / Receipt Endpoint / partner rails later.
+4. Pick FW-020 before any additional Fund Mode UI: remove legacy SOL vault helpers so Fund Mode stays stablecoins-only.
 
 Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 

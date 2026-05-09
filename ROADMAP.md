@@ -8,14 +8,17 @@ Phased plan from pivot cleanup through hackathon submission and post-hackathon e
 
 The strategic rollout order is being tightened for the post-submission sprint. See [ADR-021](./docs/adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md) for the original public sequencing and [ADR-027](./docs/adr/0027-fund-mode-is-the-hero-product.md) for the current hero-product focus:
 
+FundLabs is the umbrella strategy: build the financial layer for groups, human or AI. FundWise proves the shared-finance loop, Fundy distributes that loop into Telegram and personal agents, and Receipt Endpoint turns verified payment outcomes into an agent-commerce API surface.
+
 1. **Split Mode on Solana mainnet** — the public, open wedge. Settlement asset is **USDC** ([ADR-011](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)). This proves wallet-native Groups, verified transfers, session-gated ledger access, and Receipts.
 2. **Fund Mode invite-only beta** — the hero product direction. Pooled USDC Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, and execution are the next one-month sprint.
 3. **Fundy companion agent** — a personalized finance Telegram agent built in a **separate repository** ([ADR-022](./docs/adr/0022-fundy-moves-to-a-separate-repository.md)) on a **PI agent framework**, using the **Zerion CLI** for wallet intelligence. Fundy manages personal finance for an individual user, plugs into FundWise to manage Group expenses, can be added to friends' Telegram groups, and grows a **tax filing / tax advisory** surface owned by Fundy ([ADR-023](./docs/adr/0023-tax-advisory-and-filing-live-in-fundy.md)). Fundy is a sibling product, not a feature of the FundWise repo.
-4. **Visa-rail card partnerships** — settled or Treasury-held USDC reaches Visa merchants through partners (KAST, Avici, Rain). Targeting the **Visa Frontier hackathon track (Germany)** as the first wedge ([ADR-024](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)); see the partner research brief inside Phase 3.
+4. **Receipt Endpoint** — planned infrastructure product for structured, verifiable Receipts for agent and on-chain payments. It should grow from Payable Settlement Requests, Spending Policies, and FundWise Receipts rather than bypassing them.
+5. **Visa-rail card partnerships** — settled or Treasury-held USDC reaches Visa merchants through partners (KAST, Avici, Rain). Targeting the **Visa Frontier hackathon track (Germany)** as the first wedge ([ADR-024](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)); see the partner research brief inside Phase 3.
 
 The repo phases below describe engineering scope; this section is the order in which surfaces are exposed to users.
 
-Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise should not plan around novelty. The wedge is verified USDC Settlement for real private Groups, with Settlement Request Links as the acquisition loop. The hero product is Fund Mode because durable Groups eventually need shared Treasuries, governed spending, proof, and integrations. Visa/card rails come only after a concrete partner path exists.
+Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise should not plan around novelty. The wedge is verified USDC Settlement for real private Groups, with Settlement Request Links as the acquisition loop. The hero product is Fund Mode because durable Groups eventually need shared Treasuries, governed spending, proof, exits, integrations, and eventually productive idle money. Fundy and Receipt Endpoint make the same stack legible to group chats, personal agents, and developer workflows. Visa/card rails come only after a concrete partner path exists.
 
 ## One-month Fund Mode sprint - May 8 to June 8, 2026
 

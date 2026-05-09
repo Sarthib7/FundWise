@@ -2,6 +2,8 @@
 
 **Split expenses. Earn together.** Start a private Group, log shared Expenses, see live Balances, and settle up with a clear Receipt.
 
+FundWise is the first product in the broader **FundLabs** strategy: FundLabs builds the financial layer for groups, human or AI. The product family direction is FundWise for shared finance, Fundy for Telegram / personal-agent distribution, and Receipt Endpoint for agent-commerce audit trails.
+
 FundWise also has **Fund Mode** for pooled USDC Treasuries. Split Mode is the shipped wedge and current public proof, but Fund Mode is the hero product direction for the next build sprint: shared Treasuries, Contributions, reimbursement Proposals, approvals, proof, and integrations.
 
 ## Documentation Map
@@ -90,7 +92,9 @@ Neither sponsor integration should complicate the primary Split Mode settlement 
 
 The shared-expense category is crowded, and crypto-native bill-splitting competitors already exist. FundWise should not position itself as "the first crypto Splitwise" or rely on bill-splitting novelty. The wedge is narrower: verified USDC Settlement for real private Groups, live Settlement Request Links that resolve the current Balance, clear Receipts, and a support path for debtors whose funds are not already on Solana.
 
-The long-term moat is trust and distribution first, then data advantage from structured Expenses, Balances, Settlements, Receipts, Expense Proof, wallet-readiness signals, and scoped agent permissions. Fundy should ship before Fund Mode public beta because it creates distribution where Groups already coordinate and turns FundWise data into useful reminders, drafts, readiness checks, and personal-finance workflows.
+The company-level story is broader: FundLabs is building the financial layer for Groups, humans, and AI agents. Split Mode is the entry hook because it is familiar; Fund Mode is the product because durable Groups need shared Treasuries, Proposal governance, proof, exits, and eventually productive idle money. Fundy and Receipt Endpoint expand the same stack into Telegram, personal agents, and agentic-commerce receipts.
+
+The long-term moat is trust and distribution first, then data advantage from structured Expenses, Balances, Settlements, Receipts, Expense Proof, wallet-readiness signals, and scoped agent permissions. Fundy creates distribution where Groups already coordinate and turns FundWise data into useful reminders, drafts, readiness checks, and personal-finance workflows; Fund Mode creates durable Group retention through Treasury workflows. Public claims must still follow [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md).
 
 ### Shipped vs planned
 

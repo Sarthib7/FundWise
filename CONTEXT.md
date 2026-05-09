@@ -7,6 +7,8 @@ FundWise is a shared-finance app for private Groups with two modes:
 
 ## Positioning
 
+**Company umbrella:** FundLabs builds the financial layer for groups, human or AI. FundWise is the first product in that strategy; Fundy and Receipt Endpoint are planned expansion products.
+
 **Canonical public tagline:** Split expenses. Earn together.
 
 Lead public copy with shared spending, live Balances, settle-up links, and clear Receipts. Keep Solana, USDC, wallets, and other crypto mechanics behind the user benefit unless the Member is in a wallet, Settlement, Receipt, or developer context.
@@ -16,6 +18,14 @@ Lead public copy with shared spending, live Balances, settle-up links, and clear
 Fund Mode is now the hero product direction for the next build sprint. Split Mode remains the shipped wedge and public proof, but durable Group value should converge on shared Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, and integrations.
 
 ## Language
+
+**FundLabs**:
+The company and product-family umbrella for group financial infrastructure across humans and AI agents. FundWise, Fundy, and Receipt Endpoint sit under FundLabs.
+Avoid: using FundLabs as the app name
+
+**FundWise**:
+The shared-finance app for private Groups. Split Mode is the shipped wedge; Fund Mode is the hero product direction.
+Avoid: generic crypto Splitwise
 
 **Group**:
 A private collection of Members who share expenses or pool funds.
@@ -92,6 +102,10 @@ Avoid: Telegram agent, generic AI agent
 **Fundy**:
 The hosted Telegram bot that runs the FundWise Agent. It is command-first in v1 (fixed commands, no natural-language parsing); the end goal is an LLM-backed agent (e.g. OpenRouter) on top of the same tools. Fundy runs as a **separate Node service on Railway** (library: `grammy`) in a **separate repository** per ADR-0022, and calls the **same FundWise HTTP API** as the web app using service-to-service auth and later Scoped Agent Access, not direct Supabase writes from the bot process. Users link Telegram to wallet via **short-lived codes** generated in the authenticated web app (`/link FW-…` in DM). Users authenticate by linking their Telegram account to their FundWise wallet address, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe actions run in Telegram; **database-only** Proposal approve/reject may run in Telegram; **on-chain** Settlement, Contribution, and Proposal execution deep-link back to the web app (reuse **Settlement Request Links** for settle flows). Fundy later owns personal finance, tax guidance, and any Telegram-native companion workflows.
 Avoid: FundWise Telegram, the bot
+
+**Receipt Endpoint**:
+A planned FundLabs developer/API product that returns structured, verifiable Receipts for agent and on-chain payments. It should grow from FundWise Receipts, Payable Settlement Requests, Scoped Agent Access, and Spending Policies. It is not shipped in the FundWise MVP.
+Avoid: claiming live API revenue or agent-paid settlement before implementation
 
 **Agent Skill Endpoint** (`/skill.md`):
 A public URL on the production FundWise host (`https://fundwise.fun/skill.md`) that returns a machine-readable markdown document describing what FundWise is for, what actions autonomous agents may call, what they must not call, how to authenticate, rate limits, errors, and terms of use. Any personal AI agent can `curl` this URL to discover FundWise capabilities and integrate without manual configuration.
@@ -177,6 +191,7 @@ Avoid: Optimized debts, minimum transfers
 ## Product invariants
 
 - The web app is the source of truth for the MVP.
+- FundLabs is the company umbrella. FundWise app docs may use the FundLabs investor frame, but public product claims must still follow shipped/planned status.
 - **Identity is Solana pubkey–based.** The default connection path is `@solana/wallet-adapter-*` (Phantom, Solflare, Backpack, and other standard wallets). No FundWise email/password and no first-class “sign in with email” as the identity system.
 - **Optional additive path:** Phantom Connect SDK (`@phantom/react-sdk`) may be integrated for Google/Apple and embedded wallets alongside the adapter, subject to a Phantom Portal App ID and allowlisted domains. It does not replace wallet-adapter; signing and settlement must remain correct for both paths. See `docs/adr/0014-optional-phantom-connect-alongside-wallet-adapter.md`.
 - Wallet connect is a gate, not a detour. After connect, the app should restore the user's exact intent: invite-linked Group, Settlement Request Link, or first Group creation.
@@ -212,6 +227,7 @@ Avoid: Optimized debts, minimum transfers
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - FundWise Agent, Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 - Fund Mode is the north-star product surface for the next one-month sprint. It remains invite-only until Proposal creation, approval/rejection, proof/history, and execution work end to end.
+- Live yield-bearing Treasuries, automatic Settlement, any-chain / any-currency Settlement, gasless UX, Fundy execution, Receipt Endpoint APIs, and agent-paid money movement are future claims until implemented end to end.
 
 ## Example dialogue
 

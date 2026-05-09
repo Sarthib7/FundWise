@@ -30,6 +30,8 @@ That is the primary demo path.
 
 The competitive frame should be honest: FundWise is not entering an empty category, and crypto bill-splitting clones already exist. The demo should therefore avoid "first crypto Splitwise" language and focus on the sharper wedge: live USDC Settlement from a private Group Balance, Settlement Request Links that never go stale, wallet-confirmed execution, and a verified Receipt.
 
+The company frame can be more ambitious than the demo: FundLabs builds the financial layer for groups, human or AI. FundWise is the first product, Fundy is the planned Telegram / personal-agent distribution product, and Receipt Endpoint is the planned agent-commerce audit trail. Use this in investor and accelerator contexts, but keep the 3-minute demo anchored to shipped Split Mode behavior.
+
 Everything else is a supporting layer:
 
 - `LI.FI` helps an EVM-first debtor route funds if their USDC is on another chain, ideally from inside the Settlement flow.
@@ -37,6 +39,7 @@ Everything else is a supporting layer:
 - `FundWise Agent` is the later assistant layer for reminders, draft Expenses, proof upload, and wallet-aware suggestions. Telegram bot and Telegram mini app are channels for it, not the product name.
 - `Fundy` is the hosted Telegram bot that will run the FundWise Agent. Users authenticate by linking Telegram to their FundWise wallet, then interact with Groups from Telegram. Read-only and draft-safe; money movement still requires wallet confirmation.
 - The `Agent Skill Endpoint` (`/skill.md`) is a public URL at **`https://fundwise.fun/skill.md`** that autonomous agents can `curl` to discover FundWise capabilities, allowed vs disallowed usage, and planned Scoped Agent Access; it must not expose private Member data.
+- `Receipt Endpoint` is a planned FundLabs infrastructure product for structured, verifiable receipts for agent and on-chain payments. It is directionally related to Payable Settlement Requests and FundWise Receipts, but it is not shipped in the hackathon MVP.
 - `Fund Mode` is the hero product direction and the post-submission beta sprint, but it is incomplete today and should not be presented as fully shipped until Proposal creation, approval/rejection, proof/history, and execution work end to end.
 
 ---
@@ -202,10 +205,14 @@ Avoid these claims in the main pitch unless they are actually shipped:
 
 - Gasless
 - Multichain-native settlement
+- Any-chain or any-currency Settlement
+- Automatic Settlement
+- Live yield-bearing Treasuries
 - Social-login-first onboarding
 - Telegram-first product surface
 - AI-native expense entry
 - Fundy as a shipped product (it is planned, not shipped)
+- Receipt Endpoint as a shipped product (it is planned, not shipped)
 - Scoped Agent Access or autonomous agent payment as a shipped feature
 - Payable Settlement Requests or autonomous money movement as shipped features. They are documented research, not part of the current demo path.
 - Source Currency entry or Expense Proof upload as shipped features. They are future-only for the current public demo.

@@ -12,12 +12,16 @@ FundWise should make shared expenses feel familiar while adding actual settlemen
 
 The competitive category is crowded. Splitwise, Venmo Groups, Spliit, tricount, Kittysplit, and multiple crypto-native bill splitters already train users to expect Groups, balances, receipt support, and debt simplification. FundWise should not depend on "crypto bill splitting" novelty. It should win on verified USDC Settlement for real Groups, live Settlement Request Links, Receipt integrity, cross-chain recovery only when needed, and later scoped agent access over the same wallet-bound ledger.
 
+The broader company frame is FundLabs: the financial layer for groups, human or AI. FundWise is the first product in that stack. It starts with the familiar shared-expense wedge, then moves durable Groups toward shared Treasuries, governed spending, proof, and eventually productive idle money. Fundy and Receipt Endpoint are adjacent expansion products, not current MVP requirements.
+
 ## Solution
 
 FundWise is a web app with wallet-native identity and two product modes:
 
 - Split Mode is the primary MVP path. Members create a Group, join by invite link or QR, log Expenses with familiar split methods, compute live net Balances, and settle with on-chain USDC transfers on Solana. Source Currency entry and Expense Proof are future-only for the current public demo.
 - Fund Mode is the hero product direction. Members pool USDC into a shared Treasury and spend through Proposal and approval flows. Split Mode remains the shipped wedge and public proof, but the next product sprint should accelerate Fund Mode toward an invite-only beta with Proposals, proof, integrations, and execution.
+
+Within the FundLabs product family, FundWise owns the shared-finance web product. Fundy owns Telegram and personal-agent distribution. Receipt Endpoint is the planned developer surface for structured, verifiable agent-payment receipts. These products should share language, auth boundaries, Spending Policies, and Receipt semantics, but they must not be claimed as shipped FundWise functionality until implemented.
 
 For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users route funds during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
 
@@ -38,8 +42,9 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Activity feed, not chat. The Group timeline should explain the ledger without becoming a general messaging product. If Fund Mode needs discussion later, prefer Proposal-scoped comments over full Group chat.
 - Sponsor integrations must support the main flow, not redefine it.
 - Settlement Request Links are the primary growth loop. They should take a debtor from a shared intent into the current live Balance, then through wallet-confirmed USDC Settlement and Receipt without stale amounts or automatic sending.
+- Position FundWise under FundLabs, not as a standalone "crypto Splitwise." Split Mode is the entry hook; Fund Mode is the durable product surface; Fundy and Receipt Endpoint expand the same financial layer into chat, agents, and receipts.
 - Distribution expansion should reuse the same wallet-native ledger model across web, FundWise Agent, Telegram, wallet-mini-app, and native-mobile surfaces instead of inventing separate product rules per channel.
-- Fundy ships before public Fund Mode. The companion agent creates distribution where Groups already coordinate and turns FundWise ledger data into reminders, draft Expenses, wallet-readiness checks, personal-finance workflows, and later tax guidance.
+- Fundy grows beside Fund Mode and should be ready before broad public Fund Mode distribution. The companion agent creates distribution where Groups already coordinate and turns FundWise ledger data into reminders, draft Expenses, wallet-readiness checks, personal-finance workflows, and later tax guidance, but it does not block the invite-only Fund Mode beta sprint.
 - The long-range end state is a stablecoin-first product where gas, fees, and bridging are abstracted away as much as possible for the end user, while the core ledger still stays wallet-verifiable underneath.
 - Roll out by audience in sequence: crypto-native Groups first, then an accelerated Fund Mode invite-only beta, with Fundy and scoped agents growing beside it as distribution and automation surfaces. Non-crypto users through card, IBAN, or Altitude-style Solana banking rails come later once partner paths are concrete.
 
@@ -209,4 +214,5 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Do not claim an empty market. The correct positioning is not "the first crypto Splitwise"; it is "wallet-native Group settlement with live USDC finality and verifiable Receipts."
 - Sponsor integrations should be framed as supporting layers. LI.FI helps when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
 - Fund Mode is the north-star product and should be documented as Treasury plus Proposal functionality. It should not be claimed as complete until Proposal creation, approval/rejection, proof/history, and execution are implemented end to end.
+- Treat live yield, automatic Settlement, any-chain / any-currency Settlement, gasless UX, Fundy execution, Receipt Endpoint APIs, and agent-paid money movement as future claims unless they are implemented end to end and reclassified in [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md).
 - Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, FundWise Agent distribution surfaces, and broader mobile surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.
