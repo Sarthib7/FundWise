@@ -289,7 +289,7 @@ export function HeroSection() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-24 text-center sm:px-6 sm:pt-28 md:pb-24 md:pt-32 lg:px-[max(24px,calc(50%-660px))]">
+      <section className="relative overflow-hidden px-4 pb-8 pt-16 text-center sm:px-6 sm:pt-20 md:pb-10 md:pt-24 lg:px-[max(24px,calc(50%-660px))]">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -303,19 +303,19 @@ export function HeroSection() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
+        <div className="relative z-10 mb-5 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
-          Group money from tab to treasury
+          Private Group money on Solana
         </div>
 
-        <h1 className="relative z-10 font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
-          Split the tab.
+        <h1 className="relative z-10 mb-4 font-serif text-[clamp(2.75rem,7vw,5.25rem)] leading-[1.02] tracking-tight text-foreground text-balance">
+          Split expenses.
           <br />
-          <em className="not-italic text-brand-grad font-serif">Fund the treasury.</em>
+          <em className="not-italic text-brand-grad font-serif">Fund what&apos;s next.</em>
         </h1>
 
-        <p className="relative z-10 mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
-          FundWise helps private Groups close one-off Expenses with exact USDC Settlements, then graduate recurring spend into shared Treasuries with Proposals and approvals.
+        <p className="relative z-10 mx-auto mb-7 max-w-xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-8 md:text-lg">
+          Track shared spending, settle exact USDC Balances, and turn recurring Groups into shared Treasuries.
         </p>
 
         <div className="relative z-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -333,31 +333,24 @@ export function HeroSection() {
           </Link>
         </div>
 
-        <div className="relative z-10 mx-auto mt-8 grid max-w-3xl gap-2 rounded-[18px] border border-brand-border-c bg-background/80 p-2 text-left shadow-sm backdrop-blur sm:grid-cols-3">
-          <div className="rounded-[12px] bg-brand-pale px-4 py-3">
-            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-deep">
-              <Receipt className="h-3.5 w-3.5" aria-hidden="true" />
-              Split Mode
-            </div>
-            <p className="text-sm font-semibold text-foreground">Close what is owed</p>
-            <p className="mt-1 text-xs leading-relaxed text-brand-text-2">Expenses, live Balances, settle-up links, Receipts.</p>
-          </div>
-          <div className="rounded-[12px] border border-brand-border-c bg-brand-surface px-4 py-3">
-            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-text-3">
-              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Trust Layer
-            </div>
-            <p className="text-sm font-semibold text-foreground">Prove the ledger first</p>
-            <p className="mt-1 text-xs leading-relaxed text-brand-text-2">Wallet-native Members, verified USDC movement, shared history.</p>
-          </div>
-          <div className="rounded-[12px] border border-brand-fund-blue-border bg-brand-fund-blue-bg px-4 py-3">
-            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-fund-blue">
-              <Landmark className="h-3.5 w-3.5" aria-hidden="true" />
-              Fund Mode
-            </div>
-            <p className="text-sm font-semibold text-foreground">Manage shared capital</p>
-            <p className="mt-1 text-xs leading-relaxed text-brand-text-2">Contributions, Treasury, Proposals, approvals, execution.</p>
-          </div>
+        <div className="relative z-10 mx-auto mt-6 flex max-w-2xl flex-wrap items-center justify-center gap-2">
+          {[
+            { label: "Live Balances", icon: Receipt },
+            { label: "Verified Receipts", icon: ShieldCheck },
+            { label: "Treasury beta", icon: Landmark },
+          ].map((item) => {
+            const Icon = item.icon
+
+            return (
+              <div
+                key={item.label}
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border-c bg-background/80 px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm backdrop-blur"
+              >
+                <Icon className="h-4 w-4 text-brand-mid" aria-hidden="true" />
+                {item.label}
+              </div>
+            )
+          })}
         </div>
       </section>
 
