@@ -25,6 +25,7 @@ interface CrossChainBridgeModalProps {
   onOpenChange: (open: boolean) => void
   destinationAddress: string
   groupName: string
+  flow?: "settlement" | "contribution"
   initialAmount?: string
   onSuccess?: (txHash: string, amount: string) => void
 }
@@ -34,6 +35,7 @@ export function CrossChainBridgeModal({
   onOpenChange,
   destinationAddress,
   groupName,
+  flow = "settlement",
   initialAmount = "",
   onSuccess,
 }: CrossChainBridgeModalProps) {
@@ -51,6 +53,8 @@ export function CrossChainBridgeModal({
 
   const needsWalletConnection = !evmWallet
   const needsAmount = !amount.trim()
+  const flowLabel = flow === "contribution" ? "Contribution" : "Settlement"
+  const finalActionLabel = flow === "contribution" ? "Contribute" : "Settle"
 
   useEffect(() => {
     if (!open) {
@@ -116,7 +120,7 @@ export function CrossChainBridgeModal({
       setLifiEvmProvider(evmWallet)
       const result = await executeBridgeRoute(quote.route, setBridgeStatus)
       if (result.txHash) {
-        toast.success("Route submitted. Return to the Settlement after confirmation.")
+        toast.success(`Route submitted. Return to the ${flowLabel} after confirmation.`)
         onSuccess?.(result.txHash || "", quote.toAmount)
         setQuote(null)
         setAmount("")
@@ -139,9 +143,9 @@ export function CrossChainBridgeModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Route Funds For Settlement</DialogTitle>
+          <DialogTitle>Route Funds For {flowLabel}</DialogTitle>
           <DialogDescription>
-            If the USDC for this Settlement is on another supported network, FundWise uses LI.FI to route it and then returns you to {groupName}.
+            If the USDC for this {flowLabel} is on another supported network, FundWise uses LI.FI to route it and then returns you to {groupName}.
           </DialogDescription>
         </DialogHeader>
 
@@ -156,7 +160,7 @@ export function CrossChainBridgeModal({
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Destination Wallet</p>
             <p className="mt-2 break-all font-mono text-sm">{destinationAddress}</p>
             <p className="mt-2 text-xs text-muted-foreground">
-              This is the wallet that will complete the final FundWise Settlement.
+              This is the wallet that will complete the final FundWise {flowLabel}.
             </p>
           </div>
 
@@ -245,7 +249,7 @@ export function CrossChainBridgeModal({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              This should match the Settlement amount unless you want to route extra USDC.
+              This should match the {flowLabel} amount unless you want to route extra USDC.
             </p>
           </div>
 
@@ -302,7 +306,7 @@ export function CrossChainBridgeModal({
                   Destination wallet: {destinationAddress.slice(0, 6)}...{destinationAddress.slice(-4)}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  After routing confirms, return here and press Settle to create the Receipt.
+                  After routing confirms, return here and press {finalActionLabel}.
                 </p>
               </div>
             </div>
@@ -356,7 +360,7 @@ export function CrossChainBridgeModal({
                 </>
               ) : (
                 <>
-                  Route Funds For Settlement
+                  Route Funds For {flowLabel}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

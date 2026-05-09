@@ -119,17 +119,24 @@ Completed:
 - **FW-004:** LI.FI handoff copy now uses `Route funds for Settlement`, returns to the Group after route submission, and preserves the normal Settlement / Receipt path.
 - **FW-005:** Zerion CLI wallet-readiness support shipped as `scripts/zerion-readiness.mjs` plus `pnpm zerion:readiness` and `docs/zerion-readiness.md`. Wraps `zerion analyze <address>`, summarizes USDC/SOL/broader context, prints a `READY` / `NOT READY` verdict with reasons, and falls back to a clear install message if the CLI is missing. Auth is pass-through (`ZERION_API_KEY`); optional x402 is documented, not required. `pnpm build` green.
 - **FW-019:** Fund Mode Treasury addresses now require on-chain Squads verification before persistence.
+- **FW-020:** Legacy SOL vault payment, withdrawal, balance, and lamport conversion helpers were removed from `lib/squads-multisig.ts`; Fund Mode Treasury helpers now stay stablecoin-only. `pnpm build` green.
+- **FW-026:** Fund Mode reimbursement Proposal creation shipped with authenticated `POST /api/proposals`, server-side Treasury / Member / USDC validation, dashboard reads, and UI creation/listing. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-027:** Proposal approval/rejection lifecycle now uses Squads-backed governance: Members sign Squads review transactions, FundWise stores signatures and mirrored status, and the database no longer acts as the approval authority. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-028:** Approved reimbursement Proposals now execute through Squads vault transactions, then FundWise verifies the executed Squads status and Treasury-to-recipient stablecoin transfer before marking the Proposal executed. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-029:** Proposal audit trail now supports one external proof link, Proposal-scoped comments, creator-only memo/proof edits before first outside approval, and visible edit history. Native file-upload storage rules are documented before upload ships. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-030:** LI.FI routing is now available as `Route funds for Contribution` inside Fund Mode. It routes USDC to the Member wallet, returns to the same Group Contribution context, and leaves the Contribution ledger/receipt path unchanged. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-031:** Zerion readiness now distinguishes Split Settlement, Fund Contribution, Proposal member action, and Treasury funding contexts while staying read-only. Docs cover CLI setup and optional x402 without inventing secrets. `node scripts/zerion-readiness.mjs --help`, `pnpm test tests/fundwise-mutations.test.ts`, and `pnpm build` green.
+- **FW-032:** Fund Mode beta rehearsal script/runbook exists and devnet rehearsal now reaches invite-only Group creation, invite join, Squads v4 Treasury initialization, and stablecoin Contribution. Full Proposal approval/execution rehearsal is blocked until the remote Supabase project receives the checked-in Fund Mode Proposal migrations.
 
 Next pick:
 
-- **FW-020:** Remove legacy SOL vault helpers from Squads Fund Mode code.
-- **FW-025:** Lock the one-month Fund Mode beta execution plan and keep it indexed.
+- Apply pending Supabase migrations `20260509120000_anchor_proposals_to_squads_governance.sql` and `20260509123000_add_proposal_audit_trail.sql`, then rerun `pnpm fund:rehearsal`.
 
 Next:
 
 1. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero product sprint, and planned surfaces stay labeled as planned.
 2. Continue devnet/mainnet hardening for the free Split Mode launch because Fund Mode reuses the same wallet, session, receipt, and transfer trust boundaries.
-3. Finish the Fund Mode beta foundation: remove legacy SOL vault helpers, rehearse Treasury initialization and Contributions, then build reimbursement Proposals, approval/rejection, and execution.
+3. Finish the Fund Mode beta foundation: rehearse Treasury initialization and Contributions, then build reimbursement Proposals, approval/rejection, and execution.
 4. Add integrations only where they help Fund Mode: LI.FI for Contribution funding, Zerion for Treasury / Member readiness, FundWise Agent / Fundy for read-only and draft-safe Proposal workflows, and card / IBAN rails only after a concrete partner path exists.
 5. Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as planned unless separately implemented end to end.
 
@@ -148,7 +155,7 @@ Next:
 1. Keep [SUBMISSION.md](./SUBMISSION.md) and public copy aligned with FW-007: Source Currency and Expense Proof are future-only for the current demo.
 2. Keep [docs/positioning.md](./docs/positioning.md) as the working FundLabs/FundWise strategy reference: FundLabs umbrella, FundWise wedge/product direction, Fundy distribution, Receipt Endpoint infrastructure, and claims guardrails.
 3. Keep [docs/monetization.md](./docs/monetization.md) as the working business-model reference: free Split Mode launch, paid Fund Mode / Fundy / Receipt Endpoint / partner rails later.
-4. Pick FW-020 before any additional Fund Mode UI: remove legacy SOL vault helpers so Fund Mode stays stablecoins-only.
+4. Pick FW-026 next: build reimbursement Proposal creation now that the legacy SOL vault helpers are gone.
 
 Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
 
@@ -213,7 +220,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Payable Settlement Requests are now documented as a planned research direction for x402 / MPP / pay.sh-style agent payments. They extend Settlement Request Links for approved agents, but remain post-MVP and require scoped `settlement:pay` authority, idempotency, live Balance resolution, and verified payment proof before any Receipt is created.
 - Agent Spending Policies are now documented as a required prerequisite for payable settlement. They define per-Settlement caps, daily caps, Group scope, counterparty scope, expiry, revocation, and human fallback behavior.
 - Group ownership currently has limited power. In Split Mode, creator ownership is mostly a label; in Fund Mode, `created_by` can initialize Treasury addresses. Future ownership transfer must stay administrative and must not grant power over Balances or Receipts.
-- Telegram scope should stay read-only and draft-safe plus comments/history. **Proposal approve/reject** may run from Fundy when those actions are database-only; **on-chain** Settlement, Contribution, and Proposal execution remain app-and-wallet confirmed (deep-link back; reuse **Settlement Request Links** for settle intents).
+- Telegram scope should stay read-only and draft-safe plus comments/history. **Proposal approve/reject** is wallet-confirmed Squads governance for Fund Mode, so Fundy should deep-link Members back to the app for review signing rather than treat approvals as database-only bot actions. **On-chain** Settlement, Contribution, Proposal review, and Proposal execution remain app-and-wallet confirmed.
 - Telegram identity should stay simple: one Telegram account links to one active wallet at a time, with an explicit relink flow later if needed.
 - Telegram chat mapping should stay simple: one Telegram chat maps to one FundWise Group at a time, with any group-switching flow deferred.
 - Telegram bot attachment may be initiated by any Member, but each person must authenticate privately in DM before the bot acts for them in the shared chat.

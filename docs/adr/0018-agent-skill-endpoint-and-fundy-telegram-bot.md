@@ -14,7 +14,7 @@ Users link via **web-app-generated linking codes**. The user authenticates in th
 See the full command set in CONTEXT.md. Key rules:
 - Read-only commands: `/balance`, `/expenses`, `/owe`, `/settlements`, `/group`
 - Draft-safe commands: `/draft`, `/drafts`
-- Database-only mutations: `/approve`, `/reject` (Proposal approval/rejection without on-chain execution)
+- Proposal comments/history may be database-only, but Proposal approve/reject is no longer database-only for Fund Mode; ADR-0029 makes Squads the governance authority, so Fundy should deep-link Members to the app for wallet-confirmed review signing.
 - Money movement bounces to the web app: Settlement execution, Contribution execution, Proposal execution all use existing deep links (`?settle=`, `?action=contribute`, etc.)
 - Zerion commands: `/analyze`, `/readiness`, `/verify`
 

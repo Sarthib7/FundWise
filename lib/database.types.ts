@@ -249,9 +249,15 @@ export interface Database {
           amount: number
           mint: string
           memo: string | null
+          proof_url: string | null
           status: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          squads_transaction_index: number | null
+          squads_proposal_address: string | null
+          squads_transaction_address: string | null
+          squads_create_tx_sig: string | null
           tx_sig: string | null
           created_at: string
+          updated_at: string
           executed_at: string | null
         }
         Insert: {
@@ -262,9 +268,15 @@ export interface Database {
           amount: number
           mint: string
           memo?: string | null
+          proof_url?: string | null
           status?: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          squads_transaction_index?: number | null
+          squads_proposal_address?: string | null
+          squads_transaction_address?: string | null
+          squads_create_tx_sig?: string | null
           tx_sig?: string | null
           created_at?: string
+          updated_at?: string
           executed_at?: string | null
         }
         Update: {
@@ -275,9 +287,15 @@ export interface Database {
           amount?: number
           mint?: string
           memo?: string | null
+          proof_url?: string | null
           status?: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          squads_transaction_index?: number | null
+          squads_proposal_address?: string | null
+          squads_transaction_address?: string | null
+          squads_create_tx_sig?: string | null
           tx_sig?: string | null
           created_at?: string
+          updated_at?: string
           executed_at?: string | null
         }
         Relationships: []
@@ -287,19 +305,73 @@ export interface Database {
           id: string
           proposal_id: string
           member_wallet: string
-          approved_at: string
+          decision: "approved" | "rejected"
+          tx_sig: string
+          reviewed_at: string
         }
         Insert: {
           id?: string
           proposal_id: string
           member_wallet: string
-          approved_at?: string
+          decision: "approved" | "rejected"
+          tx_sig: string
+          reviewed_at?: string
         }
         Update: {
           id?: string
           proposal_id?: string
           member_wallet?: string
-          approved_at?: string
+          decision?: "approved" | "rejected"
+          tx_sig?: string
+          reviewed_at?: string
+        }
+        Relationships: []
+      }
+      proposal_comments: {
+        Row: {
+          id: string
+          proposal_id: string
+          member_wallet: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          proposal_id: string
+          member_wallet: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          proposal_id?: string
+          member_wallet?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      proposal_edits: {
+        Row: {
+          id: string
+          proposal_id: string
+          editor_wallet: string
+          changed_fields: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          proposal_id: string
+          editor_wallet: string
+          changed_fields: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          proposal_id?: string
+          editor_wallet?: string
+          changed_fields?: Json
+          created_at?: string
         }
         Relationships: []
       }

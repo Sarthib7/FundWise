@@ -5,10 +5,10 @@ export function HowItWorksSection() {
         How it works
       </div>
       <h2 className="font-serif text-[clamp(1.75rem,4vw,2.875rem)] tracking-tight leading-[1.1] mb-3.5 text-foreground text-balance">
-        From Group tab to done
+        From open tab to shared Treasury
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        Built for the moment a shared expense needs to stop being a reminder.
+        The same Group can start with simple split-and-settle behavior, then move into pooled spending when it becomes recurring.
       </p>
 
       <div className="grid gap-8 md:grid-cols-3 md:gap-10">
@@ -20,7 +20,7 @@ export function HowItWorksSection() {
             Start with a private Group
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            Create a Group for a trip, dinner, household, or shared tab. Invite Members by link or QR.
+            Create a Group for a trip, dinner, household, club, or recurring budget. Invite Members by link or QR.
           </p>
         </div>
 
@@ -29,10 +29,10 @@ export function HowItWorksSection() {
             02
           </div>
           <h3 className="font-serif text-xl tracking-tight mb-2.5 text-foreground">
-            Log Expenses and see Balances
+            Close the current tab
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            Record who paid, who participated, and how to split it. FundWise keeps the live Group Balance clear.
+            Record who paid, who participated, and how to split it. FundWise turns the live Balance into exact USDC Settlements and Receipts.
           </p>
         </div>
 
@@ -41,10 +41,10 @@ export function HowItWorksSection() {
             03
           </div>
           <h3 className="font-serif text-xl tracking-tight mb-2.5 text-foreground">
-            Settle up cleanly
+            Fund what comes next
           </h3>
           <p className="text-sm text-brand-text-2 leading-relaxed">
-            The person who owes gets a clear next step. Once they settle, the Group gets a Receipt everyone can trust.
+            Durable Groups graduate into Fund Mode: Contributions, Treasury Balance, reimbursement Proposals, approvals, proof, and execution.
           </p>
         </div>
       </div>

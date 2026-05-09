@@ -9,6 +9,15 @@ type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
+type ProposalReviewRow = Database["public"]["Tables"]["proposal_approvals"]["Row"]
+type ProposalCommentRow = Database["public"]["Tables"]["proposal_comments"]["Row"]
+type ProposalEditRow = Database["public"]["Tables"]["proposal_edits"]["Row"]
+type ProposalWithReviews = ProposalRow & {
+  reviews: ProposalReviewRow[]
+  comments: ProposalCommentRow[]
+  edits: ProposalEditRow[]
+}
 
 type ActivityItem =
   | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
@@ -206,6 +215,108 @@ async function listContributions(groupId: string): Promise<ContributionRow[]> {
   return (data || []) as ContributionRow[]
 }
 
+async function listProposalReviews(proposalIds: string[]): Promise<ProposalReviewRow[]> {
+  if (proposalIds.length === 0) {
+    return [] as ProposalReviewRow[]
+  }
+
+  const { data, error } = await getAdmin()
+    .from("proposal_approvals")
+    .select("*")
+    .in("proposal_id", proposalIds)
+    .order("reviewed_at", { ascending: true })
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposal reviews: ${error.message}`)
+  }
+
+  return (data || []) as ProposalReviewRow[]
+}
+
+async function listProposalComments(proposalIds: string[]): Promise<ProposalCommentRow[]> {
+  if (proposalIds.length === 0) {
+    return [] as ProposalCommentRow[]
+  }
+
+  const { data, error } = await getAdmin()
+    .from("proposal_comments")
+    .select("*")
+    .in("proposal_id", proposalIds)
+    .order("created_at", { ascending: true })
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposal comments: ${error.message}`)
+  }
+
+  return (data || []) as ProposalCommentRow[]
+}
+
+async function listProposalEdits(proposalIds: string[]): Promise<ProposalEditRow[]> {
+  if (proposalIds.length === 0) {
+    return [] as ProposalEditRow[]
+  }
+
+  const { data, error } = await getAdmin()
+    .from("proposal_edits")
+    .select("*")
+    .in("proposal_id", proposalIds)
+    .order("created_at", { ascending: true })
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposal edit history: ${error.message}`)
+  }
+
+  return (data || []) as ProposalEditRow[]
+}
+
+async function listProposals(groupId: string): Promise<ProposalWithReviews[]> {
+  const { data, error } = await getAdmin()
+    .from("proposals")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposals: ${error.message}`)
+  }
+
+  const proposals = (data || []) as ProposalRow[]
+  const proposalIds = proposals.map((proposal) => proposal.id)
+  const [reviews, comments, edits] = await Promise.all([
+    listProposalReviews(proposalIds),
+    listProposalComments(proposalIds),
+    listProposalEdits(proposalIds),
+  ])
+  const reviewsByProposal = new Map<string, ProposalReviewRow[]>()
+  const commentsByProposal = new Map<string, ProposalCommentRow[]>()
+  const editsByProposal = new Map<string, ProposalEditRow[]>()
+
+  for (const review of reviews) {
+    const currentReviews = reviewsByProposal.get(review.proposal_id) || []
+    currentReviews.push(review)
+    reviewsByProposal.set(review.proposal_id, currentReviews)
+  }
+
+  for (const comment of comments) {
+    const currentComments = commentsByProposal.get(comment.proposal_id) || []
+    currentComments.push(comment)
+    commentsByProposal.set(comment.proposal_id, currentComments)
+  }
+
+  for (const edit of edits) {
+    const currentEdits = editsByProposal.get(edit.proposal_id) || []
+    currentEdits.push(edit)
+    editsByProposal.set(edit.proposal_id, currentEdits)
+  }
+
+  return proposals.map((proposal) => ({
+    ...proposal,
+    reviews: reviewsByProposal.get(proposal.id) || [],
+    comments: commentsByProposal.get(proposal.id) || [],
+    edits: editsByProposal.get(proposal.id) || [],
+  }))
+}
+
 async function buildActivityFeed(groupId: string): Promise<ActivityItem[]> {
   const expenses = await listExpenses(groupId)
   const expenseSplits = await listExpenseSplits(expenses.map((expense) => expense.id))
@@ -336,6 +447,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
       members: [] as MemberRow[],
       activity: [] as ActivityItem[],
       contributions: [] as ContributionRow[],
+      proposals: [] as ProposalWithReviews[],
     }
   }
 
@@ -350,6 +462,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
       members,
       activity: await buildActivityFeed(groupId),
       contributions: [] as ContributionRow[],
+      proposals: [] as ProposalWithReviews[],
     }
   }
 
@@ -361,6 +474,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
     members,
     activity: [] as ActivityItem[],
     contributions: await listContributions(groupId),
+    proposals: await listProposals(groupId),
   }
 }
 

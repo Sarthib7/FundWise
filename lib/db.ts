@@ -9,6 +9,16 @@ type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
+type ProposalReviewRow = Database["public"]["Tables"]["proposal_approvals"]["Row"]
+type ProposalCommentRow = Database["public"]["Tables"]["proposal_comments"]["Row"]
+type ProposalEditRow = Database["public"]["Tables"]["proposal_edits"]["Row"]
+
+export type ProposalWithReviews = ProposalRow & {
+  reviews: ProposalReviewRow[]
+  comments: ProposalCommentRow[]
+  edits: ProposalEditRow[]
+}
 
 export type ActivityItem =
   | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
@@ -22,6 +32,7 @@ export type GroupDashboardSnapshot = {
   members: MemberRow[]
   activity: ActivityItem[]
   contributions: ContributionRow[]
+  proposals: ProposalWithReviews[]
 }
 
 export type SettlementReceiptView = {
@@ -311,6 +322,90 @@ export async function addContribution(data: {
 export async function getContributions(groupId: string) {
   const snapshot = await getGroupDashboardSnapshot(groupId)
   return snapshot.contributions
+}
+
+export async function addProposal(data: {
+  groupId: string
+  proposerWallet: string
+  recipientWallet: string
+  amount: number
+  mint: string
+  squadsTransactionIndex: number
+  squadsProposalAddress: string
+  squadsTransactionAddress: string
+  squadsCreateTxSig: string
+  proofUrl?: string
+  memo?: string
+}) {
+  return requestJson<ProposalRow>("/api/proposals", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function getProposals(groupId: string) {
+  const snapshot = await getGroupDashboardSnapshot(groupId)
+  return snapshot.proposals
+}
+
+export async function reviewProposal(data: {
+  proposalId: string
+  memberWallet: string
+  decision: "approved" | "rejected"
+  txSig: string
+}) {
+  return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}/review`, {
+    method: "POST",
+    body: JSON.stringify({
+      memberWallet: data.memberWallet,
+      decision: data.decision,
+      txSig: data.txSig,
+    }),
+  })
+}
+
+export async function executeProposal(data: {
+  proposalId: string
+  executorWallet: string
+  txSig: string
+}) {
+  return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({
+      executorWallet: data.executorWallet,
+      txSig: data.txSig,
+    }),
+  })
+}
+
+export async function updateProposalMetadata(data: {
+  proposalId: string
+  editorWallet: string
+  memo?: string
+  proofUrl?: string
+}) {
+  return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      editorWallet: data.editorWallet,
+      memo: data.memo,
+      proofUrl: data.proofUrl,
+    }),
+  })
+}
+
+export async function addProposalComment(data: {
+  proposalId: string
+  memberWallet: string
+  body: string
+}) {
+  return requestJson<ProposalCommentRow>(`/api/proposals/${data.proposalId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({
+      memberWallet: data.memberWallet,
+      body: data.body,
+    }),
+  })
 }
 
 export async function getSettlementById(settlementId: string) {

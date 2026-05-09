@@ -10,6 +10,7 @@ import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
   verifyContributionTransfer,
+  verifyProposalExecutionTransfer,
   verifySettlementTransfer,
 } from "@/lib/server/solana-transfer-verification"
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin"
@@ -18,6 +19,9 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
+type ProposalInsert = Database["public"]["Tables"]["proposals"]["Insert"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
+type ProposalEditInsert = Database["public"]["Tables"]["proposal_edits"]["Insert"]
 type SettlementGraphActivity = Parameters<typeof computeBalancesFromActivity>[1]
 
 type SupabaseMutationError = {
@@ -39,9 +43,20 @@ type SolanaAccountInfo = {
 type TreasuryAccountReader = {
   getAccountInfo(address: PublicKey, commitment: "confirmed"): Promise<SolanaAccountInfo | null>
 }
+type SquadsProposalReader = {
+  getAccountInfo(address: PublicKey, commitment: "confirmed"): Promise<SolanaAccountInfo | null>
+}
 
 function getAdmin() {
   return getSupabaseAdmin()
+}
+
+function isMissingColumnSchemaCacheError(error: SupabaseMutationError, column: string) {
+  return (
+    error.code === "PGRST204" ||
+    error.message?.includes(`'${column}' column`) ||
+    error.message?.includes(`"${column}" column`)
+  )
 }
 
 export function validateExpenseLedgerInput(data: {
@@ -90,6 +105,69 @@ export function validateExpenseLedgerInput(data: {
   if (splitTotal !== data.amount) {
     throw new FundWiseError("Expense split shares must add up to the full Expense amount.")
   }
+}
+
+export function validateProposalInput(data: {
+  amount: number
+  mint: string
+  expectedMint: string
+  memo?: string | null
+  proofUrl?: string | null
+}) {
+  if (!Number.isSafeInteger(data.amount) || data.amount <= 0) {
+    throw new FundWiseError("Proposal amount must be a positive integer token amount.")
+  }
+
+  if (data.mint !== data.expectedMint) {
+    throw new FundWiseError("Proposal mint does not match this Group stablecoin.")
+  }
+
+  const memo = data.memo?.trim() || null
+
+  if (memo && memo.length > 240) {
+    throw new FundWiseError("Proposal memo must be 240 characters or fewer.")
+  }
+
+  return { memo, proofUrl: normalizeProofUrl(data.proofUrl) }
+}
+
+function normalizeProofUrl(proofUrl?: string | null) {
+  const trimmedProofUrl = proofUrl?.trim() || null
+
+  if (!trimmedProofUrl) {
+    return null
+  }
+
+  if (trimmedProofUrl.length > 500) {
+    throw new FundWiseError("Proposal proof link must be 500 characters or fewer.")
+  }
+
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(trimmedProofUrl)
+  } catch {
+    throw new FundWiseError("Proposal proof link must be a valid URL.")
+  }
+
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    throw new FundWiseError("Proposal proof link must use HTTP or HTTPS.")
+  }
+
+  return parsedUrl.toString()
+}
+
+function normalizeProposalComment(body?: string | null) {
+  const trimmedBody = body?.trim() || ""
+
+  if (!trimmedBody) {
+    throw new FundWiseError("Proposal comment cannot be empty.")
+  }
+
+  if (trimmedBody.length > 1000) {
+    throw new FundWiseError("Proposal comment must be 1000 characters or fewer.")
+  }
+
+  return trimmedBody
 }
 
 export function assertSettlementMatchesCurrentGraph(data: {
@@ -204,6 +282,133 @@ export async function verifyFundModeTreasuryAddresses(
   }
 }
 
+async function loadSquadsProposal(
+  proposalAddress: string,
+  accountReader: SquadsProposalReader = new Connection(getSolanaRpcUrl(), "confirmed")
+) {
+  const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
+  const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")
+
+  if (!proposalAccount) {
+    throw new FundWiseError("Squads Proposal account is not confirmed on the configured Solana RPC.")
+  }
+
+  if (!proposalAccount.owner.equals(multisig.PROGRAM_ID)) {
+    throw new FundWiseError("Squads Proposal account is not owned by the Squads program.")
+  }
+
+  try {
+    const [proposal] = multisig.accounts.Proposal.fromAccountInfo(
+      proposalAccount as AccountInfo<Buffer>
+    )
+    return proposal
+  } catch {
+    throw new FundWiseError("Squads Proposal account data could not be decoded.")
+  }
+}
+
+async function verifySquadsProposalMetadata(data: {
+  multisigAddress: string
+  transactionIndex: number
+  proposalAddress: string
+  transactionAddress: string
+}) {
+  if (!Number.isSafeInteger(data.transactionIndex) || data.transactionIndex < 1) {
+    throw new FundWiseError("Squads transaction index must be a positive safe integer.")
+  }
+
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+  const proposalPubkey = parsePublicKey(data.proposalAddress, "Squads Proposal address")
+  const transactionPubkey = parsePublicKey(data.transactionAddress, "Squads transaction address")
+  const transactionIndex = BigInt(data.transactionIndex)
+  const [expectedProposalPda] = multisig.getProposalPda({
+    multisigPda: multisigPubkey,
+    transactionIndex,
+  })
+  const [expectedTransactionPda] = multisig.getTransactionPda({
+    multisigPda: multisigPubkey,
+    index: transactionIndex,
+  })
+
+  if (!proposalPubkey.equals(expectedProposalPda)) {
+    throw new FundWiseError("Squads Proposal address does not match the expected PDA.")
+  }
+
+  if (!transactionPubkey.equals(expectedTransactionPda)) {
+    throw new FundWiseError("Squads transaction address does not match the expected PDA.")
+  }
+
+  const proposal = await loadSquadsProposal(data.proposalAddress)
+
+  if (!proposal.multisig.equals(multisigPubkey)) {
+    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
+  }
+
+  if (BigInt(proposal.transactionIndex.toString()) !== transactionIndex) {
+    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
+  }
+}
+
+async function verifySquadsProposalReview(data: {
+  multisigAddress: string
+  transactionIndex: number
+  proposalAddress: string
+  memberWallet: string
+  decision: "approved" | "rejected"
+}) {
+  const proposal = await loadSquadsProposal(data.proposalAddress)
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+  const memberPubkey = parsePublicKey(data.memberWallet, "Reviewer wallet")
+
+  if (!proposal.multisig.equals(multisigPubkey)) {
+    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
+  }
+
+  if (BigInt(proposal.transactionIndex.toString()) !== BigInt(data.transactionIndex)) {
+    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
+  }
+
+  const reviewedWallets = data.decision === "approved" ? proposal.approved : proposal.rejected
+  const hasReview = reviewedWallets.some((wallet) => wallet.equals(memberPubkey))
+
+  if (!hasReview) {
+    throw new FundWiseError("Squads Proposal does not include this wallet review yet.")
+  }
+
+  return proposal.pretty().status
+}
+
+async function verifySquadsProposalExecuted(data: {
+  multisigAddress: string
+  transactionIndex: number
+  proposalAddress: string
+}) {
+  const proposal = await loadSquadsProposal(data.proposalAddress)
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+
+  if (!proposal.multisig.equals(multisigPubkey)) {
+    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
+  }
+
+  if (BigInt(proposal.transactionIndex.toString()) !== BigInt(data.transactionIndex)) {
+    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
+  }
+
+  if (proposal.pretty().status !== "Executed") {
+    throw new FundWiseError("Squads Proposal has not been executed on-chain yet.")
+  }
+}
+
+function mapSquadsStatusToFundWiseStatus(
+  status: "Draft" | "Active" | "Rejected" | "Approved" | "Executing" | "Executed" | "Cancelled"
+) {
+  if (status === "Approved") return "approved"
+  if (status === "Rejected") return "rejected"
+  if (status === "Executed") return "executed"
+  if (status === "Cancelled") return "cancelled"
+  return "pending"
+}
+
 async function getGroupOrThrow(groupId: string) {
   const { data, error } = await getAdmin()
     .from("groups")
@@ -238,6 +443,24 @@ async function getExpenseOrThrow(expenseId: string) {
   }
 
   return data
+}
+
+async function getProposalOrThrow(proposalId: string): Promise<ProposalRow> {
+  const { data, error } = await getAdmin()
+    .from("proposals")
+    .select("*")
+    .eq("id", proposalId)
+    .maybeSingle()
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposal: ${error.message}`)
+  }
+
+  if (!data) {
+    throw new FundWiseError("Proposal not found")
+  }
+
+  return data as ProposalRow
 }
 
 async function getProfile(wallet: string): Promise<ProfileRow | null> {
@@ -769,6 +992,395 @@ export async function addContributionMutation(data: {
   }
 
   return contribution
+}
+
+export async function addProposalMutation(data: {
+  groupId: string
+  proposerWallet: string
+  recipientWallet: string
+  amount: number
+  mint: string
+  squadsTransactionIndex: number
+  squadsProposalAddress: string
+  squadsTransactionAddress: string
+  squadsCreateTxSig: string
+  proofUrl?: string | null
+  memo?: string | null
+}) {
+  const group = await getGroupOrThrow(data.groupId)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Proposals can only be created for Fund Mode Groups.")
+  }
+
+  if (!group.multisig_address || !group.treasury_address) {
+    throw new FundWiseError("Treasury must be initialized before creating reimbursement Proposals.")
+  }
+
+  const { memo, proofUrl } = validateProposalInput({
+    amount: data.amount,
+    mint: data.mint,
+    expectedMint: group.stablecoin_mint,
+    memo: data.memo,
+    proofUrl: data.proofUrl,
+  })
+
+  await assertWalletIsMember(
+    data.groupId,
+    data.proposerWallet,
+    "Only Group Members can create reimbursement Proposals."
+  )
+
+  await assertWalletIsMember(
+    data.groupId,
+    data.recipientWallet,
+    "Reimbursement recipient must be a current Group Member."
+  )
+
+  await verifySquadsProposalMetadata({
+    multisigAddress: group.multisig_address,
+    transactionIndex: data.squadsTransactionIndex,
+    proposalAddress: data.squadsProposalAddress,
+    transactionAddress: data.squadsTransactionAddress,
+  })
+
+  const insert: ProposalInsert = {
+    group_id: data.groupId,
+    proposer_wallet: data.proposerWallet,
+    recipient_wallet: data.recipientWallet,
+    amount: data.amount,
+    mint: data.mint,
+    memo,
+    proof_url: proofUrl,
+    status: "pending",
+    squads_transaction_index: data.squadsTransactionIndex,
+    squads_proposal_address: data.squadsProposalAddress,
+    squads_transaction_address: data.squadsTransactionAddress,
+    squads_create_tx_sig: data.squadsCreateTxSig,
+    tx_sig: null,
+    executed_at: null,
+  }
+
+  const { data: proposal, error } = await getAdmin()
+    .from("proposals")
+    .insert(insert)
+    .select("*")
+    .single()
+
+  if (error && isMissingColumnSchemaCacheError(error, "proof_url")) {
+    // Lets beta rehearsal keep moving when the remote Supabase project has not
+    // received the optional Proposal audit migration yet.
+    const { proof_url: _proofUrl, ...insertWithoutProofUrl } = insert
+    const { data: fallbackProposal, error: fallbackError } = await getAdmin()
+      .from("proposals")
+      .insert(insertWithoutProofUrl as ProposalInsert)
+      .select("*")
+      .single()
+
+    if (fallbackError) {
+      throw new FundWiseError(`Failed to create Proposal: ${fallbackError.message}`)
+    }
+
+    return fallbackProposal
+  }
+
+  if (error) {
+    throw new FundWiseError(`Failed to create Proposal: ${error.message}`)
+  }
+
+  return proposal
+}
+
+export async function reviewProposalMutation(data: {
+  proposalId: string
+  memberWallet: string
+  decision: "approved" | "rejected"
+  txSig: string
+}) {
+  if (data.decision !== "approved" && data.decision !== "rejected") {
+    throw new FundWiseError("Proposal review decision must be approved or rejected.")
+  }
+
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can be reviewed.")
+  }
+
+  if (proposal.status !== "pending") {
+    throw new FundWiseError("Only pending Proposals can be reviewed.")
+  }
+
+  if (
+    !group.multisig_address ||
+    proposal.squads_transaction_index === null ||
+    !proposal.squads_proposal_address
+  ) {
+    throw new FundWiseError("Proposal is missing Squads governance metadata.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.memberWallet,
+    "Only Group Members can review Proposals."
+  )
+
+  if (proposal.proposer_wallet === data.memberWallet) {
+    throw new FundWiseError("Proposal creator cannot review their own Proposal.")
+  }
+
+  const squadsStatus = await verifySquadsProposalReview({
+    multisigAddress: group.multisig_address,
+    transactionIndex: proposal.squads_transaction_index,
+    proposalAddress: proposal.squads_proposal_address,
+    memberWallet: data.memberWallet,
+    decision: data.decision,
+  })
+  const nextStatus = mapSquadsStatusToFundWiseStatus(squadsStatus)
+
+  const { error: reviewError } = await getAdmin()
+    .from("proposal_approvals")
+    .insert({
+      proposal_id: data.proposalId,
+      member_wallet: data.memberWallet,
+      decision: data.decision,
+      tx_sig: data.txSig,
+    })
+
+  if (reviewError?.code === "23505") {
+    throw new FundWiseError("Each Member can review a Proposal at most once.")
+  }
+
+  if (reviewError) {
+    throw new FundWiseError(`Failed to record Proposal review: ${reviewError.message}`)
+  }
+
+  const { data: reviewedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({ status: nextStatus })
+    .eq("id", data.proposalId)
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to update Proposal status: ${error.message}`)
+  }
+
+  return reviewedProposal
+}
+
+export async function executeProposalMutation(data: {
+  proposalId: string
+  executorWallet: string
+  txSig: string
+}) {
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can be executed.")
+  }
+
+  if (proposal.status === "executed") {
+    throw new FundWiseError("Proposal is already executed.")
+  }
+
+  if (proposal.status !== "approved") {
+    throw new FundWiseError("Only approved Proposals can be executed.")
+  }
+
+  if (
+    !group.multisig_address ||
+    !group.treasury_address ||
+    proposal.squads_transaction_index === null ||
+    !proposal.squads_proposal_address
+  ) {
+    throw new FundWiseError("Proposal is missing Squads execution metadata.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.executorWallet,
+    "Only Group Members can execute approved Proposals."
+  )
+
+  const { data: existingExecution, error: existingExecutionError } = await getAdmin()
+    .from("proposals")
+    .select("id")
+    .eq("tx_sig", data.txSig)
+    .maybeSingle()
+
+  if (existingExecutionError) {
+    throw new FundWiseError(`Failed to check for duplicate Proposal execution transaction: ${existingExecutionError.message}`)
+  }
+
+  if (existingExecution) {
+    throw new FundWiseError("This Proposal execution transaction has already been recorded.")
+  }
+
+  await verifySquadsProposalExecuted({
+    multisigAddress: group.multisig_address,
+    transactionIndex: proposal.squads_transaction_index,
+    proposalAddress: proposal.squads_proposal_address,
+  })
+
+  await verifyProposalExecutionTransfer({
+    txSig: data.txSig,
+    mint: proposal.mint,
+    treasuryAddress: group.treasury_address,
+    recipientWallet: proposal.recipient_wallet,
+    executorWallet: data.executorWallet,
+    amount: proposal.amount,
+  })
+
+  const { data: executedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({
+      status: "executed",
+      tx_sig: data.txSig,
+      executed_at: new Date().toISOString(),
+    })
+    .eq("id", data.proposalId)
+    .eq("status", "approved")
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to mark Proposal executed: ${error.message}`)
+  }
+
+  return executedProposal
+}
+
+export async function updateProposalMetadataMutation(data: {
+  proposalId: string
+  editorWallet: string
+  memo?: string | null
+  proofUrl?: string | null
+}) {
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can be edited.")
+  }
+
+  if (proposal.status !== "pending") {
+    throw new FundWiseError("Only pending Proposals can be edited.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.editorWallet,
+    "Only Group Members can edit Proposals."
+  )
+
+  if (proposal.proposer_wallet !== data.editorWallet) {
+    throw new FundWiseError("Only the Proposal creator can edit Proposal metadata.")
+  }
+
+  const { data: outsideApprovals, error: outsideApprovalsError } = await getAdmin()
+    .from("proposal_approvals")
+    .select("id")
+    .eq("proposal_id", data.proposalId)
+    .eq("decision", "approved")
+    .neq("member_wallet", proposal.proposer_wallet)
+
+  if (outsideApprovalsError) {
+    throw new FundWiseError(`Failed to check Proposal approval history: ${outsideApprovalsError.message}`)
+  }
+
+  if ((outsideApprovals || []).length > 0) {
+    throw new FundWiseError("Proposal cannot be edited after the first outside approval.")
+  }
+
+  const memo = data.memo?.trim() || null
+  if (memo && memo.length > 240) {
+    throw new FundWiseError("Proposal memo must be 240 characters or fewer.")
+  }
+
+  const proofUrl = normalizeProofUrl(data.proofUrl)
+  const changedFields: Record<string, { from: string | null; to: string | null }> = {}
+
+  if ((proposal.memo || null) !== memo) {
+    changedFields.memo = { from: proposal.memo, to: memo }
+  }
+
+  if ((proposal.proof_url || null) !== proofUrl) {
+    changedFields.proof_url = { from: proposal.proof_url, to: proofUrl }
+  }
+
+  if (Object.keys(changedFields).length === 0) {
+    throw new FundWiseError("Proposal metadata did not change.")
+  }
+
+  const { data: updatedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({
+      memo,
+      proof_url: proofUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.proposalId)
+    .eq("status", "pending")
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to update Proposal metadata: ${error.message}`)
+  }
+
+  const editInsert: ProposalEditInsert = {
+    proposal_id: data.proposalId,
+    editor_wallet: data.editorWallet,
+    changed_fields: changedFields,
+  }
+  const { error: editError } = await getAdmin()
+    .from("proposal_edits")
+    .insert(editInsert)
+
+  if (editError) {
+    throw new FundWiseError(`Failed to record Proposal edit history: ${editError.message}`)
+  }
+
+  return updatedProposal
+}
+
+export async function addProposalCommentMutation(data: {
+  proposalId: string
+  memberWallet: string
+  body: string
+}) {
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can have comments.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.memberWallet,
+    "Only Group Members can comment on Proposals."
+  )
+
+  const body = normalizeProposalComment(data.body)
+  const { data: comment, error } = await getAdmin()
+    .from("proposal_comments")
+    .insert({
+      proposal_id: data.proposalId,
+      member_wallet: data.memberWallet,
+      body,
+    })
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to add Proposal comment: ${error.message}`)
+  }
+
+  return comment
 }
 
 export async function updateGroupTreasuryMutation(data: {

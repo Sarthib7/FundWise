@@ -228,6 +228,7 @@ export default function GroupDashboard() {
     transfers,
     activity,
     contributions,
+    proposals,
     treasuryBalance,
     isLoading,
     isMember,
@@ -236,6 +237,11 @@ export default function GroupDashboard() {
     isSavingProfileName,
     isCreatingTreasury,
     isContributing,
+    isCreatingProposal,
+    reviewingProposalId,
+    executingProposalId,
+    editingProposalId,
+    commentingProposalId,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -273,11 +279,17 @@ export default function GroupDashboard() {
     deleteExpense,
     createTreasury,
     contribute,
+    createProposal,
+    updateProposalMetadata,
+    addProposalComment,
+    reviewProposal,
+    executeProposal,
     clearSettlementRequest,
     shareSettlementRequest,
   } = dashboard
   const [showExpenseDialog, setShowExpenseDialog] = useState(false)
   const [showBridge, setShowBridge] = useState(false)
+  const [bridgeFlow, setBridgeFlow] = useState<"settlement" | "contribution">("settlement")
   const [bridgeInitialAmount, setBridgeInitialAmount] = useState("")
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -335,7 +347,14 @@ export default function GroupDashboard() {
   }, [contribute, contributionAmount])
 
   const openSettlementFundingRoute = useCallback((transfer: SettlementTransfer) => {
+    setBridgeFlow("settlement")
     setBridgeInitialAmount(formatEditableTokenAmount(transfer.amount))
+    setShowBridge(true)
+  }, [])
+
+  const openContributionFundingRoute = useCallback((amount: string) => {
+    setBridgeFlow("contribution")
+    setBridgeInitialAmount(amount)
     setShowBridge(true)
   }, [])
 
@@ -788,17 +807,32 @@ export default function GroupDashboard() {
                   contributorCount={contributorCount}
                   missingMembersForTreasury={missingMembersForTreasury}
                   contributions={contributions}
+                  proposals={proposals}
+                  members={members}
                   memberNameByWallet={memberNameByWallet}
+                  walletAddress={walletAddress}
                   isGroupCreator={isGroupCreator}
                   isMember={isMember}
                   connected={connected}
                   isWalletVerified={isWalletVerified}
+                  lifiSupported={lifiSupported}
                   isCreatingTreasury={isCreatingTreasury}
                   isContributing={isContributing}
+                  isCreatingProposal={isCreatingProposal}
+                  reviewingProposalId={reviewingProposalId}
+                  executingProposalId={executingProposalId}
+                  editingProposalId={editingProposalId}
+                  commentingProposalId={commentingProposalId}
                   contributionAmount={contributionAmount}
                   onContributionAmountChange={setContributionAmount}
+                  onOpenContributionFundingRoute={openContributionFundingRoute}
                   onCreateTreasury={createTreasury}
                   onContribute={handleContribute}
+                  onCreateProposal={createProposal}
+                  onUpdateProposalMetadata={updateProposalMetadata}
+                  onAddProposalComment={addProposalComment}
+                  onReviewProposal={reviewProposal}
+                  onExecuteProposal={executeProposal}
                   onJoin={joinGroup}
                 />
               )}
@@ -841,10 +875,15 @@ export default function GroupDashboard() {
         onOpenChange={setShowBridge}
         destinationAddress={walletAddress}
         groupName={group.name}
+        flow={bridgeFlow}
         initialAmount={bridgeInitialAmount}
         onSuccess={(txHash, amount) => {
+          if (bridgeFlow === "contribution") {
+            setContributionAmount(amount)
+          }
+
           toast.success(
-            isFundMode
+            bridgeFlow === "contribution"
               ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
               : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
             {

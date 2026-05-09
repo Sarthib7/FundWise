@@ -116,7 +116,9 @@ async function verifyAtaTransfer(params: {
   mint: string
   senderWallet: string
   recipientWallet: string
+  senderOwnerOffCurve?: boolean
   recipientOwnerOffCurve?: boolean
+  signerWallet?: string
   expectedAmount: number
   actionLabel: string
 }) {
@@ -125,7 +127,9 @@ async function verifyAtaTransfer(params: {
     mint,
     senderWallet,
     recipientWallet,
+    senderOwnerOffCurve = false,
     recipientOwnerOffCurve = false,
+    signerWallet,
     expectedAmount,
     actionLabel,
   } = params
@@ -138,7 +142,9 @@ async function verifyAtaTransfer(params: {
   const mintPubkey = new PublicKey(mint)
   const senderPubkey = new PublicKey(senderWallet)
   const recipientPubkey = new PublicKey(recipientWallet)
-  const expectedSourceAta = toBase58(await getAssociatedTokenAddress(mintPubkey, senderPubkey))
+  const expectedSourceAta = toBase58(
+    await getAssociatedTokenAddress(mintPubkey, senderPubkey, senderOwnerOffCurve)
+  )
   const expectedDestinationAta = toBase58(
     await getAssociatedTokenAddress(mintPubkey, recipientPubkey, recipientOwnerOffCurve)
   )
@@ -147,7 +153,7 @@ async function verifyAtaTransfer(params: {
   const destinationBalance = tokenBalances.get(expectedDestinationAta)
   const expectedAmountRaw = BigInt(expectedAmount)
 
-  assertSigner(transaction, senderWallet, actionLabel)
+  assertSigner(transaction, signerWallet || senderWallet, actionLabel)
 
   if (!sourceBalance) {
     throw new FundWiseError(`${actionLabel} source token account was not present in the on-chain transaction.`)
@@ -213,5 +219,25 @@ export async function verifyContributionTransfer(params: {
     recipientOwnerOffCurve: true,
     expectedAmount: params.amount,
     actionLabel: "Contribution",
+  })
+}
+
+export async function verifyProposalExecutionTransfer(params: {
+  txSig: string
+  mint: string
+  treasuryAddress: string
+  recipientWallet: string
+  executorWallet: string
+  amount: number
+}) {
+  await verifyAtaTransfer({
+    txSig: params.txSig,
+    mint: params.mint,
+    senderWallet: params.treasuryAddress,
+    recipientWallet: params.recipientWallet,
+    senderOwnerOffCurve: true,
+    signerWallet: params.executorWallet,
+    expectedAmount: params.amount,
+    actionLabel: "Proposal execution",
   })
 }

@@ -259,6 +259,36 @@ export function buildOpenApiSpec(baseUrl?: string) {
           responses: { "200": { description: "Recorded Contribution." } },
         },
       },
+      "/api/proposals": {
+        post: {
+          summary: "Create a Fund Mode reimbursement Proposal for a current Group Member.",
+          responses: { "200": { description: "Created Proposal." } },
+        },
+      },
+      "/api/proposals/{proposalId}/review": {
+        post: {
+          summary: "Approve or reject a pending Fund Mode Proposal.",
+          responses: { "200": { description: "Reviewed Proposal." } },
+        },
+      },
+      "/api/proposals/{proposalId}": {
+        patch: {
+          summary: "Update editable off-chain Proposal metadata before outside approval.",
+          responses: { "200": { description: "Updated Proposal." } },
+        },
+      },
+      "/api/proposals/{proposalId}/comments": {
+        post: {
+          summary: "Add a Proposal-scoped Fund Mode comment.",
+          responses: { "200": { description: "Created Proposal comment." } },
+        },
+      },
+      "/api/proposals/{proposalId}/execute": {
+        post: {
+          summary: "Record a wallet-confirmed Squads execution for an approved Fund Mode Proposal.",
+          responses: { "200": { description: "Executed Proposal." } },
+        },
+      },
       "/api/profile/display-name": {
         post: {
           summary: "Update a Member's global Profile Display Name.",
@@ -286,6 +316,7 @@ export function buildOAuthAuthorizationServerMetadata(baseUrl?: string) {
       "expenses:write",
       "profile:write",
       "settlements:record",
+      "proposals:write",
     ],
     service_documentation: `${origin}/api/docs`,
     fundwise_auth_note:

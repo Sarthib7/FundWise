@@ -7,11 +7,17 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui"
 import { PublicKey } from "@solana/web3.js"
 import {
   addContribution as dbAddContribution,
+  addProposalComment as dbAddProposalComment,
   addMember,
+  addProposal as dbAddProposal,
   addSettlement as dbAddSettlement,
   deleteExpense as dbDeleteExpense,
+  executeProposal as dbExecuteProposal,
   getGroupDashboardSnapshot,
+  reviewProposal as dbReviewProposal,
   type ActivityItem,
+  type ProposalWithReviews,
+  updateProposalMetadata as dbUpdateProposalMetadata,
   updateGroupTreasury,
   updateProfileDisplayName,
 } from "@/lib/db"
@@ -36,8 +42,11 @@ import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
 import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
 import {
   contributeStablecoinToTreasury,
+  createSquadsReimbursementProposal,
   createSquadsMultisig,
+  executeSquadsReimbursementProposal,
   getTreasuryStablecoinBalance,
+  reviewSquadsProposal,
 } from "@/lib/squads-multisig"
 import { toast } from "sonner"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
@@ -91,6 +100,7 @@ export function useGroupDashboard() {
   const [transfers, setTransfers] = useState<SettlementTransfer[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [contributions, setContributions] = useState<ContributionRow[]>([])
+  const [proposals, setProposals] = useState<ProposalWithReviews[]>([])
   const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [memberCount, setMemberCount] = useState(0)
@@ -100,6 +110,11 @@ export function useGroupDashboard() {
   const [isSavingProfileName, setIsSavingProfileName] = useState(false)
   const [isCreatingTreasury, setIsCreatingTreasury] = useState(false)
   const [isContributing, setIsContributing] = useState(false)
+  const [isCreatingProposal, setIsCreatingProposal] = useState(false)
+  const [reviewingProposalId, setReviewingProposalId] = useState<string | null>(null)
+  const [executingProposalId, setExecutingProposalId] = useState<string | null>(null)
+  const [editingProposalId, setEditingProposalId] = useState<string | null>(null)
+  const [commentingProposalId, setCommentingProposalId] = useState<string | null>(null)
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
@@ -141,12 +156,14 @@ export function useGroupDashboard() {
         setTransfers([])
         setActivity([])
         setContributions([])
+        setProposals([])
         setTreasuryBalance(0)
         return
       }
 
       if (groupData.mode === "split") {
         setContributions([])
+        setProposals([])
         setTreasuryBalance(0)
 
         if (snapshot.isMember) {
@@ -170,6 +187,7 @@ export function useGroupDashboard() {
 
       if (!snapshot.isMember) {
         setContributions([])
+        setProposals([])
         setTreasuryBalance(0)
         return
       }
@@ -179,6 +197,7 @@ export function useGroupDashboard() {
         : 0
 
       setContributions(snapshot.contributions)
+      setProposals(snapshot.proposals)
       setTreasuryBalance(nextTreasuryBalance)
     } catch (error) {
       console.error("[FundWise] Failed to load group:", error)
@@ -275,14 +294,14 @@ export function useGroupDashboard() {
 
       if (preview.sourceTokenAccountExists) {
         if (lifiSupported) {
-          return `This ${actionLabel} needs ${formatTokenAmount(shortfall)} more ${tokenName}. Open the Settlement again and route funds from another supported network if that is where your USDC is.`
+          return `This ${actionLabel} needs ${formatTokenAmount(shortfall)} more ${tokenName}. Route funds from another supported network if that is where your USDC is, then retry the ${actionLabel}.`
         }
 
         return `This ${actionLabel} needs ${formatTokenAmount(shortfall)} more ${tokenName} in the connected wallet.`
       }
 
       if (lifiSupported) {
-        return `This wallet does not hold ${tokenName} for the Settlement yet. Open the Settlement again and route funds from another supported network if that is where your USDC is.`
+        return `This wallet does not hold ${tokenName} for the ${actionLabel} yet. Route funds from another supported network if that is where your USDC is, then retry the ${actionLabel}.`
       }
 
       return `This wallet does not hold ${tokenName} on ${clusterLabel}. Add ${tokenName} to the connected wallet first, then retry the ${actionLabel}.`
@@ -742,6 +761,270 @@ export function useGroupDashboard() {
     walletAddress,
   ])
 
+  const handleCreateProposal = useCallback(async (data: {
+    recipientWallet: string
+    amount: string
+    proofUrl?: string
+    memo?: string
+  }) => {
+    if (!group || group.mode !== "fund" || !connected || !walletAddress) {
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before creating a Proposal")
+      return false
+    }
+
+    if (!group.multisig_address || !group.treasury_address) {
+      toast.error("Initialize the Treasury before creating reimbursement Proposals")
+      return false
+    }
+
+    if (!data.recipientWallet) {
+      toast.error("Choose a Member to reimburse")
+      return false
+    }
+
+    setIsCreatingProposal(true)
+
+    try {
+      await ensureWalletWriteAccess()
+      const signingWallet = getSigningWallet(wallet?.adapter)
+      if (!signingWallet) {
+        throw new Error("No wallet found")
+      }
+
+      const trimmedAmount = data.amount.trim()
+
+      if (!/^\d+(\.\d{1,6})?$/.test(trimmedAmount)) {
+        throw new Error("Enter a valid Proposal amount")
+      }
+
+      const tokenAmount = parseTokenAmount(trimmedAmount)
+
+      if (!Number.isSafeInteger(tokenAmount) || tokenAmount <= 0) {
+        throw new Error("Enter a valid Proposal amount")
+      }
+
+      const squadsProposal = await createSquadsReimbursementProposal(
+        signingWallet,
+        walletAddress,
+        group.multisig_address,
+        group.treasury_address,
+        data.recipientWallet,
+        group.stablecoin_mint,
+        tokenAmount
+      )
+
+      await dbAddProposal({
+        groupId,
+        proposerWallet: walletAddress,
+        recipientWallet: data.recipientWallet,
+        amount: tokenAmount,
+        mint: group.stablecoin_mint,
+        squadsTransactionIndex: squadsProposal.transactionIndex,
+        squadsProposalAddress: squadsProposal.proposalAddress,
+        squadsTransactionAddress: squadsProposal.transactionAddress,
+        squadsCreateTxSig: squadsProposal.signature,
+        proofUrl: data.proofUrl,
+        memo: data.memo,
+      })
+
+      toast.success("Reimbursement Proposal created")
+      await loadData()
+      return true
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to create Proposal"))
+      return false
+    } finally {
+      setIsCreatingProposal(false)
+    }
+  }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, wallet?.adapter, walletAddress])
+
+  const handleUpdateProposalMetadata = useCallback(async (
+    proposalId: string,
+    data: { memo?: string; proofUrl?: string }
+  ) => {
+    if (!connected || !walletAddress) {
+      setWalletModalVisible(true)
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before editing Proposals")
+      return false
+    }
+
+    setEditingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      await dbUpdateProposalMetadata({
+        proposalId,
+        editorWallet: walletAddress,
+        memo: data.memo,
+        proofUrl: data.proofUrl,
+      })
+
+      toast.success("Proposal updated")
+      await loadData()
+      return true
+    } catch (error) {
+      console.error("[FundWise] Failed to update Proposal:", error)
+      toast.error(getErrorMessage(error, "Failed to update Proposal"))
+      return false
+    } finally {
+      setEditingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, isMember, loadData, walletAddress, setWalletModalVisible])
+
+  const handleAddProposalComment = useCallback(async (
+    proposalId: string,
+    body: string
+  ) => {
+    if (!connected || !walletAddress) {
+      setWalletModalVisible(true)
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before commenting on Proposals")
+      return false
+    }
+
+    setCommentingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      await dbAddProposalComment({
+        proposalId,
+        memberWallet: walletAddress,
+        body,
+      })
+
+      toast.success("Comment added")
+      await loadData()
+      return true
+    } catch (error) {
+      console.error("[FundWise] Failed to add Proposal comment:", error)
+      toast.error(getErrorMessage(error, "Failed to add Proposal comment"))
+      return false
+    } finally {
+      setCommentingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, isMember, loadData, walletAddress, setWalletModalVisible])
+
+  const handleReviewProposal = useCallback(async (
+    proposalId: string,
+    decision: "approved" | "rejected"
+  ) => {
+    if (!group || group.mode !== "fund" || !connected || !walletAddress) {
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before reviewing Proposals")
+      return false
+    }
+
+    setReviewingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      const proposal = proposals.find((item) => item.id === proposalId)
+      const signingWallet = getSigningWallet(wallet?.adapter)
+
+      if (!proposal || proposal.squads_transaction_index === null || !group.multisig_address) {
+        throw new Error("Proposal is missing Squads governance metadata")
+      }
+
+      if (!signingWallet) {
+        throw new Error("No wallet found")
+      }
+
+      const { signature } = await reviewSquadsProposal(
+        signingWallet,
+        walletAddress,
+        group.multisig_address,
+        proposal.squads_transaction_index,
+        decision
+      )
+
+      await dbReviewProposal({
+        proposalId,
+        memberWallet: walletAddress,
+        decision,
+        txSig: signature,
+      })
+
+      toast.success(decision === "approved" ? "Proposal approved" : "Proposal rejected")
+      await loadData()
+      return true
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to review Proposal"))
+      return false
+    } finally {
+      setReviewingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, group, isMember, loadData, proposals, wallet?.adapter, walletAddress])
+
+  const handleExecuteProposal = useCallback(async (proposalId: string) => {
+    if (!connected || !walletAddress) {
+      setWalletModalVisible(true)
+      return false
+    }
+
+    if (!group || group.mode !== "fund" || !group.multisig_address) {
+      toast.error("Treasury must be initialized first")
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before executing Proposals")
+      return false
+    }
+
+    setExecutingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      const proposal = proposals.find((item) => item.id === proposalId)
+      const signingWallet = getSigningWallet(wallet?.adapter)
+
+      if (!proposal || proposal.status !== "approved" || proposal.squads_transaction_index === null) {
+        throw new Error("Proposal is not ready for execution")
+      }
+
+      if (!signingWallet) {
+        throw new Error("No wallet found")
+      }
+
+      const { signature } = await executeSquadsReimbursementProposal(
+        signingWallet,
+        walletAddress,
+        group.multisig_address,
+        proposal.squads_transaction_index
+      )
+
+      await dbExecuteProposal({
+        proposalId,
+        executorWallet: walletAddress,
+        txSig: signature,
+      })
+
+      toast.success("Proposal executed")
+      await loadData()
+      return true
+    } catch (error) {
+      console.error("[FundWise] Failed to execute Proposal:", error)
+      toast.error(getErrorMessage(error, "Failed to execute Proposal"))
+      return false
+    } finally {
+      setExecutingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, group, isMember, loadData, proposals, wallet?.adapter, walletAddress, setWalletModalVisible])
+
   const clearSettlementRequest = useCallback(() => {
     router.replace(`/groups/${groupId}`, { scroll: false })
   }, [groupId, router])
@@ -812,6 +1095,7 @@ export function useGroupDashboard() {
     transfers,
     activity,
     contributions,
+    proposals,
     treasuryBalance,
     isLoading,
     isMember,
@@ -820,6 +1104,11 @@ export function useGroupDashboard() {
     isSavingProfileName,
     isCreatingTreasury,
     isContributing,
+    isCreatingProposal,
+    reviewingProposalId,
+    executingProposalId,
+    editingProposalId,
+    commentingProposalId,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -857,6 +1146,11 @@ export function useGroupDashboard() {
     deleteExpense: handleDeleteExpense,
     createTreasury: handleCreateTreasury,
     contribute: handleContribute,
+    createProposal: handleCreateProposal,
+    updateProposalMetadata: handleUpdateProposalMetadata,
+    addProposalComment: handleAddProposalComment,
+    reviewProposal: handleReviewProposal,
+    executeProposal: handleExecuteProposal,
     clearSettlementRequest,
     shareSettlementRequest: handleShareSettlementRequest,
   }

@@ -398,6 +398,102 @@ Request:
 }
 \`\`\`
 
+### Proposals
+
+#### POST /api/proposals
+
+Create a Fund Mode reimbursement Proposal for a current Group Member.
+
+Auth: browser wallet session. \`proposerWallet\` must match the authenticated wallet. The Group must be a Fund Mode Group with an initialized Treasury. The recipient must be a current Group Member.
+
+Important: the browser creates the Squads vault transaction and Squads Proposal first. This route verifies and stores the Squads Proposal mapping for FundWise UX/history; the database is not the approval authority and this route does not execute Treasury movement.
+
+Request:
+
+\`\`\`json
+{
+  "groupId": "<group-id>",
+  "proposerWallet": "<member-wallet>",
+  "recipientWallet": "<member-wallet>",
+  "amount": 100,
+  "mint": "<usdc-mint>",
+  "squadsTransactionIndex": 1,
+  "squadsProposalAddress": "<squads-proposal-pda>",
+  "squadsTransactionAddress": "<squads-transaction-pda>",
+  "squadsCreateTxSig": "<solana-signature>",
+  "proofUrl": "https://example.com/receipt.pdf",
+  "memo": "Hotel deposit reimbursement"
+}
+\`\`\`
+
+#### PATCH /api/proposals/{proposalId}
+
+Update editable off-chain Proposal metadata.
+
+Auth: browser wallet session. \`editorWallet\` must match the authenticated wallet, be the Proposal creator, and still be a current Group Member.
+
+Important: only \`memo\` and \`proofUrl\` are editable. Recipient, amount, mint, and Squads transaction details are immutable because they are anchored in the Squads transaction. Edits are blocked after the first outside approval.
+
+Request:
+
+\`\`\`json
+{
+  "editorWallet": "<member-wallet>",
+  "memo": "Updated memo",
+  "proofUrl": "https://example.com/receipt.pdf"
+}
+\`\`\`
+
+#### POST /api/proposals/{proposalId}/comments
+
+Add a Proposal-scoped comment.
+
+Auth: browser wallet session. \`memberWallet\` must match the authenticated wallet and be a current Group Member.
+
+Request:
+
+\`\`\`json
+{
+  "memberWallet": "<member-wallet>",
+  "body": "Looks good to me."
+}
+\`\`\`
+
+#### POST /api/proposals/{proposalId}/review
+
+Approve or reject a pending Fund Mode reimbursement Proposal.
+
+Auth: browser wallet session. \`memberWallet\` must match the authenticated wallet. The Proposal creator cannot review their own Proposal. Each Member can approve or reject at most once.
+
+Important: the browser signs the Squads approve/reject action first. This route verifies the Squads Proposal state and records the review signature; threshold approval comes from Squads status and does not execute Treasury movement.
+
+Request:
+
+\`\`\`json
+{
+  "memberWallet": "<member-wallet>",
+  "decision": "approved",
+  "txSig": "<solana-signature>"
+}
+\`\`\`
+
+#### POST /api/proposals/{proposalId}/execute
+
+Record execution of an approved Fund Mode reimbursement Proposal.
+
+Auth: browser wallet session. \`executorWallet\` must match the authenticated wallet and be a current Group Member.
+
+Important: the browser executes the approved Squads vault transaction first. This route verifies Squads status is executed and verifies the stablecoin transfer from the Treasury ATA to the approved recipient before marking the FundWise Proposal executed.
+
+Request:
+
+\`\`\`json
+{
+  "executorWallet": "<member-wallet>",
+  "txSig": "<solana-signature>"
+}
+\`\`\`
+
 ### Profile
 
 #### POST /api/profile/display-name
@@ -522,6 +618,11 @@ Mutations requiring explicit Member intent:
 - \`POST /api/expenses\` — create a real Expense.
 - \`PATCH /api/expenses/{expenseId}\` — edit an Expense as its creator.
 - \`DELETE /api/expenses/{expenseId}\` — delete an Expense as its creator.
+- \`POST /api/proposals\` — create a Fund Mode reimbursement Proposal.
+- \`PATCH /api/proposals/{proposalId}\` — update editable off-chain Proposal metadata before outside approval.
+- \`POST /api/proposals/{proposalId}/comments\` — add a Proposal-scoped comment.
+- \`POST /api/proposals/{proposalId}/review\` — approve or reject a pending Proposal.
+- \`POST /api/proposals/{proposalId}/execute\` — record a verified Squads execution for an approved Proposal.
 - \`POST /api/profile/display-name\` — update Profile Display Name.
 
 Receipt-recording only after wallet-confirmed on-chain action:

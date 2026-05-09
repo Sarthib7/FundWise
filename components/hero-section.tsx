@@ -12,6 +12,8 @@ import {
   Loader2,
   Palmtree,
   Receipt,
+  ShieldCheck,
+  Landmark,
   UtensilsCrossed,
   Wallet,
 } from "lucide-react"
@@ -62,7 +64,7 @@ const demoGroups: DemoGroup[] = [
     icon: Palmtree,
     iconClassName: "bg-brand-pale text-brand-deep",
     title: "Lisbon Trip",
-    subtitle: "4 friends · Split expenses",
+    subtitle: "4 friends · Close the tab",
     metrics: [
       { label: "You owe", value: "$40.00", tone: "negative" },
       { label: "Total expenses", value: "$640.00" },
@@ -287,7 +289,7 @@ export function HeroSection() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-24 text-center sm:px-6 sm:pt-28 md:pb-24 md:pt-32 lg:px-[max(24px,calc(50%-660px))]">
+      <section className="relative overflow-hidden px-4 pb-8 pt-16 text-center sm:px-6 sm:pt-20 md:pb-10 md:pt-24 lg:px-[max(24px,calc(50%-660px))]">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -301,19 +303,19 @@ export function HeroSection() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
+        <div className="relative z-10 mb-5 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
-          Shared expenses without the chase
+          Private Group money on Solana
         </div>
 
-        <h1 className="relative z-10 font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
+        <h1 className="relative z-10 mb-4 font-serif text-[clamp(2.75rem,7vw,5.25rem)] leading-[1.02] tracking-tight text-foreground text-balance">
           Split expenses.
           <br />
-          <em className="not-italic text-brand-grad font-serif">Earn together.</em>
+          <em className="not-italic text-brand-grad font-serif">Fund what&apos;s next.</em>
         </h1>
 
-        <p className="relative z-10 mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
-          FundWise helps private Groups track shared spending, keep live Balances clear, and settle up without chasing across chat.
+        <p className="relative z-10 mx-auto mb-7 max-w-xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-8 md:text-lg">
+          Track shared spending, settle exact USDC Balances, and turn recurring Groups into shared Treasuries.
         </p>
 
         <div className="relative z-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -329,6 +331,26 @@ export function HeroSection() {
           >
             See how it works
           </Link>
+        </div>
+
+        <div className="relative z-10 mx-auto mt-6 flex max-w-2xl flex-wrap items-center justify-center gap-2">
+          {[
+            { label: "Live Balances", icon: Receipt },
+            { label: "Verified Receipts", icon: ShieldCheck },
+            { label: "Treasury beta", icon: Landmark },
+          ].map((item) => {
+            const Icon = item.icon
+
+            return (
+              <div
+                key={item.label}
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border-c bg-background/80 px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm backdrop-blur"
+              >
+                <Icon className="h-4 w-4 text-brand-mid" aria-hidden="true" />
+                {item.label}
+              </div>
+            )
+          })}
         </div>
       </section>
 
