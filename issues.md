@@ -40,13 +40,13 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-028 | Done | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
 | FW-029 | Done | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
 | FW-030 | Done | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
-| FW-031 | Ready | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
+| FW-031 | Done | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
 | FW-032 | Ready | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | FW-028 |
 
 ## Pick Queue
 
-1. **FW-031:** Add Zerion readiness context for Fund Mode Members and Treasuries.
-2. **FW-032:** Run invite-only Fund Mode beta rehearsal and integration QA.
+1. **FW-032:** Run invite-only Fund Mode beta rehearsal and integration QA.
+2. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 3. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
 ## Handoff Queue For Claude / Lot
@@ -192,11 +192,10 @@ Extend the existing LI.FI support layer so a Member can route funds for a Fund M
 ### Notes
 
 Completed on 2026-05-09. Fund Mode Contributions now expose `Route funds for Contribution` when LI.FI is available, reusing the existing route modal with Contribution-specific copy. Funds route to the Member wallet, then the normal wallet-confirmed Contribution still moves USDC into the Squads Treasury and records the unchanged Contribution ledger entry. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed. Full gate: `pnpm build` passed.
-- [ ] `pnpm build` passes.
 
 ## FW-031 - Add Zerion Readiness Context For Fund Mode Members And Treasuries
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** FW-020
@@ -207,10 +206,14 @@ Use the existing Zerion readiness boundary to support Fund Mode Contribution and
 
 ### Acceptance Criteria
 
-- [ ] Readiness output distinguishes Member Contribution readiness from Split Mode Settlement readiness.
-- [ ] Output includes Solana USDC and SOL-for-gas readiness where Zerion data supports it.
-- [ ] Fund Mode use stays read-only and never becomes signing, wallet connection, or Treasury execution.
-- [ ] Docs explain required Zerion CLI setup and optional x402 without inventing secrets.
+- [x] Readiness output distinguishes Member Contribution readiness from Split Mode Settlement readiness.
+- [x] Output includes Solana USDC and SOL-for-gas readiness where Zerion data supports it.
+- [x] Fund Mode use stays read-only and never becomes signing, wallet connection, or Treasury execution.
+- [x] Docs explain required Zerion CLI setup and optional x402 without inventing secrets.
+
+### Notes
+
+Completed on 2026-05-09. `pnpm zerion:readiness` now supports `--mode=settlement`, `--mode=contribution`, `--mode=proposal-member`, and `--mode=treasury`. Contribution mode checks Member USDC plus SOL-for-gas, proposal-member mode checks SOL-for-gas for Squads actions, and treasury mode checks vault USDC without requiring SOL because the vault does not sign. Docs now cover Fund Mode usage, required Zerion CLI/API-key setup, and optional x402 without storing secrets. Verification: `node scripts/zerion-readiness.mjs --help`, `pnpm test tests/fundwise-mutations.test.ts`, and `pnpm build` passed.
 - [ ] `pnpm build` passes.
 
 ## FW-032 - Run Invite-Only Fund Mode Beta Rehearsal And Integration QA

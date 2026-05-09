@@ -1,6 +1,6 @@
 # Zerion CLI wallet-readiness support (FW-005)
 
-A narrow sponsor-track demo that uses the official **Zerion CLI** to answer one question: *is this Solana wallet ready to settle a FundWise expense?*
+A narrow sponsor-track demo that uses the official **Zerion CLI** to answer one question: *is this Solana wallet or Treasury ready for a FundWise action?*
 
 This is **support tooling**, not part of the FundWise app. It does not connect a wallet, sign transactions, or execute Settlements. The Solana wallet-adapter remains the sole identity and money-movement path (see [ADR-0014](./adr/0014-optional-phantom-connect-alongside-wallet-adapter.md)).
 
@@ -8,8 +8,8 @@ This is **support tooling**, not part of the FundWise app. It does not connect a
 
 For a given Solana address, the script reports:
 
-- **USDC on Solana** — does the wallet hold enough USDC to settle?
-- **SOL for gas** — does the wallet hold enough SOL for transaction fees?
+- **USDC on Solana** — does the wallet or Treasury hold enough USDC for the selected action?
+- **SOL for gas** — does the Member wallet hold enough SOL for transaction fees when the selected action requires signing?
 - **Broader wallet context** — total positions, number of chains, count of distinct symbols, as visibility into what else the wallet holds.
 
 It then prints a human verdict (`READY` / `NOT READY`) with concrete reasons, or emits a structured JSON summary when called with `--json`.
@@ -41,6 +41,7 @@ Flags:
 | --- | --- | --- |
 | `--json` | off | Emit a structured readiness summary as JSON |
 | `--min-usdc=<n>` | `1` | Override the minimum USDC threshold for "ready" |
+| `--mode=<mode>` | `settlement` | Readiness context: `settlement`, `contribution`, `proposal-member`, or `treasury` |
 | `-h`, `--help` | — | Print usage |
 
 Exit codes:
@@ -74,6 +75,7 @@ Structured output for tooling:
 $ pnpm zerion:readiness Bv1...8KJq --json
 {
   "address": "Bv1...8KJq",
+  "mode": "settlement",
   "minUsdcThreshold": 1,
   "summary": {
     "usdcAvailable": 245.30,
@@ -97,8 +99,30 @@ $ pnpm zerion:readiness Bv1...8KJq --json
 
 ## Scope and non-goals
 
-- **In scope:** Solana USDC + SOL readiness, broader wallet context, JSON output for downstream tooling.
-- **Out of scope:** wallet connection, transaction signing, Settlement execution, Group / Member identity, balances pulled from the FundWise ledger.
+- **In scope:** Split Mode Settlement readiness, Fund Mode Contribution readiness, Fund Mode Proposal member-action readiness, Treasury funding readiness, broader wallet context, JSON output for downstream tooling.
+- **Out of scope:** wallet connection, transaction signing, Settlement execution, Contribution execution, Proposal review/execution, Group / Member identity, balances pulled from the FundWise ledger.
+
+## Fund Mode contexts
+
+Contribution readiness checks the Member wallet for both Solana USDC and SOL-for-gas:
+
+```sh
+pnpm zerion:readiness <member-wallet> --mode=contribution --min-usdc=25
+```
+
+Proposal member readiness checks the Member wallet for SOL-for-gas only. Proposal creation, review, and execution are Squads wallet-confirmed actions, but the reimbursement amount comes from the Treasury, not the Member wallet:
+
+```sh
+pnpm zerion:readiness <member-wallet> --mode=proposal-member --min-usdc=0
+```
+
+Treasury readiness checks the Squads vault address for Solana USDC. It does not require SOL because the Treasury vault does not sign transactions:
+
+```sh
+pnpm zerion:readiness <treasury-address> --mode=treasury --min-usdc=100
+```
+
+All modes remain read-only wrappers around `zerion analyze`; they do not connect wallets, request signatures, or execute FundWise actions.
 
 The intent is to strengthen the FundWise sponsor story (Zerion track) without mixing readiness analysis into the wallet-bound Settlement path.
 

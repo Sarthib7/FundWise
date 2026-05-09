@@ -2,8 +2,8 @@
 // FW-005: Zerion CLI wallet-readiness support demo.
 //
 // Wraps the official Zerion CLI (`zerion analyze <address>`) and reports
-// whether a Solana wallet looks ready to settle a FundWise expense:
-// USDC available, SOL for gas, and broader wallet context.
+// whether a Solana wallet or Treasury looks ready for a FundWise action:
+// USDC available, SOL for gas where needed, and broader wallet context.
 //
 // Strictly read-only support tooling. Does not connect a wallet, does not
 // sign transactions, does not execute Settlements. The Solana
@@ -17,9 +17,9 @@
 import { spawnSync } from "node:child_process"
 import { argv, env, exit, stderr, stdout } from "node:process"
 
-const USAGE = `Usage: pnpm zerion:readiness <wallet-address> [--json] [--min-usdc=<amount>]
+const USAGE = `Usage: pnpm zerion:readiness <wallet-address> [--json] [--min-usdc=<amount>] [--mode=<mode>]
 
-Reports Solana wallet readiness for a FundWise Settlement using the official
+Reports Solana wallet readiness for a FundWise action using the official
 Zerion CLI under the hood. Read-only. Does not sign or send transactions.
 
 Setup:
@@ -30,6 +30,7 @@ Setup:
 Flags:
   --json              Emit the parsed readiness summary as JSON instead of text
   --min-usdc=<n>      Minimum USDC required to be considered "ready" (default: 1)
+  --mode=<mode>       settlement, contribution, proposal-member, or treasury
   -h, --help          Show this message
 
 Exit codes:
@@ -45,7 +46,13 @@ const DEFAULT_MIN_USDC = 1
 const SOL_DUST_FLOOR = 0.005
 
 function parseArgs(args) {
-  const out = { address: null, json: false, minUsdc: DEFAULT_MIN_USDC, help: false }
+  const out = {
+    address: null,
+    json: false,
+    minUsdc: DEFAULT_MIN_USDC,
+    mode: "settlement",
+    help: false,
+  }
   for (const raw of args) {
     if (raw === "-h" || raw === "--help") {
       out.help = true
@@ -58,6 +65,13 @@ function parseArgs(args) {
         exit(2)
       }
       out.minUsdc = n
+    } else if (raw.startsWith("--mode=")) {
+      const mode = raw.slice("--mode=".length)
+      if (!["settlement", "contribution", "proposal-member", "treasury"].includes(mode)) {
+        stderr.write(`error: --mode must be settlement, contribution, proposal-member, or treasury; got "${mode}"\n`)
+        exit(2)
+      }
+      out.mode = mode
     } else if (!raw.startsWith("-") && !out.address) {
       out.address = raw
     } else {
@@ -186,14 +200,52 @@ function summarize(positions) {
   }
 }
 
-function verdict(summary, minUsdc) {
+function actionCopy(mode) {
+  if (mode === "contribution") {
+    return {
+      label: "FundWise Contribution",
+      verb: "contribute to a FundWise Treasury",
+      usdcNeed: "to contribute",
+      needsUsdc: true,
+      needsSol: true,
+    }
+  }
+  if (mode === "proposal-member") {
+    return {
+      label: "FundWise Proposal member action",
+      verb: "review or execute a FundWise Proposal",
+      usdcNeed: "not required from this Member wallet for Proposal governance",
+      needsUsdc: false,
+      needsSol: true,
+    }
+  }
+  if (mode === "treasury") {
+    return {
+      label: "FundWise Treasury",
+      verb: "fund a FundWise reimbursement Proposal",
+      usdcNeed: "available for Treasury reimbursements",
+      needsUsdc: true,
+      needsSol: false,
+    }
+  }
+  return {
+    label: "FundWise Settlement",
+    verb: "settle FundWise expenses",
+    usdcNeed: "to settle",
+    needsUsdc: true,
+    needsSol: true,
+  }
+}
+
+function verdict(summary, minUsdc, mode) {
+  const copy = actionCopy(mode)
   const reasons = []
-  if (summary.usdcAvailable < minUsdc) {
+  if (copy.needsUsdc && summary.usdcAvailable < minUsdc) {
     reasons.push(
       `USDC below threshold: ${summary.usdcAvailable.toFixed(2)} < ${minUsdc} USDC`
     )
   }
-  if (summary.solAvailable < SOL_DUST_FLOOR) {
+  if (copy.needsSol && summary.solAvailable < SOL_DUST_FLOOR) {
     reasons.push(
       `SOL below dust floor: ${summary.solAvailable.toFixed(4)} < ${SOL_DUST_FLOOR} SOL (gas)`
     )
@@ -204,29 +256,38 @@ function verdict(summary, minUsdc) {
   return { ready: reasons.length === 0, reasons }
 }
 
-function renderHuman(address, summary, ready, reasons, minUsdc) {
+function renderHuman(address, summary, ready, reasons, minUsdc, mode) {
+  const copy = actionCopy(mode)
   const fmt = (n, dp = 2) => n.toFixed(dp)
   const mark = (ok) => (ok ? "✓" : "✗")
 
-  const usdcOk = summary.usdcAvailable >= minUsdc
-  const solOk = summary.solAvailable >= SOL_DUST_FLOOR
+  const usdcOk = !copy.needsUsdc || summary.usdcAvailable >= minUsdc
+  const solOk = !copy.needsSol || summary.solAvailable >= SOL_DUST_FLOOR
 
   const lines = []
-  lines.push(`Zerion wallet readiness — ${address}`)
+  lines.push(`Zerion ${copy.label} readiness — ${address}`)
   lines.push("─".repeat(48))
   lines.push(
     `${mark(usdcOk)} USDC on Solana:  ${fmt(summary.usdcAvailable)} USDC` +
-      (usdcOk ? `  (≥ ${minUsdc} USDC threshold met)` : `  (need ≥ ${minUsdc} USDC to settle)`)
+      (copy.needsUsdc
+        ? usdcOk
+          ? `  (≥ ${minUsdc} USDC threshold met)`
+          : `  (need ≥ ${minUsdc} USDC ${copy.usdcNeed})`
+        : `  (${copy.usdcNeed})`)
   )
   lines.push(
     `${mark(solOk)} SOL for gas:     ${fmt(summary.solAvailable, 4)} SOL` +
-      (solOk ? `  (above ${SOL_DUST_FLOOR} dust floor)` : `  (top up SOL for transaction fees)`)
+      (copy.needsSol
+        ? solOk
+          ? `  (above ${SOL_DUST_FLOOR} dust floor)`
+          : `  (top up SOL for transaction fees)`
+        : "  (Treasury vault does not sign transactions)")
   )
   lines.push(
     `ℹ Broader context: ${summary.totalPositions} positions across ${summary.uniqueChains} chain(s); ${summary.solanaPositions} on Solana`
   )
   lines.push("")
-  lines.push(`Verdict: ${ready ? "READY to settle FundWise expenses." : "NOT READY."}`)
+  lines.push(`Verdict: ${ready ? `READY to ${copy.verb}.` : "NOT READY."}`)
   if (!ready) {
     for (const reason of reasons) lines.push(`  · ${reason}`)
   }
@@ -252,13 +313,14 @@ function main() {
   const raw = runZerionAnalyze(args.address)
   const positions = collectPositions(raw)
   const summary = summarize(positions)
-  const v = verdict(summary, args.minUsdc)
+  const v = verdict(summary, args.minUsdc, args.mode)
 
   if (args.json) {
     stdout.write(
       JSON.stringify(
         {
           address: args.address,
+          mode: args.mode,
           minUsdcThreshold: args.minUsdc,
           summary,
           verdict: v,
@@ -268,7 +330,7 @@ function main() {
       ) + "\n"
     )
   } else {
-    stdout.write(renderHuman(args.address, summary, v.ready, v.reasons, args.minUsdc))
+    stdout.write(renderHuman(args.address, summary, v.ready, v.reasons, args.minUsdc, args.mode))
   }
 
   exit(v.ready ? 0 : 1)
