@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FundWise - Pitch Deck v2</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f5faf6;
+      --surface-2: #eaf3ec;
+      --border: #d5e8da;
+      --border-2: #c0d9c7;
+      --ink: #0d1f14;
+      --text-2: #4a6b55;
+      --text-3: #8dab97;
+      --deep: #0d6b3a;
+      --mid: #1a9151;
+      --blue: #2a4fa8;
+      --blue-bg: #e8f0fb;
+      --amber: #b87512;
+      --amber-bg: #fff4df;
+      --danger: #b42318;
+      --danger-bg: #fff0ed;
+      --font-sans: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: "DM Serif Display", Georgia, "Times New Roman", serif;
+      --font-mono: "Geist Mono", "SF Mono", Consolas, monospace;
+      --ease: cubic-bezier(.16,1,.3,1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+    body { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+
+    .deck { width: 100vw; height: 100vh; position: relative; overflow: hidden; background: var(--bg); }
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 54px 76px 46px;
+      background:
+        radial-gradient(circle at 86% 14%, rgba(78, 201, 138, .10), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+      transition: opacity .32s var(--ease);
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    .slide.active .animate-in { animation: rise .46s var(--ease) both; }
+    .slide.active .animate-in:nth-child(2) { animation-delay: .05s; }
+    .slide.active .animate-in:nth-child(3) { animation-delay: .10s; }
+    .slide.active .animate-in:nth-child(4) { animation-delay: .15s; }
+    .slide.active .animate-in:nth-child(5) { animation-delay: .20s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    .slide-header, .slide-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 14px; color: var(--ink); }
+    .mark { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--border); }
+    .slab { height: 6px; border-radius: 999px; margin: 3px auto; }
+    .slab.one { width: 28px; background: #0d6b3a; transform: rotate(-3deg); }
+    .slab.two { width: 34px; background: #1a9151; }
+    .slab.three { width: 25px; background: #4ec98a; transform: rotate(3deg); }
+    .wordmark { font-family: var(--font-serif); font-size: 31px; line-height: 1; }
+    .domain { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); margin-top: 4px; }
+    .section-label { font-size: 11px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; color: var(--mid); }
+    .slide-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); }
+    .slide-body { align-self: center; width: 100%; max-width: 1240px; margin: 0 auto; }
+    .slide-footer { color: var(--text-3); font-size: 13px; }
+
+    h1, h2, h3 { color: var(--ink); }
+    .hero { font-family: var(--font-serif); font-size: clamp(76px, 8vw, 118px); line-height: .92; font-weight: 500; }
+    .headline { font-family: var(--font-serif); font-size: clamp(52px, 5.7vw, 82px); line-height: .98; font-weight: 500; max-width: 1040px; }
+    .subhead { font-size: 24px; line-height: 1.45; color: var(--text-2); max-width: 860px; }
+    .body-copy { font-size: 20px; line-height: 1.55; color: var(--text-2); }
+    .small { font-size: 15px; line-height: 1.5; color: var(--text-2); }
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .green { color: var(--deep); }
+    .muted { color: var(--text-3); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .stack { display: flex; flex-direction: column; gap: 18px; }
+    .stack-lg { display: flex; flex-direction: column; gap: 32px; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 26px; padding: 30px; }
+    .card.white { background: #fff; }
+    .card.highlight { background: #f0faf4; border-color: var(--border-2); }
+    .card.blue { background: var(--blue-bg); border-color: #c9d9f7; }
+    .card.amber { background: var(--amber-bg); border-color: #f0d7a8; }
+    .card.danger { background: var(--danger-bg); border-color: #ffd2cc; }
+    .kicker { font-size: 12px; font-weight: 850; letter-spacing: .13em; color: var(--mid); text-transform: uppercase; }
+    .card-title { font-family: var(--font-serif); font-size: 28px; line-height: 1.1; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--text-2); font-size: 13px; font-weight: 750; }
+    .pill.green { background: #edf9f1; color: var(--deep); border-color: var(--border-2); }
+    .pill.blue { background: var(--blue-bg); color: var(--blue); border-color: #c9d9f7; }
+    .pill.amber { background: var(--amber-bg); color: var(--amber); border-color: #f0d7a8; }
+
+    .metric { font-family: var(--font-serif); font-size: 60px; line-height: .95; color: var(--deep); }
+    .metric-card { background: #fff; border: 1px solid var(--border); border-radius: 26px; padding: 30px; min-height: 178px; display: flex; flex-direction: column; justify-content: space-between; }
+    .metric-label { color: var(--text-2); font-size: 15px; line-height: 1.42; }
+
+    .table { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 24px; background: #fff; }
+    .table th { text-align: left; padding: 18px 20px; font-size: 12px; letter-spacing: .12em; color: var(--text-3); text-transform: uppercase; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .table td { padding: 18px 20px; font-size: 18px; color: var(--text-2); border-bottom: 1px solid var(--border); }
+    .table tr:last-child td { border-bottom: 0; }
+    .table .yes { color: var(--deep); font-weight: 850; }
+    .table .no { color: var(--text-3); }
+    .table .you { background: #f0faf4; color: var(--ink); font-weight: 800; }
+
+    .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 36px; padding: 20px; }
+    .product-screen { background: #fff; border: 1px solid var(--border); border-radius: 28px; padding: 26px; min-height: 540px; }
+    .app-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+    .avatar-stack { display: flex; }
+    .avatar { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; margin-left: -8px; border: 2px solid #fff; background: var(--surface-2); color: var(--deep); font-size: 12px; font-weight: 850; }
+    .avatar:first-child { margin-left: 0; }
+    .expense-row { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .expense-icon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--surface); color: var(--deep); font-weight: 900; }
+    .settle-box { margin-top: 24px; border-radius: 24px; padding: 24px; background: #edf9f1; border: 1px solid var(--border-2); }
+
+    .flow-line { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .flow-step { position: relative; background: #fff; border: 1px solid var(--border); border-radius: 24px; padding: 24px; min-height: 176px; }
+    .step-num { width: 44px; height: 38px; border-radius: 13px; display: grid; place-items: center; background: var(--surface-2); color: var(--deep); font-weight: 900; margin-bottom: 22px; font-size: 12px; }
+
+    .notes { display: none; position: fixed; left: 28px; right: 28px; bottom: 72px; z-index: 20; background: rgba(13,31,20,.96); color: rgba(255,255,255,.82); border-radius: 18px; padding: 18px 22px; font-size: 15px; line-height: 1.5; }
+    .notes.visible { display: block; }
+    .notes-label { color: #98e8b9; font-size: 11px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 6px; }
+
+    .nav-bar { position: fixed; left: 28px; right: 28px; bottom: 22px; z-index: 10; display: flex; align-items: center; justify-content: space-between; opacity: 0; transition: opacity .18s var(--ease); }
+    .deck:hover .nav-bar { opacity: 1; }
+    .nav-btn { min-height: 40px; border-radius: 999px; padding: 0 16px; border: 1px solid var(--border); background: #fff; color: var(--text-2); font-weight: 750; cursor: pointer; }
+    .nav-btn:focus-visible { outline: 2px solid var(--mid); outline-offset: 2px; }
+    .nav-progress { flex: 1; max-width: 220px; height: 4px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+    .nav-progress-fill { height: 100%; background: var(--mid); border-radius: 999px; transition: width .2s var(--ease); }
+    .nav-counter { color: var(--text-3); font-family: var(--font-mono); font-size: 12px; }
+
+    @media (max-width: 900px) {
+      .slide { padding: 34px 22px 34px; }
+      .grid-2, .grid-3, .grid-4, .flow-line { grid-template-columns: 1fr; }
+      .product-screen { min-height: auto; }
+      .slide-footer { align-items: flex-start; flex-direction: column; gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .slide, .animate-in, .nav-progress-fill { animation: none !important; transition: none !important; } }
+    @media print { body { overflow: visible; } .deck { overflow: visible; } .slide { position: relative; opacity: 1; pointer-events: auto; page-break-after: always; height: 100vh; } .nav-bar, .notes { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+    <section class="slide active">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="slide-count">01 / 12</div></header>
+      <main class="slide-body">
+        <div class="stack-lg animate-in" style="max-width: 1060px;">
+          <div class="row" style="justify-content:flex-start; gap:12px;"><span class="pill green">Shared finance</span><span class="pill blue">USDC Settlement</span><span class="pill amber">Group Treasuries</span></div>
+          <h1 class="hero">Group money,<br><span class="green">done right.</span></h1>
+          <p class="subhead">FundWise helps private Groups split expenses, settle in USDC, and grow into shared Treasuries with Proposals and verifiable Receipts.</p>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>FundWise is the first FundLabs product</span><span>01 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>Open with FundWise. FundLabs is the company frame; FundWise is the product everyone will use.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Problem</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">Every Group creates money mess.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card"><p class="card-title">After spending</p><p class="body-copy">Someone tracks who owes whom, then chases everyone across chat and payment apps.</p></div>
+            <div class="card"><p class="card-title">Before spending</p><p class="body-copy">Shared pots sit in one person's wallet or bank account with no transparent controls.</p></div>
+            <div class="card"><p class="card-title">After paying</p><p class="body-copy">Proof is scattered across screenshots, transaction links, and private messages.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>The pain is social, financial, and operational</span><span>02 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>Make the problem human first. Trips, roommates, clubs, hackathon teams, and DAOs all hit this.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Why it matters</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">The old tools stop at bookkeeping.</h1>
+          <div class="grid-3 animate-in">
+            <div class="metric-card"><div class="metric">$90B</div><div class="metric-label">reported Splitwise expenses since 2011<br><span class="muted">Investopedia / Splitwise company data</span></div></div>
+            <div class="metric-card"><div class="metric">$15B+</div><div class="metric-label">stablecoins on Solana<br><span class="muted">DefiLlama · May 2026</span></div></div>
+            <div class="metric-card"><div class="metric">175M+</div><div class="metric-label">Visa-accepting merchant locations<br><span class="muted">Visa stablecoin-linked cards</span></div></div>
+          </div>
+          <p class="subhead animate-in">Shared spending is proven. Stablecoin settlement is finally usable. The missing layer is Group context.</p>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Sources: Investopedia, DefiLlama, Visa</span><span>03 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>The point is not top-down TAM. It is behavior plus timing: people already split money, and stablecoins are now usable enough to settle it.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Product now</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">FundWise starts where the pain starts: splitting expenses.</h1>
+          <div class="flow-line animate-in">
+            <div class="flow-step"><div class="step-num">1</div><p class="card-title">Create</p><p class="small">Start a private Group.</p></div>
+            <div class="flow-step"><div class="step-num">2</div><p class="card-title">Invite</p><p class="small">Members join by link or QR.</p></div>
+            <div class="flow-step"><div class="step-num">3</div><p class="card-title">Log</p><p class="small">Add Expenses with familiar splits.</p></div>
+            <div class="flow-step"><div class="step-num">4</div><p class="card-title">Settle</p><p class="small">Debtors sign exact USDC Settlements.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Split Mode is the shipped devnet wedge</span><span>04 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the current product, not a roadmap claim. It is familiar enough for users and concrete enough for judges.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Solution</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">One live Balance becomes one verifiable Settlement.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card"><span class="pill green">Live state</span><p class="card-title" style="margin-top:24px;">No stale IOUs</p><p class="body-copy">Settlement Request Links resolve the current Group Balance when opened.</p></div>
+            <div class="card highlight"><span class="pill green">Wallet-confirmed</span><p class="card-title" style="margin-top:24px;">No auto-send</p><p class="body-copy">Only the debtor signs their exact USDC Settlement.</p></div>
+            <div class="card amber"><span class="pill amber">Receipt-backed</span><p class="card-title" style="margin-top:24px;">No guessing</p><p class="body-copy">Each Settlement produces a Receipt with transaction proof.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Current flow: Group -> Expense -> Balance -> Settlement -> Receipt</span><span>05 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the core insight: FundWise is not just an expense ledger. It closes the loop.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Product proof</div></header>
+      <main class="slide-body">
+        <div class="grid-2" style="align-items:center; gap:46px;">
+          <div class="product-card animate-in">
+            <div class="product-screen">
+              <div class="app-top"><div><p class="kicker">Live Group</p><h2 style="font-family:var(--font-serif); font-size:38px; margin-top:4px;">Berlin Weekend</h2><p class="small">4 friends · Split Mode</p></div><div class="avatar-stack"><div class="avatar">A</div><div class="avatar">B</div><div class="avatar">C</div><div class="avatar">You</div></div></div>
+              <div class="grid-2" style="gap:16px; margin-top:24px;">
+                <div class="card highlight" style="padding:22px;"><p class="kicker">You owe</p><div class="metric" style="font-size:46px; margin-top:8px;">40 USDC</div></div>
+                <div class="card white" style="padding:22px;"><p class="kicker">Receipt</p><p class="card-title" style="margin-top:10px;">You to Asha</p><p class="small mono">4Kt...mN7x</p></div>
+              </div>
+              <div style="margin-top:22px;">
+                <div class="expense-row"><div class="row" style="justify-content:flex-start;"><div class="expense-icon">D</div><div><p class="small" style="color:var(--ink); font-weight:800;">Dinner</p><p class="small">Paid by Asha</p></div></div><strong>$120</strong></div>
+                <div class="expense-row"><div class="row" style="justify-content:flex-start;"><div class="expense-icon">T</div><div><p class="small" style="color:var(--ink); font-weight:800;">Train tickets</p><p class="small">Paid by you</p></div></div><strong>$48</strong></div>
+                <div class="settle-box"><div class="row"><div><p class="kicker">Settlement preview</p><p class="card-title" style="margin-top:6px;">Send 40 USDC</p></div><span class="pill green">Settle</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="stack-lg animate-in">
+            <h1 class="headline" style="max-width:560px;">The demo is the product.</h1>
+            <div class="stack">
+              <div class="row" style="justify-content:flex-start;"><span class="pill green">Live</span><p class="body-copy">Devnet MVP is working.</p></div>
+              <div class="row" style="justify-content:flex-start;"><span class="pill green">Safe</span><p class="body-copy">Protected ledger reads and verified receipts.</p></div>
+              <div class="row" style="justify-content:flex-start;"><span class="pill green">Shareable</span><p class="body-copy">Settlement Request Links are the growth loop.</p></div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Built for Colosseum Frontier · Working devnet MVP</span><span>06 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the handoff to the live app. The deck should set up the demo, not replace it.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Fund Mode</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">The deeper product is Fund Mode: pay before, earn together.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card highlight"><span class="pill green">Pool</span><p class="card-title" style="margin-top:24px;">Shared Treasury</p><p class="body-copy">Members contribute USDC before spending happens.</p></div>
+            <div class="card"><span class="pill green">Decide</span><p class="card-title" style="margin-top:24px;">Proposals</p><p class="body-copy">Reimbursements require approval, proof, and history.</p></div>
+            <div class="card amber"><span class="pill amber">Spend</span><p class="card-title" style="margin-top:24px;">Execution</p><p class="body-copy">Approved payouts move from the Group Treasury to Member wallets.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Fund Mode is invite-only until Proposal execution is complete</span><span>07 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>Be explicit: Fund Mode is the product direction. Treasury and Contributions exist; Proposal lifecycle is the one-month beta focus.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">How Fund Mode works</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">A Group Treasury, without one person becoming the bank.</h1>
+          <div class="flow-line animate-in">
+            <div class="flow-step"><div class="step-num">1</div><p class="card-title">Contribute</p><p class="small">Members fund the Treasury in USDC.</p></div>
+            <div class="flow-step"><div class="step-num">2</div><p class="card-title">Request</p><p class="small">A Member files a reimbursement Proposal.</p></div>
+            <div class="flow-step"><div class="step-num">3</div><p class="card-title">Approve</p><p class="small">Other Members approve or reject with history.</p></div>
+            <div class="flow-step"><div class="step-num">4</div><p class="card-title">Execute</p><p class="small">Approved Treasury payout gets a Receipt.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Current beta focus: Proposals, proof, approvals, execution, history</span><span>08 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the clearest Fund Mode slide. It explains how the product works without overclaiming yield.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Why Solana</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">If you remove Solana, FundWise becomes another IOU tracker.</h1>
+          <div class="grid-2 animate-in">
+            <div class="card danger"><p class="kicker" style="color:var(--danger);">Without Solana</p><div class="stack" style="margin-top:26px;"><p class="body-copy">The ledger still needs outside payment apps.</p><p class="body-copy">Treasury spending is opaque.</p><p class="body-copy">Receipts are screenshots.</p></div></div>
+            <div class="card highlight"><p class="kicker">With Solana</p><div class="stack" style="margin-top:26px;"><p class="body-copy">USDC Settlement is final.</p><p class="body-copy">Treasury movement is verifiable.</p><p class="body-copy">Receipts are machine-readable later.</p></div></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Crypto necessity: finality, Treasury coordination, verifiable Receipts</span><span>09 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the blockchain necessity answer. It is about product behavior, not ideology.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Expansion</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">FundWise is the product. FundLabs is the stack around it.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card highlight"><span class="pill green">FundWise</span><p class="card-title" style="margin-top:24px;">Shared finance</p><p class="body-copy">Split Mode, Fund Mode, Group Treasuries, Receipts.</p></div>
+            <div class="card blue"><span class="pill blue">Fundy</span><p class="card-title" style="margin-top:24px;">Distribution</p><p class="body-copy">Telegram and personal finance companion for reminders and drafts.</p></div>
+            <div class="card amber"><span class="pill amber">FundProof</span><p class="card-title" style="margin-top:24px;">Infrastructure</p><p class="body-copy">Planned structured receipt API for agents and developers.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Fundy and FundProof are planned; FundWise is the live product</span><span>10 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This keeps FundLabs useful without confusing the audience. FundWise is where users go.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="section-label">Business model</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">Free to start. Paid when Groups manage real money.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card"><span class="pill green">Acquire</span><p class="card-title" style="margin-top:24px;">Split Mode</p><p class="body-copy">Free Groups, Expenses, Settlement links, and normal USDC Settlements.</p></div>
+            <div class="card highlight"><span class="pill green">Monetize</span><p class="card-title" style="margin-top:24px;">Fund Mode</p><p class="body-copy">Paid Treasury workflows, Proposals, proof, admin, and later productive Treasury strategy.</p></div>
+            <div class="card blue"><span class="pill blue">Expand</span><p class="card-title" style="margin-top:24px;">Fundy + FundProof</p><p class="body-copy">Premium finance companion plus planned receipt API revenue.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Do not tax friend repayment; monetize durable Group workflows</span><span>11 / 12</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>Keep it conservative: Split Mode stays free. Fund Mode subscription is the first natural paid surface.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div><div class="wordmark">FundWise</div><div class="domain">fundwise.fun</div></div></div><div class="slide-count">12 / 12</div></header>
+      <main class="slide-body">
+        <div class="stack-lg animate-in" style="text-align:center; align-items:center;">
+          <h1 class="hero">FundWise</h1>
+          <p class="subhead" style="max-width:860px;">Split expenses. Earn together.</p>
+          <div class="row" style="justify-content:center; gap:12px;"><span class="pill green">Live devnet MVP</span><span class="pill blue">Colosseum Frontier</span><span class="pill amber">Fund Mode beta next</span></div>
+          <p class="subhead green" style="font-weight:850;">fundwise.fun</p>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Visa Frontier · LI.FI · Zerion · Colosseum Frontier</span><span>Try the devnet MVP</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>End on FundWise and the domain. The audience should remember the product, not just the holding-company thesis.</div>
+    </section>
+
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="prev()">Prev</button>
+      <div class="row" style="gap:14px;"><span class="nav-counter"><span id="current">1</span> / <span id="total">12</span></span><div class="nav-progress"><div class="nav-progress-fill" id="progress"></div></div></div>
+      <button class="nav-btn" onclick="next()">Next</button>
+    </div>
+  </div>
+
+  <script>
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let notesVisible = false;
+    document.getElementById('total').textContent = total;
+    function show(i) {
+      slides.forEach(s => s.classList.remove('active'));
+      current = Math.max(0, Math.min(i, total - 1));
+      slides[current].classList.add('active');
+      document.getElementById('current').textContent = current + 1;
+      document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+      document.querySelectorAll('.notes').forEach(n => n.classList.remove('visible'));
+      const note = slides[current].querySelector('.notes');
+      if (note && notesVisible) note.classList.add('visible');
+    }
+    function next() { show(current + 1); }
+    function prev() { show(current - 1); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        document.querySelectorAll('.notes').forEach(n => n.classList.toggle('visible', notesVisible && n.closest('.slide').classList.contains('active')));
+      }
+    });
+    document.getElementById('deck').addEventListener('click', (e) => {
+      if (e.target.closest('.nav-bar') || e.target.closest('.nav-btn')) return;
+      if (e.clientX > window.innerWidth / 2) next(); else prev();
+    });
+    show(0);
+  </script>
+</body>
+</html>

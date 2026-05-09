@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FundWise - Pitch Deck</title>
+  <title>FundWise - Pitch Deck v2</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -16,7 +16,6 @@
       --text-3: #8dab97;
       --deep: #0d6b3a;
       --mid: #1a9151;
-      --fresh: #2db870;
       --blue: #2a4fa8;
       --blue-bg: #e8f0fb;
       --amber: #b87512;
@@ -71,7 +70,7 @@
     h1, h2, h3 { color: var(--ink); }
     .hero { font-family: var(--font-serif); font-size: clamp(76px, 8vw, 118px); line-height: .92; font-weight: 500; }
     .headline { font-family: var(--font-serif); font-size: clamp(52px, 5.7vw, 82px); line-height: .98; font-weight: 500; max-width: 1040px; }
-    .subhead { font-size: 24px; line-height: 1.45; color: var(--text-2); max-width: 840px; }
+    .subhead { font-size: 24px; line-height: 1.45; color: var(--text-2); max-width: 860px; }
     .body-copy { font-size: 20px; line-height: 1.55; color: var(--text-2); }
     .small { font-size: 15px; line-height: 1.5; color: var(--text-2); }
     .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -80,6 +79,7 @@
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
     .stack { display: flex; flex-direction: column; gap: 18px; }
     .stack-lg { display: flex; flex-direction: column; gap: 32px; }
@@ -137,7 +137,7 @@
 
     @media (max-width: 900px) {
       .slide { padding: 34px 22px 34px; }
-      .grid-2, .grid-3, .flow-line { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .grid-4, .flow-line { grid-template-columns: 1fr; }
       .product-screen { min-height: auto; }
       .slide-footer { align-items: flex-start; flex-direction: column; gap: 8px; }
     }
@@ -148,87 +148,54 @@
 <body>
   <div class="deck" id="deck">
     <section class="slide active">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="slide-count">01 / 11</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="slide-count">01 / 10</div></header>
       <main class="slide-body">
         <div class="stack-lg animate-in" style="max-width: 1060px;">
-          <div class="row" style="justify-content:flex-start; gap:12px;"><span class="pill green">FundWise</span><span class="pill blue">Solana stablecoins</span><span class="pill amber">Agent payments</span></div>
-          <h1 class="hero">The financial layer<br><span class="green">for groups.</span></h1>
-          <p class="subhead">FundLabs helps human and AI groups track obligations, move stablecoins, govern shared Treasuries, and keep verifiable Receipts.</p>
+          <div class="row" style="justify-content:flex-start; gap:12px;"><span class="pill green">Story</span><span class="pill blue">Shared finance</span><span class="pill amber">USDC Settlement</span></div>
+          <h1 class="hero">A weekend trip<br><span class="green">should not end in debt chasing.</span></h1>
+          <p class="subhead">Four friends pay for dinner, tickets, and an Airbnb. The spending is easy. The settlement is where the Group starts to break.</p>
         </div>
       </main>
-      <footer class="slide-footer"><span>fundwise.fun</span><span>FundWise live on devnet · Fundy + FundProof planned</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Open with the company, not just the app: FundLabs builds the financial layer for groups, human or AI. FundWise is the first product.</div>
+      <footer class="slide-footer"><span>FundWise is the shared-finance app for private Groups</span><span>01 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>Start with the human story. Everyone has lived the post-trip settlement mess.</div>
     </section>
 
     <section class="slide">
       <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Problem</div></header>
       <main class="slide-body">
         <div class="stack-lg">
-          <h1 class="headline animate-in">Groups coordinate money everywhere except the financial system.</h1>
+          <h1 class="headline animate-in">Group money lives in three broken places.</h1>
           <div class="grid-3 animate-in">
-            <div class="card"><p class="card-title">The chat</p><p class="body-copy">Decisions happen in Telegram, WhatsApp, and DMs, but nothing becomes a reliable ledger.</p></div>
-            <div class="card"><p class="card-title">The app</p><p class="body-copy">Splitwise-style tools track IOUs, then push settlement into another rail.</p></div>
-            <div class="card"><p class="card-title">The wallet</p><p class="body-copy">Stablecoins can settle instantly, but wallets do not understand Group context or receipts.</p></div>
+            <div class="card"><p class="card-title">The chat</p><p class="body-copy">The Group decides what to buy, but chat does not become financial state.</p></div>
+            <div class="card"><p class="card-title">The tracker</p><p class="body-copy">Splitwise-style tools record IOUs, then leave settlement somewhere else.</p></div>
+            <div class="card"><p class="card-title">The wallet</p><p class="body-copy">Stablecoins can settle, but wallets do not understand Groups, Balances, or Receipts.</p></div>
           </div>
         </div>
       </main>
-      <footer class="slide-footer"><span>Problem: coordination, settlement, proof, and automation are split apart</span><span>02 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Make this relatable: dinner, trips, roommates, DAO reimbursements, and AI agents all need shared financial state.</div>
+      <footer class="slide-footer"><span>The problem is coordination plus settlement plus proof</span><span>02 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the problem. Not "crypto is hard." The problem is that Group money has no unified financial layer.</div>
     </section>
 
     <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Why now</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Solution</div></header>
       <main class="slide-body">
         <div class="stack-lg">
-          <h1 class="headline animate-in">The timing stack finally exists.</h1>
-          <div class="grid-3 animate-in">
-            <div class="metric-card"><div class="metric">$90B</div><div class="metric-label">reported Splitwise expenses since 2011<br><span class="muted">Investopedia / Splitwise company data</span></div></div>
-            <div class="metric-card"><div class="metric">$14B+</div><div class="metric-label">stablecoins on Solana<br><span class="muted">DefiLlama · May 2026</span></div></div>
-            <div class="metric-card"><div class="metric">175M+</div><div class="metric-label">Visa-accepting merchant locations<br><span class="muted">Visa stablecoin-linked cards</span></div></div>
-          </div>
-          <p class="subhead animate-in">Stablecoins are usable, Solana is cheap enough for consumer payments, and agents are starting to transact with payment rails.</p>
-        </div>
-      </main>
-      <footer class="slide-footer"><span>Sources: Investopedia, DefiLlama, Visa newsroom / stablecoin pages</span><span>03 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>The $90B hook says the behavior is huge. The Solana and Visa stats say stablecoin settlement can now connect to everyday money movement.</div>
-    </section>
-
-    <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Product family</div></header>
-      <main class="slide-body">
-        <div class="stack-lg">
-          <h1 class="headline animate-in">Three products, one shared financial stack.</h1>
-          <div class="grid-3 animate-in">
-            <div class="card highlight"><span class="pill green">Live wedge</span><p class="card-title" style="margin-top:24px;">FundWise</p><p class="body-copy">Shared expenses, USDC Settlement, shared Treasuries, Proposals, and Receipts.</p></div>
-            <div class="card blue"><span class="pill blue">Distribution</span><p class="card-title" style="margin-top:24px;">Fundy</p><p class="body-copy">Telegram and personal finance agent for reminders, drafts, readiness, and Group workflows.</p></div>
-            <div class="card amber"><span class="pill amber">Infrastructure</span><p class="card-title" style="margin-top:24px;">FundProof</p><p class="body-copy">Structured, verifiable receipts for agent and on-chain payments via x402 / MPP-style rails.</p></div>
-          </div>
-        </div>
-      </main>
-      <footer class="slide-footer"><span>Status: FundWise devnet MVP · Fundy and FundProof planned</span><span>04 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Be precise: FundWise is live. Fundy and FundProof are the expansion products, not shipped claims.</div>
-    </section>
-
-    <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">FundWise</div></header>
-      <main class="slide-body">
-        <div class="stack-lg">
-          <h1 class="headline animate-in">Split expenses. Earn together.</h1>
+          <h1 class="headline animate-in">FundWise turns Group spending into a live financial layer.</h1>
           <div class="flow-line animate-in">
-            <div class="flow-step"><div class="step-num">1</div><p class="card-title">Group</p><p class="small">Private Group by invite link or QR.</p></div>
-            <div class="flow-step"><div class="step-num">2</div><p class="card-title">Expense</p><p class="small">Log shared spending with familiar splits.</p></div>
-            <div class="flow-step"><div class="step-num">3</div><p class="card-title">Balance</p><p class="small">Live net Balances and current Settlement edge.</p></div>
-            <div class="flow-step"><div class="step-num">4</div><p class="card-title">Receipt</p><p class="small">Wallet-confirmed USDC Settlement, verified on-chain.</p></div>
+            <div class="flow-step"><div class="step-num">1</div><p class="card-title">Group</p><p class="small">Invite Members by link or QR.</p></div>
+            <div class="flow-step"><div class="step-num">2</div><p class="card-title">Expense</p><p class="small">Track who paid and how it splits.</p></div>
+            <div class="flow-step"><div class="step-num">3</div><p class="card-title">Balance</p><p class="small">Compute who owes whom live.</p></div>
+            <div class="flow-step"><div class="step-num">4</div><p class="card-title">Receipt</p><p class="small">Settle in USDC with proof.</p></div>
           </div>
-          <p class="subhead animate-in">Split Mode is the shipped wedge. Fund Mode is the hero direction: shared Treasuries, Contributions, reimbursement Proposals, approvals, proof, and execution.</p>
+          <p class="subhead animate-in">The current product is Split Mode. The next product surface is Fund Mode for Groups that want to fund before spending.</p>
         </div>
       </main>
-      <footer class="slide-footer"><span>Core demo: Group -> Expense -> Balance -> Settlement -> Receipt</span><span>05 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Run the live demo from here. Keep Fund Mode framed as active beta direction until Proposals execute end to end.</div>
+      <footer class="slide-footer"><span>Core flow: Group -> Expense -> Balance -> Settlement -> Receipt</span><span>03 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the solution in one slide. Don't over-explain the stack yet.</div>
     </section>
 
     <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Product demo</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">What we built</div></header>
       <main class="slide-body">
         <div class="grid-2" style="align-items:center; gap:46px;">
           <div class="product-card animate-in">
@@ -246,103 +213,122 @@
             </div>
           </div>
           <div class="stack-lg animate-in">
-            <h1 class="headline" style="max-width:560px;">A live settle-up link, not a stale IOU.</h1>
+            <h1 class="headline" style="max-width:560px;">A working Split Mode MVP.</h1>
             <div class="stack">
-              <div class="row" style="justify-content:flex-start;"><span class="pill green">1</span><p class="body-copy">The link opens the current Balance.</p></div>
-              <div class="row" style="justify-content:flex-start;"><span class="pill green">2</span><p class="body-copy">The debtor reviews the exact USDC amount.</p></div>
-              <div class="row" style="justify-content:flex-start;"><span class="pill green">3</span><p class="body-copy">The wallet signs; the Receipt proves.</p></div>
+              <div class="row" style="justify-content:flex-start;"><span class="pill green">Live</span><p class="body-copy">Private Groups, Expenses, Balances.</p></div>
+              <div class="row" style="justify-content:flex-start;"><span class="pill green">On-chain</span><p class="body-copy">Wallet-confirmed USDC Settlements.</p></div>
+              <div class="row" style="justify-content:flex-start;"><span class="pill green">Shareable</span><p class="body-copy">Settlement Request Links and Receipts.</p></div>
             </div>
           </div>
         </div>
       </main>
-      <footer class="slide-footer"><span>Built for Colosseum Frontier · Working devnet MVP · verified Receipts</span><span>06 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Show the browser after this slide. The product proof is the live Settlement and Receipt, not a feature list.</div>
+      <footer class="slide-footer"><span>Built for Colosseum Frontier · Working devnet MVP</span><span>04 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This slide answers "what have you actually built?" It should lead into the live demo.</div>
     </section>
 
     <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Why Solana</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">What makes it good</div></header>
       <main class="slide-body">
         <div class="stack-lg">
-          <h1 class="headline animate-in">If you remove the chain, the product loses finality.</h1>
-          <div class="grid-2 animate-in">
-            <div class="card danger"><p class="kicker" style="color:var(--danger);">Without Solana</p><div class="stack" style="margin-top:26px;"><p class="body-copy">Group ledger still needs outside payment apps.</p><p class="body-copy">No verifiable Settlement Receipt.</p><p class="body-copy">Agents cannot reason about payment proof.</p></div></div>
-            <div class="card highlight"><p class="kicker">With Solana</p><div class="stack" style="margin-top:26px;"><p class="body-copy">USDC moves at consumer-payment speed.</p><p class="body-copy">Receipts include on-chain signatures.</p><p class="body-copy">The same rails can support x402 and agents later.</p></div></div>
+          <h1 class="headline animate-in">The link is live. The payment is exact. The Receipt is verifiable.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card"><span class="pill green">Live state</span><p class="card-title" style="margin-top:24px;">No stale IOUs</p><p class="body-copy">A Settlement Request Link resolves the current Balance when opened.</p></div>
+            <div class="card highlight"><span class="pill green">User control</span><p class="card-title" style="margin-top:24px;">No auto-send</p><p class="body-copy">Only the debtor signs their own exact USDC Settlement.</p></div>
+            <div class="card amber"><span class="pill amber">Trust</span><p class="card-title" style="margin-top:24px;">No "did you pay?"</p><p class="body-copy">Each Settlement creates a Receipt with transaction proof.</p></div>
           </div>
         </div>
       </main>
-      <footer class="slide-footer"><span>Crypto necessity: final Settlement, composable Receipts, agent-readable proofs</span><span>07 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Do not say "because decentralization." Say the money actually moves, and the result is verifiable by humans or agents.</div>
+      <footer class="slide-footer"><span>This is the wedge: verified Group Settlement, not another tracker</span><span>05 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This explains why FundWise is good now. It is not just Splitwise with a wallet.</div>
     </section>
 
     <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Moat</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">What makes it better</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">Fund Mode flips the model: fund first, reimburse with governance.</h1>
+          <div class="grid-3 animate-in">
+            <div class="card highlight"><span class="pill green">Pool</span><p class="card-title" style="margin-top:24px;">Shared Treasury</p><p class="body-copy">Members contribute USDC before spending happens.</p></div>
+            <div class="card"><span class="pill green">Decide</span><p class="card-title" style="margin-top:24px;">Proposals</p><p class="body-copy">A reimbursement needs recipient, amount, proof, and approvals.</p></div>
+            <div class="card amber"><span class="pill amber">Execute</span><p class="card-title" style="margin-top:24px;">Treasury payout</p><p class="body-copy">Approved spending moves from Treasury to Member wallet with a Receipt.</p></div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Fund Mode is invite-only until Proposal execution is complete</span><span>06 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the future product depth. Say clearly: Fund Mode is the hero direction and next beta focus.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Why this works</div></header>
       <main class="slide-body">
         <div class="stack-lg">
           <h1 class="headline animate-in">Split Mode acquires.<br>Fund Mode retains.<br>Receipts compound.</h1>
           <div class="grid-3 animate-in">
-            <div class="card"><span class="pill green">Network loop</span><p class="card-title" style="margin-top:24px;">Settle-up links</p><p class="body-copy">Every debtor link invites another wallet into a private Group.</p></div>
-            <div class="card highlight"><span class="pill green">Retention loop</span><p class="card-title" style="margin-top:24px;">Shared Treasuries</p><p class="body-copy">Recurring Groups need Contributions, approvals, proof, and exits.</p></div>
-            <div class="card amber"><span class="pill amber">Data loop</span><p class="card-title" style="margin-top:24px;">Receipts</p><p class="body-copy">Structured Expenses, Settlements, Proposals, and Receipts become the audit layer.</p></div>
+            <div class="card"><span class="pill green">Acquisition</span><p class="card-title" style="margin-top:24px;">Settle-up links</p><p class="body-copy">Every debtor flow invites another Member into a private Group.</p></div>
+            <div class="card highlight"><span class="pill green">Retention</span><p class="card-title" style="margin-top:24px;">Shared Treasuries</p><p class="body-copy">Recurring Groups stay for Contributions, Proposals, proof, and history.</p></div>
+            <div class="card amber"><span class="pill amber">Moat</span><p class="card-title" style="margin-top:24px;">Structured Receipts</p><p class="body-copy">Expense, Settlement, Proposal, and Receipt history becomes the audit layer.</p></div>
           </div>
         </div>
       </main>
-      <footer class="slide-footer"><span>Moat: trust, distribution, and structured financial history</span><span>08 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>The moat is not "we split bills." It is the growing financial graph of Groups, Treasuries, policies, and receipts.</div>
+      <footer class="slide-footer"><span>FundWise is the product; FundLabs is the product family around it</span><span>07 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This is the business logic of the product, not just feature explanation.</div>
     </section>
 
     <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Competition</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Roadmap</div></header>
       <main class="slide-body">
         <div class="stack-lg">
-          <h1 class="headline animate-in">We are not "first crypto Splitwise." The wedge is verified Group settlement.</h1>
-          <table class="table animate-in">
-            <thead><tr><th>Capability</th><th>Splitwise</th><th>Payment apps</th><th>Multisig tools</th><th>FundWise</th></tr></thead>
-            <tbody>
-              <tr><td>Shared expense ledger</td><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td><td class="you">Yes</td></tr>
-              <tr><td>USDC Settlement</td><td class="no">No</td><td class="no">Limited</td><td class="yes">Yes</td><td class="you">Yes</td></tr>
-              <tr><td>Shared Treasury governance</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td><td class="you">Beta direction</td></tr>
-              <tr><td>Agent-ready Receipts</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="you">Planned</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </main>
-      <footer class="slide-footer"><span>Honest competition, sharper wedge</span><span>09 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Acknowledge the market. FundWise wins by combining ledger, settlement, Treasury coordination, and receipts.</div>
-    </section>
-
-    <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Business model</div></header>
-      <main class="slide-body">
-        <div class="stack-lg">
-          <h1 class="headline animate-in">Free wedge. Paid coordination. API upside.</h1>
-          <div class="grid-3 animate-in">
-            <div class="card"><span class="pill green">Acquire</span><p class="card-title" style="margin-top:24px;">FundWise Split Mode</p><p class="body-copy">Free shared-expense Groups and normal USDC Settlements.</p><p class="small muted" style="margin-top:18px;">Do not tax friend repayment.</p></div>
-            <div class="card highlight"><span class="pill green">Monetize</span><p class="card-title" style="margin-top:24px;">Fund Mode + Fundy</p><p class="body-copy">Paid Treasury workflows and premium personal-finance automation.</p><p class="small muted" style="margin-top:18px;">Subscription first; yield spread later.</p></div>
-            <div class="card blue"><span class="pill blue">Expand</span><p class="card-title" style="margin-top:24px;">FundProof</p><p class="body-copy">Per-call structured Receipts for agent-commerce and developer workflows.</p><p class="small muted" style="margin-top:18px;">Planned API product.</p></div>
+          <h1 class="headline animate-in">From live wedge to durable Group finance.</h1>
+          <div class="flow-line animate-in">
+            <div class="flow-step"><div class="step-num">Now</div><p class="card-title">Split Mode</p><p class="small">Devnet MVP, Settlement links, Receipts.</p></div>
+            <div class="flow-step"><div class="step-num">Next</div><p class="card-title">Fund Mode</p><p class="small">Proposals, approval, proof, execution.</p></div>
+            <div class="flow-step"><div class="step-num">Then</div><p class="card-title">Fundy</p><p class="small">Telegram and personal finance companion.</p></div>
+            <div class="flow-step"><div class="step-num">Later</div><p class="card-title">FundProof</p><p class="small">Agent-ready receipt infrastructure.</p></div>
           </div>
         </div>
       </main>
-      <footer class="slide-footer"><span>Current monetization stance: Split Mode free; paid surfaces are Fund Mode, Fundy, FundProof, and partner rails</span><span>10 / 11</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Be conservative: no live yield revenue claim. Fund Mode subscription is the first clean paid line; FundProof is the investor-upside line.</div>
+      <footer class="slide-footer"><span>Visa / LI.FI / Zerion support the same core Group flow</span><span>08 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>This slide gives the arc without overclaiming. Fundy and FundProof are planned.</div>
     </section>
 
     <section class="slide">
-      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="slide-count">11 / 11</div></header>
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="section-label">Team</div></header>
+      <main class="slide-body">
+        <div class="stack-lg">
+          <h1 class="headline animate-in">Built by a small team that lives the problem.</h1>
+          <div class="grid-2 animate-in" style="gap:36px; max-width:980px;">
+            <div class="card highlight" style="min-height:260px; display:flex; flex-direction:column; justify-content:space-between;">
+              <div><span class="pill green">Founder</span><p class="card-title" style="margin-top:28px;">Sarthi</p></div>
+              <p class="body-copy">Product, engineering, and shared-finance story.</p>
+            </div>
+            <div class="card blue" style="min-height:260px; display:flex; flex-direction:column; justify-content:space-between;">
+              <div><span class="pill blue">Founder</span><p class="card-title" style="margin-top:28px;">Hrishi</p></div>
+              <p class="body-copy">Engineering, agents, and execution support.</p>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer class="slide-footer"><span>Sarthi + Hrishi · building FundWise full-time through Frontier</span><span>09 / 10</span></footer>
+      <div class="notes"><div class="notes-label">Speaker notes</div>Keep this slide simple. Add photos, exact titles, or advisor logos later if needed.</div>
+    </section>
+
+    <section class="slide">
+      <header class="slide-header"><div class="brand"><div class="mark"><div><div class="slab one"></div><div class="slab two"></div><div class="slab three"></div></div></div><div class="wordmark">FundWise.fun</div></div><div class="slide-count">10 / 10</div></header>
       <main class="slide-body">
         <div class="stack-lg animate-in" style="text-align:center; align-items:center;">
           <h1 class="hero">FundWise</h1>
-          <p class="subhead" style="max-width:840px;">The first FundLabs product: shared finance for groups, human or AI.</p>
-          <div class="row" style="justify-content:center; gap:12px;"><span class="pill green">FundWise live on devnet</span><span class="pill blue">Colosseum Frontier</span><span class="pill amber">Fundy + FundProof planned</span></div>
+          <p class="subhead" style="max-width:860px;">Split expenses. Earn together.</p>
+          <div class="row" style="justify-content:center; gap:12px;"><span class="pill green">Live devnet MVP</span><span class="pill blue">Colosseum Frontier</span><span class="pill amber">Fund Mode beta next</span></div>
           <p class="subhead green" style="font-weight:850;">fundwise.fun</p>
         </div>
       </main>
       <footer class="slide-footer"><span>Visa Frontier · LI.FI · Zerion · Colosseum Frontier</span><span>Try the devnet MVP</span></footer>
-      <div class="notes"><div class="notes-label">Speaker notes</div>Close with the company line and the proof: FundWise works today, Fund Mode is next, Fundy and FundProof extend the stack.</div>
+      <div class="notes"><div class="notes-label">Speaker notes</div>End with the domain and the one-line pitch. The audience should remember FundWise.</div>
     </section>
 
     <div class="nav-bar">
       <button class="nav-btn" onclick="prev()">Prev</button>
-      <div class="row" style="gap:14px;"><span class="nav-counter"><span id="current">1</span> / <span id="total">11</span></span><div class="nav-progress"><div class="nav-progress-fill" id="progress"></div></div></div>
+      <div class="row" style="gap:14px;"><span class="nav-counter"><span id="current">1</span> / <span id="total">10</span></span><div class="nav-progress"><div class="nav-progress-fill" id="progress"></div></div></div>
       <button class="nav-btn" onclick="next()">Next</button>
     </div>
   </div>
