@@ -126,10 +126,11 @@ Completed:
 - **FW-029:** Proposal audit trail now supports one external proof link, Proposal-scoped comments, creator-only memo/proof edits before first outside approval, and visible edit history. Native file-upload storage rules are documented before upload ships. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-030:** LI.FI routing is now available as `Route funds for Contribution` inside Fund Mode. It routes USDC to the Member wallet, returns to the same Group Contribution context, and leaves the Contribution ledger/receipt path unchanged. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-031:** Zerion readiness now distinguishes Split Settlement, Fund Contribution, Proposal member action, and Treasury funding contexts while staying read-only. Docs cover CLI setup and optional x402 without inventing secrets. `node scripts/zerion-readiness.mjs --help`, `pnpm test tests/fundwise-mutations.test.ts`, and `pnpm build` green.
+- **FW-032:** Fund Mode beta rehearsal script/runbook exists and devnet rehearsal now reaches invite-only Group creation, invite join, Squads v4 Treasury initialization, and stablecoin Contribution. Full Proposal approval/execution rehearsal is blocked until the remote Supabase project receives the checked-in Fund Mode Proposal migrations.
 
 Next pick:
 
-- **FW-032:** Run invite-only Fund Mode beta rehearsal and integration QA.
+- Apply pending Supabase migrations `20260509120000_anchor_proposals_to_squads_governance.sql` and `20260509123000_add_proposal_audit_trail.sql`, then rerun `pnpm fund:rehearsal`.
 
 Next:
 

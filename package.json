@@ -15,6 +15,7 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
+    "fund:rehearsal": "node scripts/fund-mode-beta-rehearsal.mjs",
     "zerion:readiness": "node scripts/zerion-readiness.mjs"
   },
   "dependencies": {

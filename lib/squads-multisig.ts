@@ -139,7 +139,13 @@ export async function createSquadsMultisig(
     if (wallet) {
       console.log("[Squads] Creating multisig on-chain...")
 
-      const createMultisigIx = multisig.instructions.multisigCreate({
+      const [programConfigPda] = multisig.getProgramConfigPda({})
+      const programConfig = await multisig.accounts.ProgramConfig.fromAccountAddress(
+        connection,
+        programConfigPda
+      )
+      const createMultisigIx = multisig.instructions.multisigCreateV2({
+        treasury: programConfig.treasury,
         createKey: createKey.publicKey,
         creator,
         multisigPda,
@@ -147,6 +153,7 @@ export async function createSquadsMultisig(
         threshold: resolvedThreshold,
         members: multisigMembers,
         timeLock: 0,
+        rentCollector: null,
       })
 
       const tx = new Transaction().add(createMultisigIx)

@@ -51,6 +51,14 @@ function getAdmin() {
   return getSupabaseAdmin()
 }
 
+function isMissingColumnSchemaCacheError(error: SupabaseMutationError, column: string) {
+  return (
+    error.code === "PGRST204" ||
+    error.message?.includes(`'${column}' column`) ||
+    error.message?.includes(`"${column}" column`)
+  )
+}
+
 export function validateExpenseLedgerInput(data: {
   amount: number
   mint: string
@@ -1058,6 +1066,23 @@ export async function addProposalMutation(data: {
     .insert(insert)
     .select("*")
     .single()
+
+  if (error && isMissingColumnSchemaCacheError(error, "proof_url")) {
+    // Lets beta rehearsal keep moving when the remote Supabase project has not
+    // received the optional Proposal audit migration yet.
+    const { proof_url: _proofUrl, ...insertWithoutProofUrl } = insert
+    const { data: fallbackProposal, error: fallbackError } = await getAdmin()
+      .from("proposals")
+      .insert(insertWithoutProofUrl as ProposalInsert)
+      .select("*")
+      .single()
+
+    if (fallbackError) {
+      throw new FundWiseError(`Failed to create Proposal: ${fallbackError.message}`)
+    }
+
+    return fallbackProposal
+  }
 
   if (error) {
     throw new FundWiseError(`Failed to create Proposal: ${error.message}`)

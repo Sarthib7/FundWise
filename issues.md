@@ -218,10 +218,10 @@ Completed on 2026-05-09. `pnpm zerion:readiness` now supports `--mode=settlement
 
 ## FW-032 - Run Invite-Only Fund Mode Beta Rehearsal And Integration QA
 
-**Status:** Ready
+**Status:** Blocked
 **Priority:** P1
 **Type:** AFK
-**Blocked by:** FW-028
+**Blocked by:** Remote Supabase migrations not applied
 
 ### What to verify
 
@@ -229,15 +229,22 @@ Run the one-month beta path with real wallets on devnet before public claims cha
 
 ### Acceptance Criteria
 
-- [ ] Fund Mode Group creation works for an invite-enabled wallet.
-- [ ] Second Member joins by invite link.
-- [ ] Treasury initialization succeeds and persists verified Squads addresses.
-- [ ] Member makes a Contribution and the Treasury balance updates.
+- [x] Fund Mode Group creation works for an invite-enabled wallet.
+- [x] Second Member joins by invite link.
+- [x] Treasury initialization succeeds and persists verified Squads addresses.
+- [x] Member makes a Contribution and the Treasury balance updates.
 - [ ] Member creates a reimbursement Proposal.
 - [ ] Other Member approves or rejects.
 - [ ] Approved Proposal executes through the Treasury.
 - [ ] LI.FI and Zerion support paths are checked where available.
 - [ ] Findings are either fixed or split into new indexed issues.
+
+### 2026-05-09 Rehearsal Notes
+
+- Added `pnpm fund:rehearsal` and `docs/fund-mode-beta-rehearsal.md`.
+- Squads v4 research showed `multisigCreate` is deprecated/rejected; FundWise now uses `multisigCreateV2` with the program config treasury and `rentCollector: null`.
+- Devnet rehearsal reached Squads Treasury creation and stablecoin Contribution twice. Latest confirmed Group: `8eeb481d-74cd-4913-b60c-44a7b5d5010f`; Treasury: `6make1GpsYtGwAM1pvYmzXWAh2xqJMMrTM5Kv8HxujY2`; Multisig: `F1N1RXU65p2GKWW4XYxoPoBZKxxJoEXeMQBCpS3AfuFD`; Contribution tx: `3XLaSC58XU6tqQnwwsVz8ZSq3sf8oSYbiB6sRHoT7cGyof9JbjdgMUd4HBYaMw4x52G7NRVN7gVcX8UUezdD4C9m`.
+- Proposal creation is blocked because the remote Supabase project is missing checked-in migrations `20260509120000_anchor_proposals_to_squads_governance.sql` and `20260509123000_add_proposal_audit_trail.sql`. The CLI could not link/push from this environment due missing Supabase project privileges.
 
 ### FW-010 Planning Notes (deferred)
 
