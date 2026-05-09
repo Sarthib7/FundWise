@@ -443,6 +443,23 @@ Request:
 }
 \`\`\`
 
+#### POST /api/proposals/{proposalId}/execute
+
+Record execution of an approved Fund Mode reimbursement Proposal.
+
+Auth: browser wallet session. \`executorWallet\` must match the authenticated wallet and be a current Group Member.
+
+Important: the browser executes the approved Squads vault transaction first. This route verifies Squads status is executed and verifies the stablecoin transfer from the Treasury ATA to the approved recipient before marking the FundWise Proposal executed.
+
+Request:
+
+\`\`\`json
+{
+  "executorWallet": "<member-wallet>",
+  "txSig": "<solana-signature>"
+}
+\`\`\`
+
 ### Profile
 
 #### POST /api/profile/display-name
@@ -569,6 +586,7 @@ Mutations requiring explicit Member intent:
 - \`DELETE /api/expenses/{expenseId}\` — delete an Expense as its creator.
 - \`POST /api/proposals\` — create a Fund Mode reimbursement Proposal.
 - \`POST /api/proposals/{proposalId}/review\` — approve or reject a pending Proposal.
+- \`POST /api/proposals/{proposalId}/execute\` — record a verified Squads execution for an approved Proposal.
 - \`POST /api/profile/display-name\` — update Profile Display Name.
 
 Receipt-recording only after wallet-confirmed on-chain action:

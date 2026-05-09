@@ -122,10 +122,11 @@ Completed:
 - **FW-020:** Legacy SOL vault payment, withdrawal, balance, and lamport conversion helpers were removed from `lib/squads-multisig.ts`; Fund Mode Treasury helpers now stay stablecoin-only. `pnpm build` green.
 - **FW-026:** Fund Mode reimbursement Proposal creation shipped with authenticated `POST /api/proposals`, server-side Treasury / Member / USDC validation, dashboard reads, and UI creation/listing. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-027:** Proposal approval/rejection lifecycle now uses Squads-backed governance: Members sign Squads review transactions, FundWise stores signatures and mirrored status, and the database no longer acts as the approval authority. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-028:** Approved reimbursement Proposals now execute through Squads vault transactions, then FundWise verifies the executed Squads status and Treasury-to-recipient stablecoin transfer before marking the Proposal executed. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 
 Next pick:
 
-- **FW-028:** Execute approved Fund Mode reimbursements through Squads.
+- **FW-029:** Add Proposal proof, comments, and edit history model.
 
 Next:
 

@@ -357,6 +357,20 @@ export async function reviewProposal(data: {
   })
 }
 
+export async function executeProposal(data: {
+  proposalId: string
+  executorWallet: string
+  txSig: string
+}) {
+  return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}/execute`, {
+    method: "POST",
+    body: JSON.stringify({
+      executorWallet: data.executorWallet,
+      txSig: data.txSig,
+    }),
+  })
+}
+
 export async function getSettlementById(settlementId: string) {
   const receipt = await getSettlementReceiptView(settlementId)
   return receipt.settlement

@@ -27,6 +27,7 @@ import {
   HandCoins,
   Landmark,
   Loader2,
+  Send,
   ShieldCheck,
   Target,
   Wallet,
@@ -65,6 +66,7 @@ type FundModeDashboardProps = {
   isContributing: boolean
   isCreatingProposal: boolean
   reviewingProposalId: string | null
+  executingProposalId: string | null
   contributionAmount: string
   onContributionAmountChange: (value: string) => void
   onCreateTreasury: () => void | Promise<void>
@@ -78,6 +80,7 @@ type FundModeDashboardProps = {
     proposalId: string,
     decision: "approved" | "rejected"
   ) => boolean | Promise<boolean>
+  onExecuteProposal: (proposalId: string) => boolean | Promise<boolean>
   onJoin: () => void | Promise<void>
 }
 
@@ -110,12 +113,14 @@ export function FundModeDashboard({
   isContributing,
   isCreatingProposal,
   reviewingProposalId,
+  executingProposalId,
   contributionAmount,
   onContributionAmountChange,
   onCreateTreasury,
   onContribute,
   onCreateProposal,
   onReviewProposal,
+  onExecuteProposal,
   onJoin,
 }: FundModeDashboardProps) {
   const [proposalRecipientWallet, setProposalRecipientWallet] = useState("")
@@ -401,7 +406,9 @@ export function FundModeDashboard({
                   isMember &&
                   proposal.proposer_wallet !== walletAddress &&
                   !viewerReview
+                const canExecute = proposal.status === "approved" && isMember
                 const isReviewing = reviewingProposalId === proposal.id
+                const isExecuting = executingProposalId === proposal.id
 
                 return (
                   <div
@@ -482,6 +489,33 @@ export function FundModeDashboard({
                             Approve
                           </Button>
                         </div>
+                      )}
+                      {canExecute && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="min-h-10 bg-accent hover:bg-accent/90"
+                          disabled={isExecuting}
+                          onClick={() => void onExecuteProposal(proposal.id)}
+                        >
+                          {isExecuting ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4 mr-2" />
+                          )}
+                          Execute
+                        </Button>
+                      )}
+                      {proposal.status === "executed" && proposal.tx_sig && (
+                        <a
+                          href={getSolanaExplorerTxUrl(proposal.tx_sig)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                        >
+                          View execution
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
                       )}
                     </div>
                   </div>

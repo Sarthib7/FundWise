@@ -10,6 +10,7 @@ import {
   PublicKey,
   Transaction,
   TransactionMessage,
+  VersionedTransaction,
   Keypair,
 } from "@solana/web3.js"
 import {
@@ -26,14 +27,22 @@ const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.de
 export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
 
 type WalletSigner = {
-  sendTransaction?: (transaction: Transaction, connection: Connection, options?: unknown) => Promise<string>
-  signAndSendTransaction?: (transaction: Transaction) => Promise<string | { signature: string }>
-  signTransaction?: (transaction: Transaction) => Promise<Transaction>
+  sendTransaction?: (
+    transaction: Transaction | VersionedTransaction,
+    connection: Connection,
+    options?: unknown
+  ) => Promise<string>
+  signAndSendTransaction?: (
+    transaction: Transaction | VersionedTransaction
+  ) => Promise<string | { signature: string }>
+  signTransaction?: (
+    transaction: Transaction | VersionedTransaction
+  ) => Promise<Transaction | VersionedTransaction>
 }
 
 async function sendWalletTransaction(
   wallet: WalletSigner,
-  transaction: Transaction,
+  transaction: Transaction | VersionedTransaction,
   blockhash: string,
   lastValidBlockHeight: number
 ) {
@@ -364,6 +373,34 @@ export async function reviewSquadsProposal(
   const transaction = new Transaction().add(instruction)
   transaction.recentBlockhash = blockhash
   transaction.feePayer = member
+
+  const signature = await sendWalletTransaction(
+    wallet,
+    transaction,
+    blockhash,
+    lastValidBlockHeight
+  )
+
+  return { signature }
+}
+
+export async function executeSquadsReimbursementProposal(
+  wallet: WalletSigner,
+  memberAddress: string,
+  multisigAddress: string,
+  transactionIndex: number
+): Promise<{ signature: string }> {
+  const member = new PublicKey(memberAddress)
+  const multisigPda = new PublicKey(multisigAddress)
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+  const transaction = await multisig.transactions.vaultTransactionExecute({
+    connection,
+    blockhash,
+    feePayer: member,
+    multisigPda,
+    transactionIndex: BigInt(transactionIndex),
+    member,
+  })
 
   const signature = await sendWalletTransaction(
     wallet,

@@ -271,6 +271,12 @@ export function buildOpenApiSpec(baseUrl?: string) {
           responses: { "200": { description: "Reviewed Proposal." } },
         },
       },
+      "/api/proposals/{proposalId}/execute": {
+        post: {
+          summary: "Record a wallet-confirmed Squads execution for an approved Fund Mode Proposal.",
+          responses: { "200": { description: "Executed Proposal." } },
+        },
+      },
       "/api/profile/display-name": {
         post: {
           summary: "Update a Member's global Profile Display Name.",

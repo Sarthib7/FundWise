@@ -37,7 +37,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-025 | Done | P1 | AFK | Index Fund Mode hero-product sprint and integration backlog | Owner direction |
 | FW-026 | Done | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
 | FW-027 | Done | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
-| FW-028 | Ready | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
+| FW-028 | Done | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
 | FW-029 | Ready | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
 | FW-030 | Ready | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
 | FW-031 | Ready | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
@@ -45,7 +45,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 ## Pick Queue
 
-1. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
+1. **FW-029:** Add Proposal proof, comments, and edit history model.
 2. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
 3. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
@@ -124,7 +124,7 @@ Completed on 2026-05-09. Proposal reviews originally shipped as database-backed 
 
 ## FW-028 - Execute Approved Fund Mode Reimbursements Through Squads
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P0
 **Type:** AFK
 **Blocked by:** FW-027
@@ -135,13 +135,17 @@ Execute approved Squads reimbursement Proposals through the stored Squads Multis
 
 ### Acceptance Criteria
 
-- [ ] Execution is a separate explicit action after the approval threshold is met.
-- [ ] Any current Member can trigger execution for an approved Proposal.
-- [ ] Treasury movement targets only the approved Member recipient wallet.
-- [ ] Execution uses the approved Squads transaction message without client-side mutation.
-- [ ] Server verifies the resulting on-chain transfer before marking the Proposal executed.
-- [ ] Duplicate execution attempts are rejected idempotently.
-- [ ] `pnpm build` passes.
+- [x] Execution is a separate explicit action after the approval threshold is met.
+- [x] Any current Member can trigger execution for an approved Proposal.
+- [x] Treasury movement targets only the approved Member recipient wallet.
+- [x] Execution uses the approved Squads transaction message without client-side mutation.
+- [x] Server verifies the resulting on-chain transfer before marking the Proposal executed.
+- [x] Duplicate execution attempts are rejected idempotently.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-09. Approved Proposals now expose a separate Execute action that signs the Squads vault transaction, records execution through `POST /api/proposals/{proposalId}/execute`, verifies the Squads Proposal is executed, verifies the stablecoin delta from the Treasury ATA to the approved Member recipient, rejects duplicate execution signatures, and stores `tx_sig` / `executed_at` only after verification. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed with 15 tests. Full gate: `pnpm build` passed.
 
 ## FW-029 - Add Proposal Proof, Comments, And Edit History Model
 

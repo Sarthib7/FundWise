@@ -10,6 +10,7 @@ import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
   verifyContributionTransfer,
+  verifyProposalExecutionTransfer,
   verifySettlementTransfer,
 } from "@/lib/server/solana-transfer-verification"
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin"
@@ -326,6 +327,27 @@ async function verifySquadsProposalReview(data: {
   }
 
   return proposal.pretty().status
+}
+
+async function verifySquadsProposalExecuted(data: {
+  multisigAddress: string
+  transactionIndex: number
+  proposalAddress: string
+}) {
+  const proposal = await loadSquadsProposal(data.proposalAddress)
+  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
+
+  if (!proposal.multisig.equals(multisigPubkey)) {
+    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
+  }
+
+  if (BigInt(proposal.transactionIndex.toString()) !== BigInt(data.transactionIndex)) {
+    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
+  }
+
+  if (proposal.pretty().status !== "Executed") {
+    throw new FundWiseError("Squads Proposal has not been executed on-chain yet.")
+  }
 }
 
 function mapSquadsStatusToFundWiseStatus(
@@ -1077,6 +1099,89 @@ export async function reviewProposalMutation(data: {
   }
 
   return reviewedProposal
+}
+
+export async function executeProposalMutation(data: {
+  proposalId: string
+  executorWallet: string
+  txSig: string
+}) {
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can be executed.")
+  }
+
+  if (proposal.status === "executed") {
+    throw new FundWiseError("Proposal is already executed.")
+  }
+
+  if (proposal.status !== "approved") {
+    throw new FundWiseError("Only approved Proposals can be executed.")
+  }
+
+  if (
+    !group.multisig_address ||
+    !group.treasury_address ||
+    proposal.squads_transaction_index === null ||
+    !proposal.squads_proposal_address
+  ) {
+    throw new FundWiseError("Proposal is missing Squads execution metadata.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.executorWallet,
+    "Only Group Members can execute approved Proposals."
+  )
+
+  const { data: existingExecution, error: existingExecutionError } = await getAdmin()
+    .from("proposals")
+    .select("id")
+    .eq("tx_sig", data.txSig)
+    .maybeSingle()
+
+  if (existingExecutionError) {
+    throw new FundWiseError(`Failed to check for duplicate Proposal execution transaction: ${existingExecutionError.message}`)
+  }
+
+  if (existingExecution) {
+    throw new FundWiseError("This Proposal execution transaction has already been recorded.")
+  }
+
+  await verifySquadsProposalExecuted({
+    multisigAddress: group.multisig_address,
+    transactionIndex: proposal.squads_transaction_index,
+    proposalAddress: proposal.squads_proposal_address,
+  })
+
+  await verifyProposalExecutionTransfer({
+    txSig: data.txSig,
+    mint: proposal.mint,
+    treasuryAddress: group.treasury_address,
+    recipientWallet: proposal.recipient_wallet,
+    executorWallet: data.executorWallet,
+    amount: proposal.amount,
+  })
+
+  const { data: executedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({
+      status: "executed",
+      tx_sig: data.txSig,
+      executed_at: new Date().toISOString(),
+    })
+    .eq("id", data.proposalId)
+    .eq("status", "approved")
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to mark Proposal executed: ${error.message}`)
+  }
+
+  return executedProposal
 }
 
 export async function updateGroupTreasuryMutation(data: {
