@@ -4,12 +4,16 @@ FundWise should keep Split Mode free at launch. The early product needs trust, r
 
 This is also the competitive response. Shared-expense tracking is crowded, and several crypto-native bill splitters already exist. Charging the core Settlement loop too early would weaken the only acquisition loop that can make FundWise stand out: a Member shares a Settlement Request Link, the debtor signs the exact USDC Settlement, and the Group gets a verifiable Receipt.
 
+FundLabs-level strategy adds two later revenue lines beyond the current FundWise app: Fundy as the paid personal-finance / group-chat agent, and Receipt Endpoint as a per-call API for agent-commerce receipts. Those lines belong in the company narrative, but they stay planned until the products exist.
+
 ## Decisions
 
 - Split Mode Group creation, Expense tracking, Balances, Settlement Request Links, and normal USDC Settlements stay free for the first public launch.
 - No FundWise Settlement fee ships in the hackathon demo or first mainnet Split Mode launch.
 - Fund Mode is the first natural paid FundWise surface because it manages pooled Treasury workflows, approvals, history, and higher-intent Groups.
+- Fund Mode yield spread is a plausible later revenue line only after yield routing, risk disclosures, withdrawal mechanics, and Treasury accounting are implemented and reviewed.
 - Fundy is the second paid surface because it can own personal-finance automation, Telegram workflows, wallet-readiness support, reminders, premium analysis, and later tax guidance.
+- Receipt Endpoint is a third planned FundLabs revenue line because agent-payment receipts can be priced per API call, but it is not a FundWise MVP revenue line.
 - Top-up, card, IBAN, and partner-rail revenue should be treated as upside until a real provider integration exists.
 
 ## Candidate Revenue Lines
@@ -19,7 +23,9 @@ This is also the competitive response. Shared-expense tracking is crowded, and s
 | Split Mode Settlement fee | Do not launch | Hurts acquisition and makes repayment feel taxed |
 | Fund Mode subscription | Preferred first paid FundWise line | Fits durable Groups, Treasuries, Proposals, and admin value |
 | Fund Mode usage fee | Later / capped | A tiny Treasury or Proposal fee may work only after Groups already trust the product |
+| Fund Mode yield spread | Later / not in beta | Requires real yield integration, risk review, disclosures, and exit mechanics |
 | Fundy premium | Preferred paid agent line | Users can pay for automation, reminders, wallet analysis, personal finance, and tax help without taxing friend repayment |
+| Receipt Endpoint per-call API | Planned FundLabs line | Useful for agentic commerce only after structured Receipts and payment verification exist |
 | Top-up / routing commission | Later partner line | Useful if LI.FI, card, bank, or Altitude-style rails become real onboarding surfaces |
 | Card / payment-rail revenue share | Later partner line | Requires partner agreements; do not claim as shipped |
 
