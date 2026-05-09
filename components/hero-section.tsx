@@ -12,6 +12,8 @@ import {
   Loader2,
   Palmtree,
   Receipt,
+  ShieldCheck,
+  Landmark,
   UtensilsCrossed,
   Wallet,
 } from "lucide-react"
@@ -62,7 +64,7 @@ const demoGroups: DemoGroup[] = [
     icon: Palmtree,
     iconClassName: "bg-brand-pale text-brand-deep",
     title: "Lisbon Trip",
-    subtitle: "4 friends · Split expenses",
+    subtitle: "4 friends · Close the tab",
     metrics: [
       { label: "You owe", value: "$40.00", tone: "negative" },
       { label: "Total expenses", value: "$640.00" },
@@ -303,17 +305,17 @@ export function HeroSection() {
 
         <div className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-brand-border-2 bg-brand-pale px-4 py-1.5 text-xs font-semibold text-brand-deep md:mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-fresh animate-pulse-dot" />
-          Shared expenses without the chase
+          Group money from tab to treasury
         </div>
 
         <h1 className="relative z-10 font-serif text-[clamp(2.5rem,7vw,5rem)] leading-[1.05] tracking-tight text-foreground mb-5 text-balance">
-          Split expenses.
+          Split the tab.
           <br />
-          <em className="not-italic text-brand-grad font-serif">Earn together.</em>
+          <em className="not-italic text-brand-grad font-serif">Fund the treasury.</em>
         </h1>
 
         <p className="relative z-10 mx-auto mb-9 max-w-2xl text-balance text-base leading-relaxed text-brand-text-2 md:mb-11 md:text-lg">
-          FundWise helps private Groups track shared spending, keep live Balances clear, and settle up without chasing across chat.
+          FundWise helps private Groups close one-off Expenses with exact USDC Settlements, then graduate recurring spend into shared Treasuries with Proposals and approvals.
         </p>
 
         <div className="relative z-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -329,6 +331,33 @@ export function HeroSection() {
           >
             See how it works
           </Link>
+        </div>
+
+        <div className="relative z-10 mx-auto mt-8 grid max-w-3xl gap-2 rounded-[18px] border border-brand-border-c bg-background/80 p-2 text-left shadow-sm backdrop-blur sm:grid-cols-3">
+          <div className="rounded-[12px] bg-brand-pale px-4 py-3">
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-deep">
+              <Receipt className="h-3.5 w-3.5" aria-hidden="true" />
+              Split Mode
+            </div>
+            <p className="text-sm font-semibold text-foreground">Close what is owed</p>
+            <p className="mt-1 text-xs leading-relaxed text-brand-text-2">Expenses, live Balances, settle-up links, Receipts.</p>
+          </div>
+          <div className="rounded-[12px] border border-brand-border-c bg-brand-surface px-4 py-3">
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-text-3">
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              Trust Layer
+            </div>
+            <p className="text-sm font-semibold text-foreground">Prove the ledger first</p>
+            <p className="mt-1 text-xs leading-relaxed text-brand-text-2">Wallet-native Members, verified USDC movement, shared history.</p>
+          </div>
+          <div className="rounded-[12px] border border-brand-fund-blue-border bg-brand-fund-blue-bg px-4 py-3">
+            <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-fund-blue">
+              <Landmark className="h-3.5 w-3.5" aria-hidden="true" />
+              Fund Mode
+            </div>
+            <p className="text-sm font-semibold text-foreground">Manage shared capital</p>
+            <p className="mt-1 text-xs leading-relaxed text-brand-text-2">Contributions, Treasury, Proposals, approvals, execution.</p>
+          </div>
         </div>
       </section>
 

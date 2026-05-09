@@ -1,6 +1,8 @@
 import {
   ArrowRightLeft,
+  Landmark,
   Link2,
+  ListChecks,
   ReceiptText,
   ShieldCheck,
   WalletCards,
@@ -20,8 +22,8 @@ const features = [
   },
   {
     icon: WalletCards,
-    title: "Stable shared ledger",
-    desc: "Balances stay easy to read from the first Expense to the final Receipt.",
+    title: "One Group ledger",
+    desc: "The same Member history can start with Split Mode and grow into Treasury workflows.",
   },
   {
     icon: ArrowRightLeft,
@@ -29,14 +31,24 @@ const features = [
     desc: "If someone needs to move funds first, routing stays behind the settle-up flow instead of becoming a separate task.",
   },
   {
-    icon: ReceiptText,
-    title: "Verifiable Receipts",
-    desc: "Each completed settle-up records who paid whom, how much moved, and the proof behind it.",
+    icon: Landmark,
+    title: "Shared Treasury",
+    desc: "Fund Mode gives recurring Groups a pooled USDC balance instead of endless reimbursements.",
+  },
+  {
+    icon: ListChecks,
+    title: "Proposal-led spend",
+    desc: "Reimbursements move through review, approval, proof, history, and explicit execution.",
   },
   {
     icon: ShieldCheck,
     title: "Private Groups",
     desc: "Group ledgers stay scoped to invited Members, not public feeds or loose payment notes.",
+  },
+  {
+    icon: ReceiptText,
+    title: "Verifiable Receipts",
+    desc: "Each completed settle-up records who paid whom, how much moved, and the proof behind it.",
   },
 ]
 
@@ -47,10 +59,10 @@ export function FeaturesSection() {
         Why FundWise
       </div>
       <h2 className="font-serif text-[clamp(1.75rem,4vw,2.875rem)] tracking-tight leading-[1.1] mb-3.5 text-foreground text-balance">
-        Built for the moment IOUs need to end
+        Built for Groups that outgrow IOUs
       </h2>
       <p className="text-base text-brand-text-2 max-w-md leading-relaxed mb-14">
-        Expense trackers show what happened. FundWise helps the Group finish what is still owed.
+        Expense trackers show what happened. FundWise helps the Group settle what is owed and manage the money it keeps together.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
