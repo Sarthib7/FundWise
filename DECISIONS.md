@@ -41,3 +41,4 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-025 → [0025-keep-split-mode-free-and-monetize-later-surfaces.md](./docs/adr/0025-keep-split-mode-free-and-monetize-later-surfaces.md)
 - ADR-026 → [0026-research-informed-fund-mode-infrastructure-boundaries.md](./docs/adr/0026-research-informed-fund-mode-infrastructure-boundaries.md)
 - ADR-027 → [0027-fund-mode-is-the-hero-product.md](./docs/adr/0027-fund-mode-is-the-hero-product.md)
+- ADR-028 → [0028-fundlabs-product-family-positioning.md](./docs/adr/0028-fundlabs-product-family-positioning.md)

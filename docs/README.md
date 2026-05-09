@@ -6,14 +6,14 @@ This directory holds detailed product, API, positioning, and decision records. S
 
 - **Current product truth:** [STATUS](../STATUS.md) -> [Shipped vs Planned Product Matrix](./shipped-vs-planned.md)
 - **Fund Mode sprint:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md) -> [ADR-027](./adr/0027-fund-mode-is-the-hero-product.md)
-- **Messaging and positioning:** [Positioning](./positioning.md) -> [SUBMISSION](../SUBMISSION.md)
+- **FundLabs / FundWise positioning:** [Positioning](./positioning.md) -> [SUBMISSION](../SUBMISSION.md)
 - **Domain language:** [CONTEXT](../CONTEXT.md) -> related ADRs in [docs/adr](./adr/)
 - **Build plan:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md)
 - **Agent and payment surfaces:** [Agentic Settlement Endpoint Research](./agentic-settlement-endpoint.md) -> [Agent Payment Policy](./agent-payment-policy.md)
 
 ## Source Of Truth Rules
 
-- Use [Positioning](./positioning.md) for public copy, the canonical tagline, and claims to avoid.
+- Use [Positioning](./positioning.md) for the FundLabs umbrella, FundWise product position, product-family strategy, public copy, canonical taglines, and claims to avoid.
 - Use [Shipped vs Planned Product Matrix](./shipped-vs-planned.md) for shipped/planned status.
 - Use [CONTEXT](../CONTEXT.md) for names, domain terms, and invariants.
 - Use [STATUS](../STATUS.md) for the latest execution handoff.
@@ -82,3 +82,4 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [GTM rollout order](./adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md)
 - [Visa Frontier track and card partnerships](./adr/0024-visa-frontier-track-and-card-partnerships.md)
 - [Keep Split Mode free and monetize later surfaces](./adr/0025-keep-split-mode-free-and-monetize-later-surfaces.md)
+- [FundLabs product-family positioning](./adr/0028-fundlabs-product-family-positioning.md)
