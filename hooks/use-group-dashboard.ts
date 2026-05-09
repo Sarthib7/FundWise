@@ -12,7 +12,9 @@ import {
   addSettlement as dbAddSettlement,
   deleteExpense as dbDeleteExpense,
   getGroupDashboardSnapshot,
+  reviewProposal as dbReviewProposal,
   type ActivityItem,
+  type ProposalWithReviews,
   updateGroupTreasury,
   updateProfileDisplayName,
 } from "@/lib/db"
@@ -46,7 +48,6 @@ import { ensureWalletSession } from "@/lib/wallet-session-client"
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
-type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 32
@@ -93,7 +94,7 @@ export function useGroupDashboard() {
   const [transfers, setTransfers] = useState<SettlementTransfer[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [contributions, setContributions] = useState<ContributionRow[]>([])
-  const [proposals, setProposals] = useState<ProposalRow[]>([])
+  const [proposals, setProposals] = useState<ProposalWithReviews[]>([])
   const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [memberCount, setMemberCount] = useState(0)
@@ -104,6 +105,7 @@ export function useGroupDashboard() {
   const [isCreatingTreasury, setIsCreatingTreasury] = useState(false)
   const [isContributing, setIsContributing] = useState(false)
   const [isCreatingProposal, setIsCreatingProposal] = useState(false)
+  const [reviewingProposalId, setReviewingProposalId] = useState<string | null>(null)
   const [settlingTransfer, setSettlingTransfer] = useState<SettlementTransfer | null>(null)
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
@@ -810,6 +812,40 @@ export function useGroupDashboard() {
     }
   }, [connected, ensureWalletWriteAccess, group, groupId, isMember, loadData, walletAddress])
 
+  const handleReviewProposal = useCallback(async (
+    proposalId: string,
+    decision: "approved" | "rejected"
+  ) => {
+    if (!group || group.mode !== "fund" || !connected || !walletAddress) {
+      return false
+    }
+
+    if (!isMember) {
+      toast.error("Join this Group before reviewing Proposals")
+      return false
+    }
+
+    setReviewingProposalId(proposalId)
+
+    try {
+      await ensureWalletWriteAccess()
+      await dbReviewProposal({
+        proposalId,
+        memberWallet: walletAddress,
+        decision,
+      })
+
+      toast.success(decision === "approved" ? "Proposal approved" : "Proposal rejected")
+      await loadData()
+      return true
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to review Proposal"))
+      return false
+    } finally {
+      setReviewingProposalId(null)
+    }
+  }, [connected, ensureWalletWriteAccess, group, isMember, loadData, walletAddress])
+
   const clearSettlementRequest = useCallback(() => {
     router.replace(`/groups/${groupId}`, { scroll: false })
   }, [groupId, router])
@@ -890,6 +926,7 @@ export function useGroupDashboard() {
     isCreatingTreasury,
     isContributing,
     isCreatingProposal,
+    reviewingProposalId,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -928,6 +965,7 @@ export function useGroupDashboard() {
     createTreasury: handleCreateTreasury,
     contribute: handleContribute,
     createProposal: handleCreateProposal,
+    reviewProposal: handleReviewProposal,
     clearSettlementRequest,
     shareSettlementRequest: handleShareSettlementRequest,
   }

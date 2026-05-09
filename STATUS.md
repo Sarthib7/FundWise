@@ -121,10 +121,11 @@ Completed:
 - **FW-019:** Fund Mode Treasury addresses now require on-chain Squads verification before persistence.
 - **FW-020:** Legacy SOL vault payment, withdrawal, balance, and lamport conversion helpers were removed from `lib/squads-multisig.ts`; Fund Mode Treasury helpers now stay stablecoin-only. `pnpm build` green.
 - **FW-026:** Fund Mode reimbursement Proposal creation shipped with authenticated `POST /api/proposals`, server-side Treasury / Member / USDC validation, dashboard reads, and UI creation/listing. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
+- **FW-027:** Proposal approval/rejection lifecycle shipped with one review per Member, proposer self-review blocked, rejection closure, threshold-ready status, and visible review history. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 
 Next pick:
 
-- **FW-027:** Build Proposal approval and rejection lifecycle.
+- **FW-028:** Execute approved Fund Mode reimbursements through Squads.
 
 Next:
 

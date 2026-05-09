@@ -10,6 +10,8 @@ type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
+type ProposalReviewRow = Database["public"]["Tables"]["proposal_approvals"]["Row"]
+type ProposalWithReviews = ProposalRow & { reviews: ProposalReviewRow[] }
 
 type ActivityItem =
   | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
@@ -207,7 +209,25 @@ async function listContributions(groupId: string): Promise<ContributionRow[]> {
   return (data || []) as ContributionRow[]
 }
 
-async function listProposals(groupId: string): Promise<ProposalRow[]> {
+async function listProposalReviews(proposalIds: string[]): Promise<ProposalReviewRow[]> {
+  if (proposalIds.length === 0) {
+    return [] as ProposalReviewRow[]
+  }
+
+  const { data, error } = await getAdmin()
+    .from("proposal_approvals")
+    .select("*")
+    .in("proposal_id", proposalIds)
+    .order("reviewed_at", { ascending: true })
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposal reviews: ${error.message}`)
+  }
+
+  return (data || []) as ProposalReviewRow[]
+}
+
+async function listProposals(groupId: string): Promise<ProposalWithReviews[]> {
   const { data, error } = await getAdmin()
     .from("proposals")
     .select("*")
@@ -218,7 +238,20 @@ async function listProposals(groupId: string): Promise<ProposalRow[]> {
     throw new FundWiseError(`Failed to load Proposals: ${error.message}`)
   }
 
-  return (data || []) as ProposalRow[]
+  const proposals = (data || []) as ProposalRow[]
+  const reviews = await listProposalReviews(proposals.map((proposal) => proposal.id))
+  const reviewsByProposal = new Map<string, ProposalReviewRow[]>()
+
+  for (const review of reviews) {
+    const currentReviews = reviewsByProposal.get(review.proposal_id) || []
+    currentReviews.push(review)
+    reviewsByProposal.set(review.proposal_id, currentReviews)
+  }
+
+  return proposals.map((proposal) => ({
+    ...proposal,
+    reviews: reviewsByProposal.get(proposal.id) || [],
+  }))
 }
 
 async function buildActivityFeed(groupId: string): Promise<ActivityItem[]> {
@@ -351,7 +384,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
       members: [] as MemberRow[],
       activity: [] as ActivityItem[],
       contributions: [] as ContributionRow[],
-      proposals: [] as ProposalRow[],
+      proposals: [] as ProposalWithReviews[],
     }
   }
 
@@ -366,7 +399,7 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
       members,
       activity: await buildActivityFeed(groupId),
       contributions: [] as ContributionRow[],
-      proposals: [] as ProposalRow[],
+      proposals: [] as ProposalWithReviews[],
     }
   }
 

@@ -238,6 +238,7 @@ export default function GroupDashboard() {
     isCreatingTreasury,
     isContributing,
     isCreatingProposal,
+    reviewingProposalId,
     settlingTransfer,
     isSettling,
     deletingExpenseId,
@@ -276,6 +277,7 @@ export default function GroupDashboard() {
     createTreasury,
     contribute,
     createProposal,
+    reviewProposal,
     clearSettlementRequest,
     shareSettlementRequest,
   } = dashboard
@@ -802,11 +804,13 @@ export default function GroupDashboard() {
                   isCreatingTreasury={isCreatingTreasury}
                   isContributing={isContributing}
                   isCreatingProposal={isCreatingProposal}
+                  reviewingProposalId={reviewingProposalId}
                   contributionAmount={contributionAmount}
                   onContributionAmountChange={setContributionAmount}
                   onCreateTreasury={createTreasury}
                   onContribute={handleContribute}
                   onCreateProposal={createProposal}
+                  onReviewProposal={reviewProposal}
                   onJoin={joinGroup}
                 />
               )}

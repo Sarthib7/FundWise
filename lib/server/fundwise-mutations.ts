@@ -19,6 +19,7 @@ type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseInsert = Database["public"]["Tables"]["expenses"]["Insert"]
 type ProposalInsert = Database["public"]["Tables"]["proposals"]["Insert"]
+type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 type SettlementGraphActivity = Parameters<typeof computeBalancesFromActivity>[1]
 
 type SupabaseMutationError = {
@@ -262,6 +263,24 @@ async function getExpenseOrThrow(expenseId: string) {
   }
 
   return data
+}
+
+async function getProposalOrThrow(proposalId: string): Promise<ProposalRow> {
+  const { data, error } = await getAdmin()
+    .from("proposals")
+    .select("*")
+    .eq("id", proposalId)
+    .maybeSingle()
+
+  if (error) {
+    throw new FundWiseError(`Failed to load Proposal: ${error.message}`)
+  }
+
+  if (!data) {
+    throw new FundWiseError("Proposal not found")
+  }
+
+  return data as ProposalRow
 }
 
 async function getProfile(wallet: string): Promise<ProfileRow | null> {
@@ -855,6 +874,94 @@ export async function addProposalMutation(data: {
   }
 
   return proposal
+}
+
+export async function reviewProposalMutation(data: {
+  proposalId: string
+  memberWallet: string
+  decision: "approved" | "rejected"
+}) {
+  if (data.decision !== "approved" && data.decision !== "rejected") {
+    throw new FundWiseError("Proposal review decision must be approved or rejected.")
+  }
+
+  const proposal = await getProposalOrThrow(data.proposalId)
+  const group = await getGroupOrThrow(proposal.group_id)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Only Fund Mode Proposals can be reviewed.")
+  }
+
+  if (proposal.status !== "pending") {
+    throw new FundWiseError("Only pending Proposals can be reviewed.")
+  }
+
+  await assertWalletIsMember(
+    proposal.group_id,
+    data.memberWallet,
+    "Only Group Members can review Proposals."
+  )
+
+  if (proposal.proposer_wallet === data.memberWallet) {
+    throw new FundWiseError("Proposal creator cannot review their own Proposal.")
+  }
+
+  const { error: reviewError } = await getAdmin()
+    .from("proposal_approvals")
+    .insert({
+      proposal_id: data.proposalId,
+      member_wallet: data.memberWallet,
+      decision: data.decision,
+    })
+
+  if (reviewError?.code === "23505") {
+    throw new FundWiseError("Each Member can review a Proposal at most once.")
+  }
+
+  if (reviewError) {
+    throw new FundWiseError(`Failed to record Proposal review: ${reviewError.message}`)
+  }
+
+  if (data.decision === "rejected") {
+    const { data: rejectedProposal, error } = await getAdmin()
+      .from("proposals")
+      .update({ status: "rejected" })
+      .eq("id", data.proposalId)
+      .select("*")
+      .single()
+
+    if (error) {
+      throw new FundWiseError(`Failed to reject Proposal: ${error.message}`)
+    }
+
+    return rejectedProposal
+  }
+
+  const { data: approvalRows, error: approvalCountError } = await getAdmin()
+    .from("proposal_approvals")
+    .select("id")
+    .eq("proposal_id", data.proposalId)
+    .eq("decision", "approved")
+
+  if (approvalCountError) {
+    throw new FundWiseError(`Failed to count Proposal approvals: ${approvalCountError.message}`)
+  }
+
+  const approvalThreshold = group.approval_threshold ?? 1
+  const nextStatus = (approvalRows || []).length >= approvalThreshold ? "approved" : "pending"
+
+  const { data: reviewedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({ status: nextStatus })
+    .eq("id", data.proposalId)
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to update Proposal status: ${error.message}`)
+  }
+
+  return reviewedProposal
 }
 
 export async function updateGroupTreasuryMutation(data: {

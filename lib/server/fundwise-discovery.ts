@@ -265,6 +265,12 @@ export function buildOpenApiSpec(baseUrl?: string) {
           responses: { "200": { description: "Created Proposal." } },
         },
       },
+      "/api/proposals/{proposalId}/review": {
+        post: {
+          summary: "Approve or reject a pending Fund Mode Proposal.",
+          responses: { "200": { description: "Reviewed Proposal." } },
+        },
+      },
       "/api/profile/display-name": {
         post: {
           summary: "Update a Member's global Profile Display Name.",

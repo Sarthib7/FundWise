@@ -36,7 +36,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-024 | Done | P1 | AFK | Index Compass research ADRs and add scripted devnet agent rehearsal | None |
 | FW-025 | Done | P1 | AFK | Index Fund Mode hero-product sprint and integration backlog | Owner direction |
 | FW-026 | Done | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
-| FW-027 | Ready | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
+| FW-027 | Done | P0 | AFK | Build Proposal approval and rejection lifecycle | FW-026 |
 | FW-028 | Ready | P0 | AFK | Execute approved Fund Mode reimbursements through Squads | FW-027 |
 | FW-029 | Ready | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
 | FW-030 | Ready | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
@@ -45,10 +45,9 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 
 ## Pick Queue
 
-1. **FW-027:** Build Proposal approval and rejection lifecycle.
-2. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
-3. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
-4. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
+1. **FW-028:** Execute approved Fund Mode reimbursements through Squads.
+2. **FW-030 / FW-031:** Add LI.FI and Zerion support around Fund Mode once the core Treasury/Proposal path exists.
+3. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
 
 ## Handoff Queue For Claude / Lot
 
@@ -101,7 +100,7 @@ Completed on 2026-05-09. Fund Mode now has a reimbursement Proposal creation pat
 
 ## FW-027 - Build Proposal Approval And Rejection Lifecycle
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P0
 **Type:** AFK
 **Blocked by:** FW-026
@@ -112,12 +111,16 @@ Add database-backed approval and rejection behavior for Fund Mode reimbursement 
 
 ### Acceptance Criteria
 
-- [ ] Proposer cannot approve their own Proposal.
-- [ ] Each Member can approve or reject a Proposal at most once.
-- [ ] Rejection closes the Proposal and requires a new Proposal for retry.
-- [ ] Threshold approval marks the Proposal ready for execution but does not auto-send funds.
-- [ ] UI shows pending, rejected, approved-ready, and executed states distinctly.
-- [ ] `pnpm build` passes.
+- [x] Proposer cannot approve their own Proposal.
+- [x] Each Member can approve or reject a Proposal at most once.
+- [x] Rejection closes the Proposal and requires a new Proposal for retry.
+- [x] Threshold approval marks the Proposal ready for execution but does not auto-send funds.
+- [x] UI shows pending, rejected, approved-ready, and executed states distinctly.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-09. Proposal reviews now use database-backed approval/rejection decisions with one review per Member, proposer self-review blocked, rejection closing the Proposal, and threshold approval moving status to `approved` without execution. The Fund Mode dashboard shows review counts, rejection history, and pending review controls. Focused test: `pnpm test tests/fundwise-mutations.test.ts` passed with 15 tests. Full gate: `pnpm build` passed.
 
 ## FW-028 - Execute Approved Fund Mode Reimbursements Through Squads
 

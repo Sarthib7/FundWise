@@ -10,6 +10,9 @@ type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
+type ProposalReviewRow = Database["public"]["Tables"]["proposal_approvals"]["Row"]
+
+export type ProposalWithReviews = ProposalRow & { reviews: ProposalReviewRow[] }
 
 export type ActivityItem =
   | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
@@ -23,7 +26,7 @@ export type GroupDashboardSnapshot = {
   members: MemberRow[]
   activity: ActivityItem[]
   contributions: ContributionRow[]
-  proposals: ProposalRow[]
+  proposals: ProposalWithReviews[]
 }
 
 export type SettlementReceiptView = {
@@ -332,6 +335,20 @@ export async function addProposal(data: {
 export async function getProposals(groupId: string) {
   const snapshot = await getGroupDashboardSnapshot(groupId)
   return snapshot.proposals
+}
+
+export async function reviewProposal(data: {
+  proposalId: string
+  memberWallet: string
+  decision: "approved" | "rejected"
+}) {
+  return requestJson<ProposalRow>(`/api/proposals/${data.proposalId}/review`, {
+    method: "POST",
+    body: JSON.stringify({
+      memberWallet: data.memberWallet,
+      decision: data.decision,
+    }),
+  })
 }
 
 export async function getSettlementById(settlementId: string) {

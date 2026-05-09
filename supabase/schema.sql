@@ -208,7 +208,8 @@ create table public.proposal_approvals (
   id uuid primary key default uuid_generate_v4(),
   proposal_id uuid not null references public.proposals(id) on delete cascade,
   member_wallet text not null,
-  approved_at timestamptz not null default now(),
+  decision text not null check (decision in ('approved', 'rejected')),
+  reviewed_at timestamptz not null default now(),
   unique(proposal_id, member_wallet)
 );
 

@@ -17,9 +17,11 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { Database } from "@/lib/database.types"
+import type { ProposalWithReviews } from "@/lib/db"
 import { formatTokenAmount } from "@/lib/expense-engine"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import {
+  CheckCircle2,
   ExternalLink,
   FileText,
   HandCoins,
@@ -28,11 +30,11 @@ import {
   ShieldCheck,
   Target,
   Wallet,
+  XCircle,
 } from "lucide-react"
 
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
-type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 
 const CONTRIBUTION_INPUT_ID = "contribution-amount"
 const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
@@ -51,7 +53,7 @@ type FundModeDashboardProps = {
   contributorCount: number
   missingMembersForTreasury: number
   contributions: ContributionRow[]
-  proposals: ProposalRow[]
+  proposals: ProposalWithReviews[]
   members: MemberRow[]
   memberNameByWallet: Map<string, string>
   walletAddress: string
@@ -62,6 +64,7 @@ type FundModeDashboardProps = {
   isCreatingTreasury: boolean
   isContributing: boolean
   isCreatingProposal: boolean
+  reviewingProposalId: string | null
   contributionAmount: string
   onContributionAmountChange: (value: string) => void
   onCreateTreasury: () => void | Promise<void>
@@ -71,6 +74,10 @@ type FundModeDashboardProps = {
     amount: string
     memo?: string
   }) => boolean | Promise<boolean>
+  onReviewProposal: (
+    proposalId: string,
+    decision: "approved" | "rejected"
+  ) => boolean | Promise<boolean>
   onJoin: () => void | Promise<void>
 }
 
@@ -102,11 +109,13 @@ export function FundModeDashboard({
   isCreatingTreasury,
   isContributing,
   isCreatingProposal,
+  reviewingProposalId,
   contributionAmount,
   onContributionAmountChange,
   onCreateTreasury,
   onContribute,
   onCreateProposal,
+  onReviewProposal,
   onJoin,
 }: FundModeDashboardProps) {
   const [proposalRecipientWallet, setProposalRecipientWallet] = useState("")
@@ -383,30 +392,101 @@ export function FundModeDashboard({
         ) : (
           <div className="space-y-4">
             {proposals.map((proposal) => (
-              <div
-                key={proposal.id}
-                className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-sm">
-                      Reimburse {memberNameByWallet.get(proposal.recipient_wallet) || shortWallet(proposal.recipient_wallet)}
-                    </p>
-                    <Badge variant="outline" className="capitalize">
-                      {proposal.status}
-                    </Badge>
+              (() => {
+                const approvalCount = proposal.reviews.filter((review) => review.decision === "approved").length
+                const rejectionReviews = proposal.reviews.filter((review) => review.decision === "rejected")
+                const viewerReview = proposal.reviews.find((review) => review.member_wallet === walletAddress)
+                const canReview =
+                  proposal.status === "pending" &&
+                  isMember &&
+                  proposal.proposer_wallet !== walletAddress &&
+                  !viewerReview
+                const isReviewing = reviewingProposalId === proposal.id
+
+                return (
+                  <div
+                    key={proposal.id}
+                    className="flex flex-col gap-3 border-b py-3 last:border-0 sm:flex-row sm:items-start sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-sm">
+                          Reimburse {memberNameByWallet.get(proposal.recipient_wallet) || shortWallet(proposal.recipient_wallet)}
+                        </p>
+                        <Badge variant="outline" className="capitalize">
+                          {proposal.status === "approved" ? "Ready to execute" : proposal.status}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Proposed by {memberNameByWallet.get(proposal.proposer_wallet) || shortWallet(proposal.proposer_wallet)} · {new Date(proposal.created_at).toLocaleDateString()}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {approvalCount} of {approvalThreshold} approval{approvalThreshold === 1 ? "" : "s"}
+                      </p>
+                      {proposal.memo && (
+                        <p className="mt-2 text-sm text-muted-foreground">{proposal.memo}</p>
+                      )}
+                      {viewerReview && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          You {viewerReview.decision === "approved" ? "approved" : "rejected"} this Proposal.
+                        </p>
+                      )}
+                      {proposal.status === "pending" && proposal.proposer_wallet === walletAddress && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Proposal creators cannot review their own reimbursement request.
+                        </p>
+                      )}
+                      {rejectionReviews.length > 0 && (
+                        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                          {rejectionReviews.map((review) => (
+                            <p key={review.id}>
+                              Rejected by {memberNameByWallet.get(review.member_wallet) || shortWallet(review.member_wallet)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start gap-3 sm:items-end">
+                      <p className="font-mono font-semibold tabular-nums">
+                        {formatTokenAmount(proposal.amount)} {tokenName}
+                      </p>
+                      {canReview && (
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="min-h-10"
+                            disabled={isReviewing}
+                            onClick={() => void onReviewProposal(proposal.id, "rejected")}
+                          >
+                            {isReviewing ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <XCircle className="h-4 w-4 mr-2" />
+                            )}
+                            Reject
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="min-h-10 bg-accent hover:bg-accent/90"
+                            disabled={isReviewing}
+                            onClick={() => void onReviewProposal(proposal.id, "approved")}
+                          >
+                            {isReviewing ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                            )}
+                            Approve
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Proposed by {memberNameByWallet.get(proposal.proposer_wallet) || shortWallet(proposal.proposer_wallet)} · {new Date(proposal.created_at).toLocaleDateString()}
-                  </p>
-                  {proposal.memo && (
-                    <p className="mt-2 text-sm text-muted-foreground">{proposal.memo}</p>
-                  )}
-                </div>
-                <p className="font-mono font-semibold tabular-nums">
-                  {formatTokenAmount(proposal.amount)} {tokenName}
-                </p>
-              </div>
+                )
+              })()
             ))}
           </div>
         )}

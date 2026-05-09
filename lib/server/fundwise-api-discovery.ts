@@ -421,6 +421,23 @@ Request:
 }
 \`\`\`
 
+#### POST /api/proposals/{proposalId}/review
+
+Approve or reject a pending Fund Mode reimbursement Proposal.
+
+Auth: browser wallet session. \`memberWallet\` must match the authenticated wallet. The Proposal creator cannot review their own Proposal. Each Member can approve or reject at most once.
+
+Important: threshold approval marks a Proposal ready for execution. It does not execute Treasury movement.
+
+Request:
+
+\`\`\`json
+{
+  "memberWallet": "<member-wallet>",
+  "decision": "approved"
+}
+\`\`\`
+
 ### Profile
 
 #### POST /api/profile/display-name
@@ -546,6 +563,7 @@ Mutations requiring explicit Member intent:
 - \`PATCH /api/expenses/{expenseId}\` — edit an Expense as its creator.
 - \`DELETE /api/expenses/{expenseId}\` — delete an Expense as its creator.
 - \`POST /api/proposals\` — create a Fund Mode reimbursement Proposal.
+- \`POST /api/proposals/{proposalId}/review\` — approve or reject a pending Proposal.
 - \`POST /api/profile/display-name\` — update Profile Display Name.
 
 Receipt-recording only after wallet-confirmed on-chain action:

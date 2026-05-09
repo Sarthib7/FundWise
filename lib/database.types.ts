@@ -287,19 +287,22 @@ export interface Database {
           id: string
           proposal_id: string
           member_wallet: string
-          approved_at: string
+          decision: "approved" | "rejected"
+          reviewed_at: string
         }
         Insert: {
           id?: string
           proposal_id: string
           member_wallet: string
-          approved_at?: string
+          decision: "approved" | "rejected"
+          reviewed_at?: string
         }
         Update: {
           id?: string
           proposal_id?: string
           member_wallet?: string
-          approved_at?: string
+          decision?: "approved" | "rejected"
+          reviewed_at?: string
         }
         Relationships: []
       }
