@@ -1,9 +1,19 @@
 import { cookies } from "next/headers"
 import { PublicKey } from "@solana/web3.js"
 import { FundWiseError } from "@/lib/server/fundwise-error"
+import { getFundWiseClusterName, type FundWiseCluster } from "@/lib/solana-cluster"
 
-export const FUNDWISE_WALLET_CHALLENGE_COOKIE = "fundwise_wallet_challenge"
-export const FUNDWISE_WALLET_SESSION_COOKIE = "fundwise_wallet_session"
+const WALLET_CHALLENGE_COOKIE_NAME = "fundwise_wallet_challenge"
+const WALLET_SESSION_COOKIE_NAME = "fundwise_wallet_session"
+
+export const FUNDWISE_WALLET_CHALLENGE_COOKIE =
+  process.env.NODE_ENV === "production"
+    ? `__Host-${WALLET_CHALLENGE_COOKIE_NAME}`
+    : WALLET_CHALLENGE_COOKIE_NAME
+export const FUNDWISE_WALLET_SESSION_COOKIE =
+  process.env.NODE_ENV === "production"
+    ? `__Host-${WALLET_SESSION_COOKIE_NAME}`
+    : WALLET_SESSION_COOKIE_NAME
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000
@@ -15,6 +25,8 @@ export type WalletChallengePayload = {
   nonce: string
   issuedAt: number
   expiresAt: number
+  origin: string
+  cluster: FundWiseCluster
 }
 
 export type WalletSessionPayload = {
@@ -134,13 +146,41 @@ export async function readSignedCookieValue<T extends { expiresAt: number }>(raw
   }
 }
 
-export function createWalletChallengePayload(wallet: string): WalletChallengePayload {
+export function normalizeWalletAddress(wallet: string) {
+  return new PublicKey(wallet).toBase58()
+}
+
+export function getRequestOrigin(request: Request) {
+  return new URL(request.url).origin
+}
+
+export function createWalletChallengePayload(
+  wallet: string,
+  context: { origin: string; cluster?: FundWiseCluster }
+): WalletChallengePayload {
   const issuedAt = Date.now()
   return {
-    wallet,
+    wallet: normalizeWalletAddress(wallet),
     nonce: createNonce(),
     issuedAt,
     expiresAt: issuedAt + CHALLENGE_TTL_MS,
+    origin: context.origin,
+    cluster: context.cluster ?? getFundWiseClusterName(),
+  }
+}
+
+export function assertWalletChallengeContext(
+  payload: WalletChallengePayload,
+  context: { origin: string; cluster?: FundWiseCluster }
+) {
+  const expectedCluster = context.cluster ?? getFundWiseClusterName()
+
+  if (payload.origin !== context.origin) {
+    throw new FundWiseError("Wallet challenge does not match this FundWise origin. Start verification again.", 401)
+  }
+
+  if (payload.cluster !== expectedCluster) {
+    throw new FundWiseError("Wallet challenge does not match this Solana cluster. Start verification again.", 401)
   }
 }
 
@@ -157,6 +197,8 @@ export function buildWalletChallengeMessage(payload: WalletChallengePayload) {
   return [
     "FundWise wallet verification",
     "",
+    `Origin: ${payload.origin}`,
+    `Cluster: ${payload.cluster}`,
     `Wallet: ${payload.wallet}`,
     `Nonce: ${payload.nonce}`,
     `Issued At: ${new Date(payload.issuedAt).toISOString()}`,

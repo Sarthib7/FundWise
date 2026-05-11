@@ -2,9 +2,12 @@ export const runtime = "edge"
 
 import { NextResponse } from "next/server"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { enforceRateLimit, getClientIp } from "@/lib/server/rate-limit"
 import {
   buildWalletChallengeMessage,
   createWalletChallengePayload,
+  getRequestOrigin,
+  normalizeWalletAddress,
   writeWalletChallengeCookie,
 } from "@/lib/server/wallet-session"
 
@@ -17,7 +20,14 @@ export async function POST(request: Request) {
       throw new FundWiseError("Wallet address is required.")
     }
 
-    const challenge = createWalletChallengePayload(wallet)
+    const normalizedWallet = normalizeWalletAddress(wallet)
+    const clientIp = getClientIp(request)
+    enforceRateLimit({ key: `wallet-challenge:ip:${clientIp}`, limit: 30, windowMs: 60_000 })
+    enforceRateLimit({ key: `wallet-challenge:wallet:${normalizedWallet}`, limit: 10, windowMs: 60_000 })
+
+    const challenge = createWalletChallengePayload(normalizedWallet, {
+      origin: getRequestOrigin(request),
+    })
     await writeWalletChallengeCookie(challenge)
 
     return NextResponse.json({
