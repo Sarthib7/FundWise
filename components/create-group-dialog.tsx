@@ -33,6 +33,7 @@ type CreateGroupDialogProps = {
 }
 
 const DEFAULT_APPROVAL_THRESHOLD = "1"
+const FUND_MODE_BETA_TELEGRAM_URL = "https://t.me/funddotsol"
 
 export function CreateGroupDialog({
   open,
@@ -225,6 +226,16 @@ export function CreateGroupDialog({
                 ? "If your wallet is not on the beta list, creation will stop before a Group is created."
                 : "Track shared Expenses first; move to Fund Mode when the Group needs a Treasury."}
             </p>
+            {mode === "fund" ? (
+              <a
+                href={FUND_MODE_BETA_TELEGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex min-h-10 items-center rounded-sm text-xs font-medium text-accent underline-offset-4 transition-colors hover:text-accent/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Join the Fund Mode beta on Telegram
+              </a>
+            ) : null}
           </div>
 
           <div className="rounded-xl border border-dashed border-accent/25 bg-accent/5 p-4">

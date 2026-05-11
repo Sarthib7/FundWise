@@ -40,6 +40,7 @@ type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 const CONTRIBUTION_INPUT_ID = "contribution-amount"
 const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
 const PROPOSAL_MEMO_INPUT_ID = "proposal-memo"
+const FUND_MODE_BETA_TELEGRAM_URL = "https://t.me/funddotsol"
 
 type FundModeDashboardProps = {
   tokenName: string
@@ -166,11 +167,22 @@ export function FundModeDashboard({
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge variant="outline">Fund Mode beta</Badge>
-        <p className="text-sm text-muted-foreground">
-          Treasury screens are in controlled testing while the Proposal lifecycle is completed.
-        </p>
+      <div className="mb-4 flex flex-col gap-3 rounded-xl border border-brand-fund-blue-border/60 bg-brand-fund-blue-bg/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">Fund Mode beta</Badge>
+          <p className="text-sm text-muted-foreground">
+            Invite-only devnet testing for pooled Treasuries, Proposals, and pricing feedback.
+          </p>
+        </div>
+        <a
+          href={FUND_MODE_BETA_TELEGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-fund-blue-border bg-background px-3 text-sm font-medium text-brand-fund-blue transition-colors hover:bg-brand-fund-blue-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          Join beta Telegram
+          <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+        </a>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

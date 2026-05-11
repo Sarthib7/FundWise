@@ -100,7 +100,7 @@ Goal: validate Fund Mode pricing on devnet with test USDC + test SOL before any 
 
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
-| FW-048 | Telegram beta channel onboarding — Fund Mode entry page has a "Join beta Telegram" link to `t.me/funddotsol` (later: a private invite-only channel) | Coordination + support |
+| FW-048 | Telegram beta channel onboarding — Fund Mode entry page has a "Join beta Telegram" link to `t.me/funddotsol` (later: a private invite-only channel) | Coordination + support | **Done** |
 | FW-056 | Beta admin dashboard (internal) — list of active beta pools, contribution counts, proposal counts, last activity, willingness-to-pay responses | Without this, the owner has no way to see beta health |
 | FW-057 | Weekly beta digest email/Telegram post (manual, owner-sent): top pools, biggest reimbursements, common feedback | Keeps beta cohort engaged |
 

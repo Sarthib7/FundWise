@@ -56,7 +56,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | FW-043 |
 | FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) + exit flow proposal type | None |
 | FW-047 | Ready | P1 | AFK | Fund Mode creation fee infrastructure (devnet beta) | FW-033 |
-| FW-048 | Ready | P2 | AFK | Telegram beta channel onboarding link from Fund Mode entry | None |
+| FW-048 | Done | P2 | AFK | Telegram beta channel onboarding link from Fund Mode entry | None |
 
 ## Pick Queue
 
@@ -84,7 +84,7 @@ The hackathon submission is complete. Post-submission execution follows the two 
 3. **FW-044** Auto-suggested reimbursement proposals (P1, AFK)
 4. **FW-047** Creation fee infrastructure (P1, AFK)
 5. **FW-045** Member roles + exit flow (P2, AFK)
-6. **FW-048** Telegram beta channel link (P2, AFK)
+6. **FW-048** Telegram beta channel link (P2, AFK) — done
 
 ## Handoff Queue For Claude / Lot
 
@@ -1338,7 +1338,7 @@ Pure devnet monetization test. Mainnet creation fee is not enabled until Fund Mo
 
 ## FW-048 - Telegram Beta Channel Onboarding Link From Fund Mode Entry
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P2
 **Type:** AFK
 **Blocked by:** None
@@ -1349,8 +1349,12 @@ Add a "Join the Fund Mode beta on Telegram" link from the Fund Mode entry surfac
 
 ### Acceptance Criteria
 
-- [ ] Link visible only when Fund Mode is selected or being shown.
-- [ ] Opens Telegram in a new tab with `rel="noopener noreferrer"`.
-- [ ] Copy explains: "Fund Mode is invite-only beta. Join the Telegram group for support and to help us test pricing."
-- [ ] No tracking parameters in URL.
-- [ ] `pnpm build` passes.
+- [x] Link visible only when Fund Mode is selected or being shown.
+- [x] Opens Telegram in a new tab with `rel="noopener noreferrer"`.
+- [x] Copy explains: "Fund Mode is invite-only beta. Join the Telegram group for support and to help us test pricing."
+- [x] No tracking parameters in URL.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-11 on `checklist` branch. Fund Mode creation now shows a focused `Join the Fund Mode beta on Telegram` link only after Fund Mode is selected, and the Fund Mode dashboard shows a beta onboarding banner with a `Join beta Telegram` CTA to `https://t.me/funddotsol`. Both links open in a new tab with `rel="noopener noreferrer"` and no tracking parameters. `pnpm test` and `pnpm build` passed.
