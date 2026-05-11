@@ -102,5 +102,12 @@
     "vercel": "47.0.4",
     "vitest": "^4.1.5",
     "wrangler": "^4.86.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@vercel/static-config>ajv": "8.18.0",
+      "next>postcss": "8.5.10",
+      "rpc-websockets>uuid": "11.1.1"
+    }
   }
 }
