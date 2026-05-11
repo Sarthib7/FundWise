@@ -277,8 +277,8 @@ describe("verifyFundModeTreasuryAddresses", () => {
       configAuthority: PublicKey.default,
       threshold: 1,
       timeLock: 0,
-      transactionIndex: BigInt(0),
-      staleTransactionIndex: BigInt(0),
+      transactionIndex: BigInt(0) as unknown as Parameters<typeof multisig.accounts.Multisig.fromArgs>[0]['transactionIndex'],
+      staleTransactionIndex: BigInt(0) as unknown as Parameters<typeof multisig.accounts.Multisig.fromArgs>[0]['staleTransactionIndex'],
       rentCollector: null,
       bump: 255,
       members: [

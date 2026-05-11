@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, ArrowRight, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react"
 import { getBridgeQuote, executeBridgeRoute, getSupportedSourceChains, type BridgeQuote, type BridgeStatus } from "@/lib/lifi-bridge"
+import { parseUsdcAmount } from "@/lib/parse-usdc-amount"
 import {
   CHAIN_NAMES,
   ensureLifiChainsLoaded,
@@ -90,8 +91,18 @@ export function CrossChainBridgeModal({
     }
   }
 
+  const [amountError, setAmountError] = useState<string | null>(null)
+
   const handleGetQuote = useCallback(async () => {
     if (!amount || !evmWallet || !destinationAddress) return
+
+    const parsed = parseUsdcAmount(amount)
+    if (!parsed.ok) {
+      setAmountError(parsed.error)
+      return
+    }
+    setAmountError(null)
+
     setIsQuoting(true)
     setBridgeStatus({ status: "quoting" })
     try {
@@ -237,6 +248,7 @@ export function CrossChainBridgeModal({
                 onChange={(e) => {
                   setAmount(e.target.value)
                   setQuote(null)
+                  setAmountError(null)
                 }}
               />
               <Button
@@ -251,6 +263,9 @@ export function CrossChainBridgeModal({
             <p className="text-xs text-muted-foreground">
               This should match the {flowLabel} amount unless you want to route extra USDC.
             </p>
+            {amountError && (
+              <p className="text-xs text-red-600 dark:text-red-400">{amountError}</p>
+            )}
           </div>
 
           {lifiSupported && !quote && (

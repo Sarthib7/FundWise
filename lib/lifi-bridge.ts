@@ -5,6 +5,7 @@ import {
   LIFI_CHAINS,
   USDC_ADDRESSES,
 } from "./lifi-config"
+import { parseUsdcAmount } from "./parse-usdc-amount"
 
 export interface BridgeQuote {
   fromChain: number
@@ -44,8 +45,12 @@ export async function getBridgeQuote(params: {
     throw new Error(`Unsupported chain: ${CHAIN_NAMES[params.fromChain] || params.fromChain}`)
   }
 
-  // Convert human-readable amount to smallest unit (USDC has 6 decimals)
-  const amountInSmallestUnit = (parseFloat(params.fromAmount) * 1e6).toString()
+  // Convert human-readable amount to smallest unit using integer math
+  const parsed = parseUsdcAmount(params.fromAmount)
+  if (!parsed.ok) {
+    throw new Error(parsed.error)
+  }
+  const amountInSmallestUnit = parsed.smallestUnit
 
   const quote = await getQuote({
     fromChain: params.fromChain,

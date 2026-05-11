@@ -1,10 +1,7 @@
-import { supabase } from "./supabase"
 import type { Database } from "./database.types"
 
 type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
-type GroupInsert = Database["public"]["Tables"]["groups"]["Insert"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
-type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"]
 type ExpenseSplitRow = Database["public"]["Tables"]["expense_splits"]["Row"]
 type SettlementRow = Database["public"]["Tables"]["settlements"]["Row"]
@@ -118,44 +115,6 @@ export async function getGroupDashboardSnapshot(groupId: string, wallet?: string
 // MEMBERS
 // =============================================
 
-async function getProfile(wallet: string): Promise<ProfileRow | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("wallet", wallet)
-    .maybeSingle()
-
-  if (error) {
-    console.warn("[FundWise] Failed to load profile:", error.message)
-    return null
-  }
-
-  return data
-}
-
-async function getProfileDisplayNames(wallets: string[]) {
-  if (wallets.length === 0) {
-    return new Map<string, string>()
-  }
-
-  const uniqueWallets = Array.from(new Set(wallets))
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("wallet, display_name")
-    .in("wallet", uniqueWallets)
-
-  if (error) {
-    console.warn("[FundWise] Failed to load profile display names:", error.message)
-    return new Map<string, string>()
-  }
-
-  return new Map(
-    ((data || []) as Pick<ProfileRow, "wallet" | "display_name">[])
-      .filter((profile) => Boolean(profile.display_name))
-      .map((profile) => [profile.wallet, profile.display_name as string])
-  )
-}
-
 export async function addMember(
   groupId: string,
   wallet: string,
@@ -216,38 +175,6 @@ export async function addExpense(data: {
   })
 }
 
-export async function getExpenses(groupId: string) {
-  const { data, error } = await supabase
-    .from("expenses")
-    .select("*")
-    .eq("group_id", groupId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-
-  if (error) throw new Error(`Failed to get expenses: ${error.message}`)
-  return data
-}
-
-export async function getExpenseSplits(expenseId: string) {
-  const { data, error } = await supabase
-    .from("expense_splits")
-    .select("*")
-    .eq("expense_id", expenseId)
-
-  if (error) throw new Error(`Failed to get splits: ${error.message}`)
-  return data
-}
-
-export async function getAllSplitsForGroup(groupId: string) {
-  const { data, error } = await supabase
-    .from("expense_splits")
-    .select("*, expenses!inner(group_id)")
-    .eq("expenses.group_id", groupId)
-
-  if (error) throw new Error(`Failed to get group splits: ${error.message}`)
-  return data
-}
-
 export async function deleteExpense(expenseId: string, actorWallet: string) {
   await requestJson<{ ok: true }>(`/api/expenses/${expenseId}`, {
     method: "DELETE",
@@ -293,17 +220,6 @@ export async function addSettlement(data: {
     method: "POST",
     body: JSON.stringify(data),
   })
-}
-
-export async function getSettlements(groupId: string) {
-  const { data, error } = await supabase
-    .from("settlements")
-    .select("*")
-    .eq("group_id", groupId)
-    .order("confirmed_at", { ascending: false })
-
-  if (error) throw new Error(`Failed to get settlements: ${error.message}`)
-  return data
 }
 
 export async function addContribution(data: {
