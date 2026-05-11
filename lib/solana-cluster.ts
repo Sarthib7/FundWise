@@ -35,28 +35,6 @@ export function getSolanaRpcUrls(): string[] {
   return ordered
 }
 
-export function getSolanaRpcFallbackUrls(): string[] {
-  const raw = process.env.NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS ?? ""
-  return raw
-    .split(",")
-    .map((url) => url.trim())
-    .filter((url) => url.length > 0)
-}
-
-export function getSolanaRpcUrls(): string[] {
-  const primary = getSolanaRpcUrl()
-  const fallbacks = getSolanaRpcFallbackUrls()
-  const seen = new Set<string>()
-  const ordered: string[] = []
-  for (const url of [primary, ...fallbacks]) {
-    if (!seen.has(url)) {
-      seen.add(url)
-      ordered.push(url)
-    }
-  }
-  return ordered
-}
-
 export function getFundWiseClusterName(rpcUrl: string = getSolanaRpcUrl()): FundWiseCluster {
   const normalizedRpcUrl = rpcUrl.toLowerCase()
 

@@ -155,7 +155,6 @@ function writePendingSettlementReceipt(
 function openSettlementReceipt(groupId: string, settlementId: string) {
   window.location.assign(`/groups/${groupId}/settlements/${settlementId}`)
 }
-
 export function useGroupDashboard() {
   const params = useParams()
   const router = useRouter()
