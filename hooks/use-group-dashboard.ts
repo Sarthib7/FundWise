@@ -55,6 +55,14 @@ type GroupRow = Database["public"]["Tables"]["groups"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
+export type PendingSettlementReceipt = {
+  groupId: string
+  fromWallet: string
+  toWallet: string
+  amount: number
+  mint: string
+  txSig: string
+}
 
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 32
 
@@ -80,6 +88,68 @@ function isTransactionCancelled(error: unknown) {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback
+}
+
+function getPendingSettlementStorageKey(groupId: string, walletAddress: string) {
+  return `fundwise:pending-settlement:${groupId}:${walletAddress}`
+}
+
+function readPendingSettlementReceipt(
+  groupId: string,
+  walletAddress: string
+): PendingSettlementReceipt | null {
+  if (typeof window === "undefined" || !groupId || !walletAddress) {
+    return null
+  }
+
+  const raw = window.localStorage.getItem(
+    getPendingSettlementStorageKey(groupId, walletAddress)
+  )
+
+  if (!raw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as PendingSettlementReceipt
+
+    if (
+      parsed.groupId === groupId &&
+      parsed.fromWallet === walletAddress &&
+      parsed.toWallet &&
+      Number.isSafeInteger(parsed.amount) &&
+      parsed.amount > 0 &&
+      parsed.mint &&
+      parsed.txSig
+    ) {
+      return parsed
+    }
+  } catch {
+    window.localStorage.removeItem(
+      getPendingSettlementStorageKey(groupId, walletAddress)
+    )
+  }
+
+  return null
+}
+
+function writePendingSettlementReceipt(
+  pendingSettlement: PendingSettlementReceipt | null,
+  groupId: string,
+  walletAddress: string
+) {
+  if (typeof window === "undefined" || !groupId || !walletAddress) {
+    return
+  }
+
+  const storageKey = getPendingSettlementStorageKey(groupId, walletAddress)
+
+  if (!pendingSettlement) {
+    window.localStorage.removeItem(storageKey)
+    return
+  }
+
+  window.localStorage.setItem(storageKey, JSON.stringify(pendingSettlement))
 }
 
 export function useGroupDashboard() {
@@ -119,6 +189,14 @@ export function useGroupDashboard() {
   const [isSettling, setIsSettling] = useState(false)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [sharingTransferKey, setSharingTransferKey] = useState<string | null>(null)
+  const [pendingSettlementReceipt, setPendingSettlementReceipt] =
+    useState<PendingSettlementReceipt | null>(null)
+
+  useEffect(() => {
+    setPendingSettlementReceipt(
+      readPendingSettlementReceipt(groupId, walletAddress)
+    )
+  }, [groupId, walletAddress])
 
   const loadData = useCallback(async () => {
     if (!groupId) {
@@ -511,6 +589,16 @@ export function useGroupDashboard() {
         group.stablecoin_mint || DEFAULT_STABLECOIN.mint
       )
       settlementTxSig = signature
+      const pendingSettlement = {
+        groupId,
+        fromWallet: walletAddress,
+        toWallet: transfer.to,
+        amount: transfer.amount,
+        mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
+        txSig: signature,
+      }
+      setPendingSettlementReceipt(pendingSettlement)
+      writePendingSettlementReceipt(pendingSettlement, groupId, walletAddress)
 
       const settlement = await dbAddSettlement({
         groupId,
@@ -525,6 +613,8 @@ export function useGroupDashboard() {
       toast.success(`Settled ${formatTokenAmount(transfer.amount)} ${tokenName} with ${creditorLabel}`, {
         description: "View your receipt →",
       })
+      setPendingSettlementReceipt(null)
+      writePendingSettlementReceipt(null, groupId, walletAddress)
 
       router.push(`/groups/${groupId}/settlements/${settlement.id}`)
       return true
@@ -539,7 +629,7 @@ export function useGroupDashboard() {
         })
       } else if (settlementTxSig) {
         toast.error("Settlement reached Solana, but FundWise could not verify and record the Receipt.", {
-          description: `Refresh the Group before retrying. Transaction ${shortWallet(settlementTxSig)} is not recorded in FundWise yet.`,
+          description: `Use Retry Receipt below after RPC access is fixed. Transaction ${shortWallet(settlementTxSig)} is not recorded yet.`,
         })
       } else {
         toast.error(errorMessage)
@@ -562,6 +652,43 @@ export function useGroupDashboard() {
     router,
     tokenName,
     wallet?.adapter,
+    walletAddress,
+  ])
+
+  const handleRecoverSettlementReceipt = useCallback(async () => {
+    if (!pendingSettlementReceipt || !walletAddress) {
+      return false
+    }
+
+    setIsSettling(true)
+
+    try {
+      await ensureWalletWriteAccess()
+      const settlement = await dbAddSettlement({
+        groupId: pendingSettlementReceipt.groupId,
+        fromWallet: pendingSettlementReceipt.fromWallet,
+        toWallet: pendingSettlementReceipt.toWallet,
+        amount: pendingSettlementReceipt.amount,
+        mint: pendingSettlementReceipt.mint,
+        txSig: pendingSettlementReceipt.txSig,
+      })
+
+      setPendingSettlementReceipt(null)
+      writePendingSettlementReceipt(null, groupId, walletAddress)
+      toast.success("Settlement Receipt recorded")
+      router.push(`/groups/${groupId}/settlements/${settlement.id}`)
+      return true
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to record Settlement Receipt")
+      return false
+    } finally {
+      setIsSettling(false)
+    }
+  }, [
+    ensureWalletWriteAccess,
+    groupId,
+    pendingSettlementReceipt,
+    router,
     walletAddress,
   ])
 
@@ -1111,6 +1238,7 @@ export function useGroupDashboard() {
     commentingProposalId,
     settlingTransfer,
     isSettling,
+    pendingSettlementReceipt,
     deletingExpenseId,
     sharingTransferKey,
     tokenName,
@@ -1142,6 +1270,7 @@ export function useGroupDashboard() {
     joinGroup: handleJoin,
     saveProfileName,
     settle: handleSettle,
+    recoverSettlementReceipt: handleRecoverSettlementReceipt,
     canDeleteExpense,
     deleteExpense: handleDeleteExpense,
     createTreasury: handleCreateTreasury,

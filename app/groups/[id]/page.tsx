@@ -244,6 +244,7 @@ export default function GroupDashboard() {
     commentingProposalId,
     settlingTransfer,
     isSettling,
+    pendingSettlementReceipt,
     deletingExpenseId,
     sharingTransferKey,
     tokenName,
@@ -275,6 +276,7 @@ export default function GroupDashboard() {
     joinGroup,
     saveProfileName,
     settle,
+    recoverSettlementReceipt,
     canDeleteExpense,
     deleteExpense,
     createTreasury,
@@ -771,6 +773,7 @@ export default function GroupDashboard() {
                   requestedTransfer={requestedTransfer}
                   sharingTransferKey={sharingTransferKey}
                   isSettling={isSettling}
+                  pendingSettlementReceipt={pendingSettlementReceipt}
                   settlingTransfer={settlingTransfer}
                   isSubmitting={isSubmitting}
                   deletingExpenseId={deletingExpenseId}
@@ -785,6 +788,7 @@ export default function GroupDashboard() {
                   onClearSettlementRequest={clearSettlementRequest}
                   onShareSettlementRequest={shareSettlementRequest}
                   onSettle={settle}
+                  onRecoverSettlementReceipt={recoverSettlementReceipt}
                   onOpenSettlementFundingRoute={openSettlementFundingRoute}
                   onOpenCreateExpenseDialog={openCreateExpenseDialog}
                   onOpenEditExpenseDialog={openEditExpenseDialog}

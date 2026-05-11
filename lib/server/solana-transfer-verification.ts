@@ -1,13 +1,13 @@
 import { getAssociatedTokenAddress } from "@solana/spl-token"
-import { Connection, PublicKey, type ParsedTransactionWithMeta, type TokenBalance } from "@solana/web3.js"
-import { getSolanaRpcUrl } from "@/lib/solana-cluster"
+import { PublicKey, type ParsedTransactionWithMeta, type TokenBalance } from "@solana/web3.js"
+import { createFundWiseConnection } from "@/lib/fallback-connection"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 
 const VERIFICATION_COMMITMENT = "confirmed"
 const MAX_VERIFICATION_ATTEMPTS = 12
 const VERIFICATION_RETRY_DELAY_MS = 1000
 
-const connection = new Connection(getSolanaRpcUrl(), VERIFICATION_COMMITMENT)
+const connection = createFundWiseConnection(VERIFICATION_COMMITMENT)
 
 type TokenBalanceSnapshot = {
   mint?: string

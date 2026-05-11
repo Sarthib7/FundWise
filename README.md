@@ -204,11 +204,16 @@ Create `.env.local` manually. The repo does not currently ship an `.env.example`
 
 Required keys used by the app:
 
+- `SOLANA_RPC_URL` — server-side RPC for receipt verification in API routes
 - `NEXT_PUBLIC_SOLANA_RPC_URL`
+- `SOLANA_RPC_FALLBACK_URLS`
+- `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `FUNDWISE_SESSION_SECRET`
+
+For a deployed devnet demo, set `SOLANA_RPC_URL` to a private devnet RPC. Public Solana devnet RPC endpoints may reject Cloudflare Workers with `403`, which lets the wallet transaction land but prevents FundWise from recording the verified Receipt.
 
 Fallback compatibility is present for:
 

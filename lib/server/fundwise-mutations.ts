@@ -864,7 +864,7 @@ export async function addSettlementMutation(data: {
 
   const { data: existingSettlement, error: existingSettlementError } = await getAdmin()
     .from("settlements")
-    .select("id")
+    .select("id, group_id, from_wallet, to_wallet, amount, mint")
     .eq("tx_sig", data.txSig)
     .maybeSingle()
 
@@ -873,6 +873,16 @@ export async function addSettlementMutation(data: {
   }
 
   if (existingSettlement) {
+    if (
+      existingSettlement.group_id === data.groupId &&
+      existingSettlement.from_wallet === data.fromWallet &&
+      existingSettlement.to_wallet === data.toWallet &&
+      existingSettlement.amount === data.amount &&
+      existingSettlement.mint === data.mint
+    ) {
+      return { id: existingSettlement.id }
+    }
+
     throw new FundWiseError("This Settlement transaction has already been recorded.")
   }
 
