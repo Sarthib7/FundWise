@@ -4,12 +4,23 @@ This directory holds detailed product, API, positioning, and decision records. S
 
 ## Fast Paths
 
+- **Split Mode to mainnet:** [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md). Phased map. Test plan. Rollback.
+- **Fund Mode devnet beta:** [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md). Easy UX. Monetization tests. Beta ops.
 - **Current product truth:** [STATUS](../STATUS.md) -> [Shipped vs Planned Product Matrix](./shipped-vs-planned.md)
-- **Fund Mode sprint:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md) -> [ADR-027](./adr/0027-fund-mode-is-the-hero-product.md)
+- **Build plan:** [issues](../issues.md). Pick Queue at top. FW-* IDs.
+- **Monetization:** [Monetization Model](./monetization.md). Free Split Mode. Paid Fund Mode. Meteora yield later.
 - **FundLabs / FundWise positioning:** [Positioning](./positioning.md) -> [SUBMISSION](../SUBMISSION.md)
 - **Domain language:** [CONTEXT](../CONTEXT.md) -> related ADRs in [docs/adr](./adr/)
-- **Build plan:** [ROADMAP](../ROADMAP.md) -> [issues](../issues.md)
 - **Agent and payment surfaces:** [Agentic Settlement Endpoint Research](./agentic-settlement-endpoint.md) -> [Agent Payment Policy](./agent-payment-policy.md)
+
+## Execution Checklists
+
+Two tracks. Two checklists. Tick items as they ship.
+
+- [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md). Public app. Mainnet. Real USDC. Locked sequential phases.
+- [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md). Devnet only. Invite gated. Tests pricing.
+
+New blockers become indexed `FW-*` issues in [issues](../issues.md). Not new files.
 
 ## Source Of Truth Rules
 
@@ -31,6 +42,10 @@ This directory holds detailed product, API, positioning, and decision records. S
 - [issues](../issues.md) - indexed local backlog
 - [Shipped vs Planned Product Matrix](./shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope status
 - [Monetization Model](./monetization.md) - free Split Mode launch and paid-surface hypotheses
+- [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md) - phased mainnet map, test plan, rollback
+- [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md) - easy-UX work, monetization tests, beta program ops
+- [Fund Mode Beta Rehearsal](./fund-mode-beta-rehearsal.md) - scripted rehearsal flow for devnet beta
+- [Fund Mode Proposal Audit](./fund-mode-proposal-audit.md) - storage and access rules for Proposal proof/comments
 - [Research Reports](./research/) - generated market and technology research; supporting context only, not source of truth
 
 ## API And Agent Surfaces

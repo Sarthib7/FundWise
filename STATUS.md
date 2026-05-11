@@ -1,10 +1,11 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-05-08
-**Phase:** Fund Mode beta acceleration on top of Split Mode devnet foundation
-**Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
+**Snapshot date:** 2026-05-11
+**Phase:** Dual-track delivery — Split Mode to mainnet (public), Fund Mode stays devnet (invite-only beta for monetization testing)
+**Hackathon:** Colosseum Frontier (April 6 - May 11, 2026) — submission complete
 **Active issue index:** [issues.md](./issues.md)
-**Handoff:** Product scope is now tightened for the next submission pass: Source Currency and Expense Proof are future-only, Split Mode stays free at launch, shipped/planned state is canonicalized, mini-games are out of FundWise scope, Compass research is indexed into ADRs, and Fund Mode is now the hero-product sprint for the next month. Split Mode remains the shipped wedge; Fund Mode beta must move fast on Proposals, integrations, and rehearsal without claiming unshipped flows as live.
+**Execution checklists:** [Split Mode mainnet](./docs/split-mode-mainnet-checklist.md) · [Fund Mode beta](./docs/fund-mode-beta-checklist.md)
+**Handoff:** Network strategy is locked: public app is mainnet only (Split Mode); Fund Mode stays devnet, invite-gated, hidden from public UI, used to test the monetization model with selected beta users coordinated in a Telegram group. Fundy ships alongside Split Mode mainnet from its separate repository. Yield routing via Meteora is planned but not in scope until Fund Mode is mainnet-stable. The two execution checklists own the phased work going forward.
 
 ---
 
@@ -12,10 +13,16 @@
 
 FundWise is still a two-mode product:
 
-1. Split Mode: track shared expenses in a Group, compute who owes whom, and settle in USDC on Solana.
-2. Fund Mode: pool USDC into a shared Treasury and spend from it via Proposals.
+1. Split Mode: track shared expenses in a Group, compute who owes whom, and settle in USDC on Solana. **Public, mainnet target.**
+2. Fund Mode: pool USDC into a shared Treasury and spend from it via Proposals. **Invite-only beta, devnet only, hidden from public UI.**
 
 The product direction is now sharper:
+
+- **Network strategy (locked 2026-05-11):** public production runs on Solana mainnet and exposes Split Mode only. Fund Mode is kept on devnet for invite-only beta testing, accessed via wallets listed in `FUNDWISE_FUND_MODE_INVITE_WALLETS`. Beta testers are coordinated in a private Telegram group. This keeps users from having to switch wallet networks and isolates real money from beta workflows. Fund Mode mainnet graduation is a separate decision after both the product and the monetization model are validated on devnet — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
+- **Single deployment, dual-cluster awareness (Option A):** the same app reads both mainnet and devnet RPC URLs, picks per-Group cluster based on `Group.mode`, and shows a cluster badge in the header so the user always knows which network they're on.
+- **Monetization beta on devnet:** the Fund Mode devnet beta is the controlled environment for testing the pricing model — creation fee acceptance, subscription willingness-to-pay surveys, free-tier wall friction — before any real billing flips on. See [docs/monetization.md](./docs/monetization.md) and `docs/fund-mode-beta-checklist.md` Phase C.
+- **Fundy ships alongside Split Mode mainnet** from its separate repository, providing Telegram-based reminders, draft expenses, wallet-readiness, and the FundWise Agent surface. Money movement still wallet-confirmed in the web app.
+- **Yield routing via Meteora** is the future Fund Mode revenue line beyond subscription, planned for after Fund Mode mainnet is stable. Not in beta scope.
 
 - FundWise sits under the broader FundLabs umbrella: FundLabs builds the financial layer for groups, human or AI. FundWise is the shared-finance product, Fundy is the Telegram / personal-agent distribution product, and Receipt Endpoint is the planned agent-commerce audit-trail product.
 - Keep public copy aligned with [docs/positioning.md](./docs/positioning.md): lead with Groups, shared Expenses, live Balances, settle-up links, and Receipts; keep crypto mechanics behind the user action until wallet or Settlement context requires them.
@@ -108,6 +115,13 @@ The product direction is now sharper:
 
 ## Next active work
 
+The post-submission execution path is now split across two checklists, both indexed in [issues.md](./issues.md) as `FW-033` and up:
+
+1. **Public mainnet launch of Split Mode** — see [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md). Phases: pre-flight code (cluster-aware mints, cluster badge, multi-RPC, footer + legal scaffold) → security hardening (FW-017/018/023 + minimal OFAC) → production env (separate Supabase project, prod RPC, Sentry) → mainnet rehearsal with real USDC → launch + comms.
+2. **Fund Mode devnet beta with easy UX + monetization testing** — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md). Phases: easy-UX pool management (templates, treasury overview, auto-suggested proposals, member roles, exit flow) → multisig polish → monetization tests (creation fee, willingness-to-pay surveys, free-tier wall) → beta ops (Telegram channel, admin dashboard).
+
+The order within Split Mode mainnet is sequential and gated. The Fund Mode beta work runs in parallel with mainnet prep and does not block the public launch.
+
 Use [issues.md](./issues.md) as the indexed execution backlog. Current order:
 
 Completed:
@@ -126,11 +140,14 @@ Completed:
 - **FW-029:** Proposal audit trail now supports one external proof link, Proposal-scoped comments, creator-only memo/proof edits before first outside approval, and visible edit history. Native file-upload storage rules are documented before upload ships. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-030:** LI.FI routing is now available as `Route funds for Contribution` inside Fund Mode. It routes USDC to the Member wallet, returns to the same Group Contribution context, and leaves the Contribution ledger/receipt path unchanged. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-031:** Zerion readiness now distinguishes Split Settlement, Fund Contribution, Proposal member action, and Treasury funding contexts while staying read-only. Docs cover CLI setup and optional x402 without inventing secrets. `node scripts/zerion-readiness.mjs --help`, `pnpm test tests/fundwise-mutations.test.ts`, and `pnpm build` green.
-- **FW-032:** Fund Mode beta rehearsal script/runbook exists and devnet rehearsal now reaches invite-only Group creation, invite join, Squads v4 Treasury initialization, and stablecoin Contribution. Full Proposal approval/execution rehearsal is blocked until the remote Supabase project receives the checked-in Fund Mode Proposal migrations.
+- **FW-032:** Fund Mode beta rehearsal script/runbook exists and devnet rehearsal now reaches invite-only Group creation, invite join, Squads v4 Treasury initialization, and stablecoin Contribution. Supabase migrations applied by owner on 2026-05-09; schema preflight confirmed. Full Proposal creation → approval → execution rehearsal is blocked on devnet RPC rate limits — needs a private RPC URL set as `NEXT_PUBLIC_SOLANA_RPC_URL` before rerunning `pnpm fund:rehearsal`.
 
 Next pick:
 
-- Apply pending Supabase migrations `20260509120000_anchor_proposals_to_squads_governance.sql` and `20260509123000_add_proposal_audit_trail.sql`, then rerun `pnpm fund:rehearsal`.
+- **FW-032 done:** Fund Mode beta rehearsal passed end-to-end on devnet: Group creation, invite join, Squads Treasury init, Contribution, Proposal creation, approval, execution, and Treasury-to-Member payout all verified on-chain with Helius devnet RPC. Group `9c0f9012`, Proposal `c14d795c`, execution tx `44JZK41J...`.
+- **FW-021 done:** LI.FI top-up amount now uses integer-string-math parser with 20 unit tests instead of `parseFloat`.
+- **FW-022 done:** Direct browser Supabase ledger helpers removed from `lib/db.ts`; browser code exclusively uses HTTP API wrappers.
+- Remaining hardening: FW-017 (dependency audit), FW-018 (security headers), FW-023 (wallet-session abuse controls).
 
 Next:
 

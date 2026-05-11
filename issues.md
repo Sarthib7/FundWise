@@ -1,8 +1,8 @@
 # FundWise Issues
 
-**Last indexed:** 2026-05-08
-**Deadline:** 2026-05-11 Colosseum Frontier submission
-**Current focus:** Keep shipped/planned claims honest while accelerating Fund Mode as the hero product for the next one-month beta sprint.
+**Last indexed:** 2026-05-11
+**Submission status:** Colosseum Frontier submission complete (deadline 2026-05-11)
+**Current focus:** Dual-track delivery — Split Mode to public mainnet, Fund Mode stays devnet as invite-only beta for easy-UX and monetization testing. See [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md) and [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
 
 This file is the local issue index for hackathon execution. Keep each issue as a vertical slice: a completed issue should be independently demoable, testable, or useful for submission.
 
@@ -26,13 +26,13 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-014 | Done | P0 | AFK | Lock down anonymous Supabase ledger access | None |
 | FW-015 | Done | P0 | AFK | Validate Expense ledger amounts and split shares server-side | FW-014 |
 | FW-016 | Done | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
-| FW-017 | Ready | P2 | AFK | Triage dependency audit advisories | FW-014 |
-| FW-018 | Ready | P3 | AFK | Add production browser security headers | FW-014 |
+| FW-017 | Ready | P1 | AFK | Triage dependency audit advisories | FW-014 |
+| FW-018 | Ready | P1 | AFK | Add production browser security headers | FW-014 |
 | FW-019 | Done | P1 | AFK | Verify Fund Mode Treasury addresses on-chain before persistence | FW-014 |
 | FW-020 | Done | P2 | AFK | Remove legacy SOL vault helpers from Squads Fund Mode code | FW-019 |
-| FW-021 | Ready | P2 | AFK | Validate LI.FI top-up amount parsing before quote execution | FW-004 |
-| FW-022 | Ready | P2 | AFK | Retire direct browser Supabase ledger helpers after RLS lockdown | FW-014 |
-| FW-023 | Ready | P3 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
+| FW-021 | Done | P2 | AFK | Validate LI.FI top-up amount parsing before quote execution | FW-004 |
+| FW-022 | Done | P2 | AFK | Retire direct browser Supabase ledger helpers after RLS lockdown | FW-014 |
+| FW-023 | Ready | P1 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
 | FW-024 | Done | P1 | AFK | Index Compass research ADRs and add scripted devnet agent rehearsal | None |
 | FW-025 | Done | P1 | AFK | Index Fund Mode hero-product sprint and integration backlog | Owner direction |
 | FW-026 | Done | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
@@ -41,13 +41,50 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-029 | Done | P1 | AFK | Add Proposal proof, comments, and edit history model | FW-026 |
 | FW-030 | Done | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
 | FW-031 | Done | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
-| FW-032 | Ready | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | FW-028 |
+| FW-032 | Done | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | Devnet RPC rate limit |
+| FW-033 | Ready | P0 | AFK | Cluster-aware STABLECOIN_MINTS (devnet vs mainnet) | None |
+| FW-034 | Ready | P1 | AFK | Cluster badge in app header | FW-033 |
+| FW-035 | Ready | P1 | AFK | Multi-RPC fallback with Helius primary | None |
+| FW-036 | Ready | P2 | AFK | Footer social links + legal nav scaffold | None |
+| FW-037 | Ready | P2 | AFK | Privacy / Terms / Disclosures draft pages | FW-036 |
+| FW-038 | Ready | P0 | HITL | Production Supabase project + RLS migration replay | FW-014 |
+| FW-039 | Ready | P0 | HITL | Mainnet rehearsal with real USDC (full Split Mode flow) | FW-033, FW-035, FW-038, FW-017, FW-018, FW-023 |
+| FW-040 | Ready | P1 | AFK | Update public copy after mainnet launch | FW-039 |
+| FW-041 | Ready | P1 | AFK | Minimal OFAC SDN screening on wallet connect | FW-014 |
+| FW-042 | Ready | P1 | AFK | Pool templates at Fund Mode Group creation | None |
+| FW-043 | Ready | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
+| FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | FW-043 |
+| FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) + exit flow proposal type | None |
+| FW-047 | Ready | P1 | AFK | Fund Mode creation fee infrastructure (devnet beta) | FW-033 |
+| FW-048 | Ready | P2 | AFK | Telegram beta channel onboarding link from Fund Mode entry | None |
 
 ## Pick Queue
 
-1. **FW-032:** Run invite-only Fund Mode beta rehearsal and integration QA.
-2. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
-3. **FW-021 / FW-022 / FW-017 / FW-018 / FW-023:** supporting hardening tasks.
+The hackathon submission is complete. Post-submission execution follows the two checklists:
+
+**Split Mode mainnet path (sequential, gated):**
+
+1. **FW-033** Cluster-aware mints (P0, AFK)
+2. **FW-034** Cluster badge (P1, AFK)
+3. **FW-035** Multi-RPC fallback (P1, AFK)
+4. **FW-036** Footer + legal scaffold (P2, AFK)
+5. **FW-037** Legal page drafts (P2, AFK)
+6. **FW-017** Dep audit (P1, AFK)
+7. **FW-018** Security headers (P1, AFK)
+8. **FW-023** Wallet-session abuse + origin binding (P1, AFK)
+9. **FW-041** Minimal OFAC SDN screening (P1, AFK)
+10. **FW-038** Prod Supabase project (P0, HITL)
+11. **FW-039** Mainnet rehearsal (P0, HITL)
+12. **FW-040** Public copy update post-launch (P1, AFK)
+
+**Fund Mode devnet beta path (parallel, non-blocking):**
+
+1. **FW-042** Pool templates (P1, AFK)
+2. **FW-043** Treasury overview card (P1, AFK)
+3. **FW-044** Auto-suggested reimbursement proposals (P1, AFK)
+4. **FW-047** Creation fee infrastructure (P1, AFK)
+5. **FW-045** Member roles + exit flow (P2, AFK)
+6. **FW-048** Telegram beta channel link (P2, AFK)
 
 ## Handoff Queue For Claude / Lot
 
@@ -216,12 +253,42 @@ Use the existing Zerion readiness boundary to support Fund Mode Contribution and
 Completed on 2026-05-09. `pnpm zerion:readiness` now supports `--mode=settlement`, `--mode=contribution`, `--mode=proposal-member`, and `--mode=treasury`. Contribution mode checks Member USDC plus SOL-for-gas, proposal-member mode checks SOL-for-gas for Squads actions, and treasury mode checks vault USDC without requiring SOL because the vault does not sign. Docs now cover Fund Mode usage, required Zerion CLI/API-key setup, and optional x402 without storing secrets. Verification: `node scripts/zerion-readiness.mjs --help`, `pnpm test tests/fundwise-mutations.test.ts`, and `pnpm build` passed.
 - [ ] `pnpm build` passes.
 
+## FW-021 - Validate LI.FI Top-Up Amount Parsing Before Quote Execution
+
+**Status:** Done
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-004
+
+### What was fixed
+
+`getBridgeQuote` converted the human USDC amount with `parseFloat(params.fromAmount) * 1e6` before calling LI.FI, accepting malformed strings and potentially producing unsafe, rounded, exponential, or non-finite values.
+
+### Implementation
+
+Completed on 2026-05-09. Added `lib/parse-usdc-amount.ts` with integer-string-math-based USDC amount parser that rejects malformed strings, non-finite numbers, zero/negative values, more than 6 decimals, and unsafe integer raw amounts. Updated `lib/lifi-bridge.ts` to use the new parser instead of `parseFloat`. Added client-side validation in `components/cross-chain-bridge-modal.tsx` that shows a clear error before the LI.FI quote request. Added 20 unit tests in `tests/parse-usdc-amount.test.ts`. `pnpm build` and all 69 tests pass.
+
+## FW-022 - Retire Direct Browser Supabase Ledger Helpers After RLS Lockdown
+
+**Status:** Done
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-014
+
+### What was fixed
+
+After FW-014, direct browser Supabase reads are no longer part of the ledger access model. `lib/db.ts` still kept direct `supabase.from(...)` helpers for profiles, expenses, splits, and settlements that either fail under RLS or invite future agents to reintroduce public anon-table access assumptions.
+
+### Implementation
+
+Completed on 2026-05-09. Verified that all six direct-Supabase helpers (`getProfile`, `getProfileDisplayNames`, `getExpenses`, `getExpenseSplits`, `getAllSplitsForGroup`, `getSettlements`) had zero browser-side imports — the server-side code has its own implementations. Removed all six dead functions and the `supabase` import from `lib/db.ts`. Cleaned up unused type aliases (`GroupInsert`, `ProfileRow`). The browser code exclusively uses HTTP API wrappers. `pnpm build` and all 69 tests pass.
+
 ## FW-032 - Run Invite-Only Fund Mode Beta Rehearsal And Integration QA
 
-**Status:** Blocked
+**Status:** In Progress
 **Priority:** P1
 **Type:** AFK
-**Blocked by:** Remote Supabase migrations not applied
+**Blocked by:** Devnet RPC rate limit (needs private RPC URL from owner)
 
 ### What to verify
 
@@ -233,18 +300,27 @@ Run the one-month beta path with real wallets on devnet before public claims cha
 - [x] Second Member joins by invite link.
 - [x] Treasury initialization succeeds and persists verified Squads addresses.
 - [x] Member makes a Contribution and the Treasury balance updates.
-- [ ] Member creates a reimbursement Proposal.
-- [ ] Other Member approves or rejects.
-- [ ] Approved Proposal executes through the Treasury.
-- [ ] LI.FI and Zerion support paths are checked where available.
-- [ ] Findings are either fixed or split into new indexed issues.
+- [x] Member creates a reimbursement Proposal.
+- [x] Other Member approves or rejects.
+- [x] Approved Proposal executes through the Treasury.
+- [x] LI.FI and Zerion support paths are checked where available.
+- [x] Findings are either fixed or split into new indexed issues.
 
 ### 2026-05-09 Rehearsal Notes
 
 - Added `pnpm fund:rehearsal` and `docs/fund-mode-beta-rehearsal.md`.
 - Squads v4 research showed `multisigCreate` is deprecated/rejected; FundWise now uses `multisigCreateV2` with the program config treasury and `rentCollector: null`.
 - Devnet rehearsal reached Squads Treasury creation and stablecoin Contribution twice. Latest confirmed Group: `8eeb481d-74cd-4913-b60c-44a7b5d5010f`; Treasury: `6make1GpsYtGwAM1pvYmzXWAh2xqJMMrTM5Kv8HxujY2`; Multisig: `F1N1RXU65p2GKWW4XYxoPoBZKxxJoEXeMQBCpS3AfuFD`; Contribution tx: `3XLaSC58XU6tqQnwwsVz8ZSq3sf8oSYbiB6sRHoT7cGyof9JbjdgMUd4HBYaMw4x52G7NRVN7gVcX8UUezdD4C9m`.
-- Proposal creation is blocked because the remote Supabase project is missing checked-in migrations `20260509120000_anchor_proposals_to_squads_governance.sql` and `20260509123000_add_proposal_audit_trail.sql`. The CLI could not link/push from this environment due missing Supabase project privileges.
+
+### 2026-05-10 Session 3 Rehearsal Notes
+
+- **Helius devnet RPC configured** — `NEXT_PUBLIC_SOLANA_RPC_URL` fixed to `https://devnet.helius-rpc.com/?api-key=...` format.
+- **Creator wallet added to invite list** — `FUNDWISE_FUND_MODE_INVITE_WALLETS=EMc97zXSrG6vb8aqEMponNPgYcDJ9G5vLRYHJz1BYsge`.
+- **Full rehearsal passed**: Group `9c0f9012-babc-4750-b9f5-c1b7695dcb04`, Proposal `c14d795c-af81-4562-bc46-ce7452d6c5b5`, Treasury `qbWnoe6q8JtkbxEvgVxEvhkViGBoWK8K9CrXyRMNCxD`, Multisig `C2FVNyYN3z3ufcaPUtA7pNbHPju5zfghvvJnoh9K2e3s`.
+- **All 12 steps completed**: health check, SOL funding, wallet sessions, display names, stablecoin mint, Fund Mode Group creation, invite join, Squads Treasury initialization, 25 USDC Contribution, reimbursement Proposal creation, approval, and execution.
+- **Treasury balance after execution**: 20.00 test units (25 contributed - 5 reimbursed).
+- **LI.FI and Zerion paths** confirmed via script output.
+- **FW-032 is now Done.**
 
 ### FW-010 Planning Notes (deferred)
 
@@ -839,7 +915,7 @@ Completed on 2026-05-09. `lib/squads-multisig.ts` now exposes Squads Multisig cr
 
 ## FW-021 - Validate LI.FI Top-Up Amount Parsing Before Quote Execution
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P2  
 **Type:** AFK  
 **Blocked by:** FW-004
@@ -850,11 +926,11 @@ Completed on 2026-05-09. `lib/squads-multisig.ts` now exposes Squads Multisig cr
 
 ### Acceptance Criteria
 
-- [ ] Add a shared USDC amount parser for LI.FI top-up inputs that rejects malformed strings, non-finite numbers, zero/negative values, more than six decimals, and unsafe integer raw amounts.
-- [ ] Use integer string math instead of floating point for `fromAmount`.
-- [ ] UI shows a clear validation error before requesting a LI.FI quote.
-- [ ] Tests cover malformed, fractional, too-precise, and valid top-up amounts.
-- [ ] `pnpm build` passes.
+- [x] Add a shared USDC amount parser for LI.FI top-up inputs that rejects malformed strings, non-finite numbers, zero/negative values, more than six decimals, and unsafe integer raw amounts.
+- [x] Use integer string math instead of floating point for `fromAmount`.
+- [x] UI shows a clear validation error before requesting a LI.FI quote.
+- [x] Tests cover malformed, fractional, too-precise, and valid top-up amounts.
+- [x] `pnpm build` passes.
 
 ### Notes
 
@@ -866,7 +942,7 @@ Created from AI pentest on 2026-05-06. Evidence: `lib/lifi-bridge.ts` lines 47-5
 
 ## FW-022 - Retire Direct Browser Supabase Ledger Helpers After RLS Lockdown
 
-**Status:** Ready  
+**Status:** Done  
 **Priority:** P2  
 **Type:** AFK  
 **Blocked by:** FW-014
@@ -877,10 +953,10 @@ After FW-014, direct browser Supabase reads should no longer be part of the ledg
 
 ### Acceptance Criteria
 
-- [ ] Remove unused direct browser Supabase ledger helpers from `lib/db.ts`, or rewrite them to call protected HTTP APIs.
-- [ ] Keep invite-code lookup and dashboard reads on server-backed routes only.
-- [ ] Ensure no browser component imports the raw `supabase` client for private ledger tables.
-- [ ] `pnpm build` passes.
+- [x] Remove unused direct browser Supabase ledger helpers from `lib/db.ts`, or rewrite them to call protected HTTP APIs.
+- [x] Keep invite-code lookup and dashboard reads on server-backed routes only.
+- [x] Ensure no browser component imports the raw `supabase` client for private ledger tables.
+- [x] `pnpm build` passes.
 
 ### Notes
 
@@ -916,3 +992,333 @@ Created from AI pentest on 2026-05-06. Evidence: `app/api/auth/wallet/challenge/
 ### User Stories Covered
 
 25, 26, 31, 32, 33
+
+## FW-033 - Cluster-Aware Stablecoin Mints
+
+**Status:** Ready
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Split the hardcoded devnet `STABLECOIN_MINTS` map in `lib/expense-engine.ts` into a `{ devnet, mainnet }` shape keyed by `getFundWiseClusterName()`. Fix the PYUSD devnet/mainnet mints so they are correct on both clusters.
+
+### Acceptance Criteria
+
+- [ ] `STABLECOIN_MINTS` is selected per cluster, not hardcoded.
+- [ ] Mainnet USDC mint = `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
+- [ ] Mainnet PYUSD mint = `2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo`.
+- [ ] Mainnet USDT mint = `Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ`.
+- [ ] Devnet mints remain unchanged for Fund Mode beta.
+- [ ] `DEFAULT_STABLECOIN` returns the cluster-appropriate USDC.
+- [ ] Audit query identifies any existing `groups.stablecoin_mint` rows that would be stranded by the switch; documented in the migration PR.
+- [ ] `pnpm build` and `pnpm test` pass.
+
+### Notes
+
+Mainnet blocker for Split Mode launch. Without this, Split Mode on mainnet would route to a devnet test mint that doesn't exist.
+
+## FW-034 - Cluster Badge In Header
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-033
+
+### What to build
+
+Add a small badge in the app header showing the current Solana cluster (`mainnet` green, `devnet` orange, `custom RPC` gray). Visible on every authenticated page so users know which network they're on, especially when switching between Split Mode (mainnet) and Fund Mode (devnet) Groups.
+
+### Acceptance Criteria
+
+- [ ] Badge reads cluster from `getFundWiseClusterName()` and updates per-Group when cluster differs.
+- [ ] Badge is visible on `/groups`, `/groups/[id]`, and Receipt pages.
+- [ ] Tooltip on hover explains what the network means.
+- [ ] No layout regression at `375`, `768`, `1280`.
+- [ ] `pnpm build` passes.
+
+## FW-035 - Multi-RPC Fallback With Helius Primary
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Replace the single `NEXT_PUBLIC_SOLANA_RPC_URL` with a primary + optional fallback list. On RPC error, automatically retry the request against the next URL in the list.
+
+### Acceptance Criteria
+
+- [ ] `NEXT_PUBLIC_SOLANA_RPC_URL` remains the primary.
+- [ ] New env var `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS` accepts comma-separated URLs.
+- [ ] `Connection` helper in `lib/solana-cluster.ts` wraps retries on `getAccountInfo`, `getBalance`, `confirmTransaction`, `sendRawTransaction` so a 429 / 503 on primary falls through to fallback.
+- [ ] Fallback is logged but not surfaced to user UI.
+- [ ] Tests cover primary success, primary fail + fallback success, all-fail.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Helius stays primary for now; user will add Triton or QuickNode later.
+
+## FW-036 - Footer Social Links + Legal Nav Scaffold
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Extend `components/footer.tsx` with X (`https://x.com/funddotsol`) and Telegram (`https://t.me/funddotsol`) social links, and a legal nav row pointing to placeholder pages for Privacy, Terms, and Disclosures.
+
+### Acceptance Criteria
+
+- [ ] Footer shows X + Telegram links with accessible labels (`aria-label`, visible icon optional).
+- [ ] Footer shows Privacy / Terms / Disclosures links pointing to `/legal/privacy`, `/legal/terms`, `/legal/disclosures`.
+- [ ] External links open in a new tab with `rel="noopener noreferrer"`.
+- [ ] Layout responsive at `375`, `768`, `1280`.
+- [ ] `pnpm build` passes.
+
+## FW-037 - Privacy / Terms / Disclosures Draft Pages
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-036
+
+### What to build
+
+Create draft Privacy Policy, Terms of Service, and Disclosures pages. **Not legally reviewed.** Each page has a banner at the top: "Draft v0 — pending legal review. Not yet binding." Content follows the structure outlined in `docs/split-mode-mainnet-checklist.md` Phase 1.
+
+### Acceptance Criteria
+
+- [ ] `/legal/privacy`, `/legal/terms`, `/legal/disclosures` exist with draft content.
+- [ ] Each page has the "Draft v0" banner.
+- [ ] Privacy covers: wallet identity, data collected (display name, group/expense data, session cookies), data not collected (private keys, KYC), third parties (Supabase, Cloudflare, Helius, LI.FI, Zerion), user rights (delete, export), contact email.
+- [ ] Terms covers: non-custodial nature, third-party assets (USDC, Solana), user responsibilities, prohibited uses, disclaimer of warranties, limitation of liability, governing law placeholder, modification process.
+- [ ] Disclosures covers: smart contract risk, USDC depeg risk, network risk, fee responsibility, no FDIC insurance, beta status of Fund Mode.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Lawyer review is deferred per owner direction until revenue justifies the cost. Drafts must clearly say "Draft v0".
+
+## FW-038 - Production Supabase Project + RLS Migration Replay
+
+**Status:** Ready
+**Priority:** P0
+**Type:** HITL
+**Blocked by:** FW-014
+
+### What to do
+
+Spin up a separate Supabase project for mainnet (`fundwise-prod`), distinct from the existing devnet beta project. Replay all schema migrations + RLS lockdown SQL. Verify anonymous reads are denied. Rotate `SUPABASE_SERVICE_ROLE_KEY` and `FUNDWISE_SESSION_SECRET` for prod.
+
+### Acceptance Criteria
+
+- [ ] New Supabase project created; URL + keys captured for prod env vars.
+- [ ] All migrations from `supabase/migrations/` replayed in order.
+- [ ] FW-014 RLS lockdown SQL applied; anonymous REST returns zero rows for private tables.
+- [ ] Daily backup confirmed enabled.
+- [ ] Service role key + session secret rotated, distinct from devnet.
+- [ ] Cloudflare Pages prod env vars updated to point at new project.
+- [ ] Devnet beta Supabase project keys remain untouched.
+- [ ] Documented in `docs/ops-runbook.md` (new file).
+
+### Notes
+
+This is HITL because it requires owner access to Supabase and Cloudflare dashboards. Mainnet blocker.
+
+## FW-039 - Mainnet Rehearsal With Real USDC
+
+**Status:** Ready
+**Priority:** P0
+**Type:** HITL
+**Blocked by:** FW-033, FW-035, FW-038, FW-017, FW-018, FW-023
+
+### What to verify
+
+Run the 17-step mainnet test plan from `docs/split-mode-mainnet-checklist.md` Phase 4 with two real mainnet wallets funded with ~$5 USDC + ~$1 SOL each. Capture tx signatures, screenshots, and any failure modes.
+
+### Acceptance Criteria
+
+- [ ] All 17 steps in the checklist pass.
+- [ ] Real USDC transfer confirmed on Solana mainnet explorer.
+- [ ] Receipt page shows mainnet explorer URL (no `?cluster=` suffix).
+- [ ] Settlement Request Link flow works on mainnet.
+- [ ] Insufficient-USDC / insufficient-SOL / first-ATA preflight states behave correctly.
+- [ ] Wallet rejection mid-flow recovers gracefully.
+- [ ] LI.FI top-up path verified (optional, may defer if user has Solana USDC).
+- [ ] All findings either fixed or split into new indexed issues.
+
+## FW-040 - Update Public Copy After Mainnet Launch
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-039
+
+### What to update
+
+After mainnet rehearsal passes, update `README.md`, `STATUS.md`, `SUBMISSION.md`, `docs/shipped-vs-planned.md`, and landing copy to reflect that Split Mode is live on mainnet. Keep Fund Mode language as "devnet beta, invite-only".
+
+### Acceptance Criteria
+
+- [ ] README updated.
+- [ ] STATUS updated (TL;DR + Phase header).
+- [ ] SUBMISSION updated.
+- [ ] `docs/shipped-vs-planned.md` updated.
+- [ ] Landing page hero + claims aligned.
+- [ ] Footer copyright year correct.
+- [ ] `pnpm build` passes.
+
+## FW-041 - Minimal OFAC SDN Screening On Wallet Connect
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-014
+
+### What to build
+
+Block sanctioned wallets at login by comparing the connecting wallet address against the public OFAC SDN list (e.g. ultrasoundmoney/sanctioned-addresses on GitHub). This is a cheap defensive measure, not a full compliance program.
+
+### Acceptance Criteria
+
+- [ ] Wallet connect / verify flow checks address against an in-memory SDN list at app startup.
+- [ ] If matched, block with a clear "this wallet is not supported" message.
+- [ ] SDN list source documented (URL + refresh cadence).
+- [ ] Unit test covers a known SDN address and a known clean address.
+- [ ] `pnpm build` passes.
+
+### Notes
+
+Per owner direction, lawyer review is deferred. This is a minimal good-faith measure for mainnet launch.
+
+## FW-042 - Pool Templates At Fund Mode Group Creation
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Add quick-start templates to Fund Mode Group creation: `Trip pool`, `Friend fund`, `DAO grant`, `Family budget`. Each preselects a threshold suggestion, sample memo, and role hints. Reduces first-time UX cliff.
+
+### Acceptance Criteria
+
+- [ ] Template selector visible during Fund Mode Group creation only.
+- [ ] Selecting a template prefills threshold suggestion (e.g. `Friend fund` defaults to majority+1).
+- [ ] Templates have a "no template" / "custom" fallback.
+- [ ] Template choice stored on the Group row for future analytics.
+- [ ] `pnpm build` passes.
+
+## FW-043 - Treasury Overview Card On Fund Mode Dashboard
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Add a single-screen "pool state" overview card to Fund Mode Group dashboard: available balance, pending proposal count badge, last 5 events, top 3 contributors. No drilling.
+
+### Acceptance Criteria
+
+- [ ] Card appears at the top of Fund Mode Group dashboard.
+- [ ] Shows live USDC balance from Treasury vault.
+- [ ] Shows pending proposal count with click-through to proposals list.
+- [ ] Shows last 5 activity events (contribution, proposal, approval, execution).
+- [ ] Shows top 3 contributors by total contribution amount.
+- [ ] Responsive at `375`, `768`, `1280`.
+- [ ] `pnpm build` passes.
+
+## FW-044 - Auto-Suggested Reimbursement Proposals From Member Expenses
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-043
+
+### What to build
+
+When a Member logs an expense in a Fund Mode Group with a "pay from pool" flag, the dashboard surfaces a one-click "Propose reimbursement for $X" with memo + amount pre-filled. Closes the Split-Mode-style log → reconcile loop for pools.
+
+### Acceptance Criteria
+
+- [ ] Fund Mode expense entry has a "pay from pool" toggle.
+- [ ] When toggled, after expense save, dashboard surfaces a one-click suggested proposal.
+- [ ] One click opens the Proposal creation dialog with recipient = Member, amount = expense amount, memo = expense memo.
+- [ ] User can edit before submitting.
+- [ ] Dismissing the suggestion is sticky per expense (no re-nag).
+- [ ] `pnpm build` passes.
+
+## FW-045 - Fund Mode Member Roles + Exit Flow Proposal Type
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Add light member roles in FundWise: `Admin` / `Member` / `Viewer`. Admin can change threshold and invite. Member can propose / approve / execute. Viewer is read-only. Stored in FundWise (Squads stays the on-chain authority). Add an explicit "return funds to leaving Member" proposal type.
+
+### Acceptance Criteria
+
+- [ ] `members.role` column added with default `member`.
+- [ ] Server enforces role-gated actions: only Admin can invite, only Admin can change threshold.
+- [ ] UI shows role badge next to Member name in dashboard.
+- [ ] Group creator becomes Admin by default.
+- [ ] New proposal type `member_exit` with recipient = leaving Member, amount = custom or pro-rata. Runs normal approval lifecycle.
+- [ ] Migration covers the new column + proposal type.
+- [ ] Tests cover role enforcement edge cases.
+- [ ] `pnpm build` passes.
+
+## FW-047 - Fund Mode Creation Fee Infrastructure (Devnet Beta)
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-033
+
+### What to build
+
+At Fund Mode Treasury init, prompt for a flat creation fee (devnet test-USDC) sent to a FundWise dev wallet. Show what the equivalent mainnet fee would be ($3-$5 USD). Allow opt-out with a one-click "skip for beta" button but record the choice for monetization analytics. Devnet test-USDC has no real value — this is a behavioral test, not real revenue.
+
+### Acceptance Criteria
+
+- [ ] Creation fee step appears after Squads multisig confirm, before FundWise persistence.
+- [ ] Fee amount configurable via env var (`FUNDWISE_FUND_MODE_CREATION_FEE_USDC`).
+- [ ] Fee destination wallet configurable via env var (`FUNDWISE_FUND_MODE_FEE_DEST_WALLET`).
+- [ ] User can opt out; both paths are recorded in a new `fund_mode_fee_responses` table.
+- [ ] Fee transfer verified on-chain before treasury persistence proceeds.
+- [ ] Skip path completes treasury persistence normally.
+- [ ] `pnpm build` and `pnpm test` pass.
+
+### Notes
+
+Pure devnet monetization test. Mainnet creation fee is not enabled until Fund Mode graduates to mainnet (separate decision).
+
+## FW-048 - Telegram Beta Channel Onboarding Link From Fund Mode Entry
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Add a "Join the Fund Mode beta on Telegram" link from the Fund Mode entry surfaces (Group creation dialog, dashboard empty state). Points at `https://t.me/funddotsol` for now; later moves to a private invite-only channel.
+
+### Acceptance Criteria
+
+- [ ] Link visible only when Fund Mode is selected or being shown.
+- [ ] Opens Telegram in a new tab with `rel="noopener noreferrer"`.
+- [ ] Copy explains: "Fund Mode is invite-only beta. Join the Telegram group for support and to help us test pricing."
+- [ ] No tracking parameters in URL.
+- [ ] `pnpm build` passes.
