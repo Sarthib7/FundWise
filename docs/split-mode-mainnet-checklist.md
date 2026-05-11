@@ -21,7 +21,11 @@ This file is the execution checklist for moving Split Mode from devnet to mainne
 - ✅ Footer social links and draft legal pages exist (FW-036/FW-037)
 - ✅ Baseline browser security headers are configured; CSP is opt-in behind `FUNDWISE_ENABLE_CSP=true` (FW-018)
 - ✅ Mainnet pre-flight security hardening items are complete through FW-041; production env setup is next
+- ✅ Production Supabase prep: `docs/ops-runbook.md` + `pnpm supabase:verify-rls` shipped (FW-038 HITL portion remains)
+- ✅ Fund Mode pool templates shipped (FW-042)
+- ✅ Fund Mode Telegram beta onboarding links shipped (FW-048)
 - ❌ No production Supabase project — devnet project would carry over
+- ❌ Sentry blocked: `@sentry/nextjs` breaks `@cloudflare/next-on-pages`; need Cloudflare-native monitoring
 
 ---
 
@@ -112,7 +116,7 @@ Notes:
 | FW-038a | Rotate `FUNDWISE_SESSION_SECRET` for prod; ensure not shared with devnet | New |
 | FW-038b | Configure mainnet Helius RPC + fallback URLs as prod env vars in Cloudflare Pages | New |
 | FW-038c | Daily Supabase backup confirmed enabled; document restore procedure in `docs/ops-runbook.md` | HITL — restore procedure documented |
-| FW-038d | Sentry (or equivalent) error monitoring wired into prod build | New |
+| FW-038d | Sentry (or equivalent) error monitoring wired into prod build | Blocked — `@sentry/nextjs` breaks `@cloudflare/next-on-pages` with duplicated identifier error; must use Cloudflare-compatible alternative or wait for OpenNext |
 
 **Supabase project structure** (resolved decision):
 

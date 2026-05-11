@@ -20,13 +20,14 @@ This is the execution checklist for the Fund Mode beta program. Companion to `do
 - ✅ LI.FI `Route funds for Contribution`
 - ✅ Zerion readiness for `contribution`, `proposal-member`, `treasury` modes
 - 🔒 Invite-gated via `FUNDWISE_FUND_MODE_INVITE_WALLETS` env var
-- ❌ Pool creation UX is bare: no templates, no threshold suggestions, no member-role hints
+- ✅ Pool creation templates shipped (Trip pool, Friend fund, DAO grant, Family budget) with `lib/fund-mode-templates.ts`
+- ✅ Telegram beta channel onboarding link shipped to Fund Mode creation dialog and dashboard
 - ❌ No treasury overview card — beta users have to scroll/hunt to understand pool state
 - ❌ No auto-suggested reimbursement proposals from expenses
 - ❌ No member roles — every Member can do everything Squads allows
 - ❌ No exit / refund flow when a Member leaves
 - ❌ No creation fee infrastructure
-- ❌ No Telegram beta channel onboarding link from the app
+- ❌ No Telegram beta channel onboarding link from the app → **now shipped (FW-048)**
 
 ---
 
@@ -56,12 +57,12 @@ Goal: a user who's never used a multisig should be able to spin up a working poo
 | FW-049 | Threshold suggestions at Treasury init: 2 members → 2/2, 3-5 → majority, 6+ → 1/2 + 1. Show "what this means" tooltip | Members don't know what threshold to pick | New |
 
 **Code locations expected to change:**
-- `components/create-group-dialog.tsx` (templates)
+- `components/create-group-dialog.tsx` (templates) ✅ done
 - `components/group-dashboard/*` (treasury overview, auto-proposals)
 - `hooks/use-group-dashboard.ts`
 - `lib/server/fundwise-mutations.ts` (role enforcement, exit proposal type)
 - `lib/squads-multisig.ts` (threshold suggestions surface)
-- New: `lib/fund-mode-templates.ts`
+- `lib/fund-mode-templates.ts` ✅ shipped
 
 Out of scope for first beta:
 - Native chat (use Telegram group)
