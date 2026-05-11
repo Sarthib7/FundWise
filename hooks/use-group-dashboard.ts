@@ -152,6 +152,10 @@ function writePendingSettlementReceipt(
   window.localStorage.setItem(storageKey, JSON.stringify(pendingSettlement))
 }
 
+function openSettlementReceipt(groupId: string, settlementId: string) {
+  window.location.assign(`/groups/${groupId}/settlements/${settlementId}`)
+}
+
 export function useGroupDashboard() {
   const params = useParams()
   const router = useRouter()
@@ -614,7 +618,7 @@ export function useGroupDashboard() {
       setPendingSettlementReceipt(null)
       writePendingSettlementReceipt(null, groupId, walletAddress)
 
-      router.push(`/groups/${groupId}/settlements/${settlement.id}`)
+      openSettlementReceipt(groupId, settlement.id)
       return true
     } catch (error) {
       const errorMessage = getErrorMessage(error, "Settlement failed")
@@ -674,7 +678,7 @@ export function useGroupDashboard() {
       setPendingSettlementReceipt(null)
       writePendingSettlementReceipt(null, groupId, walletAddress)
       toast.success("Settlement Receipt recorded")
-      router.push(`/groups/${groupId}/settlements/${settlement.id}`)
+      openSettlementReceipt(groupId, settlement.id)
       return true
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to record Settlement Receipt")
