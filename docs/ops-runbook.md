@@ -80,8 +80,10 @@ If it fails:
 Set these in the Cloudflare Pages production environment:
 
 ```text
-NEXT_PUBLIC_SOLANA_RPC_URL=<Helius mainnet RPC URL>
-NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS=<comma-separated fallback mainnet RPC URLs>
+SOLANA_RPC_URL=<private Solana RPC URL used by API routes for receipt verification>
+SOLANA_RPC_FALLBACK_URLS=<comma-separated private fallback RPC URLs>
+NEXT_PUBLIC_SOLANA_RPC_URL=<public client RPC URL for wallet reads and sends>
+NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS=<comma-separated public fallback RPC URLs>
 NEXT_PUBLIC_SUPABASE_URL=<fundwise-prod URL>
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<fundwise-prod publishable key>
 SUPABASE_SERVICE_ROLE_KEY=<fundwise-prod service role key>
@@ -92,6 +94,7 @@ FUNDWISE_ENABLE_CSP=false
 Rules:
 
 - `FUNDWISE_SESSION_SECRET` must be different from devnet / local.
+- For a devnet deployment, set `SOLANA_RPC_URL` to a private devnet RPC. Cloudflare Workers may be blocked by public Solana RPC endpoints, which causes wallet-confirmed Settlements to fail at Receipt recording.
 - Keep `FUNDWISE_ENABLE_CSP=false` until wallet, QR scanner, Supabase, LI.FI, and receipt flows are browser-QA'd with CSP enabled.
 - Do not configure Fund Mode public access for prod. Keep `FUNDWISE_FUND_MODE_INVITE_WALLETS` absent or tightly scoped.
 
