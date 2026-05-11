@@ -1159,6 +1159,8 @@ Spin up a separate Supabase project for mainnet (`fundwise-prod`), distinct from
 
 This is HITL because it requires owner access to Supabase and Cloudflare dashboards. Mainnet blocker.
 
+2026-05-11 prep completed on `checklist` branch: added `docs/ops-runbook.md` with production Supabase creation, migration replay, backup/restore, Cloudflare env, and mainnet rehearsal gates; added `scripts/verify-supabase-rls.mjs` plus `pnpm supabase:verify-rls` to verify anonymous private-ledger reads are empty and anonymous `groups` insert is denied by RLS before constraints. The script auto-loads `.env.local` for local checks without printing secrets. Verified against the currently configured devnet Supabase project: RLS verification passed. `pnpm test` and `pnpm build` passed. Owner still needs to create/configure the prod Supabase project and Cloudflare env vars.
+
 ## FW-039 - Mainnet Rehearsal With Real USDC
 
 **Status:** Ready

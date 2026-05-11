@@ -147,7 +147,7 @@ Next pick:
 - **FW-032 done:** Fund Mode beta rehearsal passed end-to-end on devnet: Group creation, invite join, Squads Treasury init, Contribution, Proposal creation, approval, execution, and Treasury-to-Member payout all verified on-chain with Helius devnet RPC. Group `9c0f9012`, Proposal `c14d795c`, execution tx `44JZK41J...`.
 - **FW-021 done:** LI.FI top-up amount now uses integer-string-math parser with 20 unit tests instead of `parseFloat`.
 - **FW-022 done:** Direct browser Supabase ledger helpers removed from `lib/db.ts`; browser code exclusively uses HTTP API wrappers.
-- Remaining mainnet blocker: FW-038 production Supabase / Cloudflare environment setup, then FW-039 mainnet rehearsal.
+- Remaining mainnet blocker: FW-038 production Supabase / Cloudflare environment setup, then FW-039 mainnet rehearsal. FW-038 prep is in place via `docs/ops-runbook.md` and `pnpm supabase:verify-rls`; owner dashboard access is required to finish it.
 
 Next:
 

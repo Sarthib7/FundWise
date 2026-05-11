@@ -108,10 +108,10 @@ Notes:
 
 | ID | Task | Status |
 | --- | --- | --- |
-| FW-038 | Create separate prod Supabase project; replay schema migrations; replay RLS lockdown (FW-014 SQL); verify anonymous-read denial; rotate `SUPABASE_SERVICE_ROLE_KEY` for prod | New |
+| FW-038 | Create separate prod Supabase project; replay schema migrations; replay RLS lockdown (FW-014 SQL); verify anonymous-read denial; rotate `SUPABASE_SERVICE_ROLE_KEY` for prod | HITL — prep done (`docs/ops-runbook.md`, `pnpm supabase:verify-rls`) |
 | FW-038a | Rotate `FUNDWISE_SESSION_SECRET` for prod; ensure not shared with devnet | New |
 | FW-038b | Configure mainnet Helius RPC + fallback URLs as prod env vars in Cloudflare Pages | New |
-| FW-038c | Daily Supabase backup confirmed enabled; document restore procedure in `docs/ops-runbook.md` | New |
+| FW-038c | Daily Supabase backup confirmed enabled; document restore procedure in `docs/ops-runbook.md` | HITL — restore procedure documented |
 | FW-038d | Sentry (or equivalent) error monitoring wired into prod build | New |
 
 **Supabase project structure** (resolved decision):
