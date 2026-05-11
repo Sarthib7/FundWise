@@ -370,6 +370,34 @@ export function SplitModeDashboard({
             </>
           ) : null}
 
+          {isMember && pendingSettlementReceipt ? (
+            <div className="mb-5 flex flex-col gap-3 rounded-[12px] border border-amber-500/30 bg-amber-500/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  Settlement reached Solana
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  Record the Receipt for {formatTokenAmount(pendingSettlementReceipt.amount)} {tokenName}
+                  {" "}sent to {memberNameByWallet.get(pendingSettlementReceipt.toWallet) || shortWallet(pendingSettlementReceipt.toWallet)}.
+                  Tx {shortWallet(pendingSettlementReceipt.txSig)}.
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="min-h-11 bg-background sm:min-h-10"
+                disabled={isSettling}
+                onClick={() => void onRecoverSettlementReceipt()}
+              >
+                {isSettling ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Receipt className="h-4 w-4 mr-2" />
+                )}
+                Retry Receipt
+              </Button>
+            </div>
+          ) : null}
+
           <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.07em] text-muted-foreground">
             Recent expenses and Receipts
           </div>
@@ -533,34 +561,6 @@ export function SplitModeDashboard({
             )}
           </div>
         )}
-
-          {isMember && pendingSettlementReceipt ? (
-            <div className="mt-4 flex flex-col gap-3 rounded-[12px] border border-amber-500/30 bg-amber-500/10 p-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-sm font-semibold text-foreground">
-                  Settlement reached Solana
-                </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">
-                  Record the Receipt for {formatTokenAmount(pendingSettlementReceipt.amount)} {tokenName}
-                  {" "}sent to {memberNameByWallet.get(pendingSettlementReceipt.toWallet) || shortWallet(pendingSettlementReceipt.toWallet)}.
-                  Tx {shortWallet(pendingSettlementReceipt.txSig)}.
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                className="min-h-11 bg-background sm:min-h-10"
-                disabled={isSettling}
-                onClick={() => void onRecoverSettlementReceipt()}
-              >
-                {isSettling ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Receipt className="h-4 w-4 mr-2" />
-                )}
-                Retry Receipt
-              </Button>
-            </div>
-          ) : null}
 
           {isMember ? (
             <div className="mt-4 flex flex-col gap-3 rounded-[12px] border border-brand-border-c bg-brand-surface p-3 sm:flex-row sm:items-center sm:justify-between">
