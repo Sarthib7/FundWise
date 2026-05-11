@@ -117,7 +117,7 @@ The product direction is now sharper:
 
 The post-submission execution path is now split across two checklists, both indexed in [issues.md](./issues.md) as `FW-033` and up:
 
-1. **Public mainnet launch of Split Mode** — see [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md). Phases: pre-flight code (cluster-aware mints, cluster badge, multi-RPC, footer + legal scaffold) → remaining security hardening (minimal OFAC) → production env (separate Supabase project, prod RPC, Sentry) → mainnet rehearsal with real USDC → launch + comms.
+1. **Public mainnet launch of Split Mode** — see [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md). Phases: pre-flight code (cluster-aware mints, cluster badge, multi-RPC, footer + legal scaffold) → production environment setup → production env (separate Supabase project, prod RPC, Sentry) → mainnet rehearsal with real USDC → launch + comms.
 2. **Fund Mode devnet beta with easy UX + monetization testing** — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md). Phases: easy-UX pool management (templates, treasury overview, auto-suggested proposals, member roles, exit flow) → multisig polish → monetization tests (creation fee, willingness-to-pay surveys, free-tier wall) → beta ops (Telegram channel, admin dashboard).
 
 The order within Split Mode mainnet is sequential and gated. The Fund Mode beta work runs in parallel with mainnet prep and does not block the public launch.
@@ -147,7 +147,7 @@ Next pick:
 - **FW-032 done:** Fund Mode beta rehearsal passed end-to-end on devnet: Group creation, invite join, Squads Treasury init, Contribution, Proposal creation, approval, execution, and Treasury-to-Member payout all verified on-chain with Helius devnet RPC. Group `9c0f9012`, Proposal `c14d795c`, execution tx `44JZK41J...`.
 - **FW-021 done:** LI.FI top-up amount now uses integer-string-math parser with 20 unit tests instead of `parseFloat`.
 - **FW-022 done:** Direct browser Supabase ledger helpers removed from `lib/db.ts`; browser code exclusively uses HTTP API wrappers.
-- Remaining hardening: FW-041 (minimal OFAC screening).
+- Remaining mainnet blocker: FW-038 production Supabase / Cloudflare environment setup, then FW-039 mainnet rehearsal.
 
 Next:
 

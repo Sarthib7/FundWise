@@ -48,9 +48,9 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-036 | Done | P2 | AFK | Footer social links + legal nav scaffold | None |
 | FW-037 | Done | P2 | AFK | Privacy / Terms / Disclosures draft pages | FW-036 |
 | FW-038 | Ready | P0 | HITL | Production Supabase project + RLS migration replay | FW-014 |
-| FW-039 | Ready | P0 | HITL | Mainnet rehearsal with real USDC (full Split Mode flow) | FW-033, FW-035, FW-038, FW-041 |
+| FW-039 | Ready | P0 | HITL | Mainnet rehearsal with real USDC (full Split Mode flow) | FW-033, FW-035, FW-038 |
 | FW-040 | Ready | P1 | AFK | Update public copy after mainnet launch | FW-039 |
-| FW-041 | Ready | P1 | AFK | Minimal OFAC SDN screening on wallet connect | FW-014 |
+| FW-041 | Done | P1 | AFK | Minimal OFAC SDN screening on wallet connect | FW-014 |
 | FW-042 | Ready | P1 | AFK | Pool templates at Fund Mode Group creation | None |
 | FW-043 | Ready | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
 | FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | FW-043 |
@@ -72,7 +72,7 @@ The hackathon submission is complete. Post-submission execution follows the two 
 6. **FW-017** Dep audit (P1, AFK) — done
 7. **FW-018** Security headers (P1, AFK) — done
 8. **FW-023** Wallet-session abuse + origin binding (P1, AFK) — done
-9. **FW-041** Minimal OFAC SDN screening (P1, AFK)
+9. **FW-041** Minimal OFAC SDN screening (P1, AFK) — done
 10. **FW-038** Prod Supabase project (P0, HITL)
 11. **FW-039** Mainnet rehearsal (P0, HITL)
 12. **FW-040** Public copy update post-launch (P1, AFK)
@@ -1164,7 +1164,7 @@ This is HITL because it requires owner access to Supabase and Cloudflare dashboa
 **Status:** Ready
 **Priority:** P0
 **Type:** HITL
-**Blocked by:** FW-033, FW-035, FW-038, FW-041
+**Blocked by:** FW-033, FW-035, FW-038
 
 ### What to verify
 
@@ -1204,7 +1204,7 @@ After mainnet rehearsal passes, update `README.md`, `STATUS.md`, `SUBMISSION.md`
 
 ## FW-041 - Minimal OFAC SDN Screening On Wallet Connect
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** FW-014
@@ -1215,15 +1215,17 @@ Block sanctioned wallets at login by comparing the connecting wallet address aga
 
 ### Acceptance Criteria
 
-- [ ] Wallet connect / verify flow checks address against an in-memory SDN list at app startup.
-- [ ] If matched, block with a clear "this wallet is not supported" message.
-- [ ] SDN list source documented (URL + refresh cadence).
-- [ ] Unit test covers a known SDN address and a known clean address.
-- [ ] `pnpm build` passes.
+- [x] Wallet connect / verify flow checks address against an in-memory SDN list at app startup.
+- [x] If matched, block with a clear "this wallet is not supported" message.
+- [x] SDN list source documented (URL + refresh cadence).
+- [x] Unit test covers a known SDN address and a known clean address.
+- [x] `pnpm build` passes.
 
 ### Notes
 
 Per owner direction, lawyer review is deferred. This is a minimal good-faith measure for mainnet launch.
+
+Completed on 2026-05-11 on `checklist` branch. Added `lib/server/sanctions-screening.ts` with an in-memory Solana wallet set sourced from OFAC SDN XML (`https://www.treasury.gov/ofac/downloads/sdn.xml`, field `Digital Currency Address - SOL`, checked 2026-05-11). `POST /api/auth/wallet/challenge` now normalizes the Solana wallet and blocks listed wallets with a generic 403 before issuing a challenge. Added `docs/sanctions-screening.md` with source, runtime behavior, limitations, and refresh cadence. Added `tests/sanctions-screening.test.ts` covering the known OFAC SOL address and a clean address. `pnpm test` and `pnpm build` passed.
 
 ## FW-042 - Pool Templates At Fund Mode Group Creation
 

@@ -20,7 +20,7 @@ This file is the execution checklist for moving Split Mode from devnet to mainne
 - ✅ Multi-RPC fallback is wired through `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS` (FW-035)
 - ✅ Footer social links and draft legal pages exist (FW-036/FW-037)
 - ✅ Baseline browser security headers are configured; CSP is opt-in behind `FUNDWISE_ENABLE_CSP=true` (FW-018)
-- ❌ Security hardening (FW-041 minimal OFAC screening) still open
+- ✅ Mainnet pre-flight security hardening items are complete through FW-041; production env setup is next
 - ❌ No production Supabase project — devnet project would carry over
 
 ---
@@ -96,7 +96,7 @@ select id, name, mode, stablecoin_mint, created_at
 | FW-017 | Triage `pnpm audit` advisories; upgrade safe transitives, document accepted ones | **Done** |
 | FW-018 | Browser security headers — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy | **Done** |
 | FW-023 | Rate-limit `/api/auth/wallet/challenge` and `/api/auth/wallet/verify` by IP + wallet; bind challenge message to origin + cluster; `__Host-` cookie prefix in prod | **Done** |
-| FW-041 | Minimal OFAC SDN screening on wallet connect (check against [public SDN list](https://github.com/ultrasoundmoney/sanctioned-addresses)); block sanctioned wallets at login | New |
+| FW-041 | Minimal OFAC SDN screening on wallet connect using OFAC SDN XML `Digital Currency Address - SOL`; block sanctioned wallets at login | **Done** |
 
 Notes:
 - CSP must allowlist Supabase, Helius, LI.FI, Zerion, Solana wallet adapter origins. Roll out behind a flag.
