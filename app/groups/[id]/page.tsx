@@ -22,6 +22,7 @@ import {
   calculateSplits,
   DEFAULT_STABLECOIN,
   formatTokenAmount,
+  getClusterForGroupMode,
   parseTokenAmount,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
@@ -590,7 +591,7 @@ export default function GroupDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header cluster={getClusterForGroupMode(group.mode)} />
 
       <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {connected && !isWalletVerified && (

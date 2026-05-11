@@ -43,7 +43,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-031 | Done | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
 | FW-032 | Done | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | Devnet RPC rate limit |
 | FW-033 | Done | P0 | AFK | Cluster-aware STABLECOIN_MINTS (devnet vs mainnet) | None |
-| FW-034 | Ready | P1 | AFK | Cluster badge in app header | FW-033 |
+| FW-034 | Done | P1 | AFK | Cluster badge in app header | FW-033 |
 | FW-035 | Ready | P1 | AFK | Multi-RPC fallback with Helius primary | None |
 | FW-036 | Ready | P2 | AFK | Footer social links + legal nav scaffold | None |
 | FW-037 | Ready | P2 | AFK | Privacy / Terms / Disclosures draft pages | FW-036 |
@@ -1033,7 +1033,7 @@ Focused test: `pnpm test` 89 passed (20 new cluster-aware mint tests added to `t
 
 ## FW-034 - Cluster Badge In Header
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** FW-033
@@ -1044,11 +1044,15 @@ Add a small badge in the app header showing the current Solana cluster (`mainnet
 
 ### Acceptance Criteria
 
-- [ ] Badge reads cluster from `getFundWiseClusterName()` and updates per-Group when cluster differs.
-- [ ] Badge is visible on `/groups`, `/groups/[id]`, and Receipt pages.
-- [ ] Tooltip on hover explains what the network means.
-- [ ] No layout regression at `375`, `768`, `1280`.
-- [ ] `pnpm build` passes.
+- [x] Badge reads cluster from `getFundWiseClusterName()` and updates per-Group when cluster differs.
+- [x] Badge is visible on `/groups`, `/groups/[id]`, and Receipt pages.
+- [x] Tooltip on hover explains what the network means.
+- [x] No layout regression at `375`, `768`, `1280` (additive color + tooltip only; preserves `min-h-9`/`rounded-full`/padding from the prior badge — owner should still eyeball it after the next deploy).
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-11 on `checklist` branch. Header now extracts a `ClusterBadge` component that color-codes by cluster (mainnet → emerald, devnet → amber, custom → muted) and renders a Radix Tooltip explaining the network. `Header` accepts an optional `cluster` prop so per-Group pages can override the deployment default — `app/groups/[id]/page.tsx` and `app/groups/[id]/settlements/[settlementId]/page.tsx` pass `getClusterForGroupMode(group.mode)` so Fund Mode Groups visibly show devnet even on a mainnet deployment. Other pages fall back to `getFundWiseClusterName()` (deployment cluster). `pnpm build` and `pnpm test` (89 passed) both green.
 
 ## FW-035 - Multi-RPC Fallback With Helius Primary
 

@@ -15,7 +15,11 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getSettlementReceiptView } from "@/lib/db"
 import type { Database } from "@/lib/database.types"
-import { findStablecoinByMint, formatTokenAmount } from "@/lib/expense-engine"
+import {
+  findStablecoinByMint,
+  formatTokenAmount,
+  getClusterForGroupMode,
+} from "@/lib/expense-engine"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
 
@@ -184,7 +188,7 @@ export default function SettlementReceiptPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header cluster={getClusterForGroupMode(group.mode)} />
       <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
           <Button
