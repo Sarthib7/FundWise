@@ -15,13 +15,13 @@ This file is the execution checklist for moving Split Mode from devnet to mainne
 - ✅ RLS lockdown, server-side ledger validation, settlement-graph enforcement, Squads governance shipped
 - ✅ LI.FI `Route funds for Settlement` shipped
 - ✅ Zerion CLI wallet readiness shipped
-- ❌ Stablecoin mints hardcoded to devnet at `lib/expense-engine.ts:13`
-- ❌ No cluster-aware mint selection
-- ❌ Single RPC, no fallback
-- ❌ No cluster badge in UI — user can't tell which network they're on
-- ❌ Security hardening (FW-017, FW-018, FW-023) still open
+- ✅ Stablecoin mints are cluster-aware (FW-033)
+- ✅ Cluster badge shows the active network on authenticated pages (FW-034)
+- ✅ Multi-RPC fallback is wired through `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS` (FW-035)
+- ✅ Footer social links and draft legal pages exist (FW-036/FW-037)
+- ✅ Baseline browser security headers are configured; CSP is opt-in behind `FUNDWISE_ENABLE_CSP=true` (FW-018)
+- ❌ Security hardening (FW-041 minimal OFAC screening) still open
 - ❌ No production Supabase project — devnet project would carry over
-- ❌ No legal pages, no footer social links
 
 ---
 
@@ -58,14 +58,15 @@ Cluster routing per the dual-cluster strategy:
 | FW-033 | Cluster-aware `STABLECOIN_MINTS` — split into `{ devnet, mainnet }` keyed by cluster, fix PYUSD mainnet mint | **Done** (commit `a2f2fbd` on `checklist` branch) |
 | FW-034 | Cluster badge in app header (`mainnet` green / `devnet` orange) — visible on every authenticated page | **Done** |
 | FW-035 | Multi-RPC fallback — primary + comma-separated fallback URLs from env, automatic retry on RPC error | **Done** |
-| FW-036 | Footer: X + Telegram social links; legal nav scaffold pointing to placeholder pages | Ready |
-| FW-037 | Privacy / Terms / Disclosures draft pages (v0, marked "draft, not yet legally reviewed") | Ready |
+| FW-036 | Footer: X + Telegram social links; legal nav scaffold pointing to placeholder pages | **Done** |
+| FW-037 | Privacy / Terms / Disclosures draft pages (v0, marked "draft, not yet legally reviewed") | **Done** |
 
 **Code locations touched:**
 - `lib/expense-engine.ts` (mint config — done in FW-033)
 - `lib/solana-cluster.ts` (already has cluster helpers — add fallback RPC support)
 - `components/footer.tsx`
 - `components/header.tsx` (cluster badge)
+- `next.config.mjs` (baseline security headers + opt-in CSP)
 - `app/legal/privacy/page.tsx` (new)
 - `app/legal/terms/page.tsx` (new)
 - `app/legal/disclosures/page.tsx` (new)
@@ -92,9 +93,9 @@ select id, name, mode, stablecoin_mint, created_at
 
 | ID | Task | Status |
 | --- | --- | --- |
-| FW-017 | Triage `pnpm audit` advisories (26 reported); upgrade safe transitives, document accepted ones | Ready, **bump to P1** |
-| FW-018 | Browser security headers — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy | Ready, **bump to P1** |
-| FW-023 | Rate-limit `/api/auth/wallet/challenge` and `/api/auth/wallet/verify` by IP + wallet; bind challenge message to origin + cluster; `__Host-` cookie prefix in prod | Ready, **bump to P1** |
+| FW-017 | Triage `pnpm audit` advisories; upgrade safe transitives, document accepted ones | **Done** |
+| FW-018 | Browser security headers — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy | **Done** |
+| FW-023 | Rate-limit `/api/auth/wallet/challenge` and `/api/auth/wallet/verify` by IP + wallet; bind challenge message to origin + cluster; `__Host-` cookie prefix in prod | **Done** |
 | FW-041 | Minimal OFAC SDN screening on wallet connect (check against [public SDN list](https://github.com/ultrasoundmoney/sanctioned-addresses)); block sanctioned wallets at login | New |
 
 Notes:

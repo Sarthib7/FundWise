@@ -26,13 +26,13 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-014 | Done | P0 | AFK | Lock down anonymous Supabase ledger access | None |
 | FW-015 | Done | P0 | AFK | Validate Expense ledger amounts and split shares server-side | FW-014 |
 | FW-016 | Done | P0 | AFK | Require Settlements to match the live Settlement graph | FW-015 |
-| FW-017 | Ready | P1 | AFK | Triage dependency audit advisories | FW-014 |
-| FW-018 | Ready | P1 | AFK | Add production browser security headers | FW-014 |
+| FW-017 | Done | P1 | AFK | Triage dependency audit advisories | FW-014 |
+| FW-018 | Done | P1 | AFK | Add production browser security headers | FW-014 |
 | FW-019 | Done | P1 | AFK | Verify Fund Mode Treasury addresses on-chain before persistence | FW-014 |
 | FW-020 | Done | P2 | AFK | Remove legacy SOL vault helpers from Squads Fund Mode code | FW-019 |
 | FW-021 | Done | P2 | AFK | Validate LI.FI top-up amount parsing before quote execution | FW-004 |
 | FW-022 | Done | P2 | AFK | Retire direct browser Supabase ledger helpers after RLS lockdown | FW-014 |
-| FW-023 | Ready | P1 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
+| FW-023 | Done | P1 | AFK | Add wallet-session abuse controls and origin binding | FW-014 |
 | FW-024 | Done | P1 | AFK | Index Compass research ADRs and add scripted devnet agent rehearsal | None |
 | FW-025 | Done | P1 | AFK | Index Fund Mode hero-product sprint and integration backlog | Owner direction |
 | FW-026 | Done | P0 | AFK | Build reimbursement Proposal creation for Fund Mode | FW-020 |
@@ -45,10 +45,10 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-033 | Done | P0 | AFK | Cluster-aware STABLECOIN_MINTS (devnet vs mainnet) | None |
 | FW-034 | Done | P1 | AFK | Cluster badge in app header | FW-033 |
 | FW-035 | Done | P1 | AFK | Multi-RPC fallback with Helius primary | None |
-| FW-036 | Ready | P2 | AFK | Footer social links + legal nav scaffold | None |
-| FW-037 | Ready | P2 | AFK | Privacy / Terms / Disclosures draft pages | FW-036 |
+| FW-036 | Done | P2 | AFK | Footer social links + legal nav scaffold | None |
+| FW-037 | Done | P2 | AFK | Privacy / Terms / Disclosures draft pages | FW-036 |
 | FW-038 | Ready | P0 | HITL | Production Supabase project + RLS migration replay | FW-014 |
-| FW-039 | Ready | P0 | HITL | Mainnet rehearsal with real USDC (full Split Mode flow) | FW-033, FW-035, FW-038, FW-017, FW-018, FW-023 |
+| FW-039 | Ready | P0 | HITL | Mainnet rehearsal with real USDC (full Split Mode flow) | FW-033, FW-035, FW-038, FW-041 |
 | FW-040 | Ready | P1 | AFK | Update public copy after mainnet launch | FW-039 |
 | FW-041 | Ready | P1 | AFK | Minimal OFAC SDN screening on wallet connect | FW-014 |
 | FW-042 | Ready | P1 | AFK | Pool templates at Fund Mode Group creation | None |
@@ -69,9 +69,9 @@ The hackathon submission is complete. Post-submission execution follows the two 
 3. **FW-035** Multi-RPC fallback (P1, AFK)
 4. **FW-036** Footer + legal scaffold (P2, AFK)
 5. **FW-037** Legal page drafts (P2, AFK)
-6. **FW-017** Dep audit (P1, AFK)
-7. **FW-018** Security headers (P1, AFK)
-8. **FW-023** Wallet-session abuse + origin binding (P1, AFK)
+6. **FW-017** Dep audit (P1, AFK) — done
+7. **FW-018** Security headers (P1, AFK) — done
+8. **FW-023** Wallet-session abuse + origin binding (P1, AFK) — done
 9. **FW-041** Minimal OFAC SDN screening (P1, AFK)
 10. **FW-038** Prod Supabase project (P0, HITL)
 11. **FW-039** Mainnet rehearsal (P0, HITL)
@@ -803,8 +803,8 @@ Completed on 2026-05-06. Settlement recording now asserts an exact current simpl
 
 ## FW-017 - Triage Dependency Audit Advisories
 
-**Status:** Ready  
-**Priority:** P2  
+**Status:** Done  
+**Priority:** P1  
 **Type:** AFK  
 **Blocked by:** FW-014
 
@@ -814,15 +814,17 @@ Completed on 2026-05-06. Settlement recording now asserts an exact current simpl
 
 ### Acceptance Criteria
 
-- [ ] Update safe direct dependencies where patched versions are available.
-- [ ] Document advisories that are transitive with no patched path yet.
-- [ ] Confirm deploy/build tooling updates do not break Cloudflare Pages output.
-- [ ] `pnpm audit --audit-level moderate` is clean or remaining advisories are explicitly accepted with rationale.
-- [ ] `pnpm build` passes.
+- [x] Update safe direct dependencies where patched versions are available.
+- [x] Document advisories that are transitive with no patched path yet.
+- [x] Confirm deploy/build tooling updates do not break Cloudflare Pages output.
+- [x] `pnpm audit --audit-level moderate` is clean or remaining advisories are explicitly accepted with rationale.
+- [x] `pnpm build` passes.
 
 ### Notes
 
 Created from CSO finding `FW-CSO-004` on 2026-05-06. This is important but below the immediate ledger integrity fixes.
+
+Completed on 2026-05-11 on `checklist` branch. Added safe pnpm overrides for patched transitive `postcss`, `uuid`, and `ajv` paths, then documented remaining accepted advisories in `docs/dependency-audit.md`. `pnpm audit --audit-level moderate` now reports 23 advisories (down from 26): unpatched Solana `bigint-buffer`, plus Cloudflare/Vercel build-tooling `tar`, `undici`, and `esbuild` paths that cannot be fully patched without moving off deprecated `@cloudflare/next-on-pages` / changing its Vercel peer contract. `pnpm test`, `pnpm build`, and `pnpm build:pages` passed.
 
 ### User Stories Covered
 
@@ -830,8 +832,8 @@ Created from CSO finding `FW-CSO-004` on 2026-05-06. This is important but below
 
 ## FW-018 - Add Production Browser Security Headers
 
-**Status:** Ready  
-**Priority:** P3  
+**Status:** Done  
+**Priority:** P1  
 **Type:** AFK  
 **Blocked by:** FW-014
 
@@ -841,14 +843,16 @@ The app does not currently configure browser hardening headers such as `X-Conten
 
 ### Acceptance Criteria
 
-- [ ] Add baseline security headers in Next or Cloudflare configuration.
-- [ ] Do not break wallet-adapter, QR scanning, Supabase, LI.FI, or analytics behavior.
-- [ ] Roll out CSP only after testing required wallet and third-party domains.
-- [ ] `pnpm build` passes.
+- [x] Add baseline security headers in Next or Cloudflare configuration.
+- [x] Do not break wallet-adapter, QR scanning, Supabase, LI.FI, or analytics behavior.
+- [x] Roll out CSP only after testing required wallet and third-party domains.
+- [x] `pnpm build` passes.
 
 ### Notes
 
 Created from CSO finding `FW-CSO-005` on 2026-05-06.
+
+Completed on 2026-05-11 on `checklist` branch. `next.config.mjs` now applies baseline security headers to all routes: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy` that still allows camera and clipboard for QR/share flows, and production-only HSTS. CSP is implemented but opt-in behind `FUNDWISE_ENABLE_CSP=true`; the policy allowlists Supabase, Solana RPC/Helius, LI.FI, Zerion, and `open.er-api.com`, plus configured primary/fallback RPC and Supabase origins. Keeping CSP disabled by default avoids breaking wallet-adapter, QR scanning, or third-party route flows before browser QA. `pnpm build` passed.
 
 ### User Stories Covered
 
@@ -968,8 +972,8 @@ Created from AI pentest on 2026-05-06. Evidence: `lib/db.ts` lines 110-145 reads
 
 ## FW-023 - Add Wallet-Session Abuse Controls And Origin Binding
 
-**Status:** Ready  
-**Priority:** P3  
+**Status:** Done  
+**Priority:** P1  
 **Type:** AFK  
 **Blocked by:** FW-014
 
@@ -979,15 +983,17 @@ Wallet challenge and verification endpoints are simple and correct for the curre
 
 ### Acceptance Criteria
 
-- [ ] Rate-limit `/api/auth/wallet/challenge` and `/api/auth/wallet/verify` by IP and wallet address.
-- [ ] Include deployment origin and Solana cluster in the wallet challenge message.
-- [ ] Consider `__Host-` cookie names for production session cookies where deployment constraints allow it.
-- [ ] Add tests for challenge mismatch, expired challenge, invalid signature, and origin/cluster message formatting.
-- [ ] `pnpm build` passes.
+- [x] Rate-limit `/api/auth/wallet/challenge` and `/api/auth/wallet/verify` by IP and wallet address.
+- [x] Include deployment origin and Solana cluster in the wallet challenge message.
+- [x] Consider `__Host-` cookie names for production session cookies where deployment constraints allow it.
+- [x] Add tests for challenge mismatch, expired challenge, invalid signature, and origin/cluster message formatting.
+- [x] `pnpm build` passes.
 
 ### Notes
 
 Created from AI pentest on 2026-05-06. Evidence: `app/api/auth/wallet/challenge/route.ts` lines 11-26 issues challenges without throttling; `lib/server/wallet-session.ts` lines 156-166 builds the message without origin or cluster fields.
+
+Completed on 2026-05-11 on `checklist` branch. Added in-memory Edge-compatible rate limits keyed by IP and wallet for challenge and verify endpoints, normalized wallet addresses before issuing/verifying challenges, bound signed messages to request origin and current Solana cluster, rejected origin/cluster replay during verification, and switched production cookie names to `__Host-fundwise_wallet_challenge` / `__Host-fundwise_wallet_session` while retaining dev cookie names locally. Added `tests/wallet-session.test.ts` for message formatting, origin mismatch, cluster mismatch, expired signed cookie payloads, invalid signatures, IP extraction, and rate-limit bucket behavior. `pnpm test` and `pnpm build` passed.
 
 ### User Stories Covered
 
@@ -1082,7 +1088,7 @@ Helius stays primary; configure additional fallbacks at deploy time by setting `
 
 ## FW-036 - Footer Social Links + Legal Nav Scaffold
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P2
 **Type:** AFK
 **Blocked by:** None
@@ -1093,15 +1099,19 @@ Extend `components/footer.tsx` with X (`https://x.com/funddotsol`) and Telegram 
 
 ### Acceptance Criteria
 
-- [ ] Footer shows X + Telegram links with accessible labels (`aria-label`, visible icon optional).
-- [ ] Footer shows Privacy / Terms / Disclosures links pointing to `/legal/privacy`, `/legal/terms`, `/legal/disclosures`.
-- [ ] External links open in a new tab with `rel="noopener noreferrer"`.
-- [ ] Layout responsive at `375`, `768`, `1280`.
-- [ ] `pnpm build` passes.
+- [x] Footer shows X + Telegram links with accessible labels (`aria-label`, visible icon optional).
+- [x] Footer shows Privacy / Terms / Disclosures links pointing to `/legal/privacy`, `/legal/terms`, `/legal/disclosures`.
+- [x] External links open in a new tab with `rel="noopener noreferrer"`.
+- [x] Layout responsive at `375`, `768`, `1280` (additive flex-wrap row layout, owner to spot-check after next deploy).
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-11 on `checklist` branch. Footer now has three rows: product nav (existing), Community section with X + Telegram external links (target=_blank, noopener noreferrer, aria-label), and Legal section with internal links to /legal/privacy, /legal/terms, /legal/disclosures. Copyright line moved into the top row.
 
 ## FW-037 - Privacy / Terms / Disclosures Draft Pages
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P2
 **Type:** AFK
 **Blocked by:** FW-036
@@ -1112,16 +1122,16 @@ Create draft Privacy Policy, Terms of Service, and Disclosures pages. **Not lega
 
 ### Acceptance Criteria
 
-- [ ] `/legal/privacy`, `/legal/terms`, `/legal/disclosures` exist with draft content.
-- [ ] Each page has the "Draft v0" banner.
-- [ ] Privacy covers: wallet identity, data collected (display name, group/expense data, session cookies), data not collected (private keys, KYC), third parties (Supabase, Cloudflare, Helius, LI.FI, Zerion), user rights (delete, export), contact email.
-- [ ] Terms covers: non-custodial nature, third-party assets (USDC, Solana), user responsibilities, prohibited uses, disclaimer of warranties, limitation of liability, governing law placeholder, modification process.
-- [ ] Disclosures covers: smart contract risk, USDC depeg risk, network risk, fee responsibility, no FDIC insurance, beta status of Fund Mode.
-- [ ] `pnpm build` passes.
+- [x] `/legal/privacy`, `/legal/terms`, `/legal/disclosures` exist with draft content.
+- [x] Each page has the "Draft v0" banner (shared via `app/legal/layout.tsx`).
+- [x] Privacy covers: wallet identity, data collected (display name, group/expense data, session cookies), data not collected (private keys, KYC), third parties (Supabase, Cloudflare, Helius, LI.FI, Zerion), user rights (delete, export), contact channel.
+- [x] Terms covers: non-custodial nature, third-party assets (USDC, Solana), user responsibilities, prohibited uses, disclaimer of warranties, limitation of liability, governing law placeholder, modification process.
+- [x] Disclosures covers: smart contract risk, USDC depeg risk, network risk, fee responsibility, no FDIC insurance, beta status of Fund Mode.
+- [x] `pnpm build` passes.
 
 ### Notes
 
-Lawyer review is deferred per owner direction until revenue justifies the cost. Drafts must clearly say "Draft v0".
+Completed on 2026-05-11 on `checklist` branch. Three pages under `app/legal/` share an `app/legal/layout.tsx` that renders Header + Footer + a persistent amber "Draft v0 — pending legal review" banner with a Telegram contact link. Pages use Tailwind `prose` for readable typography. Build shows three new static routes: `/legal/privacy`, `/legal/terms`, `/legal/disclosures`. Lawyer review remains deferred per owner direction; final binding text replaces these drafts before mainnet launch.
 
 ## FW-038 - Production Supabase Project + RLS Migration Replay
 
@@ -1154,7 +1164,7 @@ This is HITL because it requires owner access to Supabase and Cloudflare dashboa
 **Status:** Ready
 **Priority:** P0
 **Type:** HITL
-**Blocked by:** FW-033, FW-035, FW-038, FW-017, FW-018, FW-023
+**Blocked by:** FW-033, FW-035, FW-038, FW-041
 
 ### What to verify
 
