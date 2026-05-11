@@ -5,10 +5,10 @@
  * No multisig, no compression - just basic transfers
  */
 
-import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js"
+import { createFundWiseConnection } from "@/lib/fallback-connection"
 
-const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
-export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
+export const connection = createFundWiseConnection("confirmed")
 
 /**
  * Pay from user wallet to group wallet

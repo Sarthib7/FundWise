@@ -1,11 +1,11 @@
 import type { Database, Json } from "@/lib/database.types"
-import { Connection, PublicKey, type AccountInfo } from "@solana/web3.js"
+import { PublicKey, type AccountInfo } from "@solana/web3.js"
 import * as multisig from "@sqds/multisig"
 import {
   computeBalancesFromActivity,
   simplifySettlements,
 } from "@/lib/expense-engine"
-import { getSolanaRpcUrl } from "@/lib/solana-cluster"
+import { createFundWiseConnection } from "@/lib/fallback-connection"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
@@ -233,7 +233,7 @@ export async function verifyFundModeTreasuryAddresses(
     multisigAddress: string
     treasuryAddress: string
   },
-  accountReader: TreasuryAccountReader = new Connection(getSolanaRpcUrl(), "confirmed")
+  accountReader: TreasuryAccountReader = createFundWiseConnection("confirmed")
 ) {
   const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
   const treasuryPubkey = parsePublicKey(data.treasuryAddress, "Treasury address")
@@ -284,7 +284,7 @@ export async function verifyFundModeTreasuryAddresses(
 
 async function loadSquadsProposal(
   proposalAddress: string,
-  accountReader: SquadsProposalReader = new Connection(getSolanaRpcUrl(), "confirmed")
+  accountReader: SquadsProposalReader = createFundWiseConnection("confirmed")
 ) {
   const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
   const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")

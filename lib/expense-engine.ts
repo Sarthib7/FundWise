@@ -1,14 +1,15 @@
-import { Connection, PublicKey } from "@solana/web3.js"
+import { PublicKey } from "@solana/web3.js"
 import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token"
 import type { Database } from "./database.types"
 import { getGroupDashboardSnapshot, type ActivityItem } from "./db"
 import { executeStablecoinTransfer } from "./stablecoin-transfer"
-import { getFundWiseClusterName, getSolanaRpcUrl, type FundWiseCluster } from "./solana-cluster"
+import { getFundWiseClusterName, type FundWiseCluster } from "./solana-cluster"
+import { createFundWiseConnection } from "./fallback-connection"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type GroupMode = Database["public"]["Tables"]["groups"]["Row"]["mode"]
 
-export const connection = new Connection(getSolanaRpcUrl(), "confirmed")
+export const connection = createFundWiseConnection("confirmed")
 
 export type StablecoinInfo = { mint: string; name: string; decimals: number }
 

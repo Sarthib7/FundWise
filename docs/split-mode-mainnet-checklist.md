@@ -57,7 +57,7 @@ Cluster routing per the dual-cluster strategy:
 | --- | --- | --- |
 | FW-033 | Cluster-aware `STABLECOIN_MINTS` — split into `{ devnet, mainnet }` keyed by cluster, fix PYUSD mainnet mint | **Done** (commit `a2f2fbd` on `checklist` branch) |
 | FW-034 | Cluster badge in app header (`mainnet` green / `devnet` orange) — visible on every authenticated page | **Done** |
-| FW-035 | Multi-RPC fallback — primary + comma-separated fallback URLs from env, automatic retry on RPC error | Ready |
+| FW-035 | Multi-RPC fallback — primary + comma-separated fallback URLs from env, automatic retry on RPC error | **Done** |
 | FW-036 | Footer: X + Telegram social links; legal nav scaffold pointing to placeholder pages | Ready |
 | FW-037 | Privacy / Terms / Disclosures draft pages (v0, marked "draft, not yet legally reviewed") | Ready |
 

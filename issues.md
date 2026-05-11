@@ -44,7 +44,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-032 | Done | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | Devnet RPC rate limit |
 | FW-033 | Done | P0 | AFK | Cluster-aware STABLECOIN_MINTS (devnet vs mainnet) | None |
 | FW-034 | Done | P1 | AFK | Cluster badge in app header | FW-033 |
-| FW-035 | Ready | P1 | AFK | Multi-RPC fallback with Helius primary | None |
+| FW-035 | Done | P1 | AFK | Multi-RPC fallback with Helius primary | None |
 | FW-036 | Ready | P2 | AFK | Footer social links + legal nav scaffold | None |
 | FW-037 | Ready | P2 | AFK | Privacy / Terms / Disclosures draft pages | FW-036 |
 | FW-038 | Ready | P0 | HITL | Production Supabase project + RLS migration replay | FW-014 |
@@ -1056,7 +1056,7 @@ Completed on 2026-05-11 on `checklist` branch. Header now extracts a `ClusterBad
 
 ## FW-035 - Multi-RPC Fallback With Helius Primary
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** None
@@ -1067,16 +1067,18 @@ Replace the single `NEXT_PUBLIC_SOLANA_RPC_URL` with a primary + optional fallba
 
 ### Acceptance Criteria
 
-- [ ] `NEXT_PUBLIC_SOLANA_RPC_URL` remains the primary.
-- [ ] New env var `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS` accepts comma-separated URLs.
-- [ ] `Connection` helper in `lib/solana-cluster.ts` wraps retries on `getAccountInfo`, `getBalance`, `confirmTransaction`, `sendRawTransaction` so a 429 / 503 on primary falls through to fallback.
-- [ ] Fallback is logged but not surfaced to user UI.
-- [ ] Tests cover primary success, primary fail + fallback success, all-fail.
-- [ ] `pnpm build` passes.
+- [x] `NEXT_PUBLIC_SOLANA_RPC_URL` remains the primary.
+- [x] New env var `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS` accepts comma-separated URLs.
+- [x] Connection helper in `lib/fallback-connection.ts` wraps every method via a Proxy. Retries triggered on retriable RPC errors (HTTP 408/425/429/500/502/503/504, common rate-limit / timeout / network error patterns in the message, and `ECONNRESET` / `ETIMEDOUT` / `ENOTFOUND` codes). Single-endpoint case bypasses the proxy entirely.
+- [x] Fallback logged via `console.warn`, not surfaced to user UI.
+- [x] Tests cover primary success, primary fail + fallback success, all-fail, non-retriable error (no retry), and the error-classification helper itself.
+- [x] `pnpm build` and `pnpm test` (100 passed) green.
 
 ### Notes
 
-Helius stays primary for now; user will add Triton or QuickNode later.
+Completed on 2026-05-11 on `checklist` branch. New module `lib/fallback-connection.ts` exports `createFundWiseConnection(commitment, options?)`. Options surface a `connectionFactory` + `onFallback` callback for testing. `lib/solana-cluster.ts` gains `getSolanaRpcFallbackUrls()` and `getSolanaRpcUrls()` (dedups primary if it also appears in fallbacks). All seven `new Connection(...)` call sites in the app now route through `createFundWiseConnection`: `lib/expense-engine.ts`, `lib/stablecoin-transfer.ts`, `lib/simple-payment.ts`, `lib/squads-multisig.ts`, `lib/server/solana-transfer-verification.ts`, and both `accountReader` default args in `lib/server/fundwise-mutations.ts`. Solana transaction submission via the same primary is safe to retry because Solana dedups by signature within blockhash validity.
+
+Helius stays primary; configure additional fallbacks at deploy time by setting `NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS=https://triton.example,https://quicknode.example`.
 
 ## FW-036 - Footer Social Links + Legal Nav Scaffold
 

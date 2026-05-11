@@ -21,10 +21,9 @@ import {
 } from "@solana/spl-token"
 import * as multisig from "@sqds/multisig"
 import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
+import { createFundWiseConnection } from "@/lib/fallback-connection"
 
-const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
-
-export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
+export const connection = createFundWiseConnection("confirmed")
 
 type WalletSigner = {
   sendTransaction?: (

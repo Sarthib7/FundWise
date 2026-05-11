@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL, PublicKey, Transaction, Connection } from "@solana/web3.js"
+import { LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js"
 import {
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
@@ -6,11 +6,11 @@ import {
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptAccount,
 } from "@solana/spl-token"
-import { getSolanaRpcUrl } from "@/lib/solana-cluster"
+import { createFundWiseConnection } from "@/lib/fallback-connection"
 
 const STABLECOIN_TRANSFER_COMMITMENT = "confirmed"
 
-const connection = new Connection(getSolanaRpcUrl(), STABLECOIN_TRANSFER_COMMITMENT)
+const connection = createFundWiseConnection(STABLECOIN_TRANSFER_COMMITMENT)
 
 export type StablecoinTransferPreview = {
   fromAta: PublicKey
