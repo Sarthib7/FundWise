@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getSettlementReceiptView } from "@/lib/db"
 import type { Database } from "@/lib/database.types"
-import { STABLECOIN_MINTS, formatTokenAmount } from "@/lib/expense-engine"
+import { findStablecoinByMint, formatTokenAmount } from "@/lib/expense-engine"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
 
@@ -93,9 +93,7 @@ export default function SettlementReceiptPage() {
       return null
     }
 
-    return Object.values(STABLECOIN_MINTS).find(
-      (stablecoin) => stablecoin.mint === group.stablecoin_mint
-    )
+    return findStablecoinByMint(group.stablecoin_mint) ?? null
   }, [group])
   const groupHref = group ? `/groups/${group.id}` : `/groups/${groupId}`
 

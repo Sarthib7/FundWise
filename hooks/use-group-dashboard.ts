@@ -26,10 +26,10 @@ import {
   computeBalancesFromActivity,
   DEFAULT_STABLECOIN,
   executeSettlement,
+  findStablecoinByMint,
   formatTokenAmount,
   parseTokenAmount,
   simplifySettlements,
-  STABLECOIN_MINTS,
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
@@ -254,9 +254,7 @@ export function useGroupDashboard() {
     [settlementTimestamps]
   )
 
-  const mintInfo = group
-    ? Object.values(STABLECOIN_MINTS).find((mint) => mint.mint === group.stablecoin_mint)
-    : null
+  const mintInfo = group ? findStablecoinByMint(group.stablecoin_mint) ?? null : null
   const tokenName = mintInfo?.name || "Token"
   const isFundMode = group?.mode === "fund"
   const isGroupCreator = group?.created_by === walletAddress

@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
 import { createGroup, getGroupByCode, getGroupsForWallet } from "@/lib/db"
-import { DEFAULT_STABLECOIN, STABLECOIN_MINTS } from "@/lib/expense-engine"
+import { findStablecoinByMint, getDefaultStablecoinForGroupMode } from "@/lib/expense-engine"
 import {
   Users,
   Plus,
@@ -175,7 +175,7 @@ export default function GroupsPage() {
         const createdGroup = await createGroup({
           name: values.name,
           mode: values.mode,
-          stablecoinMint: DEFAULT_STABLECOIN.mint,
+          stablecoinMint: getDefaultStablecoinForGroupMode(values.mode).mint,
           createdBy: walletAddress,
           fundingGoal: values.fundingGoal,
           approvalThreshold: values.approvalThreshold,
@@ -251,10 +251,7 @@ export default function GroupsPage() {
   )
 
   const getMintName = (mint: string) => {
-    for (const [, data] of Object.entries(STABLECOIN_MINTS)) {
-      if (data.mint === mint) return data.name
-    }
-    return "Unknown"
+    return findStablecoinByMint(mint)?.name ?? "Unknown"
   }
 
   if (!connected) {

@@ -55,20 +55,36 @@ Cluster routing per the dual-cluster strategy:
 
 | ID | Task | Status |
 | --- | --- | --- |
-| FW-033 | Cluster-aware `STABLECOIN_MINTS` — split into `{ devnet, mainnet }` keyed by cluster, fix PYUSD mainnet mint | Ready |
+| FW-033 | Cluster-aware `STABLECOIN_MINTS` — split into `{ devnet, mainnet }` keyed by cluster, fix PYUSD mainnet mint | **Done** (commit `bcfe…` on `checklist` branch) |
 | FW-034 | Cluster badge in app header (`mainnet` green / `devnet` orange) — visible on every authenticated page | Ready |
 | FW-035 | Multi-RPC fallback — primary + comma-separated fallback URLs from env, automatic retry on RPC error | Ready |
 | FW-036 | Footer: X + Telegram social links; legal nav scaffold pointing to placeholder pages | Ready |
 | FW-037 | Privacy / Terms / Disclosures draft pages (v0, marked "draft, not yet legally reviewed") | Ready |
 
 **Code locations touched:**
-- `lib/expense-engine.ts` (mint config)
+- `lib/expense-engine.ts` (mint config — done in FW-033)
 - `lib/solana-cluster.ts` (already has cluster helpers — add fallback RPC support)
 - `components/footer.tsx`
 - `components/header.tsx` (cluster badge)
 - `app/legal/privacy/page.tsx` (new)
 - `app/legal/terms/page.tsx` (new)
 - `app/legal/disclosures/page.tsx` (new)
+
+**Pre-mainnet audit query** — run against the existing devnet beta Supabase project (and the new prod project once it exists in FW-038) to confirm no Split Mode groups are stranded on devnet-only mints:
+
+```sql
+-- Stranded check: Split Mode groups on devnet-only mint addresses
+-- Expected on a fresh prod project: zero rows.
+-- Expected on the devnet beta project: rows are fine because they stay on devnet.
+select id, name, mode, stablecoin_mint, created_at
+  from groups
+ where mode = 'split'
+   and stablecoin_mint in (
+       '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', -- devnet test USDC
+       'CXFaY4cXf25ZhFlexqroBfBceJ8YqWBsfaY3HQd9qucz'  -- devnet PYUSD placeholder
+   )
+ order by created_at desc;
+```
 
 ---
 

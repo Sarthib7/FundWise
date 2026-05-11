@@ -42,7 +42,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-030 | Done | P1 | AFK | Add LI.FI funding path for Fund Mode Contributions | FW-020 |
 | FW-031 | Done | P1 | AFK | Add Zerion readiness context for Fund Mode Members and Treasuries | FW-020 |
 | FW-032 | Done | P1 | AFK | Run invite-only Fund Mode beta rehearsal and integration QA | Devnet RPC rate limit |
-| FW-033 | Ready | P0 | AFK | Cluster-aware STABLECOIN_MINTS (devnet vs mainnet) | None |
+| FW-033 | Done | P0 | AFK | Cluster-aware STABLECOIN_MINTS (devnet vs mainnet) | None |
 | FW-034 | Ready | P1 | AFK | Cluster badge in app header | FW-033 |
 | FW-035 | Ready | P1 | AFK | Multi-RPC fallback with Helius primary | None |
 | FW-036 | Ready | P2 | AFK | Footer social links + legal nav scaffold | None |
@@ -995,7 +995,7 @@ Created from AI pentest on 2026-05-06. Evidence: `app/api/auth/wallet/challenge/
 
 ## FW-033 - Cluster-Aware Stablecoin Mints
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P0
 **Type:** AFK
 **Blocked by:** None
@@ -1006,18 +1006,30 @@ Split the hardcoded devnet `STABLECOIN_MINTS` map in `lib/expense-engine.ts` int
 
 ### Acceptance Criteria
 
-- [ ] `STABLECOIN_MINTS` is selected per cluster, not hardcoded.
-- [ ] Mainnet USDC mint = `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
-- [ ] Mainnet PYUSD mint = `2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo`.
-- [ ] Mainnet USDT mint = `Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ`.
-- [ ] Devnet mints remain unchanged for Fund Mode beta.
-- [ ] `DEFAULT_STABLECOIN` returns the cluster-appropriate USDC.
-- [ ] Audit query identifies any existing `groups.stablecoin_mint` rows that would be stranded by the switch; documented in the migration PR.
-- [ ] `pnpm build` and `pnpm test` pass.
+- [x] `STABLECOIN_MINTS` is selected per cluster, not hardcoded.
+- [x] Mainnet USDC mint = `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
+- [x] Mainnet PYUSD mint = `2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo`.
+- [x] Mainnet USDT mint = `Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ`.
+- [x] Devnet mints remain unchanged for Fund Mode beta.
+- [x] `DEFAULT_STABLECOIN` returns the cluster-appropriate USDC.
+- [x] Audit query identifies any existing `groups.stablecoin_mint` rows that would be stranded by the switch; documented in `docs/split-mode-mainnet-checklist.md` Phase 1.
+- [x] `pnpm build` and `pnpm test` pass.
 
 ### Notes
 
-Mainnet blocker for Split Mode launch. Without this, Split Mode on mainnet would route to a devnet test mint that doesn't exist.
+Completed on 2026-05-11 on `checklist` branch. New exports in `lib/expense-engine.ts`:
+
+- `STABLECOIN_MINTS_BY_CLUSTER` — `{ devnet, mainnet-beta, custom }` maps
+- `getStablecoinMintsForCluster(cluster?)` — resolves mints for the given cluster (default: current deployment)
+- `getDefaultStablecoinForCluster(cluster?)` — USDC for the cluster
+- `findStablecoinByMint(mintAddress)` — searches across both clusters; used wherever a Group's stored mint needs metadata
+- `getClusterForGroupMode(mode)` — forces devnet for `mode === "fund"`, deployment cluster otherwise
+- `getDefaultStablecoinForGroupMode(mode)` — picks the right USDC for new Groups
+- Legacy `STABLECOIN_MINTS` / `DEFAULT_STABLECOIN` exports remain and resolve to the deployment's primary cluster at module load — still used by fallback paths in `app/groups/[id]/page.tsx` and `hooks/use-group-dashboard.ts`.
+
+Callers updated: `app/groups/page.tsx` (Group creation now uses `getDefaultStablecoinForGroupMode`, and `getMintName` uses `findStablecoinByMint`), `app/groups/[id]/settlements/[settlementId]/page.tsx` (metadata lookup via `findStablecoinByMint`), `hooks/use-group-dashboard.ts` (metadata lookup via `findStablecoinByMint`). Per-Group RPC routing (so a Fund Mode Group on a mainnet deployment actually talks to a devnet RPC) is intentionally out of scope for FW-033 and tracked in FW-035.
+
+Focused test: `pnpm test` 89 passed (20 new cluster-aware mint tests added to `tests/expense-engine.test.ts`). Full gate: `pnpm build` passed.
 
 ## FW-034 - Cluster Badge In Header
 
