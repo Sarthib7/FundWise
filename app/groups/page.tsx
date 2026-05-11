@@ -159,6 +159,7 @@ export default function GroupsPage() {
       mode: "split" | "fund"
       fundingGoal?: number
       approvalThreshold?: number
+      groupTemplate?: GroupRow["group_template"]
     }) => {
       if (!walletAddress) {
         return
@@ -179,6 +180,7 @@ export default function GroupsPage() {
           createdBy: walletAddress,
           fundingGoal: values.fundingGoal,
           approvalThreshold: values.approvalThreshold,
+          groupTemplate: values.groupTemplate,
         })
 
         setIsCreateDialogOpen(false)

@@ -51,7 +51,7 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-039 | Ready | P0 | HITL | Mainnet rehearsal with real USDC (full Split Mode flow) | FW-033, FW-035, FW-038 |
 | FW-040 | Ready | P1 | AFK | Update public copy after mainnet launch | FW-039 |
 | FW-041 | Done | P1 | AFK | Minimal OFAC SDN screening on wallet connect | FW-014 |
-| FW-042 | Ready | P1 | AFK | Pool templates at Fund Mode Group creation | None |
+| FW-042 | Done | P1 | AFK | Pool templates at Fund Mode Group creation | None |
 | FW-043 | Ready | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
 | FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | FW-043 |
 | FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) + exit flow proposal type | None |
@@ -79,7 +79,7 @@ The hackathon submission is complete. Post-submission execution follows the two 
 
 **Fund Mode devnet beta path (parallel, non-blocking):**
 
-1. **FW-042** Pool templates (P1, AFK)
+1. **FW-042** Pool templates (P1, AFK) — done
 2. **FW-043** Treasury overview card (P1, AFK)
 3. **FW-044** Auto-suggested reimbursement proposals (P1, AFK)
 4. **FW-047** Creation fee infrastructure (P1, AFK)
@@ -1231,7 +1231,7 @@ Completed on 2026-05-11 on `checklist` branch. Added `lib/server/sanctions-scree
 
 ## FW-042 - Pool Templates At Fund Mode Group Creation
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P1
 **Type:** AFK
 **Blocked by:** None
@@ -1242,11 +1242,15 @@ Add quick-start templates to Fund Mode Group creation: `Trip pool`, `Friend fund
 
 ### Acceptance Criteria
 
-- [ ] Template selector visible during Fund Mode Group creation only.
-- [ ] Selecting a template prefills threshold suggestion (e.g. `Friend fund` defaults to majority+1).
-- [ ] Templates have a "no template" / "custom" fallback.
-- [ ] Template choice stored on the Group row for future analytics.
-- [ ] `pnpm build` passes.
+- [x] Template selector visible during Fund Mode Group creation only.
+- [x] Selecting a template prefills threshold suggestion (e.g. `Friend fund` defaults to majority+1).
+- [x] Templates have a "no template" / "custom" fallback.
+- [x] Template choice stored on the Group row for future analytics.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-11 on `checklist` branch. Added `lib/fund-mode-templates.ts` with `Trip pool`, `Friend fund`, `DAO grant`, and `Family budget` presets, each carrying an approval-threshold suggestion, default memo, and role hint. Fund Mode Group creation now shows a template selector only after Fund Mode is selected; `Custom` is the no-template fallback, and choosing a template prefills the approval threshold. Added `groups.group_template` via migration `20260511150000_add_fund_mode_template_to_groups.sql`, updated database types, API input, browser wrapper, and server mutation validation/persistence. `pnpm test` and `pnpm build` passed.
 
 ## FW-043 - Treasury Overview Card On Fund Mode Dashboard
 

@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       createdBy?: string
       fundingGoal?: number
       approvalThreshold?: number
+      groupTemplate?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
     }
 
     if (!body.name || !body.mode || !body.stablecoinMint || !body.createdBy) {
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
       createdBy: body.createdBy,
       fundingGoal: body.fundingGoal,
       approvalThreshold: body.approvalThreshold,
+      groupTemplate: body.groupTemplate,
     })
 
     return NextResponse.json(group)

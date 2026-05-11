@@ -20,6 +20,7 @@ export interface Database {
           created_at: string
           funding_goal: number | null
           approval_threshold: number | null
+          group_template: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
           multisig_address: string | null
           treasury_address: string | null
         }
@@ -33,6 +34,7 @@ export interface Database {
           created_at?: string
           funding_goal?: number | null
           approval_threshold?: number | null
+          group_template?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
           multisig_address?: string | null
           treasury_address?: string | null
         }
@@ -46,6 +48,7 @@ export interface Database {
           created_at?: string
           funding_goal?: number | null
           approval_threshold?: number | null
+          group_template?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
           multisig_address?: string | null
           treasury_address?: string | null
         }

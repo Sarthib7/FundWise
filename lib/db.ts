@@ -69,6 +69,7 @@ export async function createGroup(data: {
   createdBy: string
   fundingGoal?: number
   approvalThreshold?: number
+  groupTemplate?: GroupRow["group_template"]
 }): Promise<{ id: string; code: string }> {
   return requestJson<{ id: string; code: string }>("/api/groups", {
     method: "POST",

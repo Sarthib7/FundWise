@@ -48,7 +48,7 @@ Goal: a user who's never used a multisig should be able to spin up a working poo
 
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
-| FW-042 | Pool templates at Group creation (`Trip pool`, `Friend fund`, `DAO grant`, `Family budget`) — each sets default threshold suggestion, default proposal memos, default member-role expectations | First-time UX cliff; users don't know what threshold means | New |
+| FW-042 | Pool templates at Group creation (`Trip pool`, `Friend fund`, `DAO grant`, `Family budget`) — each sets default threshold suggestion, default proposal memos, default member-role expectations | First-time UX cliff; users don't know what threshold means | **Done** |
 | FW-043 | Treasury overview card on Group dashboard — available balance, pending proposal count, last 5 events, top contributors. One screen, no drilling | Currently users must scroll the activity feed to understand pool state | New |
 | FW-044 | Auto-suggested reimbursement proposals — when a Member logs an expense flagged "from pool", the dashboard surfaces a one-click "Propose reimbursement for $X" with memo pre-filled | Biggest UX win; closes the Split-Mode-style "log → reconcile" loop for pools | New |
 | FW-045 | Member roles (light): Admin / Member / Viewer. Admin can change threshold + invite. Member can propose / approve / execute. Viewer is read-only. Stored in FundWise (not Squads — Squads stays the on-chain authority) | Squads roles are too low-level for non-crypto users | New |

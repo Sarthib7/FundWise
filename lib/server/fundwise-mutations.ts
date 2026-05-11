@@ -6,6 +6,7 @@ import {
   simplifySettlements,
 } from "@/lib/expense-engine"
 import { createFundWiseConnection } from "@/lib/fallback-connection"
+import { isFundModeTemplateId, type FundModeTemplateId } from "@/lib/fund-mode-templates"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
@@ -537,11 +538,16 @@ export async function createGroupMutation(data: {
   createdBy: string
   fundingGoal?: number
   approvalThreshold?: number
+  groupTemplate?: FundModeTemplateId | null
 }) {
   if (data.mode === "fund" && !isFundModeInviteWallet(data.createdBy)) {
     throw new FundWiseError(
       "Fund Mode is currently invite-only while the treasury Proposal lifecycle is being finished."
     )
+  }
+
+  if (data.groupTemplate && !isFundModeTemplateId(data.groupTemplate)) {
+    throw new FundWiseError("Unknown Fund Mode template.")
   }
 
   const insert: GroupInsert = {
@@ -551,6 +557,7 @@ export async function createGroupMutation(data: {
     created_by: data.createdBy,
     funding_goal: data.fundingGoal ?? null,
     approval_threshold: data.approvalThreshold ?? null,
+    group_template: data.mode === "fund" ? data.groupTemplate ?? null : null,
   }
 
   const { data: group, error } = await getAdmin()

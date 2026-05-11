@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { FUND_MODE_TEMPLATES, type FundModeTemplateId } from "@/lib/fund-mode-templates"
 import { cn } from "@/lib/utils"
 
 type GroupMode = "split" | "fund"
@@ -23,6 +24,7 @@ type CreateGroupValues = {
   mode: GroupMode
   fundingGoal?: number
   approvalThreshold?: number
+  groupTemplate?: FundModeTemplateId | null
 }
 
 type CreateGroupDialogProps = {
@@ -49,6 +51,7 @@ export function CreateGroupDialog({
   const [mode, setMode] = useState<GroupMode>("split")
   const [fundingGoal, setFundingGoal] = useState("")
   const [approvalThreshold, setApprovalThreshold] = useState(DEFAULT_APPROVAL_THRESHOLD)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<FundModeTemplateId | null>(null)
   const [errors, setErrors] = useState<{
     name?: string
     fundingGoal?: string
@@ -61,6 +64,7 @@ export function CreateGroupDialog({
       setMode("split")
       setFundingGoal("")
       setApprovalThreshold(DEFAULT_APPROVAL_THRESHOLD)
+      setSelectedTemplateId(null)
       setErrors({})
     }
   }, [open])
@@ -115,6 +119,7 @@ export function CreateGroupDialog({
       mode,
       fundingGoal: parsedFundingGoal,
       approvalThreshold: parsedApprovalThreshold,
+      groupTemplate: mode === "fund" ? selectedTemplateId : null,
     })
   }
 
@@ -249,8 +254,61 @@ export function CreateGroupDialog({
           </div>
 
           {mode === "fund" && (
-            <div className="grid gap-4 rounded-xl border bg-muted/30 p-4 sm:grid-cols-2">
-              <div className="space-y-2">
+            <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium">Pool template</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Optional. Templates prefill the approval threshold and explain expected roles for beta testers.
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTemplateId(null)}
+                    className={cn(
+                      "min-h-20 rounded-lg border p-3 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      selectedTemplateId === null
+                        ? "border-accent/30 bg-accent/10 shadow-sm"
+                        : "border-border bg-background hover:border-accent/20 hover:bg-accent/5"
+                    )}
+                  >
+                    <p className="text-sm font-semibold">Custom</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Start without a preset and tune the Treasury rules yourself.
+                    </p>
+                  </button>
+                  {FUND_MODE_TEMPLATES.map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTemplateId(template.id)
+                        setApprovalThreshold(String(template.approvalThreshold))
+                        setErrors((current) => ({ ...current, approvalThreshold: undefined }))
+                      }}
+                      className={cn(
+                        "min-h-20 rounded-lg border p-3 text-left transition-[border-color,background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        selectedTemplateId === template.id
+                          ? "border-brand-fund-blue-border bg-brand-fund-blue-bg shadow-sm"
+                          : "border-border bg-background hover:border-brand-fund-blue-border hover:bg-brand-fund-blue-bg/60"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold">{template.label}</p>
+                        <Badge variant="outline" className="text-[10px]">
+                          {template.approvalThreshold} approval{template.approvalThreshold === 1 ? "" : "s"}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{template.description}</p>
+                      <p className="mt-2 text-[11px] text-muted-foreground">{template.roleHint}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
                 <Label htmlFor={fundingGoalId}>Funding goal</Label>
                 <Input
                   id={fundingGoalId}
@@ -311,6 +369,7 @@ export function CreateGroupDialog({
                     Treasury actions will require this many approvals after Members join.
                   </p>
                 )}
+                </div>
               </div>
             </div>
           )}
