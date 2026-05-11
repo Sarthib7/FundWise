@@ -9,7 +9,7 @@ export type CreateFundWiseConnectionOptions = {
   onFallback?: (failed: { endpoint: string; method: string; error: unknown }) => void
 }
 
-const RETRIABLE_STATUS_CODES = new Set([408, 425, 429, 500, 502, 503, 504])
+const RETRIABLE_STATUS_CODES = new Set([403, 408, 425, 429, 500, 502, 503, 504])
 
 const RETRIABLE_ERROR_PATTERNS = [
   "rate limit",
@@ -18,6 +18,8 @@ const RETRIABLE_ERROR_PATTERNS = [
   "429",
   "503",
   "fetch failed",
+  "forbidden",
+  "blocked from this endpoint",
   "network error",
   "request timed out",
   "timeout",

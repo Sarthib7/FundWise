@@ -3,7 +3,36 @@ const DEFAULT_SOLANA_RPC_URL = "https://api.devnet.solana.com"
 export type FundWiseCluster = "mainnet-beta" | "devnet" | "custom"
 
 export function getSolanaRpcUrl() {
-  return process.env.NEXT_PUBLIC_SOLANA_RPC_URL || DEFAULT_SOLANA_RPC_URL
+  return (
+    process.env.SOLANA_RPC_URL ||
+    process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
+    DEFAULT_SOLANA_RPC_URL
+  )
+}
+
+export function getSolanaRpcFallbackUrls(): string[] {
+  const raw =
+    process.env.SOLANA_RPC_FALLBACK_URLS ??
+    process.env.NEXT_PUBLIC_SOLANA_RPC_FALLBACK_URLS ??
+    ""
+  return raw
+    .split(",")
+    .map((url) => url.trim())
+    .filter((url) => url.length > 0)
+}
+
+export function getSolanaRpcUrls(): string[] {
+  const primary = getSolanaRpcUrl()
+  const fallbacks = getSolanaRpcFallbackUrls()
+  const seen = new Set<string>()
+  const ordered: string[] = []
+  for (const url of [primary, ...fallbacks]) {
+    if (!seen.has(url)) {
+      seen.add(url)
+      ordered.push(url)
+    }
+  }
+  return ordered
 }
 
 export function getSolanaRpcFallbackUrls(): string[] {
