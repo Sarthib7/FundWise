@@ -3,7 +3,7 @@
 **Owner:** sarthib7
 **Target:** Public mainnet launch of Split Mode
 **Strategy:** Public app pinned to mainnet for Split Mode. Fund Mode stays devnet, invite-only, hidden from the public UI.
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-13
 
 This file is the execution checklist for moving Split Mode from devnet to mainnet. Tick items as they ship. New blockers become indexed `FW-*` issues in `issues.md`, not new files.
 
@@ -14,6 +14,7 @@ This file is the execution checklist for moving Split Mode from devnet to mainne
 - ✅ Split Mode lifecycle works end-to-end on devnet (Group → invite → Expense → Balance → Settlement → Receipt)
 - ✅ RLS lockdown, server-side ledger validation, settlement-graph enforcement, Squads governance shipped
 - ✅ LI.FI `Route funds for Settlement` shipped
+- ✅ LI.FI route metadata readiness check shipped as `pnpm lifi:readiness`
 - ✅ Zerion CLI wallet readiness shipped
 - ✅ Stablecoin mints are cluster-aware (FW-033)
 - ✅ Cluster badge shows the active network on authenticated pages (FW-034)
@@ -129,6 +130,8 @@ Notes:
 
 **Prerequisites:** Phases 1-3 done. Two real mainnet wallets funded with ~$5 USDC + ~$1 SOL each.
 
+**LI.FI rehearsal rule:** Sepolia is not a valid FundWise rehearsal path. LI.FI's current guidance is to test integrations on mainnet, and `pnpm lifi:readiness` currently reports no Ethereum/Base/Arbitrum/OP Sepolia route into Solana USDC. Before public launch, run `pnpm lifi:readiness`, then execute one tiny mainnet EVM USDC route into the Member's Solana wallet and complete the normal Settlement flow.
+
 | # | Flow | Pass criteria |
 | --- | --- | --- |
 | 1 | Create Group → copy invite | Group row created with mainnet mint; invite link works |
@@ -147,7 +150,7 @@ Notes:
 | 14 | Insufficient SOL at settle | Clear error, SOL guidance shown |
 | 15 | First-time recipient ATA | Preflight shows extra rent cost (~0.002 SOL) |
 | 16 | Wallet rejection mid-flow | App recovers gracefully |
-| 17 | LI.FI top-up path (optional) | Polygon/Base USDC → Solana USDC → settle |
+| 17 | LI.FI route readiness + top-up path | `pnpm lifi:readiness` passes; tiny mainnet EVM USDC route → Solana USDC → settle |
 
 **Output artifacts to capture:**
 - Group UUID, member wallets (redacted to first/last 4 chars)

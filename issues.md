@@ -1163,14 +1163,14 @@ This is HITL because it requires owner access to Supabase and Cloudflare dashboa
 
 ## FW-039 - Mainnet Rehearsal With Real USDC
 
-**Status:** Done
+**Status:** Ready
 **Priority:** P0
 **Type:** HITL
 **Blocked by:** FW-033, FW-035, FW-038
 
 ### What to verify
 
-Run the 17-step mainnet test plan from `docs/split-mode-mainnet-checklist.md` Phase 4 with two real mainnet wallets funded with ~$5 USDC + ~$1 SOL each. Capture tx signatures, screenshots, and any failure modes.
+Run the 17-step mainnet test plan from `docs/split-mode-mainnet-checklist.md` Phase 4 with two real mainnet wallets funded with ~$5 USDC + ~$1 SOL each. Capture tx signatures, screenshots, and any failure modes. Sepolia is not an accepted LI.FI rehearsal path; the route proof must be a tiny mainnet EVM USDC route into Solana USDC.
 
 ### Acceptance Criteria
 
@@ -1180,7 +1180,8 @@ Run the 17-step mainnet test plan from `docs/split-mode-mainnet-checklist.md` Ph
 - [ ] Settlement Request Link flow works on mainnet.
 - [ ] Insufficient-USDC / insufficient-SOL / first-ATA preflight states behave correctly.
 - [ ] Wallet rejection mid-flow recovers gracefully.
-- [ ] LI.FI top-up path verified (optional, may defer if user has Solana USDC).
+- [ ] `pnpm lifi:readiness` passes immediately before the mainnet route proof.
+- [ ] LI.FI `Route funds for Settlement` verified with a tiny mainnet EVM USDC route; prefer Base or Optimism to minimize gas.
 - [ ] All findings either fixed or split into new indexed issues.
 
 ## FW-040 - Update Public Copy After Mainnet Launch

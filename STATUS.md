@@ -83,7 +83,7 @@ The product direction is now sharper:
 - Public Story page added for the problem narrative, Settlement Request Link loop, and LI.FI cross-chain Settlement routing angle
 - Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
 - Fund Mode vertical slice with invite-only creation support, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
-- LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
+- LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, mainnet-aware bridge UI, and `pnpm lifi:readiness` route metadata checks
 - Stablecoin transfer preflight for Settlements and Contributions: balance checks before wallet prompt, explicit SOL-for-gas guidance, and one-time token-account creation messaging
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
 - Wallet-signed session cookies for protected FundWise actions and browser-session verification
@@ -147,6 +147,7 @@ Next pick:
 
 - **FW-032 done:** Fund Mode beta rehearsal passed end-to-end on devnet: Group creation, invite join, Squads Treasury init, Contribution, Proposal creation, approval, execution, and Treasury-to-Member payout all verified on-chain with Helius devnet RPC. Group `9c0f9012`, Proposal `c14d795c`, execution tx `44JZK41J...`.
 - **FW-021 done:** LI.FI top-up amount now uses integer-string-math parser with 20 unit tests instead of `parseFloat`.
+- **LI.FI readiness done:** `pnpm lifi:readiness` checks the exact FundWise source set (Ethereum/Base/Arbitrum/Optimism/Polygon USDC -> Solana USDC) against live LI.FI metadata. Current result: mainnet routes ready, Sepolia probes have no usable route into Solana USDC, so FW-039 must use a tiny mainnet route.
 - **FW-022 done:** Direct browser Supabase ledger helpers removed from `lib/db.ts`; browser code exclusively uses HTTP API wrappers.
 - Remaining mainnet blocker: FW-038 production Supabase / Cloudflare environment setup, then FW-039 mainnet rehearsal. FW-038 prep is in place via `docs/ops-runbook.md` and `pnpm supabase:verify-rls`; owner dashboard access is required to finish it.
 - Sentry (`@sentry/nextjs`) attempted and **reverted** — breaks `@cloudflare/next-on-pages` with a duplicated identifier error. Monitoring must use a Cloudflare-compatible alternative or wait for OpenNext adapter.
