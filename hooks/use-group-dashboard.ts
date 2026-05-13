@@ -38,16 +38,7 @@ import {
   previewStablecoinTransfer,
   type StablecoinTransferPreview,
 } from "@/lib/stablecoin-transfer"
-import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
-import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
-import {
-  contributeStablecoinToTreasury,
-  createSquadsReimbursementProposal,
-  createSquadsMultisig,
-  executeSquadsReimbursementProposal,
-  getTreasuryStablecoinBalance,
-  reviewSquadsProposal,
-} from "@/lib/squads-multisig"
+import { getFundWiseClusterLabel, isSolanaMainnetCluster } from "@/lib/solana-cluster"
 import { toast } from "sonner"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
 
@@ -155,6 +146,12 @@ function writePendingSettlementReceipt(
 function openSettlementReceipt(groupId: string, settlementId: string) {
   window.location.assign(`/groups/${groupId}/settlements/${settlementId}`)
 }
+
+async function loadSquadsTreasuryBalance(treasuryAddress: string, mintAddress: string) {
+  const { getTreasuryStablecoinBalance } = await import("@/lib/squads-multisig")
+  return getTreasuryStablecoinBalance(treasuryAddress, mintAddress)
+}
+
 export function useGroupDashboard() {
   const params = useParams()
   const router = useRouter()
@@ -164,7 +161,7 @@ export function useGroupDashboard() {
 
   const walletAddress = publicKey?.toString() || ""
   const groupId = params.id as string
-  const lifiSupported = isLifiSupportedForCurrentCluster()
+  const lifiSupported = isSolanaMainnetCluster()
   const clusterLabel = getFundWiseClusterLabel()
 
   const [group, setGroup] = useState<GroupRow | null>(null)
@@ -274,7 +271,7 @@ export function useGroupDashboard() {
       }
 
       const nextTreasuryBalance = groupData.treasury_address
-        ? await getTreasuryStablecoinBalance(groupData.treasury_address, groupData.stablecoin_mint)
+        ? await loadSquadsTreasuryBalance(groupData.treasury_address, groupData.stablecoin_mint)
         : 0
 
       setContributions(snapshot.contributions)
@@ -744,6 +741,7 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
+      const { createSquadsMultisig } = await import("@/lib/squads-multisig")
       const memberKeys = members.map((member) => new PublicKey(member.wallet))
       const result = await createSquadsMultisig(
         publicKey,
@@ -834,6 +832,7 @@ export function useGroupDashboard() {
         destinationLabel: "the Treasury",
       })
 
+      const { contributeStablecoinToTreasury } = await import("@/lib/squads-multisig")
       const { signature } = await contributeStablecoinToTreasury(
         signingWallet,
         walletAddress,
@@ -934,6 +933,7 @@ export function useGroupDashboard() {
         throw new Error("Enter a valid Proposal amount")
       }
 
+      const { createSquadsReimbursementProposal } = await import("@/lib/squads-multisig")
       const squadsProposal = await createSquadsReimbursementProposal(
         signingWallet,
         walletAddress,
@@ -1070,6 +1070,7 @@ export function useGroupDashboard() {
         throw new Error("No wallet found")
       }
 
+      const { reviewSquadsProposal } = await import("@/lib/squads-multisig")
       const { signature } = await reviewSquadsProposal(
         signingWallet,
         walletAddress,
@@ -1127,6 +1128,7 @@ export function useGroupDashboard() {
         throw new Error("No wallet found")
       }
 
+      const { executeSquadsReimbursementProposal } = await import("@/lib/squads-multisig")
       const { signature } = await executeSquadsReimbursementProposal(
         signingWallet,
         walletAddress,
