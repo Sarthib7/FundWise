@@ -2,20 +2,17 @@
 
 export const runtime = "edge"
 
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ExpenseDialog, type ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
-import { FundModeDashboard } from "@/components/group-dashboard/fund-mode-dashboard"
+import type { ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
-import { SplitModeDashboard } from "@/components/group-dashboard/split-mode-dashboard"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
-import { InviteGroupDialog } from "@/components/invite-group-dialog"
 import { useGroupDashboard, PROFILE_DISPLAY_NAME_MAX_LENGTH } from "@/hooks/use-group-dashboard"
 import { addExpense as dbAddExpense, type ActivityItem, updateExpense as dbUpdateExpense } from "@/lib/db"
 import {
@@ -38,6 +35,54 @@ import {
   Share2,
   Wallet,
 } from "lucide-react"
+
+const SplitModeDashboard = dynamic(
+  () =>
+    import("@/components/group-dashboard/split-mode-dashboard").then(
+      (module) => module.SplitModeDashboard
+    ),
+  {
+    loading: () => (
+      <Card className="p-6 text-sm text-muted-foreground">Loading Split Mode...</Card>
+    ),
+  }
+)
+
+const FundModeDashboard = dynamic(
+  () =>
+    import("@/components/group-dashboard/fund-mode-dashboard").then(
+      (module) => module.FundModeDashboard
+    ),
+  {
+    loading: () => (
+      <Card className="p-6 text-sm text-muted-foreground">Loading Fund Mode...</Card>
+    ),
+  }
+)
+
+const ExpenseDialog = dynamic(
+  () =>
+    import("@/components/group-dashboard/expense-dialog").then(
+      (module) => module.ExpenseDialog
+    ),
+  { ssr: false }
+)
+
+const CrossChainBridgeModal = dynamic(
+  () =>
+    import("@/components/cross-chain-bridge-modal").then(
+      (module) => module.CrossChainBridgeModal
+    ),
+  { ssr: false }
+)
+
+const InviteGroupDialog = dynamic(
+  () =>
+    import("@/components/invite-group-dialog").then(
+      (module) => module.InviteGroupDialog
+    ),
+  { ssr: false }
+)
 
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 type SplitMethod = Database["public"]["Enums"]["split_method"]
@@ -844,7 +889,7 @@ export default function GroupDashboard() {
         </div>
       </main>
 
-      {!isFundMode && (
+      {!isFundMode && showExpenseDialog && (
         <ExpenseDialog
           open={showExpenseDialog}
           onOpenChange={handleExpenseDialogOpenChange}
@@ -873,28 +918,30 @@ export default function GroupDashboard() {
         />
       )}
 
-      <CrossChainBridgeModal
-        open={showBridge}
-        onOpenChange={setShowBridge}
-        destinationAddress={walletAddress}
-        groupName={group.name}
-        flow={bridgeFlow}
-        initialAmount={bridgeInitialAmount}
-        onSuccess={(txHash, amount) => {
-          if (bridgeFlow === "contribution") {
-            setContributionAmount(amount)
-          }
-
-          toast.success(
-            bridgeFlow === "contribution"
-              ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
-              : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
-            {
-              description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
+      {showBridge && (
+        <CrossChainBridgeModal
+          open={showBridge}
+          onOpenChange={setShowBridge}
+          destinationAddress={walletAddress}
+          groupName={group.name}
+          flow={bridgeFlow}
+          initialAmount={bridgeInitialAmount}
+          onSuccess={(txHash, amount) => {
+            if (bridgeFlow === "contribution") {
+              setContributionAmount(amount)
             }
-          )
-        }}
-      />
+
+            toast.success(
+              bridgeFlow === "contribution"
+                ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
+                : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
+              {
+                description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
+              }
+            )
+          }}
+        />
+      )}
 
       <ProfileNameDialog
         open={showProfileDialog}
@@ -906,13 +953,15 @@ export default function GroupDashboard() {
         onSave={handleSaveProfileDialog}
       />
 
-      <InviteGroupDialog
-        open={showInviteDialog}
-        onOpenChange={setShowInviteDialog}
-        groupId={groupId}
-        groupName={group.name}
-        groupCode={group.code}
-      />
+      {showInviteDialog && (
+        <InviteGroupDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          groupId={groupId}
+          groupName={group.name}
+          groupCode={group.code}
+        />
+      )}
 
       <Footer />
     </div>
