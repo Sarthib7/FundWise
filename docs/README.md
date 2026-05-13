@@ -5,6 +5,7 @@ This directory holds detailed product, API, positioning, and decision records. S
 ## Fast Paths
 
 - **Split Mode to mainnet:** [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md). Phased map. Test plan. Rollback.
+- **LI.FI route rehearsal:** [LI.FI Route Rehearsal](./lifi-route-rehearsal.md). EVM wallet path. Sepolia boundary. Mainnet proof.
 - **Fund Mode devnet beta:** [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md). Easy UX. Monetization tests. Beta ops.
 - **Current product truth:** [STATUS](../STATUS.md) -> [Shipped vs Planned Product Matrix](./shipped-vs-planned.md)
 - **Build plan:** [issues](../issues.md). Pick Queue at top. FW-* IDs.
@@ -18,6 +19,7 @@ This directory holds detailed product, API, positioning, and decision records. S
 Two tracks. Two checklists. Tick items as they ship.
 
 - [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md). Public app. Mainnet. Real USDC. Locked sequential phases.
+- [LI.FI Route Rehearsal](./lifi-route-rehearsal.md). Mainnet-only route proof for EVM USDC into Solana USDC.
 - [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md). Devnet only. Invite gated. Tests pricing.
 
 New blockers become indexed `FW-*` issues in [issues](../issues.md). Not new files.
@@ -43,6 +45,7 @@ New blockers become indexed `FW-*` issues in [issues](../issues.md). Not new fil
 - [Shipped vs Planned Product Matrix](./shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope status
 - [Monetization Model](./monetization.md) - free Split Mode launch and paid-surface hypotheses
 - [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md) - phased mainnet map, test plan, rollback
+- [LI.FI Route Rehearsal](./lifi-route-rehearsal.md) - EVM wallet source path, testnet boundary, and mainnet proof steps
 - [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md) - easy-UX work, monetization tests, beta program ops
 - [Fund Mode Beta Rehearsal](./fund-mode-beta-rehearsal.md) - scripted rehearsal flow for devnet beta
 - [Fund Mode Proposal Audit](./fund-mode-proposal-audit.md) - storage and access rules for Proposal proof/comments

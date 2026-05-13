@@ -130,7 +130,7 @@ Notes:
 
 **Prerequisites:** Phases 1-3 done. Two real mainnet wallets funded with ~$5 USDC + ~$1 SOL each.
 
-**LI.FI rehearsal rule:** Sepolia is not a valid FundWise rehearsal path. LI.FI's current guidance is to test integrations on mainnet, and `pnpm lifi:readiness` currently reports no Ethereum/Base/Arbitrum/OP Sepolia route into Solana USDC. Before public launch, run `pnpm lifi:readiness`, then execute one tiny mainnet EVM USDC route into the Member's Solana wallet and complete the normal Settlement flow.
+**LI.FI rehearsal rule:** Sepolia is not a valid FundWise rehearsal path. LI.FI's current guidance is to test integrations on mainnet, and `pnpm lifi:readiness` currently reports no Ethereum/Base/Arbitrum/OP Sepolia route into Solana USDC. Before public launch, run `pnpm lifi:readiness`, then execute one tiny mainnet EVM USDC route into the Member's Solana wallet and complete the normal Settlement flow. Full runbook: [LI.FI Route Rehearsal](./lifi-route-rehearsal.md).
 
 | # | Flow | Pass criteria |
 | --- | --- | --- |

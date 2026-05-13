@@ -14,7 +14,7 @@ Competitive positioning: do not claim an empty category or "first crypto Splitwi
 | Expense Proof upload | Future | Do not demo as real behavior until storage, preview, size limits, and access rules are implemented |
 | Fund Mode | Partial / invite-only, accelerated beta build | Hero product direction: Treasury and Contributions exist; Proposal lifecycle and integrations must ship before it is claimed as complete |
 | Fund Mode yield / productive Treasury strategy | Planned | Directional FundLabs thesis only; do not claim live APY, yield routing, or yield spread until implemented and risk-reviewed |
-| LI.FI | Support layer groundwork | Use only as `Route funds for Settlement` when the debtor needs Solana USDC before normal Settlement |
+| LI.FI | Support layer groundwork + readiness check | Use only as mainnet `Route funds for Settlement` when the debtor needs Solana USDC before normal Settlement; Sepolia is not a supported rehearsal path |
 | Zerion | Scripted readiness demo | Read-only wallet-readiness support; not wallet connection, identity, signing, or Settlement execution |
 | Agent Skill Endpoint | Shipped baseline | Public `/skill.md` and `/api/docs` discovery/reference only |
 | Scoped Agent Access | Planned | Required before durable external-agent access to private Member or Group data |

@@ -32,6 +32,7 @@ Quick links:
 - [issues.md](./issues.md) - active indexed backlog for hackathon execution
 - [docs/README.md](./docs/README.md) - chunked documentation index by topic
 - [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope product matrix
+- [docs/lifi-route-rehearsal.md](./docs/lifi-route-rehearsal.md) - LI.FI EVM wallet path, Sepolia boundary, and mainnet rehearsal steps
 - [docs/monetization.md](./docs/monetization.md) - launch monetization model and conservative first-year scenario
 - [docs/research/](./docs/research/) - generated market and technology research, kept as supporting context only
 - [DECISIONS.md](./DECISIONS.md) - ADR index
@@ -77,7 +78,7 @@ Fund Mode is the hero product direction and the next one-month beta focus, while
 
 ### Sponsor layers
 
-- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users route funds during Settlement through a `Route funds for Settlement` flow without needing to understand the underlying route details.
+- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users route mainnet USDC during Settlement through a `Route funds for Settlement` flow without needing to understand the underlying route details. Sepolia is not a supported FundWise rehearsal path; see [docs/lifi-route-rehearsal.md](./docs/lifi-route-rehearsal.md).
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 - **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent from a separate repository. Fundy starts command-first with Zerion wallet analysis, personal finance support, Group Expense drafting, and Telegram group interaction; later versions add an LLM layer, tax guidance, and richer personal-finance workflows. See ADR-0018, ADR-0022, and ADR-0023.
@@ -101,7 +102,7 @@ The long-term moat is trust and distribution first, then data advantage from str
 Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical product-state matrix. The short version:
 
 - Shipped/demoable: Split Mode devnet MVP, Zerion readiness script, public Agent Skill Endpoint baseline.
-- Support layer: LI.FI as `Route funds for Settlement`.
+- Support layer: LI.FI as mainnet-only `Route funds for Settlement`.
 - Future: Source Currency, Expense Proof, Fund Mode Proposal lifecycle, Fundy, Scoped Agent Access, Payable Settlement Requests, Visa / IBAN / Altitude-style rails, and tax guidance.
 - Out of scope for FundWise: mini-games and prediction-market-like mechanics.
 
