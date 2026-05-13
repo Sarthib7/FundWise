@@ -1,15 +1,9 @@
-import { PublicKey } from "@solana/web3.js"
-import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token"
 import type { Database } from "./database.types"
 import { getGroupDashboardSnapshot, type ActivityItem } from "./db"
-import { executeStablecoinTransfer } from "./stablecoin-transfer"
 import { getFundWiseClusterName, type FundWiseCluster } from "./solana-cluster"
-import { createFundWiseConnection } from "./fallback-connection"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 type GroupMode = Database["public"]["Tables"]["groups"]["Row"]["mode"]
-
-export const connection = createFundWiseConnection("confirmed")
 
 export type StablecoinInfo = { mint: string; name: string; decimals: number }
 
@@ -288,6 +282,7 @@ export async function executeSettlement(
   amount: number,
   mintAddress: string
 ): Promise<{ signature: string }> {
+  const { executeStablecoinTransfer } = await import("./stablecoin-transfer")
   const { signature } = await executeStablecoinTransfer(fromWallet, {
     fromAddress,
     toAddress,
@@ -303,6 +298,13 @@ export async function executeSettlement(
 
 export async function getTokenBalance(walletAddress: string, mintAddress: string): Promise<number> {
   try {
+    const [{ PublicKey }, { getAssociatedTokenAddress, getAccount }, { createFundWiseConnection }] =
+      await Promise.all([
+        import("@solana/web3.js"),
+        import("@solana/spl-token"),
+        import("./fallback-connection"),
+      ])
+    const connection = createFundWiseConnection("confirmed")
     const mint = new PublicKey(mintAddress)
     const wallet = new PublicKey(walletAddress)
     const ata = await getAssociatedTokenAddress(mint, wallet)

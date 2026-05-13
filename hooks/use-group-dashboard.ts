@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
-import { PublicKey } from "@solana/web3.js"
 import {
   addContribution as dbAddContribution,
   addProposalComment as dbAddProposalComment,
@@ -25,7 +24,6 @@ import type { Database } from "@/lib/database.types"
 import {
   computeBalancesFromActivity,
   DEFAULT_STABLECOIN,
-  executeSettlement,
   findStablecoinByMint,
   formatTokenAmount,
   parseTokenAmount,
@@ -33,11 +31,7 @@ import {
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
-import {
-  formatSolAmountFromLamports,
-  previewStablecoinTransfer,
-  type StablecoinTransferPreview,
-} from "@/lib/stablecoin-transfer"
+import type { StablecoinTransferPreview } from "@/lib/stablecoin-transfer"
 import { getFundWiseClusterLabel, isSolanaMainnetCluster } from "@/lib/solana-cluster"
 import { toast } from "sonner"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
@@ -56,6 +50,7 @@ export type PendingSettlementReceipt = {
 }
 
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 32
+const LAMPORTS_PER_SOL = 1_000_000_000
 
 function shortWallet(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -145,6 +140,21 @@ function writePendingSettlementReceipt(
 
 function openSettlementReceipt(groupId: string, settlementId: string) {
   window.location.assign(`/groups/${groupId}/settlements/${settlementId}`)
+}
+
+function formatSolAmountFromLamports(lamports: number, fractionDigits: number = 4) {
+  return (lamports / LAMPORTS_PER_SOL).toFixed(fractionDigits)
+}
+
+async function previewStablecoinTransfer(params: {
+  fromAddress: string
+  toAddress: string
+  amount: number
+  mintAddress: string
+  recipientOwnerOffCurve?: boolean
+}) {
+  const { previewStablecoinTransfer: preview } = await import("@/lib/stablecoin-transfer")
+  return preview(params)
 }
 
 async function loadSquadsTreasuryBalance(treasuryAddress: string, mintAddress: string) {
@@ -578,6 +588,7 @@ export function useGroupDashboard() {
           memberNameByWallet.get(transfer.to) || shortWallet(transfer.to),
       })
 
+      const { executeSettlement } = await import("@/lib/expense-engine")
       const { signature } = await executeSettlement(
         signingWallet,
         walletAddress,
@@ -741,6 +752,7 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
+      const { PublicKey } = await import("@solana/web3.js")
       const { createSquadsMultisig } = await import("@/lib/squads-multisig")
       const memberKeys = members.map((member) => new PublicKey(member.wallet))
       const result = await createSquadsMultisig(
