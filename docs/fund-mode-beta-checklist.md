@@ -3,7 +3,7 @@
 **Owner:** sarthib7
 **Target:** Easy-UX pooled treasury beta on devnet, used to test the monetization model before any mainnet move
 **Strategy:** Fund Mode stays devnet-only and invite-gated. Hidden from public UI. Selected beta users are coordinated in a Telegram group. Mainnet graduation is a separate decision after the beta is stable and the monetization model is validated.
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-13
 
 This is the execution checklist for the Fund Mode beta program. Companion to `docs/fund-mode-beta-rehearsal.md` (which covers the scripted rehearsal flow) and `docs/split-mode-mainnet-checklist.md` (which covers the public mainnet path).
 
@@ -22,7 +22,7 @@ This is the execution checklist for the Fund Mode beta program. Companion to `do
 - 🔒 Invite-gated via `FUNDWISE_FUND_MODE_INVITE_WALLETS` env var
 - ✅ Pool creation templates shipped (Trip pool, Friend fund, DAO grant, Family budget) with `lib/fund-mode-templates.ts`
 - ✅ Telegram beta channel onboarding link shipped to Fund Mode creation dialog and dashboard
-- ❌ No treasury overview card — beta users have to scroll/hunt to understand pool state
+- ✅ Treasury overview card shipped: balance, funding progress, pending Proposal summary, top contributors, and recent activity
 - ❌ No auto-suggested reimbursement proposals from expenses
 - ❌ No member roles — every Member can do everything Squads allows
 - ❌ No exit / refund flow when a Member leaves
@@ -50,7 +50,7 @@ Goal: a user who's never used a multisig should be able to spin up a working poo
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
 | FW-042 | Pool templates at Group creation (`Trip pool`, `Friend fund`, `DAO grant`, `Family budget`) — each sets default threshold suggestion, default proposal memos, default member-role expectations | First-time UX cliff; users don't know what threshold means | **Done** |
-| FW-043 | Treasury overview card on Group dashboard — available balance, pending proposal count, last 5 events, top contributors. One screen, no drilling | Currently users must scroll the activity feed to understand pool state | New |
+| FW-043 | Treasury overview card on Group dashboard — available balance, pending proposal count, last 5 events, top contributors. One screen, no drilling | Currently users must scroll the activity feed to understand pool state | **Done** |
 | FW-044 | Auto-suggested reimbursement proposals — when a Member logs an expense flagged "from pool", the dashboard surfaces a one-click "Propose reimbursement for $X" with memo pre-filled | Biggest UX win; closes the Split-Mode-style "log → reconcile" loop for pools | New |
 | FW-045 | Member roles (light): Admin / Member / Viewer. Admin can change threshold + invite. Member can propose / approve / execute. Viewer is read-only. Stored in FundWise (not Squads — Squads stays the on-chain authority) | Squads roles are too low-level for non-crypto users | New |
 | FW-046 | Exit flow: an explicit "return funds to leaving Member" proposal type with one-click action. Calculates the Member's pro-rata share or accepts a custom amount, then runs the normal approval lifecycle | Without this, leaving a pool feels stuck | New |

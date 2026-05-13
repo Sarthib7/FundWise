@@ -342,7 +342,6 @@ export function useGroupDashboard() {
   const approvalThreshold = group?.approval_threshold ?? 1
   const missingMembersForTreasury = Math.max(0, approvalThreshold - memberCount)
   const contributionTotal = contributions.reduce((sum, contribution) => sum + contribution.amount, 0)
-  const contributorCount = new Set(contributions.map((contribution) => contribution.member_wallet)).size
   const fundingProgress =
     group?.funding_goal && group.funding_goal > 0
       ? Math.min(100, Math.round((contributionTotal / group.funding_goal) * 100))
@@ -1248,7 +1247,6 @@ export function useGroupDashboard() {
     approvalThreshold,
     missingMembersForTreasury,
     contributionTotal,
-    contributorCount,
     fundingProgress,
     totalSettledVolume,
     memberNameByWallet,

@@ -254,7 +254,6 @@ export default function GroupDashboard() {
     approvalThreshold,
     missingMembersForTreasury,
     contributionTotal,
-    contributorCount,
     fundingProgress,
     totalSettledVolume,
     memberNameByWallet,
@@ -809,7 +808,6 @@ export default function GroupDashboard() {
                   fundingProgress={fundingProgress}
                   approvalThreshold={approvalThreshold}
                   membersCount={memberCount}
-                  contributorCount={contributorCount}
                   missingMembersForTreasury={missingMembersForTreasury}
                   contributions={contributions}
                   proposals={proposals}

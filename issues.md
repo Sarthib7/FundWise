@@ -1,6 +1,6 @@
 # FundWise Issues
 
-**Last indexed:** 2026-05-11
+**Last indexed:** 2026-05-13
 **Submission status:** Colosseum Frontier submission complete (deadline 2026-05-11)
 **Current focus:** Dual-track delivery — Split Mode to public mainnet, Fund Mode stays devnet as invite-only beta for easy-UX and monetization testing. See [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md) and [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
 
@@ -52,8 +52,8 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-040 | Ready | P1 | AFK | Update public copy after mainnet launch | FW-039 |
 | FW-041 | Done | P1 | AFK | Minimal OFAC SDN screening on wallet connect | FW-014 |
 | FW-042 | Done | P1 | AFK | Pool templates at Fund Mode Group creation | None |
-| FW-043 | Ready | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
-| FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | FW-043 |
+| FW-043 | Done | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
+| FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | None |
 | FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) + exit flow proposal type | None |
 | FW-047 | Ready | P1 | AFK | Fund Mode creation fee infrastructure (devnet beta) | FW-033 |
 | FW-048 | Done | P2 | AFK | Telegram beta channel onboarding link from Fund Mode entry | None |
@@ -80,7 +80,7 @@ The hackathon submission is complete. Post-submission execution follows the two 
 **Fund Mode devnet beta path (parallel, non-blocking):**
 
 1. **FW-042** Pool templates (P1, AFK) — done
-2. **FW-043** Treasury overview card (P1, AFK)
+2. **FW-043** Treasury overview card (P1, AFK) — done
 3. **FW-044** Auto-suggested reimbursement proposals (P1, AFK)
 4. **FW-047** Creation fee infrastructure (P1, AFK)
 5. **FW-045** Member roles + exit flow (P2, AFK)
@@ -1135,7 +1135,7 @@ Completed on 2026-05-11 on `checklist` branch. Three pages under `app/legal/` sh
 
 ## FW-038 - Production Supabase Project + RLS Migration Replay
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P0
 **Type:** HITL
 **Blocked by:** FW-014
@@ -1163,7 +1163,7 @@ This is HITL because it requires owner access to Supabase and Cloudflare dashboa
 
 ## FW-039 - Mainnet Rehearsal With Real USDC
 
-**Status:** Ready
+**Status:** Done
 **Priority:** P0
 **Type:** HITL
 **Blocked by:** FW-033, FW-035, FW-038
@@ -1265,20 +1265,24 @@ Add a single-screen "pool state" overview card to Fund Mode Group dashboard: ava
 
 ### Acceptance Criteria
 
-- [ ] Card appears at the top of Fund Mode Group dashboard.
-- [ ] Shows live USDC balance from Treasury vault.
-- [ ] Shows pending proposal count with click-through to proposals list.
-- [ ] Shows last 5 activity events (contribution, proposal, approval, execution).
-- [ ] Shows top 3 contributors by total contribution amount.
-- [ ] Responsive at `375`, `768`, `1280`.
-- [ ] `pnpm build` passes.
+- [x] Card appears at the top of Fund Mode Group dashboard.
+- [x] Shows live USDC balance from Treasury vault.
+- [x] Shows pending proposal count with click-through to proposals list.
+- [x] Shows last 5 activity events (contribution, proposal, approval, execution).
+- [x] Shows top 3 contributors by total contribution amount.
+- [x] Responsive at `375`, `768`, `1280`.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-13 on `checklist` branch. Added `components/group-dashboard/treasury-overview-card.tsx` and wired it into the Fund Mode dashboard above Treasury initialization, Contributions, and reimbursement Proposals. The card summarizes available Treasury balance, funding progress, pending and approved Proposal totals, top contributors, and the five most recent Contribution / Proposal / review / execution events. Pending Proposal summary scrolls to the Proposal list, and `Reimburse me` preselects the connected Member before focusing the Proposal amount field. `pnpm lint`, `pnpm test`, and `pnpm build` passed; lint still reports two pre-existing `router` dependency warnings in `hooks/use-group-dashboard.ts`.
 
 ## FW-044 - Auto-Suggested Reimbursement Proposals From Member Expenses
 
 **Status:** Ready
 **Priority:** P1
 **Type:** AFK
-**Blocked by:** FW-043
+**Blocked by:** None
 
 ### What to build
 

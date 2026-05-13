@@ -152,15 +152,16 @@ Next pick:
 - Sentry (`@sentry/nextjs`) attempted and **reverted** — breaks `@cloudflare/next-on-pages` with a duplicated identifier error. Monitoring must use a Cloudflare-compatible alternative or wait for OpenNext adapter.
 - **FW-042 done:** Fund Mode pool templates (`Trip pool`, `Friend fund`, `DAO grant`, `Family budget`) shipped with `lib/fund-mode-templates.ts`, migration `20260511150000_add_fund_mode_template_to_groups.sql`, and UI selector in Group creation.
 - **FW-048 done:** Fund Mode beta Telegram onboarding link added to Group creation dialog and Fund Mode dashboard banner.
+- **FW-043 done:** Fund Mode dashboard now has a Treasury overview card with live balance, funding progress, pending Proposal summary, top contributors, recent activity, and shortcuts into reimbursement Proposal creation/list review.
 - **FW-038 prep done:** `docs/ops-runbook.md` and `scripts/verify-supabase-rls.mjs` shipped. Owner must create production Supabase project and configure Cloudflare env vars.
 
 Next:
 
 1. **FW-038 (HITL):** Owner creates production Supabase project, replays migrations, configures Cloudflare env vars.
 2. **FW-039 (HITL):** Mainnet rehearsal with real USDC after FW-038 lands.
-3. **FW-043:** Treasury overview card on Fund Mode dashboard (next AFK pick).
-4. **FW-044:** Auto-suggested reimbursement proposals from Member expenses.
-5. **FW-047:** Fund Mode creation fee infrastructure (devnet beta monetization test).
+3. **FW-044:** Auto-suggested reimbursement proposals from Member expenses.
+4. **FW-047:** Fund Mode creation fee infrastructure (devnet beta monetization test).
+5. **FW-045:** Fund Mode member roles plus exit-flow proposal type.
 6. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero product sprint, and planned surfaces stay labeled as planned.
 7. Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as planned unless separately implemented end to end.
 

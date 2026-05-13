@@ -28,14 +28,18 @@ If this preflight fails, apply the pending migrations to the Supabase project an
 
 ## Latest Run
 
-On 2026-05-09, the rehearsal confirmed:
+On 2026-05-10, the rehearsal passed end to end on devnet with Helius devnet RPC:
 
 - invite-only Fund Mode Group creation
 - second Member invite join
 - Squads v4 Treasury initialization with `multisigCreateV2`
 - stablecoin Contribution into the Squads vault token account
+- reimbursement Proposal creation
+- Squads-backed approval
+- approved Proposal execution
+- Treasury-to-Member payout verification
 
-The run stopped before Proposal creation because the remote Supabase project was missing checked-in Fund Mode Proposal migrations. The Supabase CLI could not apply them from this environment because the active account lacks project-level privileges.
+Artifacts: Group `9c0f9012`, Proposal `c14d795c`, execution tx `44JZK41J...`.
 
 ## Coverage
 

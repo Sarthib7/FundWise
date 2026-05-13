@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { WalletAvatar } from "@/components/avatar"
+import { TreasuryOverviewCard } from "@/components/group-dashboard/treasury-overview-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -28,8 +28,6 @@ import {
   Landmark,
   Loader2,
   Send,
-  ShieldCheck,
-  Target,
   Wallet,
   XCircle,
 } from "lucide-react"
@@ -40,6 +38,7 @@ type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 const CONTRIBUTION_INPUT_ID = "contribution-amount"
 const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
 const PROPOSAL_MEMO_INPUT_ID = "proposal-memo"
+const PROPOSALS_SECTION_ID = "reimbursement-proposals"
 const FUND_MODE_BETA_TELEGRAM_URL = "https://t.me/funddotsol"
 
 type FundModeDashboardProps = {
@@ -52,7 +51,6 @@ type FundModeDashboardProps = {
   fundingProgress: number
   approvalThreshold: number
   membersCount: number
-  contributorCount: number
   missingMembersForTreasury: number
   contributions: ContributionRow[]
   proposals: ProposalWithReviews[]
@@ -125,7 +123,6 @@ export function FundModeDashboard({
   fundingProgress,
   approvalThreshold,
   membersCount,
-  contributorCount,
   missingMembersForTreasury,
   contributions,
   proposals,
@@ -165,6 +162,22 @@ export function FundModeDashboard({
   const [editProofUrl, setEditProofUrl] = useState("")
   const [proposalCommentBodies, setProposalCommentBodies] = useState<Record<string, string>>({})
 
+  const handleProposeReimbursement = () => {
+    if (walletAddress) {
+      setProposalRecipientWallet(walletAddress)
+    }
+
+    const input = document.getElementById(PROPOSAL_AMOUNT_INPUT_ID)
+    input?.scrollIntoView({ behavior: "smooth", block: "center" })
+    input?.focus()
+  }
+
+  const handleViewProposals = () => {
+    document
+      .getElementById(PROPOSALS_SECTION_ID)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   return (
     <>
       <div className="mb-4 flex flex-col gap-3 rounded-xl border border-brand-fund-blue-border/60 bg-brand-fund-blue-bg/50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -185,52 +198,21 @@ export function FundModeDashboard({
         </a>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Landmark className="h-4 w-4 text-accent" />
-            Treasury Balance
-          </div>
-          <p className="mt-3 font-mono text-2xl font-semibold tabular-nums">
-            {formatTokenAmount(treasuryBalance)} {tokenName}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {treasuryAddress ? `Vault ${shortWallet(treasuryAddress)}` : "Treasury not initialized yet"}
-          </p>
-        </Card>
-
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Target className="h-4 w-4 text-accent" />
-            Funding Goal
-          </div>
-          <p className="mt-3 font-mono text-2xl font-semibold tabular-nums">
-            {fundingGoal ? `${formatTokenAmount(fundingGoal)} ${tokenName}` : "No goal"}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {formatTokenAmount(contributionTotal)} {tokenName} contributed
-          </p>
-          {fundingGoal && (
-            <div className="mt-3 space-y-2">
-              <Progress value={fundingProgress} />
-              <p className="text-[11px] text-muted-foreground">{fundingProgress}% funded</p>
-            </div>
-          )}
-        </Card>
-
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 text-accent" />
-            Approval Threshold
-          </div>
-          <p className="mt-3 font-mono text-2xl font-semibold tabular-nums">
-            {approvalThreshold} of {membersCount}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {contributorCount} contributor{contributorCount === 1 ? "" : "s"} so far
-          </p>
-        </Card>
-      </div>
+      <TreasuryOverviewCard
+        tokenName={tokenName}
+        treasuryBalance={treasuryBalance}
+        contributionTotal={contributionTotal}
+        fundingGoal={fundingGoal}
+        fundingProgress={fundingProgress}
+        contributions={contributions}
+        proposals={proposals}
+        approvalThreshold={approvalThreshold}
+        memberNameByWallet={memberNameByWallet}
+        walletAddress={walletAddress}
+        canPropose={Boolean(treasuryAddress && isMember)}
+        onProposeReimbursement={handleProposeReimbursement}
+        onViewProposals={handleViewProposals}
+      />
 
       {!treasuryAddress ? (
         <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
@@ -350,7 +332,7 @@ export function FundModeDashboard({
         </Card>
       )}
 
-      <Card className="p-6">
+      <Card id={PROPOSALS_SECTION_ID} className="p-6">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Reimbursement Proposals</h2>
