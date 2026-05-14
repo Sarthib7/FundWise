@@ -1,5 +1,3 @@
-export const runtime = "edge"
-
 import { buildOAuthProtectedResourceMetadata } from "@/lib/server/fundwise-discovery"
 
 export async function GET(request: Request) {

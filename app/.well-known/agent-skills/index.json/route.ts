@@ -1,5 +1,3 @@
-export const runtime = "edge"
-
 import { buildAgentSkillMarkdown } from "@/lib/server/fundwise-api-discovery"
 import { sha256Hex } from "@/lib/server/fundwise-discovery"
 
