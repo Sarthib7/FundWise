@@ -941,7 +941,7 @@ export async function addSettlementMutation(data: {
     throw new FundWiseError("Settlement insert returned no row from record_settlement_locked.")
   }
 
-  return { id: (lockedResult as { id: string }).id }
+  return { id: (lockedResult as { settlement_id: string }).settlement_id }
 }
 
 async function insertSettlementWithoutLock(data: {

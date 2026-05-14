@@ -64,6 +64,8 @@ alter table public.groups
 
 Without this RPC, settlements fall back to a non-locked two-step insert that has the FW-053 TOCTOU race. Application keeps working but the audit fix is not active.
 
+> **Hotfix note (2026-05-14):** the first published version of this function returned a column named `id` and had unqualified `where id = p_group_id` references, which Postgres rejected as `42702 column reference "id" is ambiguous`. The block below renames the OUT column to `settlement_id` and aliases every table query. If you already ran the older version, just paste this newer block — `create or replace function` overwrites it cleanly.
+
 ```sql
 create or replace function public.record_settlement_locked(
   p_group_id uuid,
@@ -73,7 +75,7 @@ create or replace function public.record_settlement_locked(
   p_mint text,
   p_tx_sig text
 )
-returns table (id uuid, already_existed boolean)
+returns table (settlement_id uuid, already_existed boolean)
 language plpgsql
 security definer
 set search_path = public
@@ -83,18 +85,18 @@ declare
   v_new_id uuid;
 begin
   perform 1
-    from public.groups
-   where id = p_group_id
+    from public.groups g
+   where g.id = p_group_id
    for update;
 
   if not found then
     raise exception 'Group not found' using errcode = 'P0002';
   end if;
 
-  select *
+  select s.*
     into v_existing
-    from public.settlements
-   where tx_sig = p_tx_sig
+    from public.settlements s
+   where s.tx_sig = p_tx_sig
    limit 1;
 
   if found then
@@ -107,7 +109,7 @@ begin
         using errcode = '23505';
     end if;
 
-    id := v_existing.id;
+    settlement_id := v_existing.id;
     already_existed := true;
     return next;
     return;
@@ -120,7 +122,7 @@ begin
   )
   returning settlements.id into v_new_id;
 
-  id := v_new_id;
+  settlement_id := v_new_id;
   already_existed := false;
   return next;
 end;

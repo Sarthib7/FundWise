@@ -405,7 +405,7 @@ export interface Database {
           p_tx_sig: string
         }
         Returns: {
-          id: string
+          settlement_id: string
           already_existed: boolean
         }
       }

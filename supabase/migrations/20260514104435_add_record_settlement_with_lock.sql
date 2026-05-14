@@ -11,6 +11,10 @@
 -- the original settlement row back; callers that re-use a tx_sig with
 -- different participants get a clear error.
 
+-- The OUT columns of `returns table (...)` enter the function's namespace as
+-- locals, which collides with the `id` columns on `groups` and `settlements`.
+-- Rename the OUT columns to disambiguate, then alias every table query so the
+-- planner never sees an unqualified `id`.
 create or replace function public.record_settlement_locked(
   p_group_id uuid,
   p_from_wallet text,
@@ -19,7 +23,7 @@ create or replace function public.record_settlement_locked(
   p_mint text,
   p_tx_sig text
 )
-returns table (id uuid, already_existed boolean)
+returns table (settlement_id uuid, already_existed boolean)
 language plpgsql
 security definer
 set search_path = public
@@ -31,18 +35,18 @@ begin
   -- Row lock on the group serialises concurrent settlement inserts for the
   -- same Group without blocking other Groups.
   perform 1
-    from public.groups
-   where id = p_group_id
+    from public.groups g
+   where g.id = p_group_id
    for update;
 
   if not found then
     raise exception 'Group not found' using errcode = 'P0002';
   end if;
 
-  select *
+  select s.*
     into v_existing
-    from public.settlements
-   where tx_sig = p_tx_sig
+    from public.settlements s
+   where s.tx_sig = p_tx_sig
    limit 1;
 
   if found then
@@ -55,7 +59,7 @@ begin
         using errcode = '23505';
     end if;
 
-    id := v_existing.id;
+    settlement_id := v_existing.id;
     already_existed := true;
     return next;
     return;
@@ -68,7 +72,7 @@ begin
   )
   returning settlements.id into v_new_id;
 
-  id := v_new_id;
+  settlement_id := v_new_id;
   already_existed := false;
   return next;
 end;
