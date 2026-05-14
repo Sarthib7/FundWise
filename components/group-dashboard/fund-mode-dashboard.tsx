@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Database } from "@/lib/database.types"
 import type { ProposalWithReviews } from "@/lib/db"
 import { formatTokenAmount } from "@/lib/expense-engine"
+import { computeMemberExitRefund } from "@/lib/fund-mode-exit"
 import { describeApprovalThreshold, suggestApprovalThreshold } from "@/lib/fund-mode-threshold"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import {
@@ -186,6 +187,34 @@ export function FundModeDashboard({
   const [editMemo, setEditMemo] = useState("")
   const [editProofUrl, setEditProofUrl] = useState("")
   const [proposalCommentBodies, setProposalCommentBodies] = useState<Record<string, string>>({})
+  const [exitRefundWallet, setExitRefundWallet] = useState("")
+
+  const exitRefundSuggestion = exitRefundWallet
+    ? (() => {
+        const exitMember = members.find((member) => member.wallet === exitRefundWallet)
+        if (!exitMember) return null
+        return computeMemberExitRefund({
+          member: exitMember,
+          contributions,
+          treasuryBalance,
+        })
+      })()
+    : null
+
+  const handlePrefillExitRefund = () => {
+    if (!exitRefundSuggestion) return
+    setProposalRecipientWallet(exitRefundSuggestion.memberWallet)
+    setProposalAmount(
+      exitRefundSuggestion.suggestedRefund > 0
+        ? formatTokenAmount(exitRefundSuggestion.suggestedRefund)
+        : ""
+    )
+    setProposalMemo(exitRefundSuggestion.memo)
+    setProposalProofUrl("")
+    const input = document.getElementById(PROPOSAL_AMOUNT_INPUT_ID)
+    input?.scrollIntoView({ behavior: "smooth", block: "center" })
+    input?.focus()
+  }
 
   const handleProposeReimbursement = () => {
     if (walletAddress) {
@@ -470,6 +499,53 @@ export function FundModeDashboard({
               <p className="mt-1 text-xs">
                 Once you join, you can move stablecoins into the Group Treasury from the connected wallet.
               </p>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {treasuryAddress && isMember && members.length > 1 && (
+        <Card className="p-6">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Suggest exit refund</h2>
+              <p className="text-sm text-muted-foreground">
+                Pick a Member who is leaving the pool. FundWise computes their pro-rata share of the Treasury and pre-fills the Proposal form. The Group still votes on the final amount.
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <Select value={exitRefundWallet} onValueChange={setExitRefundWallet}>
+              <SelectTrigger className="min-h-11 w-full sm:min-h-10">
+                <SelectValue placeholder="Choose the leaving Member" />
+              </SelectTrigger>
+              <SelectContent>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.wallet}>
+                    {memberNameByWallet.get(member.wallet) || shortWallet(member.wallet)}
+                    {member.wallet === walletAddress ? " (you)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
+              disabled={!exitRefundSuggestion || exitRefundSuggestion.suggestedRefund <= 0}
+              onClick={handlePrefillExitRefund}
+            >
+              Pre-fill Proposal
+            </Button>
+          </div>
+          {exitRefundSuggestion && (
+            <div className="mt-4 rounded-lg border border-border/60 bg-background/60 p-3 text-xs">
+              <p className="font-medium text-foreground">
+                Suggested refund: {formatTokenAmount(exitRefundSuggestion.suggestedRefund)} {tokenName}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Contributed: {formatTokenAmount(exitRefundSuggestion.totalContributed)} {tokenName} · Pro-rata share: {formatTokenAmount(exitRefundSuggestion.proRataShare)} {tokenName}
+              </p>
+              <p className="mt-1 text-muted-foreground">{exitRefundSuggestion.rationale}</p>
             </div>
           )}
         </Card>
