@@ -43,6 +43,7 @@ export default function GroupsPage() {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false)
   const [isJoiningGroup, setIsJoiningGroup] = useState(false)
   const [isWalletVerified, setIsWalletVerified] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [joinError, setJoinError] = useState<string | null>(null)
   const [hasAutoOpenedZeroStateCreate, setHasAutoOpenedZeroStateCreate] = useState(false)
   const [hasCreateIntent, setHasCreateIntent] = useState(false)
@@ -166,6 +167,7 @@ export default function GroupsPage() {
       }
 
       setIsCreatingGroup(true)
+      setCreateError(null)
 
       try {
         await ensureWalletSession({
@@ -191,13 +193,17 @@ export default function GroupsPage() {
         })
       } catch (error) {
         console.error("[FundWise] Failed to create group:", error)
-        toast.error(error instanceof Error ? error.message : "Failed to create your Group.")
+        const message = error instanceof Error ? error.message : "Failed to create your Group."
+        setCreateError(message)
+        toast.error(message)
       } finally {
         setIsCreatingGroup(false)
       }
     },
     [replaceCreateIntent, router, wallet?.adapter, walletAddress]
   )
+
+  const clearCreateError = useCallback(() => setCreateError(null), [])
 
   const handleJoinGroup = useCallback(
     async (inviteValue: string) => {
@@ -439,6 +445,8 @@ export default function GroupsPage() {
         onOpenChange={handleCreateDialogChange}
         isSubmitting={isCreatingGroup}
         onSubmit={handleCreateGroup}
+        errorMessage={createError}
+        onClearError={clearCreateError}
       />
       <JoinGroupDialog
         open={isJoinDialogOpen}

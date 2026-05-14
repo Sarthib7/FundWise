@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useId, useState, type FormEvent } from "react"
-import { ExternalLink, Landmark, Loader2, Users } from "lucide-react"
+import { AlertTriangle, ExternalLink, Landmark, Loader2, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { getDefaultStablecoinForGroupMode } from "@/lib/expense-engine"
 import { FUND_MODE_TEMPLATES, type FundModeTemplateId } from "@/lib/fund-mode-templates"
+import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
 import { cn } from "@/lib/utils"
 
 type GroupMode = "split" | "fund"
@@ -32,6 +34,10 @@ type CreateGroupDialogProps = {
   onOpenChange: (open: boolean) => void
   isSubmitting: boolean
   onSubmit: (values: CreateGroupValues) => Promise<void> | void
+  /** Server-side rejection surfaced inline so the user can fix and retry without closing the dialog. */
+  errorMessage?: string | null
+  /** Called when the user edits the form so the parent can clear stale errors. */
+  onClearError?: () => void
 }
 
 const DEFAULT_APPROVAL_THRESHOLD = "1"
@@ -44,6 +50,8 @@ export function CreateGroupDialog({
   onOpenChange,
   isSubmitting,
   onSubmit,
+  errorMessage,
+  onClearError,
 }: CreateGroupDialogProps) {
   const groupNameId = useId()
   const fundingGoalId = useId()
@@ -60,6 +68,13 @@ export function CreateGroupDialog({
     approvalThreshold?: string
   }>({})
 
+  const stablecoinForMode = getDefaultStablecoinForGroupMode(mode)
+  const clusterLabel = getFundWiseClusterLabel()
+
+  const clearServerError = () => {
+    if (errorMessage && onClearError) onClearError()
+  }
+
   useEffect(() => {
     if (!open) {
       setName("")
@@ -68,8 +83,9 @@ export function CreateGroupDialog({
       setApprovalThreshold(DEFAULT_APPROVAL_THRESHOLD)
       setSelectedTemplateId(null)
       setErrors({})
+      if (errorMessage && onClearError) onClearError()
     }
-  }, [open])
+  }, [open, errorMessage, onClearError])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -144,6 +160,7 @@ export function CreateGroupDialog({
               onChange={(event) => {
                 setName(event.target.value)
                 setErrors((current) => ({ ...current, name: undefined }))
+                clearServerError()
               }}
               placeholder="Weekend trip"
               autoComplete="off"
@@ -173,7 +190,10 @@ export function CreateGroupDialog({
                     ? "border-accent/30 bg-accent/10 shadow-sm"
                     : "border-border bg-card hover:border-accent/20 hover:bg-accent/5"
                 )}
-                onClick={() => setMode("split")}
+                onClick={() => {
+                  setMode("split")
+                  clearServerError()
+                }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-accent">
@@ -200,7 +220,10 @@ export function CreateGroupDialog({
                     ? "border-brand-fund-blue-border bg-brand-fund-blue-bg shadow-sm"
                     : "border-border bg-card hover:border-brand-fund-blue-border hover:bg-brand-fund-blue-bg/60"
                 )}
-                onClick={() => setMode("fund")}
+                onClick={() => {
+                  setMode("fund")
+                  clearServerError()
+                }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-accent">
@@ -397,7 +420,25 @@ export function CreateGroupDialog({
             </div>
           )}
 
-          <DialogFooter className="pt-1">
+          {errorMessage ? (
+            <div
+              role="alert"
+              className="flex gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="font-medium leading-snug">FundWise could not create this Group.</p>
+                <p className="text-xs leading-relaxed">{errorMessage}</p>
+              </div>
+            </div>
+          ) : null}
+
+          <p className="text-xs text-muted-foreground">
+            Settling on <span className="font-medium text-foreground">{clusterLabel}</span> with{" "}
+            <span className="font-medium text-foreground">{stablecoinForMode.name}</span>. Make sure the connected wallet holds {stablecoinForMode.name} on {clusterLabel} before logging Expenses or contributing.
+          </p>
+
+          <DialogFooter className="sticky bottom-0 -mx-6 -mb-6 border-t bg-background px-6 py-4 sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:p-0 sm:pt-1">
             <Button
               type="button"
               variant="outline"
