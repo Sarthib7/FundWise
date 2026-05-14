@@ -3,7 +3,7 @@
 **Owner:** sarthib7
 **Target:** Public mainnet launch of Split Mode
 **Strategy:** Public app pinned to mainnet for Split Mode. Fund Mode stays devnet, invite-only, hidden from the public UI.
-**Last updated:** 2026-05-13
+**Last updated:** 2026-05-14
 
 This file is the execution checklist for moving Split Mode from devnet to mainnet. Tick items as they ship. New blockers become indexed `FW-*` issues in `issues.md`, not new files.
 
@@ -23,9 +23,10 @@ This file is the execution checklist for moving Split Mode from devnet to mainne
 - ✅ Baseline browser security headers are configured; CSP is opt-in behind `FUNDWISE_ENABLE_CSP=true` (FW-018)
 - ✅ Mainnet pre-flight security hardening items are complete through FW-041; production env setup is next
 - ✅ Production Supabase prep: `docs/ops-runbook.md` + `pnpm supabase:verify-rls` shipped (FW-038 HITL portion remains)
+- ✅ Configured Supabase project hardening verified: RLS check passed, `settlements.tx_sig` unique, sensitive RPCs service-role-only
 - ✅ Fund Mode pool templates shipped (FW-042)
 - ✅ Fund Mode Telegram beta onboarding links shipped (FW-048)
-- ❌ No production Supabase project — devnet project would carry over
+- ⚠️ Confirm the hardened Supabase project is the separate production project before public mainnet launch
 - ❌ Sentry blocked: `@sentry/nextjs` breaks `@cloudflare/next-on-pages`; need Cloudflare-native monitoring
 
 ---
@@ -113,7 +114,7 @@ Notes:
 
 | ID | Task | Status |
 | --- | --- | --- |
-| FW-038 | Create separate prod Supabase project; replay schema migrations; replay RLS lockdown (FW-014 SQL); verify anonymous-read denial; rotate `SUPABASE_SERVICE_ROLE_KEY` for prod | HITL — prep done (`docs/ops-runbook.md`, `pnpm supabase:verify-rls`) |
+| FW-038 | Create separate prod Supabase project; replay schema migrations; replay RLS lockdown (FW-014 SQL); verify anonymous-read denial; verify RPC grants and `settlements.tx_sig` uniqueness; rotate `SUPABASE_SERVICE_ROLE_KEY` for prod | Partially complete — configured Supabase project hardened via SQL Editor on 2026-05-14; still confirm it is the separate prod project and wire Cloudflare prod env |
 | FW-038a | Rotate `FUNDWISE_SESSION_SECRET` for prod; ensure not shared with devnet | New |
 | FW-038b | Configure mainnet Helius RPC + fallback URLs as prod env vars in Cloudflare Pages | New |
 | FW-038c | Daily Supabase backup confirmed enabled; document restore procedure in `docs/ops-runbook.md` | HITL — restore procedure documented |

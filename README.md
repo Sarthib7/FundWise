@@ -173,10 +173,11 @@ Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical 
 │   ├── adr/                         ← active architecture decisions
 │   └── archive/                      ← deferred ADRs (post-hackathon)
 ├── tests/
-│   └── expense-engine.test.ts   ← 32 unit tests
+│   └── *.test.ts                     ← vitest coverage for ledger, API, and audit guards
 ├── vitest.config.ts
 ├── supabase/
-    └── schema.sql
+    ├── migrations/                  ← source of truth for database changes
+    └── schema.sql                   ← human-readable snapshot, may lag migrations
 ```
 
 ## Group Dashboard Structure
@@ -239,6 +240,12 @@ pnpm lint
 pnpm test          # vitest — expense engine unit tests
 ```
 
+Dev server notes:
+
+- `pnpm dev` should serve the app at `http://127.0.0.1:3000`.
+- If port `3000` is already occupied, run `PORT=3001 pnpm dev`.
+- A `GET /availability 404` probe or Node `--localstorage-file` warning during startup is not a dev-server failure if the app still prints `Ready` and `/api/health` returns `{ "ok": true }`.
+
 ### Deploy on Cloudflare Pages
 
 FundWise is configured for a Cloudflare **Pages** project, not direct Worker deploys.
@@ -261,17 +268,20 @@ Current verification state:
 - `pnpm exec tsc --noEmit` passes
 - `pnpm lint` passes
 - `pnpm build` passes
-- `pnpm test` — 34 tests passing (expense engine splits, balances, settlement graph)
+- `pnpm test` — 123 tests passing
+- `pnpm supabase:verify-rls` passes against the configured Supabase project
 
 ### Database Bootstrap
 
-The base FundWise tables now live in `supabase/migrations/`, not only in `supabase/schema.sql`.
+The base FundWise tables now live in `supabase/migrations/`, not only in `supabase/schema.sql`. Treat `supabase/migrations/` as the database source of truth; `supabase/schema.sql` is a readable snapshot and can lag later migration files.
 
 If a remote Supabase project was linked before that bootstrap migration existed, backfill it with:
 
 ```bash
 supabase db push --include-all
 ```
+
+The 2026-05-14 Supabase hardening was applied through the SQL Editor and mirrored in migrations: anonymous ledger access is denied by RLS, `update_expense_with_splits` and `record_settlement_locked` execute only through `service_role`, and `settlements.tx_sig` is unique.
 
 ## MVP Notes
 

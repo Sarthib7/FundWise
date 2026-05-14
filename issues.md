@@ -162,7 +162,7 @@ The hackathon submission is complete. Post-submission execution follows the two 
 
 ## FW-026 - Build Reimbursement Proposal Creation For Fund Mode
 
-**Status:** Done
+**Status:** Ready
 **Priority:** P0
 **Type:** AFK
 **Blocked by:** FW-020
@@ -1192,24 +1192,28 @@ Completed on 2026-05-11 on `checklist` branch. Three pages under `app/legal/` sh
 
 ### What to do
 
-Spin up a separate Supabase project for mainnet (`fundwise-prod`), distinct from the existing devnet beta project. Replay all schema migrations + RLS lockdown SQL. Verify anonymous reads are denied. Rotate `SUPABASE_SERVICE_ROLE_KEY` and `FUNDWISE_SESSION_SECRET` for prod.
+Spin up a separate Supabase project for mainnet (`fundwise-prod`), distinct from the existing devnet beta project. Replay all schema migrations + RLS lockdown SQL. Verify anonymous reads are denied. Verify RPC grants and Settlement idempotency hardening. Rotate `SUPABASE_SERVICE_ROLE_KEY` and `FUNDWISE_SESSION_SECRET` for prod.
 
 ### Acceptance Criteria
 
 - [ ] New Supabase project created; URL + keys captured for prod env vars.
 - [ ] All migrations from `supabase/migrations/` replayed in order.
-- [ ] FW-014 RLS lockdown SQL applied; anonymous REST returns zero rows for private tables.
+- [x] FW-014 RLS lockdown SQL applied; anonymous REST returns zero rows for private tables.
+- [x] `settlements.tx_sig` is protected by a unique index.
+- [x] `record_settlement_locked` and `update_expense_with_splits` expose `EXECUTE` only to `postgres` and `service_role`.
 - [ ] Daily backup confirmed enabled.
 - [ ] Service role key + session secret rotated, distinct from devnet.
 - [ ] Cloudflare Pages prod env vars updated to point at new project.
 - [ ] Devnet beta Supabase project keys remain untouched.
-- [ ] Documented in `docs/ops-runbook.md` (new file).
+- [x] Documented in `docs/ops-runbook.md`.
 
 ### Notes
 
 This is HITL because it requires owner access to Supabase and Cloudflare dashboards. Mainnet blocker.
 
 2026-05-11 prep completed on `checklist` branch: added `docs/ops-runbook.md` with production Supabase creation, migration replay, backup/restore, Cloudflare env, and mainnet rehearsal gates; added `scripts/verify-supabase-rls.mjs` plus `pnpm supabase:verify-rls` to verify anonymous private-ledger reads are empty and anonymous `groups` insert is denied by RLS before constraints. The script auto-loads `.env.local` for local checks without printing secrets. Verified against the currently configured devnet Supabase project: RLS verification passed. `pnpm test` and `pnpm build` passed. Owner still needs to create/configure the prod Supabase project and Cloudflare env vars.
+
+2026-05-14 live hardening completed through Supabase SQL Editor against the configured project: `pnpm supabase:verify-rls` passed, `settlements_tx_sig_unique` exists, and both sensitive RPCs now grant `EXECUTE` only to `postgres` and `service_role`. The manual SQL was captured across `supabase/migrations/20260514102502_harden_supabase_rpc_and_settlement_ids.sql`, `supabase/migrations/20260514104435_add_record_settlement_with_lock.sql`, and ADR-0030. Remaining HITL is confirming this project is the separate production project, then wiring Cloudflare prod env, backup, RPC, and session-secret values.
 
 ## FW-039 - Mainnet Rehearsal With Real USDC
 
@@ -1528,7 +1532,7 @@ Completed on 2026-05-14. Added cluster-specific RPC helpers and routed Fund Mode
 
 ## FW-053 - Branch Audit Follow-ups (Critical: Expense Payer Binding, Settlement TOCTOU, Sanctions Scope)
 
-**Status:** Open
+**Status:** Done
 **Priority:** P0
 **Type:** AFK
 **Blocked by:** None
@@ -1548,14 +1552,16 @@ A multi-pass audit ran over the `checklist` branch (62 changed files, +4129 / -4
 
 ### Acceptance criteria
 
-- [ ] `body.payer` on POST/PATCH `/api/expenses/*` is rejected unless it equals `session.wallet`, OR a payer-confirmation flow is shipped end-to-end.
-- [ ] `addSettlementMutation` performs the graph match + insert atomically (postgres function or transaction with `for update` lock on the Group row).
-- [ ] `requireAuthenticatedWallet()` calls `assertWalletIsAllowed` and returns 403 for sanctioned wallets even if their session cookie is still valid.
-- [ ] Vitest covers each of the above with a regression test under `tests/`.
+- [x] `body.payer` on POST/PATCH `/api/expenses/*` is rejected unless it equals `session.wallet`, OR a payer-confirmation flow is shipped end-to-end.
+- [x] `addSettlementMutation` performs the graph match + insert atomically (postgres function or transaction with `for update` lock on the Group row).
+- [x] `requireAuthenticatedWallet()` calls `assertWalletIsAllowed` and returns 403 for sanctioned wallets even if their session cookie is still valid.
+- [x] Vitest covers each of the above with a regression test under `tests/`.
 
 ### Notes
 
 Verified file:lines on 2026-05-14: `app/api/expenses/route.ts:59`, `lib/server/fundwise-mutations.ts:896,905,913,922`, `app/api/auth/wallet/challenge/route.ts:25`, `lib/server/wallet-session.ts:235`, `lib/server/sanctions-screening.ts:11`.
+
+Completed on 2026-05-14. The route now binds Expense payer to the authenticated session, protected routes re-screen sanctioned wallets on every request, `record_settlement_locked` serializes Settlement inserts under the parent Group row, and the live Supabase project additionally enforces unique `settlements.tx_sig` plus service-role-only RPC execution. `pnpm test`, `pnpm lint`, `pnpm build`, and `pnpm supabase:verify-rls` passed during readiness checks.
 
 ## FW-054 - Distributed Rate-Limit + Cover Money-Moving Routes
 
@@ -1851,11 +1857,11 @@ Production-readiness session that landed on `checklist` after the branch audit. 
 
 **Still HITL — operator owns the next moves:**
 
-- **FW-038 + FW-038a + FW-038b + FW-038c** — Stand up the prod Supabase project, rotate the session secret, paste Alchemy mainnet (+ Helius/public-node fallback) RPC URLs into Cloudflare Pages env, enable daily backup. Step-by-step is in `docs/prod-secrets-runbook.md`.
+- **FW-038 + FW-038a + FW-038b + FW-038c** — Supabase hardening is verified on the configured project; still confirm it is the separate prod project, rotate the session secret, paste Alchemy mainnet (+ Helius/public-node fallback) RPC URLs into Cloudflare Pages env, and enable daily backup. Step-by-step is in `docs/prod-secrets-runbook.md`.
 - **FW-039** — Split Mode mainnet rehearsal. The user asked for a devnet audit + stress test first. Run `pnpm split:stress` against the local dev server (no cookie needed for the unauth suite; copy `fundwise_wallet_session` into `FUNDWISE_STRESS_COOKIE` for the full suite), then run the existing `scripts/devnet-agent-rehearsal.mjs` end-to-end. Capture findings before scheduling the mainnet rehearsal with two real wallets and ~$15 USDC.
 - **FW-054** — Distributed rate-limit + cover money-moving routes. Open because it's the next P1 mainnet-hardening item; not blocking the first invite-only rollout.
 - **FW-056** — UI polish + dead-code cleanup batch. Mostly LOW severity; ship after launch is stable.
 
-**Mainnet readiness call:** Split Mode is code-ready for a tightly-invited mainnet rollout once `record_settlement_locked` is replayed on prod Supabase and the Alchemy RPC + session secret are pasted into Cloudflare. The remaining audit items (FW-054, FW-056) are hardening, not correctness, and can ship in the post-launch week.
+**Mainnet readiness call:** Split Mode is code-ready for a tightly-invited mainnet rollout after the hardened Supabase project is confirmed as prod and the Alchemy RPC + session secret are pasted into Cloudflare. The remaining audit items (FW-054, FW-056) are hardening, not correctness, and can ship in the post-launch week.
 
 **Fund Mode beta status:** Phase A and Phase B of `docs/fund-mode-beta-checklist.md` are now complete (FW-042/043/044/046/057/058/059). Phase C monetization telemetry (FW-047/061/062/063) and Phase D ops (FW-064/065) remain as the actual beta-running work, but the product is shippable to the first invite cohort as-is.

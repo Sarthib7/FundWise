@@ -1,6 +1,6 @@
 # FundWise Ops Runbook
 
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-14
 **Scope:** Split Mode mainnet launch prep and production operations.
 
 This runbook supports FW-038 and FW-039. It avoids secrets; paste real values only into Supabase / Cloudflare dashboards or local `.env.local`, never into git.
@@ -53,6 +53,10 @@ Notes:
   - `20260506224000_add_expense_ledger_constraints.sql`
   - `20260509120000_anchor_proposals_to_squads_governance.sql`
   - `20260509123000_add_proposal_audit_trail.sql`
+  - `20260514102502_harden_supabase_rpc_and_settlement_ids.sql`
+  - `20260514104435_add_record_settlement_with_lock.sql`
+
+If migrations are replayed through the Supabase SQL Editor instead of CLI history, run the SQL from each file in order and use the verification queries below as the source of truth.
 
 ## 4. Verify anonymous REST lockdown
 
@@ -75,7 +79,33 @@ If it fails:
 3. Confirm `20260506223000_lock_down_public_ledger_rls.sql` applied.
 4. Re-run `pnpm supabase:verify-rls`.
 
-## 5. Production Cloudflare Pages env vars
+## 5. Verify RPC and Settlement hardening
+
+Before any mainnet rehearsal, verify the database-level hardening that backs FW-053:
+
+```sql
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public'
+  and tablename = 'settlements'
+  and indexname = 'settlements_tx_sig_unique';
+```
+
+```sql
+select routine_name, grantee, privilege_type
+from information_schema.routine_privileges
+where routine_schema = 'public'
+  and routine_name in ('record_settlement_locked', 'update_expense_with_splits')
+order by routine_name, grantee;
+```
+
+Expected:
+
+- `settlements_tx_sig_unique` exists on `public.settlements(tx_sig)`.
+- Both sensitive RPCs show `EXECUTE` only for `postgres` and `service_role`.
+- No `PUBLIC`, `anon`, or `authenticated` execute grants remain.
+
+## 6. Production Cloudflare Pages env vars
 
 Set these in the Cloudflare Pages production environment:
 
@@ -104,7 +134,7 @@ Generate a production session secret locally with:
 openssl rand -base64 48
 ```
 
-## 6. Backups and restore procedure
+## 7. Backups and restore procedure
 
 Supabase dashboard steps:
 
@@ -122,7 +152,7 @@ Restore drill (if production data is corrupted):
 5. Rotate `SUPABASE_SERVICE_ROLE_KEY` and `FUNDWISE_SESSION_SECRET` after any suspected secret exposure.
 6. Document the incident in `docs/incident-log.md` before resuming launch comms.
 
-## 7. Mainnet rehearsal gate
+## 8. Mainnet rehearsal gate
 
 Before FW-039 starts, all must be true:
 
@@ -130,10 +160,11 @@ Before FW-039 starts, all must be true:
 - `pnpm build` passes.
 - `pnpm build:pages` passes.
 - `pnpm supabase:verify-rls` passes against `fundwise-prod`.
+- `settlements_tx_sig_unique` exists and sensitive RPC grants are limited to `postgres` and `service_role`.
 - Cloudflare production env uses mainnet RPC and prod Supabase.
 - Two real wallets are funded with approximately `$5 USDC + $1 SOL` each.
 
-## 8. Rollback notes
+## 9. Rollback notes
 
 If a launch blocker appears:
 

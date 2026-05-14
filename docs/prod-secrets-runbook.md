@@ -38,7 +38,7 @@ export SUPABASE_SERVICE_ROLE_KEY="<service-role-key>"
 # 3. Replay every migration in order.
 pnpm dlx supabase@latest db push --db-url "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres"
 
-# 4. Verify the RLS lockdown.
+# 4. Verify the RLS lockdown and RPC/Settlement hardening.
 pnpm supabase:verify-rls
 
 # 5. Sanity-check stranded devnet mints (should return zero rows on a fresh prod project).
@@ -46,7 +46,7 @@ psql "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgre
   -c "select id, name, mode, stablecoin_mint, created_at from groups where mode = 'split' and stablecoin_mint in ('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', 'CXFaY4cXf25ZhFlexqroBfBceJ8YqWBsfaY3HQd9qucz') order by created_at desc;"
 ```
 
-After step 4 passes, paste the three Supabase env vars into Cloudflare Pages Production env. The `SUPABASE_SERVICE_ROLE_KEY` is the one that grants the FundWise edge mutations write access — never put it in any client bundle or in Preview env. Confirm it is marked **Encrypt at rest** in Cloudflare.
+After step 4 passes, verify `settlements_tx_sig_unique` and the two sensitive RPC grants with `docs/ops-runbook.md` §5, then paste the three Supabase env vars into Cloudflare Pages Production env. The `SUPABASE_SERVICE_ROLE_KEY` is the one that grants the FundWise edge mutations write access — never put it in any client bundle or in Preview env. Confirm it is marked **Encrypt at rest** in Cloudflare.
 
 ---
 
@@ -76,9 +76,9 @@ Public devnet (`api.devnet.solana.com`) is acceptable as a fallback because devn
 
 ---
 
-## 4. Apply the audit migration before flipping prod RPC to mainnet
+## 4. Apply and verify the audit migrations before flipping prod RPC to mainnet
 
-FW-053 ships a postgres function (`record_settlement_locked`) that the mutation layer falls back from gracefully if it isn't present, but the full TOCTOU protection only kicks in once the migration is replayed.
+FW-053 ships a postgres function (`record_settlement_locked`) that the mutation layer falls back from gracefully if it isn't present, but the full TOCTOU protection only kicks in once the migration is replayed. ADR-0030 adds the required production hardening: `settlements.tx_sig` must be unique and both sensitive RPCs must execute only through `service_role`.
 
 ```bash
 # From the local checkout, against the prod Supabase project:
@@ -93,6 +93,24 @@ psql "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgre
   -c "select proname, prosecdef from pg_proc where proname = 'record_settlement_locked';"
 # Expect one row with prosecdef = t (SECURITY DEFINER).
 ```
+
+Verify the index and RPC grants:
+
+```sql
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public'
+  and tablename = 'settlements'
+  and indexname = 'settlements_tx_sig_unique';
+
+select routine_name, grantee, privilege_type
+from information_schema.routine_privileges
+where routine_schema = 'public'
+  and routine_name in ('record_settlement_locked', 'update_expense_with_splits')
+order by routine_name, grantee;
+```
+
+Expect the index to exist, and expect only `postgres` plus `service_role` on both RPCs.
 
 ---
 

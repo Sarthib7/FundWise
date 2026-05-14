@@ -97,10 +97,17 @@ Picked up immediately after the audit and executed the AFK fixes plus the Fund M
 - **`docs/monitoring-runbook.md`** — GlitchTip (open-source, MIT, Sentry-API-compatible) plus `@sentry/cloudflare` SDK enablement. Cloudflare-friendly path that sidesteps `@sentry/nextjs` ↔ `@cloudflare/next-on-pages` incompatibility. Three-step opt-in: `pnpm add @sentry/cloudflare`, set `SENTRY_DSN`, call `initMonitoring()` from the edge bootstrap.
 - **`scripts/split-mode-stress.mjs`** (`pnpm split:stress`) — HTTP stress test for the audit guards. Covers malformed body, sanctioned wallet, challenge rate limit burst, expense payer binding, and concurrent settlement dedupe.
 
+**Supabase hardening verified after SQL Editor replay:**
+
+- `pnpm supabase:verify-rls` passed against the configured Supabase project on 2026-05-14.
+- `settlements.tx_sig` is protected by a unique index so duplicate Settlement transaction signatures are database-rejected, not only app-checked.
+- `record_settlement_locked` and `update_expense_with_splits` now expose `EXECUTE` only to `postgres` and `service_role`; `PUBLIC`, `anon`, and `authenticated` grants were removed.
+- The live SQL Editor changes are captured for future replays across `supabase/migrations/20260514102502_harden_supabase_rpc_and_settlement_ids.sql`, `supabase/migrations/20260514104435_add_record_settlement_with_lock.sql`, and ADR-0030.
+
 **Still HITL — operator owns the next moves:**
 
 1. Run `pnpm split:stress` against the local dev server (then the deployed devnet URL) before scheduling the mainnet rehearsal.
-2. Stand up the prod Supabase project per §2 of the prod secrets runbook, replay every migration, run `pnpm supabase:verify-rls`.
+2. Confirm the hardened Supabase project is the intended production project, not the devnet beta project, then paste its env vars into Cloudflare Pages production.
 3. Paste Alchemy mainnet + Helius / public-node fallback RPCs into Cloudflare Pages prod env.
 4. Generate and paste the prod `FUNDWISE_SESSION_SECRET` per §1.
 5. Open a GlitchTip project (hosted free tier or self-host) and follow `docs/monitoring-runbook.md` to enable.
@@ -203,12 +210,12 @@ Next pick:
 - **FW-021 done:** LI.FI top-up amount now uses integer-string-math parser with 20 unit tests instead of `parseFloat`.
 - **LI.FI readiness done:** `pnpm lifi:readiness` checks the exact FundWise source set (Ethereum/Base/Arbitrum/Optimism/Polygon USDC -> Solana USDC) against live LI.FI metadata. Current result: mainnet routes ready, Sepolia probes have no usable route into Solana USDC, so FW-039 must use a tiny mainnet route.
 - **FW-022 done:** Direct browser Supabase ledger helpers removed from `lib/db.ts`; browser code exclusively uses HTTP API wrappers.
-- Remaining mainnet blocker: FW-038 production Supabase / Cloudflare environment setup, then FW-039 mainnet rehearsal. FW-038 prep is in place via `docs/ops-runbook.md` and `pnpm supabase:verify-rls`; owner dashboard access is required to finish it.
+- Remaining mainnet blocker: confirm the hardened Supabase project is the intended prod project, finish Cloudflare production env setup, then run FW-039 mainnet rehearsal. Supabase RLS/RPC/Settlement hardening is verified on the configured project.
 - Sentry (`@sentry/nextjs`) attempted and **reverted** — breaks `@cloudflare/next-on-pages` with a duplicated identifier error. Monitoring must use a Cloudflare-compatible alternative or wait for OpenNext adapter.
 - **FW-042 done:** Fund Mode pool templates (`Trip pool`, `Friend fund`, `DAO grant`, `Family budget`) shipped with `lib/fund-mode-templates.ts`, migration `20260511150000_add_fund_mode_template_to_groups.sql`, and UI selector in Group creation.
 - **FW-048 done:** Fund Mode beta Telegram onboarding link added to Group creation dialog and Fund Mode dashboard banner.
 - **FW-043 done:** Fund Mode dashboard now has a Treasury overview card with live balance, funding progress, pending Proposal summary, top contributors, recent activity, and shortcuts into reimbursement Proposal creation/list review.
-- **FW-038 prep done:** `docs/ops-runbook.md` and `scripts/verify-supabase-rls.mjs` shipped. Owner must create production Supabase project and configure Cloudflare env vars.
+- **FW-038 Supabase hardening done on configured project:** `docs/ops-runbook.md`, `scripts/verify-supabase-rls.mjs`, ADR-0030, and the hardening migration now document the verified RLS/RPC/Settlement state. Owner must confirm prod project identity and configure Cloudflare env vars.
 
 Next:
 
