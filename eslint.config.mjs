@@ -14,6 +14,7 @@ export default defineConfig([
   ...compat.extends("next/core-web-vitals"),
   globalIgnores([
     ".next/**",
+    ".next.pre-*/**",
     ".open-next/**",
     ".vercel/**",
     "out/**",
