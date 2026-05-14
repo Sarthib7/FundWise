@@ -99,6 +99,69 @@ export interface Database {
         }
         Relationships: []
       }
+      telegram_link_codes: {
+        Row: {
+          id: string
+          code_hash: string
+          wallet: string
+          created_at: string
+          expires_at: string
+          used_at: string | null
+        }
+        Insert: {
+          id?: string
+          code_hash: string
+          wallet: string
+          created_at?: string
+          expires_at: string
+          used_at?: string | null
+        }
+        Update: {
+          id?: string
+          code_hash?: string
+          wallet?: string
+          created_at?: string
+          expires_at?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
+      telegram_wallet_links: {
+        Row: {
+          id: string
+          telegram_id: string
+          telegram_username: string | null
+          telegram_first_name: string | null
+          telegram_last_name: string | null
+          wallet: string
+          active: boolean
+          created_at: string
+          deactivated_at: string | null
+        }
+        Insert: {
+          id?: string
+          telegram_id: string
+          telegram_username?: string | null
+          telegram_first_name?: string | null
+          telegram_last_name?: string | null
+          wallet: string
+          active?: boolean
+          created_at?: string
+          deactivated_at?: string | null
+        }
+        Update: {
+          id?: string
+          telegram_id?: string
+          telegram_username?: string | null
+          telegram_first_name?: string | null
+          telegram_last_name?: string | null
+          wallet?: string
+          active?: boolean
+          created_at?: string
+          deactivated_at?: string | null
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           id: string

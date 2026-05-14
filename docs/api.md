@@ -1,12 +1,16 @@
 # FundWise HTTP API
 
-FundWise exposes wallet-bound HTTP API routes so the web app and future agents can use the same server-side ledger surface. Protected routes require the wallet verification session cookie created by the wallet challenge / verify flow.
+FundWise exposes wallet-bound HTTP API routes so the web app and future agents can use the same server-side ledger surface. Protected routes require the wallet verification session cookie created by the wallet challenge / verify flow unless explicitly documented as Fundy service-auth routes.
 
 ## Auth
 
 - `POST /api/auth/wallet/challenge` — create a wallet verification challenge.
 - `POST /api/auth/wallet/verify` — verify the signed challenge and set the session cookie.
 - `GET /api/auth/wallet/session` — inspect the current wallet session.
+- `POST /api/telegram/link-code` — create a 5-minute one-time code for the verified wallet. User pastes it into Fundy with `/link FW-XXXXXX`.
+- `POST /api/telegram/link` — Fundy service-auth route that consumes a link code and binds a Telegram user id to the wallet.
+- `GET /api/telegram/link?telegramId={telegramId}` — Fundy service-auth route that returns the active Telegram wallet link.
+- `DELETE /api/telegram/link` — Fundy service-auth route that unlinks a Telegram user.
 
 ## Groups
 
@@ -38,6 +42,7 @@ FundWise exposes wallet-bound HTTP API routes so the web app and future agents c
 
 ## Notes for agents
 
+- Fundy uses `Authorization: Bearer <FUNDWISE_SERVICE_API_KEY>` for Telegram link routes. Later linked-user calls may include `X-Fundy-Wallet: <linked-wallet>` only on routes that explicitly support Fundy service auth.
 - Do not call Supabase directly for ledger mutations.
 - Do not attempt to execute Settlements or Contributions without a Member wallet confirmation; these routes only persist verified on-chain receipts after the wallet-signed transaction exists.
 - Use `GET /api/groups/{groupId}/ledger` as the main read endpoint for Split Mode Balance and Settlement suggestions.
