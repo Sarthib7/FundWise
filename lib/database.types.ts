@@ -395,6 +395,20 @@ export interface Database {
         }
         Returns: undefined
       }
+      record_settlement_locked: {
+        Args: {
+          p_group_id: string
+          p_from_wallet: string
+          p_to_wallet: string
+          p_amount: number
+          p_mint: string
+          p_tx_sig: string
+        }
+        Returns: {
+          id: string
+          already_existed: boolean
+        }
+      }
     }
     Enums: {
       group_mode: "split" | "fund"
