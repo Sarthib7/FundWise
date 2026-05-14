@@ -152,7 +152,33 @@ Restore drill (if production data is corrupted):
 5. Rotate `SUPABASE_SERVICE_ROLE_KEY` and `FUNDWISE_SESSION_SECRET` after any suspected secret exposure.
 6. Document the incident in `docs/incident-log.md` before resuming launch comms.
 
-## 8. Mainnet rehearsal gate
+## 8. Cloudflare Pages build gate
+
+Run the Cloudflare adapter build before any production deploy:
+
+```bash
+pnpm build:pages
+```
+
+The public discovery routes under `app/.well-known/` are dynamic App Router routes. Cloudflare Pages requires each one to export Edge Runtime config:
+
+```ts
+export const runtime = "edge"
+```
+
+Current required route files:
+
+- `app/.well-known/agent-skills/index.json/route.ts`
+- `app/.well-known/api-catalog/route.ts`
+- `app/.well-known/jwks.json/route.ts`
+- `app/.well-known/mcp/server-card.json/route.ts`
+- `app/.well-known/oauth-authorization-server/route.ts`
+- `app/.well-known/oauth-protected-resource/route.ts`
+- `app/.well-known/openid-configuration/route.ts`
+
+If `next-on-pages` reports any of those paths as not configured for Edge Runtime, do not deploy. Re-add the export and rerun `pnpm build:pages` until the build summary lists them under Edge Function Routes.
+
+## 9. Mainnet rehearsal gate
 
 Before FW-039 starts, all must be true:
 
@@ -164,7 +190,7 @@ Before FW-039 starts, all must be true:
 - Cloudflare production env uses mainnet RPC and prod Supabase.
 - Two real wallets are funded with approximately `$5 USDC + $1 SOL` each.
 
-## 9. Rollback notes
+## 10. Rollback notes
 
 If a launch blocker appears:
 

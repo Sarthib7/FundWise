@@ -3,7 +3,7 @@
 **Snapshot date:** 2026-05-14 (production-ready push)
 **Phase:** Dual-track delivery — Split Mode code-ready for tightly-invited mainnet rollout, Fund Mode devnet beta polished to checklist completion (Phase A + B). Operator-owned infra steps tracked in `docs/prod-secrets-runbook.md`.
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026) — submission complete
-**Checklist branch:** ~50 commits on `checklist`, working tree clean, 123/123 tests passing
+**Checklist branch:** 60 commits ahead of `main`, local Cloudflare Pages build-gate fix applied, `pnpm test`, `pnpm lint`, and `pnpm build:pages` passing
 **Active issue index:** [issues.md](./issues.md)
 **Execution checklists:** [Split Mode mainnet](./docs/split-mode-mainnet-checklist.md) · [Fund Mode beta](./docs/fund-mode-beta-checklist.md)
 **Handoff:** Network strategy is locked: public app is mainnet only (Split Mode); Fund Mode stays devnet, invite-gated, hidden from public UI, used to test the monetization model with selected beta users coordinated in a Telegram group. Fundy ships alongside Split Mode mainnet from its separate repository. Yield routing via Meteora is planned but not in scope until Fund Mode is mainnet-stable. The two execution checklists own the phased work going forward.
@@ -20,6 +20,7 @@ FundWise is still a two-mode product:
 The product direction is now sharper:
 
 - **Network strategy (locked 2026-05-11):** public production runs on Solana mainnet and exposes Split Mode only. Fund Mode is kept on devnet for invite-only beta testing, accessed via wallets listed in `FUNDWISE_FUND_MODE_INVITE_WALLETS`. Beta testers are coordinated in a private Telegram group. This keeps users from having to switch wallet networks and isolates real money from beta workflows. Fund Mode mainnet graduation is a separate decision after both the product and the monetization model are validated on devnet — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
+- **Cloudflare Pages build gate (verified 2026-05-14):** `pnpm build:pages` requires every dynamic `.well-known` discovery route to export `runtime = "edge"`. The build now passes on `checklist` and lists those routes as Edge Function Routes. This is tracked in FW-050 and `docs/ops-runbook.md`.
 - **Single deployment, dual-cluster awareness (Option A):** the same app reads both mainnet and devnet RPC URLs, picks per-Group cluster based on `Group.mode`, and shows a cluster badge in the header so the user always knows which network they're on.
 - **Monetization beta on devnet:** the Fund Mode devnet beta is the controlled environment for testing the pricing model — creation fee acceptance, subscription willingness-to-pay surveys, free-tier wall friction — before any real billing flips on. See [docs/monetization.md](./docs/monetization.md) and `docs/fund-mode-beta-checklist.md` Phase C.
 - **Fundy ships alongside Split Mode mainnet** from its separate repository, providing Telegram-based reminders, draft expenses, wallet-readiness, and the FundWise Agent surface. Money movement still wallet-confirmed in the web app.

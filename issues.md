@@ -1470,17 +1470,17 @@ Give the owner/admin wallet permission to create invite-only Fund Mode Groups by
 
 ### What to build
 
-Fix the production build failure where Next compiled `.well-known` route handlers as edge functions but then failed page-data collection with `PageNotFoundError` for those same public discovery routes.
+Fix the Cloudflare Pages build failure where `@cloudflare/next-on-pages` rejects dynamic `.well-known` discovery routes unless each route handler explicitly opts into the Edge Runtime.
 
 ### Acceptance Criteria
 
 - [x] Public `.well-known` discovery routes still exist at the same URLs.
-- [x] Route handlers build as normal dynamic route handlers instead of edge-only handlers.
-- [x] `pnpm build` reaches final route output.
+- [x] Each dynamic `.well-known` route exports `export const runtime = "edge"`.
+- [x] `pnpm build:pages` reaches the Cloudflare adapter build summary and lists the `.well-known` routes as Edge Function Routes.
 
 ### Notes
 
-Completed on 2026-05-14 by removing `runtime = "edge"` from the `.well-known` route handlers. The routes remain dynamic and continue returning JSON/linkset responses.
+Completed on 2026-05-14 by restoring `export const runtime = "edge"` to the `.well-known` route handlers. The earlier removal let `next build` finish, but `pnpm build:pages` failed because the Cloudflare adapter requires every non-static route to be Edge Runtime compatible. Re-verified on `checklist`: `pnpm build:pages` passes and the Cloudflare build summary lists all seven `.well-known` routes as Edge Function Routes.
 
 ## FW-051 - Polish Custom Fund Mode Group Creation And Faucet Guidance
 

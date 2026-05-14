@@ -22,6 +22,7 @@ This file is the execution checklist for moving Split Mode from devnet to mainne
 - ✅ Footer social links and draft legal pages exist (FW-036/FW-037)
 - ✅ Baseline browser security headers are configured; CSP is opt-in behind `FUNDWISE_ENABLE_CSP=true` (FW-018)
 - ✅ Mainnet pre-flight security hardening items are complete through FW-041; production env setup is next
+- ✅ Cloudflare Pages `.well-known` discovery route build gate is fixed: every dynamic discovery route exports `runtime = "edge"` and must pass `pnpm build:pages`
 - ✅ Production Supabase prep: `docs/ops-runbook.md` + `pnpm supabase:verify-rls` shipped (FW-038 HITL portion remains)
 - ✅ Configured Supabase project hardening verified: RLS check passed, `settlements.tx_sig` unique, sensitive RPCs service-role-only
 - ✅ Fund Mode pool templates shipped (FW-042)
