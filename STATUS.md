@@ -1,9 +1,9 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-05-14 (security + UI audit pass)
-**Phase:** Dual-track delivery — Split Mode to mainnet (public), Fund Mode stays devnet (invite-only beta for monetization testing). Pre-mainnet audit blockers tracked under FW-053 / FW-054 / FW-055.
+**Snapshot date:** 2026-05-14 (production-ready push)
+**Phase:** Dual-track delivery — Split Mode code-ready for tightly-invited mainnet rollout, Fund Mode devnet beta polished to checklist completion (Phase A + B). Operator-owned infra steps tracked in `docs/prod-secrets-runbook.md`.
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026) — submission complete
-**Checklist branch:** 22 commits on `checklist`, working tree dirty (7 `.well-known/*` route files modified, uncommitted)
+**Checklist branch:** ~50 commits on `checklist`, working tree clean, 123/123 tests passing
 **Active issue index:** [issues.md](./issues.md)
 **Execution checklists:** [Split Mode mainnet](./docs/split-mode-mainnet-checklist.md) · [Fund Mode beta](./docs/fund-mode-beta-checklist.md)
 **Handoff:** Network strategy is locked: public app is mainnet only (Split Mode); Fund Mode stays devnet, invite-gated, hidden from public UI, used to test the monetization model with selected beta users coordinated in a Telegram group. Fundy ships alongside Split Mode mainnet from its separate repository. Yield routing via Meteora is planned but not in scope until Fund Mode is mainnet-stable. The two execution checklists own the phased work going forward.
@@ -70,6 +70,41 @@ The `checklist` branch went through a deep security + UI audit pass before the S
 **Authentication review (no fix needed):** HMAC-signed cookies, Ed25519 wallet signatures, 5-minute challenge TTLs, 12-hour session TTLs, origin + cluster pinning on challenges, `__Host-` prefix in production. The session cookie itself does not re-pin origin or cluster — operationally minor, but worth knowing if `FUNDWISE_SESSION_SECRET` is ever shared across deployments.
 
 **Mainnet readiness call:** Split Mode should not flip to mainnet until at least FW-053 (all three sub-items) and FW-055 are merged. FW-054 is a hardening item that can ship alongside or shortly after.
+
+---
+
+## Production-Ready Push (2026-05-14, same day)
+
+Picked up immediately after the audit and executed the AFK fixes plus the Fund Mode beta polish round. Tests: **123/123 passing**. Working tree: clean.
+
+**Audit blockers landed:**
+
+- **FW-053.1** — `body.payer === session.wallet` is now enforced at POST and PATCH `/api/expenses`. No more silent attribution of an Expense to a different Member.
+- **FW-053.2** — New Postgres function `record_settlement_locked` takes `for update` on the parent Group row and deduplicates by `tx_sig`. The TS mutation falls back to the previous two-step path if the migration hasn't been replayed yet on prod, so devnet rehearsals keep moving in the interim. **Operator action:** replay `supabase/migrations/20260514104435_add_record_settlement_with_lock.sql` against prod Supabase before flipping the public app to mainnet (steps in `docs/prod-secrets-runbook.md` §4).
+- **FW-053.3** — `requireAuthenticatedWallet` now calls `assertWalletIsAllowed` on every protected request. A sanctioned wallet with a valid 12-hour session is blocked at the next call rather than living out its session.
+- **FW-055** — `verifyAtaTransfer` rejects extra token-balance deltas in the same signed transaction. Settlement / Contribution / Proposal-execution can no longer carry a hidden side transfer.
+
+**Fund Mode beta polish landed:**
+
+- **FW-057** — Threshold suggestion + plain-English explanation at Treasury init. Helper at `lib/fund-mode-threshold.ts`.
+- **FW-058** — Pre-Treasury SOL pre-flight (~0.02 SOL on devnet) surfaced on the dashboard before the wallet popup.
+- **FW-059** — Squads explorer deep-link on the live Treasury card (`https://app.squads.so/squads/<pda>?cluster=devnet`).
+- **FW-046** — Exit-refund suggestion helper. Picks the smaller of (Member's total contributions, pro-rata share of live Treasury, available balance), pre-fills the existing Proposal form. Lives at `lib/fund-mode-exit.ts` with full vitest coverage.
+
+**Operator runbooks:**
+
+- **`docs/prod-secrets-runbook.md`** — copy-paste-ready commands for session secret rotation, prod Supabase provisioning, RPC env wiring, migration replay, invite wallet management, pre-deploy smoke, and post-deploy verification.
+- **`docs/monitoring-runbook.md`** — GlitchTip (open-source, MIT, Sentry-API-compatible) plus `@sentry/cloudflare` SDK enablement. Cloudflare-friendly path that sidesteps `@sentry/nextjs` ↔ `@cloudflare/next-on-pages` incompatibility. Three-step opt-in: `pnpm add @sentry/cloudflare`, set `SENTRY_DSN`, call `initMonitoring()` from the edge bootstrap.
+- **`scripts/split-mode-stress.mjs`** (`pnpm split:stress`) — HTTP stress test for the audit guards. Covers malformed body, sanctioned wallet, challenge rate limit burst, expense payer binding, and concurrent settlement dedupe.
+
+**Still HITL — operator owns the next moves:**
+
+1. Run `pnpm split:stress` against the local dev server (then the deployed devnet URL) before scheduling the mainnet rehearsal.
+2. Stand up the prod Supabase project per §2 of the prod secrets runbook, replay every migration, run `pnpm supabase:verify-rls`.
+3. Paste Alchemy mainnet + Helius / public-node fallback RPCs into Cloudflare Pages prod env.
+4. Generate and paste the prod `FUNDWISE_SESSION_SECRET` per §1.
+5. Open a GlitchTip project (hosted free tier or self-host) and follow `docs/monitoring-runbook.md` to enable.
+6. Schedule the mainnet rehearsal (Phase 4 of `docs/split-mode-mainnet-checklist.md`) with two funded wallets.
 
 ---
 

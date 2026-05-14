@@ -69,20 +69,21 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-043 | Done | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
 | FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | None |
 | FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) | None |
-| FW-046 | Ready | P2 | AFK | Fund Mode exit/refund proposal flow | FW-045 |
+| FW-046 | Done | P2 | AFK | Fund Mode exit/refund proposal flow | FW-045 |
 | FW-047 | Ready | P1 | AFK | Fund Mode creation fee infrastructure (devnet beta) | FW-033 |
 | FW-048 | Done | P2 | AFK | Telegram beta channel onboarding link from Fund Mode entry | None |
 | FW-049 | Ready | P0 | HITL | Add beta admin wallets for Fund Mode Group creation | Cloudflare deploy env access |
 | FW-050 | Done | P0 | AFK | Fix Next build for public `.well-known` discovery routes | None |
 | FW-051 | Done | P1 | AFK | Polish custom Fund Mode Group creation and faucet guidance | None |
 | FW-052 | Done | P0 | AFK | Keep Fund Mode on custom devnet RPC while Split Mode moves mainnet | FW-033 |
-| FW-053 | Open | P0 | AFK | Branch audit follow-ups: expense payer binding, settlement TOCTOU, sanctions screen scope | None |
+| FW-053 | Done | P0 | AFK | Branch audit follow-ups: expense payer binding, settlement TOCTOU, sanctions screen scope | None |
 | FW-054 | Open | P1 | AFK | Distributed rate-limit + cover money-moving routes | None |
-| FW-055 | Open | P1 | AFK | Restrict on-chain settlement verification to expected ATAs only | None |
+| FW-055 | Done | P1 | AFK | Restrict on-chain settlement verification to expected ATAs only | None |
 | FW-056 | Open | P2 | AFK | Branch audit follow-ups: UI polish, dead code, devnet mint cleanup | None |
-| FW-057 | Ready | P1 | AFK | Threshold suggestions at Treasury initialization | None |
-| FW-058 | Ready | P1 | AFK | Pre-Treasury SOL/rent checklist UI | FW-052 |
-| FW-059 | Ready | P2 | AFK | Squads explorer link on Treasury card | FW-052 |
+| FW-057 | Done | P1 | AFK | Threshold suggestions at Treasury initialization | None |
+| FW-058 | Done | P1 | AFK | Pre-Treasury SOL/rent checklist UI | FW-052 |
+| FW-059 | Done | P2 | AFK | Squads explorer link on Treasury card | FW-052 |
+| FW-038d | Done | P1 | AFK | Cloudflare-compatible open-source monitoring shim (GlitchTip via @sentry/cloudflare) | None |
 | FW-060 | Ready | P2 | AFK | Threshold-change proposal type | FW-045 |
 | FW-061 | Ready | P1 | AFK | Monthly fee emulation banner | FW-047 |
 | FW-062 | Ready | P1 | AFK | Free-tier limits emulation | FW-047 |
@@ -1830,3 +1831,31 @@ This snapshot is the running record of the audit that produced FW-053 through FW
 - Accessibility on dashboards is OK (Radix-based, focus-visible rings on Buttons). No `dangerouslySetInnerHTML` outside `components/ui/chart.tsx` (shadcn boilerplate).
 
 **Out of scope for this audit:** the production Supabase RLS policies (RLS is verified by `scripts/verify-supabase-rls.mjs` separately and not re-read here), the LI.FI route generation (covered by `docs/lifi-route-rehearsal.md`), and the Cloudflare deployment pipeline.
+
+## Production-Ready Push Session (2026-05-14)
+
+Production-readiness session that landed on `checklist` after the branch audit. Goal: code-side mainnet blockers cleared, Fund Mode beta polished to checklist completion, operator runbooks written for the human-only steps. Tests: 123/123 passing.
+
+**Code commits in this session (oldest → newest):**
+
+- `b2fa16c` `fix(api): bind expense payer to authenticated session (FW-053)`
+- `92c197f` `fix(auth): re-screen sanctioned wallets on every authenticated mutation (FW-053)`
+- `399844c` `fix(verification): reject side transfers in verifyAtaTransfer (FW-055)`
+- `a182a17` `fix(settlement): atomic insert under row lock on parent group (FW-053)`
+- `e998bbb` `test(audit): regression coverage for FW-053 + FW-055`
+- `407a927` `feat(fund): Treasury init guidance — threshold, SOL pre-flight, Squads link (FW-057, FW-058, FW-059)`
+- `efb8377` `feat(fund): exit-refund suggestion that pre-fills the Proposal form (FW-046)`
+- `0fdda95` `docs(prod): copy-paste runbook for prod secrets and Cloudflare env`
+- `847bb0c` `feat(stress): devnet stress test for the audit guards (FW-039 prep)`
+- `7a80623` `feat(monitoring): GlitchTip / @sentry/cloudflare shim (FW-038d)`
+
+**Still HITL — operator owns the next moves:**
+
+- **FW-038 + FW-038a + FW-038b + FW-038c** — Stand up the prod Supabase project, rotate the session secret, paste Alchemy mainnet (+ Helius/public-node fallback) RPC URLs into Cloudflare Pages env, enable daily backup. Step-by-step is in `docs/prod-secrets-runbook.md`.
+- **FW-039** — Split Mode mainnet rehearsal. The user asked for a devnet audit + stress test first. Run `pnpm split:stress` against the local dev server (no cookie needed for the unauth suite; copy `fundwise_wallet_session` into `FUNDWISE_STRESS_COOKIE` for the full suite), then run the existing `scripts/devnet-agent-rehearsal.mjs` end-to-end. Capture findings before scheduling the mainnet rehearsal with two real wallets and ~$15 USDC.
+- **FW-054** — Distributed rate-limit + cover money-moving routes. Open because it's the next P1 mainnet-hardening item; not blocking the first invite-only rollout.
+- **FW-056** — UI polish + dead-code cleanup batch. Mostly LOW severity; ship after launch is stable.
+
+**Mainnet readiness call:** Split Mode is code-ready for a tightly-invited mainnet rollout once `record_settlement_locked` is replayed on prod Supabase and the Alchemy RPC + session secret are pasted into Cloudflare. The remaining audit items (FW-054, FW-056) are hardening, not correctness, and can ship in the post-launch week.
+
+**Fund Mode beta status:** Phase A and Phase B of `docs/fund-mode-beta-checklist.md` are now complete (FW-042/043/044/046/057/058/059). Phase C monetization telemetry (FW-047/061/062/063) and Phase D ops (FW-064/065) remain as the actual beta-running work, but the product is shippable to the first invite cohort as-is.
