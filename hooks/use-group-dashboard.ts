@@ -269,9 +269,19 @@ export function useGroupDashboard() {
         return
       }
 
-      setBalances([])
-      setTransfers([])
-      setActivity([])
+      // Fund Mode now includes expenses in activity for reimbursement suggestions
+      const nextFundActivity = snapshot.activity
+      setActivity(nextFundActivity)
+
+      // Compute balances from expenses for Fund Mode (used by suggested reimbursements)
+      if (nextFundActivity.length > 0) {
+        const nextBalances = computeBalancesFromActivity(snapshot.members, nextFundActivity)
+        setBalances(nextBalances)
+        setTransfers(simplifySettlements(nextBalances))
+      } else {
+        setBalances([])
+        setTransfers([])
+      }
 
       if (!snapshot.isMember) {
         setContributions([])
@@ -345,6 +355,7 @@ export function useGroupDashboard() {
   const mintInfo = group ? findStablecoinByMint(group.stablecoin_mint) ?? null : null
   const tokenName = mintInfo?.name || "Token"
   const isFundMode = group?.mode === "fund"
+  const treasuryAddress = group?.treasury_address ?? null
   const isGroupCreator = group?.created_by === walletAddress
   const approvalThreshold = group?.approval_threshold ?? 1
   const missingMembersForTreasury = Math.max(0, approvalThreshold - memberCount)
@@ -364,6 +375,64 @@ export function useGroupDashboard() {
     (requestedToWallet ? shortWallet(requestedToWallet) : "")
   const viewerDisplayName =
     members.find((member) => member.wallet === walletAddress)?.display_name || ""
+
+  // FW-044: Auto-suggested reimbursements from Member expenses
+  // For each expense the viewer paid, check if there's already a matching Proposal
+  const suggestedReimbursements = useMemo(() => {
+    if (!isFundMode || !isMember || !treasuryAddress) {
+      return []
+    }
+
+    // Build a set of (recipient_wallet, amount) pairs from non-rejected Proposals
+    // to avoid suggesting duplicate reimbursements
+    const existingProposalKeys = new Set<string>()
+    for (const proposal of proposals) {
+      if (proposal.status !== "rejected") {
+        existingProposalKeys.add(`${proposal.recipient_wallet}:${proposal.amount}`)
+      }
+    }
+
+    // For each expense where the viewer is the payer, suggest reimbursement
+    // of the viewer's net positive contribution
+    const suggestions: Array<{
+      expenseId: string
+      payerWallet: string
+      amount: number
+      memo: string
+      createdAt: string
+    }> = []
+
+    for (const item of activity) {
+      if (item.type !== "expense") continue
+
+      const expense = item.data
+      // Only suggest for expenses the viewer paid
+      if (expense.payer !== walletAddress) continue
+
+      // Calculate how much the viewer is owed from this expense
+      const viewerSplit = expense.splits.find((split) => split.wallet === walletAddress)
+      if (!viewerSplit) continue
+
+      // The viewer paid the full amount but only owes their share.
+      // The reimbursable amount = total expense - viewer's share
+      const reimbursable = expense.amount - viewerSplit.share
+      if (reimbursable <= 0) continue
+
+      // Check if there's already a matching Proposal
+      const proposalKey = `${walletAddress}:${reimbursable}`
+      if (existingProposalKeys.has(proposalKey)) continue
+
+      suggestions.push({
+        expenseId: expense.id,
+        payerWallet: walletAddress,
+        amount: reimbursable,
+        memo: expense.memo || `Reimbursement for expense`,
+        createdAt: expense.created_at,
+      })
+    }
+
+    return suggestions
+  }, [activity, isFundMode, isMember, proposals, treasuryAddress, walletAddress])
 
   const describeStablecoinFundingGap = useCallback(
     ({
@@ -1274,6 +1343,7 @@ export function useGroupDashboard() {
     viewerOutgoingTransfers,
     viewerIncomingTransfers,
     viewerDisplayName,
+    suggestedReimbursements,
     connectWallet,
     verifyWalletAccess,
     ensureWalletWriteAccess,
