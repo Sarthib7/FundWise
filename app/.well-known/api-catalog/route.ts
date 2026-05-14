@@ -1,3 +1,5 @@
+export const runtime = "edge"
+
 import { buildApiCatalog } from "@/lib/server/fundwise-discovery"
 
 export async function GET(request: Request) {
