@@ -888,16 +888,21 @@ export default function GroupDashboard() {
                         DM Fundy this command to connect Telegram to your FundWise wallet.
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="min-h-11 justify-start font-mono sm:min-h-10"
-                      onClick={() => void copyFundyLinkCommand(fundyLinkCode)}
-                    >
-                      {fundyLinkCommandCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                      /link {fundyLinkCode}
-                    </Button>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <code className="rounded-md border bg-background px-3 py-2 font-mono text-sm">
+                        /link {fundyLinkCode}
+                      </code>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11 sm:min-h-10"
+                        onClick={() => void copyFundyLinkCommand(fundyLinkCode)}
+                      >
+                        {fundyLinkCommandCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                        Copy
+                      </Button>
+                    </div>
                   </div>
                   {fundyLinkCodeExpiresAt ? (
                     <p className="mt-2 text-xs text-muted-foreground">
