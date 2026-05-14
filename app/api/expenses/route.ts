@@ -60,6 +60,13 @@ export async function POST(request: Request) {
       throw new FundWiseError("Authenticated wallet does not match the Expense creator.", 401)
     }
 
+    if (body.payer !== session.wallet) {
+      throw new FundWiseError(
+        "Expense payer must match the authenticated wallet. Ask the payer to log this Expense from their own wallet.",
+        400
+      )
+    }
+
     const expense = await addExpenseMutation({
       groupId: body.groupId,
       payer: body.payer,

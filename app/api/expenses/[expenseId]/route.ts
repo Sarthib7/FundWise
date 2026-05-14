@@ -65,6 +65,13 @@ export async function PATCH(
       throw new FundWiseError("Authenticated wallet does not match the Expense editor.", 401)
     }
 
+    if (body.payer !== session.wallet) {
+      throw new FundWiseError(
+        "Expense payer must match the authenticated wallet. Ask the payer to log this Expense from their own wallet.",
+        400
+      )
+    }
+
     await updateExpenseMutation({
       expenseId,
       actorWallet: body.actorWallet,
