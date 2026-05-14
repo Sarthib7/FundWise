@@ -29,11 +29,15 @@ Quick links:
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
 - [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
-- [issues.md](./issues.md) - active indexed backlog for hackathon execution
-- [docs/README.md](./docs/README.md) - chunked documentation index by topic
+- [issues.md](./issues.md) - active indexed `FW-*` backlog, pick queue, handoff notes, and branch-audit findings
+- [docs/README.md](./docs/README.md) - full documentation index by root docs, execution checklists, API/agent docs, security docs, research, ADRs, and topic groups
+- [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md) - Split Mode production/mainnet launch checklist
+- [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md) - Fund Mode devnet beta checklist and remaining beta work
+- [docs/ops-runbook.md](./docs/ops-runbook.md) - Supabase, Cloudflare, RLS, and production operations runbook
 - [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope product matrix
 - [docs/lifi-route-rehearsal.md](./docs/lifi-route-rehearsal.md) - LI.FI EVM wallet path, Sepolia boundary, and mainnet rehearsal steps
 - [docs/monetization.md](./docs/monetization.md) - launch monetization model and conservative first-year scenario
+- [docs/api.md](./docs/api.md) - static API reference snapshot; live markdown is at `/api/docs`
 - [docs/research/](./docs/research/) - generated market and technology research, kept as supporting context only
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md) - research note for Payable Settlement Requests, x402, MPP, and pay.sh
@@ -213,6 +217,12 @@ Required keys used by the app:
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `FUNDWISE_SESSION_SECRET`
+
+Optional Fund Mode beta keys:
+
+- `FUNDWISE_FUND_MODE_INVITE_WALLETS` — comma-separated Solana wallets allowed to create invite-only Fund Mode Groups
+- `SOLANA_DEVNET_RPC_URL` / `NEXT_PUBLIC_SOLANA_DEVNET_RPC_URL` — devnet RPC used by Fund Mode Treasury, Contribution, and Proposal flows when the public Split Mode app uses mainnet
+- `SOLANA_DEVNET_RPC_FALLBACK_URLS` / `NEXT_PUBLIC_SOLANA_DEVNET_RPC_FALLBACK_URLS`
 
 For a deployed devnet demo, set `SOLANA_RPC_URL` to a private devnet RPC. Public Solana devnet RPC endpoints may reject Cloudflare Workers with `403`, which lets the wallet transaction land but prevents FundWise from recording the verified Receipt.
 
