@@ -466,13 +466,14 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
     }
   }
 
+  // Fund Mode: include expenses so the dashboard can suggest reimbursements
   return {
     authenticated: true,
     isMember: true,
     memberCount: members.length,
     group,
     members,
-    activity: [] as ActivityItem[],
+    activity: await buildActivityFeed(groupId),
     contributions: await listContributions(groupId),
     proposals: await listProposals(groupId),
   }

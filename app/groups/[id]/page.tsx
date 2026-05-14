@@ -312,6 +312,7 @@ export default function GroupDashboard() {
     viewerOutgoingTransfers,
     viewerIncomingTransfers,
     viewerDisplayName,
+    suggestedReimbursements,
     connectWallet,
     verifyWalletAccess,
     ensureWalletWriteAccess,
@@ -392,6 +393,17 @@ export default function GroupDashboard() {
       setContributionAmount("")
     }
   }, [contribute, contributionAmount])
+
+  const handleCreateProposalFromSuggestion = useCallback(async (
+    suggestion: { payerWallet: string; amount: number; memo: string }
+  ) => {
+    const amountStr = (suggestion.amount / 1e6).toString()
+    return createProposal({
+      recipientWallet: suggestion.payerWallet,
+      amount: amountStr,
+      memo: suggestion.memo,
+    })
+  }, [createProposal])
 
   const openSettlementFundingRoute = useCallback((transfer: SettlementTransfer) => {
     setBridgeFlow("settlement")
@@ -484,7 +496,7 @@ export default function GroupDashboard() {
   }, [expenseDialogParticipantWallets, splitMethod])
 
   const handleSubmitExpense = async () => {
-    if (!connected || !walletAddress || !expenseAmount || group?.mode !== "split") {
+    if (!connected || !walletAddress || !expenseAmount || !group) {
       return
     }
 
@@ -784,6 +796,17 @@ export default function GroupDashboard() {
                     <Share2 className="h-4 w-4 mr-2" />
                     Invite
                   </Button>
+                  {isFundMode && isMember && group.treasury_address && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 sm:min-h-10"
+                      onClick={openCreateExpenseDialog}
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      Log Expense
+                    </Button>
+                  )}
                   {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
                     <Button
                       size="sm"
@@ -882,6 +905,8 @@ export default function GroupDashboard() {
                   onReviewProposal={reviewProposal}
                   onExecuteProposal={executeProposal}
                   onJoin={joinGroup}
+                  suggestedReimbursements={suggestedReimbursements}
+                  onCreateProposalFromSuggestion={handleCreateProposalFromSuggestion}
                 />
               )}
             </section>
@@ -889,7 +914,7 @@ export default function GroupDashboard() {
         </div>
       </main>
 
-      {!isFundMode && showExpenseDialog && (
+      {showExpenseDialog && (
         <ExpenseDialog
           open={showExpenseDialog}
           onOpenChange={handleExpenseDialogOpenChange}

@@ -26,6 +26,7 @@ import {
   FileText,
   HandCoins,
   Landmark,
+  Lightbulb,
   Loader2,
   Send,
   Wallet,
@@ -34,6 +35,14 @@ import {
 
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+
+export type SuggestedReimbursement = {
+  expenseId: string
+  payerWallet: string
+  amount: number
+  memo: string
+  createdAt: string
+}
 
 const CONTRIBUTION_INPUT_ID = "contribution-amount"
 const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
@@ -94,6 +103,8 @@ type FundModeDashboardProps = {
   ) => boolean | Promise<boolean>
   onExecuteProposal: (proposalId: string) => boolean | Promise<boolean>
   onJoin: () => void | Promise<void>
+  suggestedReimbursements: SuggestedReimbursement[]
+  onCreateProposalFromSuggestion: (suggestion: SuggestedReimbursement) => boolean | Promise<boolean>
 }
 
 function shortWallet(address: string) {
@@ -152,6 +163,8 @@ export function FundModeDashboard({
   onReviewProposal,
   onExecuteProposal,
   onJoin,
+  suggestedReimbursements,
+  onCreateProposalFromSuggestion,
 }: FundModeDashboardProps) {
   const [proposalRecipientWallet, setProposalRecipientWallet] = useState("")
   const [proposalAmount, setProposalAmount] = useState("")
@@ -213,6 +226,58 @@ export function FundModeDashboard({
         onProposeReimbursement={handleProposeReimbursement}
         onViewProposals={handleViewProposals}
       />
+
+      {/* FW-044: Auto-suggested reimbursements from Member expenses */}
+      {treasuryAddress && suggestedReimbursements.length > 0 && (
+        <Card className="p-6">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-amber-500" />
+              <h2 className="text-lg font-semibold">Suggested Reimbursements</h2>
+            </div>
+            <Badge variant="outline">
+              {suggestedReimbursements.length} suggestion{suggestedReimbursements.length === 1 ? "" : "s"}
+            </Badge>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">
+            You paid for these Group expenses out of pocket. Create a reimbursement Proposal in one click.
+          </p>
+          <div className="space-y-3">
+            {suggestedReimbursements.map((suggestion) => (
+              <div
+                key={suggestion.expenseId}
+                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{suggestion.memo}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Paid on {new Date(suggestion.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-semibold tabular-nums">
+                    {formatTokenAmount(suggestion.amount)} {tokenName}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="min-h-10 bg-accent hover:bg-accent/90"
+                    onClick={() => void onCreateProposalFromSuggestion(suggestion)}
+                    disabled={isCreatingProposal}
+                  >
+                    {isCreatingProposal ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <HandCoins className="h-4 w-4 mr-2" />
+                    )}
+                    Propose
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {!treasuryAddress ? (
         <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
