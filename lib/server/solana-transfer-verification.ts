@@ -188,6 +188,22 @@ async function verifyAtaTransfer(params: {
       `${actionLabel} destination token delta did not match the requested amount.`
     )
   }
+
+  // FW-055: reject any side transfer that piggy-backs on the same signed tx.
+  // A correct settlement / contribution / proposal-execution touches exactly the
+  // two ATAs above. Any other ATA delta means an attacker (or a compromised
+  // wallet extension) tacked on an extra transfer before the user signed.
+  for (const [address, balance] of tokenBalances) {
+    if (address === expectedSourceAta || address === expectedDestinationAta) {
+      continue
+    }
+
+    if (balance.postAmount !== balance.preAmount) {
+      throw new FundWiseError(
+        `${actionLabel} transaction includes an unexpected token balance change on ${address}. FundWise only records transfers that move exactly the expected amount between the listed accounts.`
+      )
+    }
+  }
 }
 
 export async function verifySettlementTransfer(params: {
