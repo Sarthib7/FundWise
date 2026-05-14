@@ -29,10 +29,15 @@ Quick links:
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
 - [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
 - [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
-- [issues.md](./issues.md) - active indexed backlog for hackathon execution
-- [docs/README.md](./docs/README.md) - chunked documentation index by topic
+- [issues.md](./issues.md) - active indexed `FW-*` backlog, pick queue, handoff notes, and branch-audit findings
+- [docs/README.md](./docs/README.md) - full documentation index by root docs, execution checklists, API/agent docs, security docs, research, ADRs, and topic groups
+- [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md) - Split Mode production/mainnet launch checklist
+- [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md) - Fund Mode devnet beta checklist and remaining beta work
+- [docs/ops-runbook.md](./docs/ops-runbook.md) - Supabase, Cloudflare, RLS, and production operations runbook
 - [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) - canonical shipped, planned, and out-of-scope product matrix
+- [docs/lifi-route-rehearsal.md](./docs/lifi-route-rehearsal.md) - LI.FI EVM wallet path, Sepolia boundary, and mainnet rehearsal steps
 - [docs/monetization.md](./docs/monetization.md) - launch monetization model and conservative first-year scenario
+- [docs/api.md](./docs/api.md) - static API reference snapshot; live markdown is at `/api/docs`
 - [docs/research/](./docs/research/) - generated market and technology research, kept as supporting context only
 - [DECISIONS.md](./DECISIONS.md) - ADR index
 - [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md) - research note for Payable Settlement Requests, x402, MPP, and pay.sh
@@ -77,7 +82,7 @@ Fund Mode is the hero product direction and the next one-month beta focus, while
 
 ### Sponsor layers
 
-- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users route funds during Settlement through a `Route funds for Settlement` flow without needing to understand the underlying route details.
+- `LI.FI` is the primary sponsor support layer after Split Mode hardening. It lets EVM-first users route mainnet USDC during Settlement through a `Route funds for Settlement` flow without needing to understand the underlying route details. Sepolia is not a supported FundWise rehearsal path; see [docs/lifi-route-rehearsal.md](./docs/lifi-route-rehearsal.md).
 - `Zerion` is a secondary intelligence layer for wallet analysis, reminders, and future FundWise Agent flows.
 - **FundWise Agent** is the preferred umbrella name for later assistant surfaces. Telegram bot and Telegram mini app are channels for it, not a separate product.
 - **Fundy** is the planned hosted Telegram bot that will run the FundWise Agent from a separate repository. Fundy starts command-first with Zerion wallet analysis, personal finance support, Group Expense drafting, and Telegram group interaction; later versions add an LLM layer, tax guidance, and richer personal-finance workflows. See ADR-0018, ADR-0022, and ADR-0023.
@@ -101,7 +106,7 @@ The long-term moat is trust and distribution first, then data advantage from str
 Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical product-state matrix. The short version:
 
 - Shipped/demoable: Split Mode devnet MVP, Zerion readiness script, public Agent Skill Endpoint baseline.
-- Support layer: LI.FI as `Route funds for Settlement`.
+- Support layer: LI.FI as mainnet-only `Route funds for Settlement`.
 - Future: Source Currency, Expense Proof, Fund Mode Proposal lifecycle, Fundy, Scoped Agent Access, Payable Settlement Requests, Visa / IBAN / Altitude-style rails, and tax guidance.
 - Out of scope for FundWise: mini-games and prediction-market-like mechanics.
 
@@ -168,10 +173,11 @@ Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical 
 │   ├── adr/                         ← active architecture decisions
 │   └── archive/                      ← deferred ADRs (post-hackathon)
 ├── tests/
-│   └── expense-engine.test.ts   ← 32 unit tests
+│   └── *.test.ts                     ← vitest coverage for ledger, API, and audit guards
 ├── vitest.config.ts
 ├── supabase/
-    └── schema.sql
+    ├── migrations/                  ← source of truth for database changes
+    └── schema.sql                   ← human-readable snapshot, may lag migrations
 ```
 
 ## Group Dashboard Structure
@@ -213,6 +219,12 @@ Required keys used by the app:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `FUNDWISE_SESSION_SECRET`
 
+Optional Fund Mode beta keys:
+
+- `FUNDWISE_FUND_MODE_INVITE_WALLETS` — comma-separated Solana wallets allowed to create invite-only Fund Mode Groups
+- `SOLANA_DEVNET_RPC_URL` / `NEXT_PUBLIC_SOLANA_DEVNET_RPC_URL` — devnet RPC used by Fund Mode Treasury, Contribution, and Proposal flows when the public Split Mode app uses mainnet
+- `SOLANA_DEVNET_RPC_FALLBACK_URLS` / `NEXT_PUBLIC_SOLANA_DEVNET_RPC_FALLBACK_URLS`
+
 For a deployed devnet demo, set `SOLANA_RPC_URL` to a private devnet RPC. Public Solana devnet RPC endpoints may reject Cloudflare Workers with `403`, which lets the wallet transaction land but prevents FundWise from recording the verified Receipt.
 
 Fallback compatibility is present for:
@@ -227,6 +239,12 @@ pnpm build
 pnpm lint
 pnpm test          # vitest — expense engine unit tests
 ```
+
+Dev server notes:
+
+- `pnpm dev` should serve the app at `http://127.0.0.1:3000`.
+- If port `3000` is already occupied, run `PORT=3001 pnpm dev`.
+- A `GET /availability 404` probe or Node `--localstorage-file` warning during startup is not a dev-server failure if the app still prints `Ready` and `/api/health` returns `{ "ok": true }`.
 
 ### Deploy on Cloudflare Pages
 
@@ -250,17 +268,20 @@ Current verification state:
 - `pnpm exec tsc --noEmit` passes
 - `pnpm lint` passes
 - `pnpm build` passes
-- `pnpm test` — 34 tests passing (expense engine splits, balances, settlement graph)
+- `pnpm test` — 123 tests passing
+- `pnpm supabase:verify-rls` passes against the configured Supabase project
 
 ### Database Bootstrap
 
-The base FundWise tables now live in `supabase/migrations/`, not only in `supabase/schema.sql`.
+The base FundWise tables now live in `supabase/migrations/`, not only in `supabase/schema.sql`. Treat `supabase/migrations/` as the database source of truth; `supabase/schema.sql` is a readable snapshot and can lag later migration files.
 
 If a remote Supabase project was linked before that bootstrap migration existed, backfill it with:
 
 ```bash
 supabase db push --include-all
 ```
+
+The 2026-05-14 Supabase hardening was applied through the SQL Editor and mirrored in migrations: anonymous ledger access is denied by RLS, `update_expense_with_splits` and `record_settlement_locked` execute only through `service_role`, and `settlements.tx_sig` is unique.
 
 ## MVP Notes
 

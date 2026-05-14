@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { WalletAvatar } from "@/components/avatar"
+import { TreasuryOverviewCard } from "@/components/group-dashboard/treasury-overview-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -19,6 +19,8 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Database } from "@/lib/database.types"
 import type { ProposalWithReviews } from "@/lib/db"
 import { formatTokenAmount } from "@/lib/expense-engine"
+import { computeMemberExitRefund } from "@/lib/fund-mode-exit"
+import { describeApprovalThreshold, suggestApprovalThreshold } from "@/lib/fund-mode-threshold"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import {
   CheckCircle2,
@@ -26,10 +28,9 @@ import {
   FileText,
   HandCoins,
   Landmark,
+  Lightbulb,
   Loader2,
   Send,
-  ShieldCheck,
-  Target,
   Wallet,
   XCircle,
 } from "lucide-react"
@@ -37,9 +38,28 @@ import {
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
 
+export type TreasuryInitReadinessProp = {
+  walletSolBalance: number
+  estimatedTreasurySol: number
+  hasEnoughSol: boolean
+  shortfallSol: number
+}
+
+export type SuggestedReimbursement = {
+  expenseId: string
+  payerWallet: string
+  amount: number
+  memo: string
+  createdAt: string
+}
+
 const CONTRIBUTION_INPUT_ID = "contribution-amount"
 const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
 const PROPOSAL_MEMO_INPUT_ID = "proposal-memo"
+const PROPOSALS_SECTION_ID = "reimbursement-proposals"
+const FUND_MODE_BETA_TELEGRAM_URL = "https://t.me/funddotsol"
+const SOLANA_FAUCET_URL = "https://faucet.solana.com"
+const CIRCLE_FAUCET_URL = "https://faucet.circle.com"
 
 type FundModeDashboardProps = {
   tokenName: string
@@ -51,8 +71,8 @@ type FundModeDashboardProps = {
   fundingProgress: number
   approvalThreshold: number
   membersCount: number
-  contributorCount: number
   missingMembersForTreasury: number
+  treasuryInitReadiness: TreasuryInitReadinessProp | null
   contributions: ContributionRow[]
   proposals: ProposalWithReviews[]
   members: MemberRow[]
@@ -95,6 +115,8 @@ type FundModeDashboardProps = {
   ) => boolean | Promise<boolean>
   onExecuteProposal: (proposalId: string) => boolean | Promise<boolean>
   onJoin: () => void | Promise<void>
+  suggestedReimbursements: SuggestedReimbursement[]
+  onCreateProposalFromSuggestion: (suggestion: SuggestedReimbursement) => boolean | Promise<boolean>
 }
 
 function shortWallet(address: string) {
@@ -124,8 +146,8 @@ export function FundModeDashboard({
   fundingProgress,
   approvalThreshold,
   membersCount,
-  contributorCount,
   missingMembersForTreasury,
+  treasuryInitReadiness,
   contributions,
   proposals,
   members,
@@ -154,6 +176,8 @@ export function FundModeDashboard({
   onReviewProposal,
   onExecuteProposal,
   onJoin,
+  suggestedReimbursements,
+  onCreateProposalFromSuggestion,
 }: FundModeDashboardProps) {
   const [proposalRecipientWallet, setProposalRecipientWallet] = useState("")
   const [proposalAmount, setProposalAmount] = useState("")
@@ -163,64 +187,167 @@ export function FundModeDashboard({
   const [editMemo, setEditMemo] = useState("")
   const [editProofUrl, setEditProofUrl] = useState("")
   const [proposalCommentBodies, setProposalCommentBodies] = useState<Record<string, string>>({})
+  const [exitRefundWallet, setExitRefundWallet] = useState("")
+
+  const exitRefundSuggestion = exitRefundWallet
+    ? (() => {
+        const exitMember = members.find((member) => member.wallet === exitRefundWallet)
+        if (!exitMember) return null
+        return computeMemberExitRefund({
+          member: exitMember,
+          contributions,
+          treasuryBalance,
+        })
+      })()
+    : null
+
+  const handlePrefillExitRefund = () => {
+    if (!exitRefundSuggestion) return
+    setProposalRecipientWallet(exitRefundSuggestion.memberWallet)
+    setProposalAmount(
+      exitRefundSuggestion.suggestedRefund > 0
+        ? formatTokenAmount(exitRefundSuggestion.suggestedRefund)
+        : ""
+    )
+    setProposalMemo(exitRefundSuggestion.memo)
+    setProposalProofUrl("")
+    const input = document.getElementById(PROPOSAL_AMOUNT_INPUT_ID)
+    input?.scrollIntoView({ behavior: "smooth", block: "center" })
+    input?.focus()
+  }
+
+  const handleProposeReimbursement = () => {
+    if (walletAddress) {
+      setProposalRecipientWallet(walletAddress)
+    }
+
+    const input = document.getElementById(PROPOSAL_AMOUNT_INPUT_ID)
+    input?.scrollIntoView({ behavior: "smooth", block: "center" })
+    input?.focus()
+  }
+
+  const handleViewProposals = () => {
+    document
+      .getElementById(PROPOSALS_SECTION_ID)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge variant="outline">Fund Mode beta</Badge>
-        <p className="text-sm text-muted-foreground">
-          Treasury screens are in controlled testing while the Proposal lifecycle is completed.
-        </p>
+      <div className="mb-4 flex flex-col gap-3 rounded-xl border border-brand-fund-blue-border/60 bg-brand-fund-blue-bg/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">Fund Mode beta</Badge>
+          <p className="text-sm text-muted-foreground">
+            Invite-only devnet testing for pooled Treasuries, Proposals, and pricing feedback.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={FUND_MODE_BETA_TELEGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-fund-blue-border bg-background px-3 text-sm font-medium text-brand-fund-blue transition-colors hover:bg-brand-fund-blue-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            Join beta Telegram
+            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+          </a>
+          <a
+            href={SOLANA_FAUCET_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            SOL faucet
+            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+          </a>
+          <a
+            href={CIRCLE_FAUCET_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            USDC faucet
+            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+          </a>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Landmark className="h-4 w-4 text-accent" />
-            Treasury Balance
-          </div>
-          <p className="mt-3 font-mono text-2xl font-semibold tabular-nums">
-            {formatTokenAmount(treasuryBalance)} {tokenName}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {treasuryAddress ? `Vault ${shortWallet(treasuryAddress)}` : "Treasury not initialized yet"}
-          </p>
-        </Card>
+      <TreasuryOverviewCard
+        tokenName={tokenName}
+        treasuryBalance={treasuryBalance}
+        contributionTotal={contributionTotal}
+        fundingGoal={fundingGoal}
+        fundingProgress={fundingProgress}
+        contributions={contributions}
+        proposals={proposals}
+        approvalThreshold={approvalThreshold}
+        memberNameByWallet={memberNameByWallet}
+        walletAddress={walletAddress}
+        canPropose={Boolean(treasuryAddress && isMember)}
+        onProposeReimbursement={handleProposeReimbursement}
+        onViewProposals={handleViewProposals}
+      />
 
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Target className="h-4 w-4 text-accent" />
-            Funding Goal
-          </div>
-          <p className="mt-3 font-mono text-2xl font-semibold tabular-nums">
-            {fundingGoal ? `${formatTokenAmount(fundingGoal)} ${tokenName}` : "No goal"}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {formatTokenAmount(contributionTotal)} {tokenName} contributed
-          </p>
-          {fundingGoal && (
-            <div className="mt-3 space-y-2">
-              <Progress value={fundingProgress} />
-              <p className="text-[11px] text-muted-foreground">{fundingProgress}% funded</p>
+      {/* FW-044: Auto-suggested reimbursements from Member expenses */}
+      {treasuryAddress && suggestedReimbursements.length > 0 && (
+        <Card className="p-6">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-amber-500" />
+              <h2 className="text-lg font-semibold">Suggested Reimbursements</h2>
             </div>
-          )}
-        </Card>
-
-        <Card className="p-5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 text-accent" />
-            Approval Threshold
+            <Badge variant="outline">
+              {suggestedReimbursements.length} suggestion{suggestedReimbursements.length === 1 ? "" : "s"}
+            </Badge>
           </div>
-          <p className="mt-3 font-mono text-2xl font-semibold tabular-nums">
-            {approvalThreshold} of {membersCount}
+          <p className="mb-4 text-sm text-muted-foreground">
+            You paid for these Group expenses out of pocket. Create a reimbursement Proposal in one click.
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {contributorCount} contributor{contributorCount === 1 ? "" : "s"} so far
-          </p>
+          <div className="space-y-3">
+            {suggestedReimbursements.map((suggestion) => (
+              <div
+                key={suggestion.expenseId}
+                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{suggestion.memo}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Paid on {new Date(suggestion.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono font-semibold tabular-nums">
+                    {formatTokenAmount(suggestion.amount)} {tokenName}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="min-h-10 bg-accent hover:bg-accent/90"
+                    onClick={() => void onCreateProposalFromSuggestion(suggestion)}
+                    disabled={isCreatingProposal}
+                  >
+                    {isCreatingProposal ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <HandCoins className="h-4 w-4 mr-2" />
+                    )}
+                    Propose
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
-      </div>
+      )}
 
       {!treasuryAddress ? (
+        (() => {
+          const expectedMembers = membersCount + missingMembersForTreasury
+          const suggestion = suggestApprovalThreshold(expectedMembers)
+          const currentDescription = describeApprovalThreshold(approvalThreshold, expectedMembers)
+          const isSuggestedThreshold = suggestion.threshold === approvalThreshold
+
+          return (
         <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
@@ -229,11 +356,37 @@ export function FundModeDashboard({
                 Create the Squads multisig and Treasury vault for this Fund Mode Group.
               </p>
               <p className="text-xs text-muted-foreground">
-                Treasury signers are captured from the current Member list when initialization happens.
+                Treasury signers are captured from the current Member list when initialization happens. The creator needs devnet SOL for fees; Members need devnet SOL and USDC before Contributions.
               </p>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-3 text-xs">
+                <p className="font-medium text-foreground">
+                  Approval threshold: {approvalThreshold} of {expectedMembers}
+                </p>
+                <p className="mt-1 text-muted-foreground">{currentDescription}</p>
+                {!isSuggestedThreshold && (
+                  <p className="mt-2 text-amber-700 dark:text-amber-300">
+                    Suggested: {suggestion.threshold} of {expectedMembers} — {suggestion.rationale}
+                  </p>
+                )}
+              </div>
+              {treasuryInitReadiness && (
+                <div className="rounded-lg border border-border/60 bg-background/60 p-3 text-xs">
+                  <p className="font-medium text-foreground">
+                    Pre-flight: {treasuryInitReadiness.estimatedTreasurySol.toFixed(2)} SOL needed for Treasury creation
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Your wallet currently has {treasuryInitReadiness.walletSolBalance.toFixed(4)} SOL.
+                  </p>
+                  {!treasuryInitReadiness.hasEnoughSol && (
+                    <p className="mt-2 text-amber-700 dark:text-amber-300">
+                      Need ~{treasuryInitReadiness.shortfallSol.toFixed(4)} more SOL. Use the SOL faucet above before clicking Initialize.
+                    </p>
+                  )}
+                </div>
+              )}
               {missingMembersForTreasury > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Invite {missingMembersForTreasury} more Member{missingMembersForTreasury === 1 ? "" : "s"} before a {approvalThreshold}-of-{membersCount + missingMembersForTreasury} Treasury can be initialized.
+                  Invite {missingMembersForTreasury} more Member{missingMembersForTreasury === 1 ? "" : "s"} before a {approvalThreshold}-of-{expectedMembers} Treasury can be initialized.
                 </p>
               )}
             </div>
@@ -255,13 +408,15 @@ export function FundModeDashboard({
             )}
           </div>
         </Card>
+          )
+        })()
       ) : (
         <Card className="p-6">
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">Make a Contribution</h2>
               <p className="text-sm text-muted-foreground">
-                Transfer stablecoins from the connected wallet into this Group Treasury.
+                Transfer stablecoins from the connected wallet into this Group Treasury. If a Member is missing devnet SOL or USDC, use the faucet links above first.
               </p>
             </div>
             <Badge className="bg-accent/10 text-accent border-accent/20">Treasury Live</Badge>
@@ -279,6 +434,17 @@ export function FundModeDashboard({
                 Multisig Address
               </p>
               <p className="font-mono text-sm break-all">{multisigAddress}</p>
+              {multisigAddress && (
+                <a
+                  href={`https://app.squads.so/squads/${multisigAddress}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                >
+                  Open in Squads
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -338,7 +504,54 @@ export function FundModeDashboard({
         </Card>
       )}
 
-      <Card className="p-6">
+      {treasuryAddress && isMember && members.length > 1 && (
+        <Card className="p-6">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Suggest exit refund</h2>
+              <p className="text-sm text-muted-foreground">
+                Pick a Member who is leaving the pool. FundWise computes their pro-rata share of the Treasury and pre-fills the Proposal form. The Group still votes on the final amount.
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <Select value={exitRefundWallet} onValueChange={setExitRefundWallet}>
+              <SelectTrigger className="min-h-11 w-full sm:min-h-10">
+                <SelectValue placeholder="Choose the leaving Member" />
+              </SelectTrigger>
+              <SelectContent>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.wallet}>
+                    {memberNameByWallet.get(member.wallet) || shortWallet(member.wallet)}
+                    {member.wallet === walletAddress ? " (you)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
+              disabled={!exitRefundSuggestion || exitRefundSuggestion.suggestedRefund <= 0}
+              onClick={handlePrefillExitRefund}
+            >
+              Pre-fill Proposal
+            </Button>
+          </div>
+          {exitRefundSuggestion && (
+            <div className="mt-4 rounded-lg border border-border/60 bg-background/60 p-3 text-xs">
+              <p className="font-medium text-foreground">
+                Suggested refund: {formatTokenAmount(exitRefundSuggestion.suggestedRefund)} {tokenName}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Contributed: {formatTokenAmount(exitRefundSuggestion.totalContributed)} {tokenName} · Pro-rata share: {formatTokenAmount(exitRefundSuggestion.proRataShare)} {tokenName}
+              </p>
+              <p className="mt-1 text-muted-foreground">{exitRefundSuggestion.rationale}</p>
+            </div>
+          )}
+        </Card>
+      )}
+
+      <Card id={PROPOSALS_SECTION_ID} className="p-6">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Reimbursement Proposals</h2>

@@ -20,6 +20,7 @@ export interface Database {
           created_at: string
           funding_goal: number | null
           approval_threshold: number | null
+          group_template: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
           multisig_address: string | null
           treasury_address: string | null
         }
@@ -33,6 +34,7 @@ export interface Database {
           created_at?: string
           funding_goal?: number | null
           approval_threshold?: number | null
+          group_template?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
           multisig_address?: string | null
           treasury_address?: string | null
         }
@@ -46,6 +48,7 @@ export interface Database {
           created_at?: string
           funding_goal?: number | null
           approval_threshold?: number | null
+          group_template?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
           multisig_address?: string | null
           treasury_address?: string | null
         }
@@ -391,6 +394,20 @@ export interface Database {
           p_splits: Json
         }
         Returns: undefined
+      }
+      record_settlement_locked: {
+        Args: {
+          p_group_id: string
+          p_from_wallet: string
+          p_to_wallet: string
+          p_amount: number
+          p_mint: string
+          p_tx_sig: string
+        }
+        Returns: {
+          settlement_id: string
+          already_existed: boolean
+        }
       }
     }
     Enums: {

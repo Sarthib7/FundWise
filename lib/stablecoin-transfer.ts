@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL, PublicKey, Transaction, Connection } from "@solana/web3.js"
+import { LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js"
 import {
   createAssociatedTokenAccountInstruction,
   createTransferInstruction,
@@ -6,11 +6,12 @@ import {
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptAccount,
 } from "@solana/spl-token"
-import { getSolanaRpcUrl } from "@/lib/solana-cluster"
+import { createFundWiseConnection, createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
+import type { FundWiseCluster } from "@/lib/solana-cluster"
 
 const STABLECOIN_TRANSFER_COMMITMENT = "confirmed"
 
-const connection = new Connection(getSolanaRpcUrl(), STABLECOIN_TRANSFER_COMMITMENT)
+const connection = createFundWiseConnection(STABLECOIN_TRANSFER_COMMITMENT)
 
 export type StablecoinTransferPreview = {
   fromAta: PublicKey
@@ -31,11 +32,16 @@ type StablecoinTransferParams = {
   mintAddress: string
   amount: number
   recipientOwnerOffCurve?: boolean
+  cluster?: FundWiseCluster
 }
 
-async function getOptionalTokenAccountAmount(address: PublicKey) {
+function getTransferConnection(cluster?: FundWiseCluster) {
+  return cluster ? createFundWiseConnectionForCluster(cluster, STABLECOIN_TRANSFER_COMMITMENT) : connection
+}
+
+async function getOptionalTokenAccountAmount(address: PublicKey, transactionConnection = connection) {
   try {
-    const account = await getAccount(connection, address)
+    const account = await getAccount(transactionConnection, address)
     return {
       exists: true,
       amount: Number(account.amount),
@@ -49,6 +55,7 @@ async function getOptionalTokenAccountAmount(address: PublicKey) {
 }
 
 async function buildStablecoinTransferTransaction(params: StablecoinTransferParams) {
+  const transactionConnection = getTransferConnection(params.cluster)
   const mint = new PublicKey(params.mintAddress)
   const fromPubkey = new PublicKey(params.fromAddress)
   const toPubkey = new PublicKey(params.toAddress)
@@ -60,9 +67,9 @@ async function buildStablecoinTransferTransaction(params: StablecoinTransferPara
     params.recipientOwnerOffCurve ?? false
   )
 
-  const sourceAccount = await getOptionalTokenAccountAmount(fromAta)
-  const destinationAccount = await getOptionalTokenAccountAmount(toAta)
-  const walletSolBalanceLamports = await connection.getBalance(fromPubkey, STABLECOIN_TRANSFER_COMMITMENT)
+  const sourceAccount = await getOptionalTokenAccountAmount(fromAta, transactionConnection)
+  const destinationAccount = await getOptionalTokenAccountAmount(toAta, transactionConnection)
+  const walletSolBalanceLamports = await transactionConnection.getBalance(fromPubkey, STABLECOIN_TRANSFER_COMMITMENT)
 
   const transaction = new Transaction()
 
@@ -76,14 +83,14 @@ async function buildStablecoinTransferTransaction(params: StablecoinTransferPara
     createTransferInstruction(fromAta, toAta, fromPubkey, BigInt(params.amount))
   )
 
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash(
+  const { blockhash, lastValidBlockHeight } = await transactionConnection.getLatestBlockhash(
     STABLECOIN_TRANSFER_COMMITMENT
   )
 
   transaction.recentBlockhash = blockhash
   transaction.feePayer = fromPubkey
 
-  const feeForMessage = await connection.getFeeForMessage(
+  const feeForMessage = await transactionConnection.getFeeForMessage(
     transaction.compileMessage(),
     STABLECOIN_TRANSFER_COMMITMENT
   )
@@ -92,7 +99,7 @@ async function buildStablecoinTransferTransaction(params: StablecoinTransferPara
   const ataRentLamports = destinationAccount.exists
     ? 0
     : await getMinimumBalanceForRentExemptAccount(
-        connection,
+        transactionConnection,
         STABLECOIN_TRANSFER_COMMITMENT
       )
 
@@ -198,7 +205,8 @@ export async function executeStablecoinTransfer(
       signature = typeof result === "string" ? result : result.signature
     } else if (wallet.signTransaction) {
       const signed = await wallet.signTransaction(transaction)
-      signature = await connection.sendRawTransaction(signed.serialize(), {
+      const transactionConnection = getTransferConnection(params.cluster)
+      signature = await transactionConnection.sendRawTransaction(signed.serialize(), {
         skipPreflight: false,
         preflightCommitment: STABLECOIN_TRANSFER_COMMITMENT,
       })
@@ -206,7 +214,8 @@ export async function executeStablecoinTransfer(
       throw new Error("Wallet does not support transaction signing")
     }
 
-    const confirmation = await connection.confirmTransaction(
+    const transactionConnection = getTransferConnection(params.cluster)
+    const confirmation = await transactionConnection.confirmTransaction(
       { signature, blockhash, lastValidBlockHeight },
       STABLECOIN_TRANSFER_COMMITMENT
     )

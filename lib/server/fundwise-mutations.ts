@@ -1,11 +1,12 @@
 import type { Database, Json } from "@/lib/database.types"
-import { Connection, PublicKey, type AccountInfo } from "@solana/web3.js"
+import { PublicKey, type AccountInfo } from "@solana/web3.js"
 import * as multisig from "@sqds/multisig"
 import {
   computeBalancesFromActivity,
   simplifySettlements,
 } from "@/lib/expense-engine"
-import { getSolanaRpcUrl } from "@/lib/solana-cluster"
+import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
+import { isFundModeTemplateId, type FundModeTemplateId } from "@/lib/fund-mode-templates"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
@@ -233,7 +234,7 @@ export async function verifyFundModeTreasuryAddresses(
     multisigAddress: string
     treasuryAddress: string
   },
-  accountReader: TreasuryAccountReader = new Connection(getSolanaRpcUrl(), "confirmed")
+  accountReader: TreasuryAccountReader = createFundWiseConnectionForCluster("devnet", "confirmed")
 ) {
   const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
   const treasuryPubkey = parsePublicKey(data.treasuryAddress, "Treasury address")
@@ -284,7 +285,7 @@ export async function verifyFundModeTreasuryAddresses(
 
 async function loadSquadsProposal(
   proposalAddress: string,
-  accountReader: SquadsProposalReader = new Connection(getSolanaRpcUrl(), "confirmed")
+  accountReader: SquadsProposalReader = createFundWiseConnectionForCluster("devnet", "confirmed")
 ) {
   const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
   const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")
@@ -537,11 +538,16 @@ export async function createGroupMutation(data: {
   createdBy: string
   fundingGoal?: number
   approvalThreshold?: number
+  groupTemplate?: FundModeTemplateId | null
 }) {
   if (data.mode === "fund" && !isFundModeInviteWallet(data.createdBy)) {
     throw new FundWiseError(
       "Fund Mode is currently invite-only while the treasury Proposal lifecycle is being finished."
     )
+  }
+
+  if (data.groupTemplate && !isFundModeTemplateId(data.groupTemplate)) {
+    throw new FundWiseError("Unknown Fund Mode template.")
   }
 
   const insert: GroupInsert = {
@@ -551,16 +557,37 @@ export async function createGroupMutation(data: {
     created_by: data.createdBy,
     funding_goal: data.fundingGoal ?? null,
     approval_threshold: data.approvalThreshold ?? null,
+    group_template: data.mode === "fund" ? data.groupTemplate ?? null : null,
   }
 
-  const { data: group, error } = await getAdmin()
+  let { data: group, error } = await getAdmin()
     .from("groups")
     .insert(insert)
     .select("id, code")
     .single()
 
+  if (error && isMissingColumnSchemaCacheError(error, "group_template")) {
+    // Some early Supabase projects were provisioned before migration
+    // `20260511150000_add_fund_mode_template_to_groups.sql` shipped. Retry
+    // without the column so devnet rehearsals are not blocked while the
+    // operator replays the migration.
+    const { group_template: _groupTemplate, ...insertWithoutTemplate } = insert
+    const fallback = await getAdmin()
+      .from("groups")
+      .insert(insertWithoutTemplate as GroupInsert)
+      .select("id, code")
+      .single()
+
+    group = fallback.data
+    error = fallback.error
+  }
+
   if (error) {
     throw new FundWiseError(`Failed to create group: ${error.message}`)
+  }
+
+  if (!group) {
+    throw new FundWiseError("Failed to create group: no row returned.")
   }
 
   await addMemberInternal(group.id, data.createdBy)
@@ -862,6 +889,69 @@ export async function addSettlementMutation(data: {
     "Settlement wallets must both be Members of this Group."
   )
 
+  const settlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
+  assertSettlementMatchesCurrentGraph({
+    members: settlementSnapshot.members,
+    activity: settlementSnapshot.activity,
+    fromWallet: data.fromWallet,
+    toWallet: data.toWallet,
+    amount: data.amount,
+  })
+
+  await verifySettlementTransfer({
+    txSig: data.txSig,
+    mint: data.mint,
+    fromWallet: data.fromWallet,
+    toWallet: data.toWallet,
+    amount: data.amount,
+  })
+
+  // FW-053: dedupe + insert atomically under a row lock on the parent group.
+  // The Postgres function takes `for update` on the group row, looks up an
+  // existing settlement by tx_sig, and either returns the existing row or
+  // inserts a new one. Two concurrent settlement calls for the same group
+  // serialise on the lock; two calls for the same tx_sig return the same id.
+  const { data: lockedResult, error: lockedError } = await getAdmin()
+    .rpc("record_settlement_locked", {
+      p_group_id: data.groupId,
+      p_from_wallet: data.fromWallet,
+      p_to_wallet: data.toWallet,
+      p_amount: data.amount,
+      p_mint: data.mint,
+      p_tx_sig: data.txSig,
+    })
+    .single()
+
+  if (lockedError) {
+    if (lockedError.code === "23505") {
+      throw new FundWiseError("This Settlement transaction has already been recorded with a different payload.")
+    }
+
+    if (lockedError.code === "PGRST202" || lockedError.message?.includes("record_settlement_locked")) {
+      // Migration 20260514104435_add_record_settlement_with_lock.sql has not been
+      // replayed on this database yet — fall back to the non-locked insert path
+      // so devnet rehearsals keep moving while the migration lands on prod.
+      return await insertSettlementWithoutLock(data)
+    }
+
+    throw new FundWiseError(`Failed to add settlement: ${lockedError.message}`)
+  }
+
+  if (!lockedResult) {
+    throw new FundWiseError("Settlement insert returned no row from record_settlement_locked.")
+  }
+
+  return { id: (lockedResult as { settlement_id: string }).settlement_id }
+}
+
+async function insertSettlementWithoutLock(data: {
+  groupId: string
+  fromWallet: string
+  toWallet: string
+  amount: number
+  mint: string
+  txSig: string
+}) {
   const { data: existingSettlement, error: existingSettlementError } = await getAdmin()
     .from("settlements")
     .select("id, group_id, from_wallet, to_wallet, amount, mint")
@@ -885,32 +975,6 @@ export async function addSettlementMutation(data: {
 
     throw new FundWiseError("This Settlement transaction has already been recorded.")
   }
-
-  const settlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
-  assertSettlementMatchesCurrentGraph({
-    members: settlementSnapshot.members,
-    activity: settlementSnapshot.activity,
-    fromWallet: data.fromWallet,
-    toWallet: data.toWallet,
-    amount: data.amount,
-  })
-
-  await verifySettlementTransfer({
-    txSig: data.txSig,
-    mint: data.mint,
-    fromWallet: data.fromWallet,
-    toWallet: data.toWallet,
-    amount: data.amount,
-  })
-
-  const latestSettlementSnapshot = await getGroupDashboardSnapshot(data.groupId, data.fromWallet)
-  assertSettlementMatchesCurrentGraph({
-    members: latestSettlementSnapshot.members,
-    activity: latestSettlementSnapshot.activity,
-    fromWallet: data.fromWallet,
-    toWallet: data.toWallet,
-    amount: data.amount,
-  })
 
   const { data: settlement, error } = await getAdmin()
     .from("settlements")

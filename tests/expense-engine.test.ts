@@ -3,8 +3,14 @@ import {
   calculateSplits,
   simplifySettlements,
   computeBalancesFromActivity,
+  findStablecoinByMint,
   formatTokenAmount,
+  getClusterForGroupMode,
+  getDefaultStablecoinForCluster,
+  getDefaultStablecoinForGroupMode,
+  getStablecoinMintsForCluster,
   parseTokenAmount,
+  STABLECOIN_MINTS_BY_CLUSTER,
 } from "../lib/expense-engine"
 import type { Balance } from "../lib/expense-engine"
 
@@ -418,5 +424,113 @@ describe("computeBalancesFromActivity", () => {
     const balances = computeBalancesFromActivity(members4, activity)
     const total = balances.reduce((sum, b) => sum + b.amount, 0)
     expect(total).toBe(0)
+  })
+})
+
+// ─── Cluster-Aware Stablecoin Mints ────────────────────────────────
+
+const MAINNET_USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+const MAINNET_PYUSD = "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"
+const MAINNET_USDT = "Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ"
+const DEVNET_USDC = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+const DEVNET_PYUSD = "CXFaY4cXf25ZhFlexqroBfBceJ8YqWBsfaY3HQd9qucz"
+
+describe("STABLECOIN_MINTS_BY_CLUSTER", () => {
+  it("returns correct mainnet USDC mint", () => {
+    expect(STABLECOIN_MINTS_BY_CLUSTER["mainnet-beta"].USDC.mint).toBe(MAINNET_USDC)
+  })
+
+  it("returns correct mainnet PYUSD mint", () => {
+    expect(STABLECOIN_MINTS_BY_CLUSTER["mainnet-beta"].PYUSD.mint).toBe(MAINNET_PYUSD)
+  })
+
+  it("returns correct mainnet USDT mint", () => {
+    expect(STABLECOIN_MINTS_BY_CLUSTER["mainnet-beta"].USDT.mint).toBe(MAINNET_USDT)
+  })
+
+  it("keeps devnet USDC mint unchanged", () => {
+    expect(STABLECOIN_MINTS_BY_CLUSTER.devnet.USDC.mint).toBe(DEVNET_USDC)
+  })
+
+  it("keeps devnet PYUSD mint unchanged", () => {
+    expect(STABLECOIN_MINTS_BY_CLUSTER.devnet.PYUSD.mint).toBe(DEVNET_PYUSD)
+  })
+
+  it("uses 6 decimals for all mints on both clusters", () => {
+    for (const cluster of Object.values(STABLECOIN_MINTS_BY_CLUSTER)) {
+      for (const stablecoin of Object.values(cluster)) {
+        expect(stablecoin.decimals).toBe(6)
+      }
+    }
+  })
+})
+
+describe("getStablecoinMintsForCluster", () => {
+  it("returns mainnet mints when called with mainnet-beta", () => {
+    expect(getStablecoinMintsForCluster("mainnet-beta").USDC.mint).toBe(MAINNET_USDC)
+  })
+
+  it("returns devnet mints when called with devnet", () => {
+    expect(getStablecoinMintsForCluster("devnet").USDC.mint).toBe(DEVNET_USDC)
+  })
+
+  it("falls back to devnet mints for custom cluster", () => {
+    expect(getStablecoinMintsForCluster("custom").USDC.mint).toBe(DEVNET_USDC)
+  })
+})
+
+describe("getDefaultStablecoinForCluster", () => {
+  it("returns mainnet USDC for mainnet-beta", () => {
+    expect(getDefaultStablecoinForCluster("mainnet-beta").mint).toBe(MAINNET_USDC)
+  })
+
+  it("returns devnet USDC for devnet", () => {
+    expect(getDefaultStablecoinForCluster("devnet").mint).toBe(DEVNET_USDC)
+  })
+})
+
+describe("findStablecoinByMint", () => {
+  it("finds mainnet USDC by mint address", () => {
+    const result = findStablecoinByMint(MAINNET_USDC)
+    expect(result?.name).toBe("USDC")
+  })
+
+  it("finds devnet USDC by mint address", () => {
+    const result = findStablecoinByMint(DEVNET_USDC)
+    expect(result?.name).toBe("USDC")
+  })
+
+  it("finds mainnet PYUSD by mint address", () => {
+    expect(findStablecoinByMint(MAINNET_PYUSD)?.name).toBe("PYUSD")
+  })
+
+  it("finds devnet PYUSD by mint address", () => {
+    expect(findStablecoinByMint(DEVNET_PYUSD)?.name).toBe("PYUSD")
+  })
+
+  it("returns undefined for unknown mint addresses", () => {
+    expect(findStablecoinByMint("1nValidMintAddressThatDoesNotExist1111111111")).toBeUndefined()
+  })
+})
+
+describe("getClusterForGroupMode", () => {
+  it("forces devnet cluster for Fund Mode groups regardless of deployment", () => {
+    expect(getClusterForGroupMode("fund")).toBe("devnet")
+  })
+
+  it("uses deployment cluster for Split Mode groups", () => {
+    const cluster = getClusterForGroupMode("split")
+    expect(["devnet", "mainnet-beta", "custom"]).toContain(cluster)
+  })
+})
+
+describe("getDefaultStablecoinForGroupMode", () => {
+  it("returns devnet USDC for Fund Mode groups", () => {
+    expect(getDefaultStablecoinForGroupMode("fund").mint).toBe(DEVNET_USDC)
+  })
+
+  it("returns a known USDC mint for Split Mode groups", () => {
+    const mint = getDefaultStablecoinForGroupMode("split").mint
+    expect([MAINNET_USDC, DEVNET_USDC]).toContain(mint)
   })
 })

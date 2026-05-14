@@ -7,7 +7,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base"
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom"
 import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare"
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui"
-import { ensureLifiChainsLoaded, setLifiSolanaProvider } from "@/lib/lifi-config"
+import { isSolanaMainnetCluster } from "@/lib/solana-cluster"
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base"
 
 import "@solana/wallet-adapter-react-ui/styles.css"
@@ -16,13 +16,28 @@ function LifiProvider({ children }: { children: React.ReactNode }) {
   const { wallet } = useWallet()
 
   useEffect(() => {
-    ensureLifiChainsLoaded().catch((error) => {
-      console.error("[FundWise] Failed to initialize LI.FI chains:", error)
-    })
-  }, [])
+    if (!isSolanaMainnetCluster()) {
+      return
+    }
 
-  useEffect(() => {
-    setLifiSolanaProvider((wallet?.adapter as SignerWalletAdapter) || null)
+    let cancelled = false
+
+    import("@/lib/lifi-config")
+      .then(async ({ ensureLifiChainsLoaded, setLifiSolanaProvider }) => {
+        if (cancelled) {
+          return
+        }
+
+        setLifiSolanaProvider((wallet?.adapter as SignerWalletAdapter) || null)
+        await ensureLifiChainsLoaded()
+      })
+      .catch((error) => {
+        console.error("[FundWise] Failed to initialize LI.FI:", error)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [wallet?.adapter])
 
   return <>{children}</>

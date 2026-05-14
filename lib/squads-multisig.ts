@@ -21,10 +21,9 @@ import {
 } from "@solana/spl-token"
 import * as multisig from "@sqds/multisig"
 import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
+import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
 
-const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
-
-export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
+export const connection = createFundWiseConnectionForCluster("devnet", "confirmed")
 
 type WalletSigner = {
   sendTransaction?: (
@@ -74,6 +73,50 @@ async function sendWalletTransaction(
   }
 
   return signature
+}
+
+/**
+ * Approximate SOL cost to create a new Squads v4 multisig + vault PDA on
+ * devnet, based on observed rehearsals on 2026-05-10:
+ *   - Multisig account rent: ~0.014 SOL
+ *   - First vault PDA rent: ~0.002 SOL
+ *   - Tx fees + signature: ~0.001 SOL
+ * Total is rounded up so the UI never under-quotes a Member who is about to
+ * sign a Treasury initialization that will fail mid-flow on insufficient SOL.
+ */
+export const TREASURY_INIT_SOL_ESTIMATE = 0.02
+
+export type TreasuryReadinessCheck = {
+  walletSolBalance: number
+  estimatedTreasurySol: number
+  hasEnoughSol: boolean
+  shortfallSol: number
+}
+
+export async function readTreasuryInitReadiness(
+  walletAddress: string
+): Promise<TreasuryReadinessCheck> {
+  try {
+    const { PublicKey } = await import("@solana/web3.js")
+    const { LAMPORTS_PER_SOL } = await import("@solana/web3.js")
+    const pubkey = new PublicKey(walletAddress)
+    const lamports = await connection.getBalance(pubkey, "confirmed")
+    const walletSolBalance = lamports / LAMPORTS_PER_SOL
+    const shortfallSol = Math.max(0, TREASURY_INIT_SOL_ESTIMATE - walletSolBalance)
+    return {
+      walletSolBalance,
+      estimatedTreasurySol: TREASURY_INIT_SOL_ESTIMATE,
+      hasEnoughSol: walletSolBalance >= TREASURY_INIT_SOL_ESTIMATE,
+      shortfallSol,
+    }
+  } catch {
+    return {
+      walletSolBalance: 0,
+      estimatedTreasurySol: TREASURY_INIT_SOL_ESTIMATE,
+      hasEnoughSol: false,
+      shortfallSol: TREASURY_INIT_SOL_ESTIMATE,
+    }
+  }
 }
 
 /**
@@ -231,6 +274,7 @@ export async function contributeStablecoinToTreasury(
     mintAddress,
     amount,
     recipientOwnerOffCurve: true,
+    cluster: "devnet",
   })
 
   return { signature }

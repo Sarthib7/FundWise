@@ -2,26 +2,24 @@
 
 export const runtime = "edge"
 
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ExpenseDialog, type ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
-import { FundModeDashboard } from "@/components/group-dashboard/fund-mode-dashboard"
+import type { ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
-import { SplitModeDashboard } from "@/components/group-dashboard/split-mode-dashboard"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CrossChainBridgeModal } from "@/components/cross-chain-bridge-modal"
-import { InviteGroupDialog } from "@/components/invite-group-dialog"
 import { useGroupDashboard, PROFILE_DISPLAY_NAME_MAX_LENGTH } from "@/hooks/use-group-dashboard"
 import { addExpense as dbAddExpense, type ActivityItem, updateExpense as dbUpdateExpense } from "@/lib/db"
 import {
   calculateSplits,
   DEFAULT_STABLECOIN,
   formatTokenAmount,
+  getClusterForGroupMode,
   parseTokenAmount,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
@@ -37,6 +35,54 @@ import {
   Share2,
   Wallet,
 } from "lucide-react"
+
+const SplitModeDashboard = dynamic(
+  () =>
+    import("@/components/group-dashboard/split-mode-dashboard").then(
+      (module) => module.SplitModeDashboard
+    ),
+  {
+    loading: () => (
+      <Card className="p-6 text-sm text-muted-foreground">Loading Split Mode...</Card>
+    ),
+  }
+)
+
+const FundModeDashboard = dynamic(
+  () =>
+    import("@/components/group-dashboard/fund-mode-dashboard").then(
+      (module) => module.FundModeDashboard
+    ),
+  {
+    loading: () => (
+      <Card className="p-6 text-sm text-muted-foreground">Loading Fund Mode...</Card>
+    ),
+  }
+)
+
+const ExpenseDialog = dynamic(
+  () =>
+    import("@/components/group-dashboard/expense-dialog").then(
+      (module) => module.ExpenseDialog
+    ),
+  { ssr: false }
+)
+
+const CrossChainBridgeModal = dynamic(
+  () =>
+    import("@/components/cross-chain-bridge-modal").then(
+      (module) => module.CrossChainBridgeModal
+    ),
+  { ssr: false }
+)
+
+const InviteGroupDialog = dynamic(
+  () =>
+    import("@/components/invite-group-dialog").then(
+      (module) => module.InviteGroupDialog
+    ),
+  { ssr: false }
+)
 
 type ActivityExpense = Extract<ActivityItem, { type: "expense" }>["data"]
 type SplitMethod = Database["public"]["Enums"]["split_method"]
@@ -252,8 +298,8 @@ export default function GroupDashboard() {
     isGroupCreator,
     approvalThreshold,
     missingMembersForTreasury,
+    treasuryInitReadiness,
     contributionTotal,
-    contributorCount,
     fundingProgress,
     totalSettledVolume,
     memberNameByWallet,
@@ -267,6 +313,7 @@ export default function GroupDashboard() {
     viewerOutgoingTransfers,
     viewerIncomingTransfers,
     viewerDisplayName,
+    suggestedReimbursements,
     connectWallet,
     verifyWalletAccess,
     ensureWalletWriteAccess,
@@ -347,6 +394,17 @@ export default function GroupDashboard() {
       setContributionAmount("")
     }
   }, [contribute, contributionAmount])
+
+  const handleCreateProposalFromSuggestion = useCallback(async (
+    suggestion: { payerWallet: string; amount: number; memo: string }
+  ) => {
+    const amountStr = (suggestion.amount / 1e6).toString()
+    return createProposal({
+      recipientWallet: suggestion.payerWallet,
+      amount: amountStr,
+      memo: suggestion.memo,
+    })
+  }, [createProposal])
 
   const openSettlementFundingRoute = useCallback((transfer: SettlementTransfer) => {
     setBridgeFlow("settlement")
@@ -439,7 +497,7 @@ export default function GroupDashboard() {
   }, [expenseDialogParticipantWallets, splitMethod])
 
   const handleSubmitExpense = async () => {
-    if (!connected || !walletAddress || !expenseAmount || group?.mode !== "split") {
+    if (!connected || !walletAddress || !expenseAmount || !group) {
       return
     }
 
@@ -592,7 +650,7 @@ export default function GroupDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header cluster={getClusterForGroupMode(group.mode)} />
 
       <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {connected && !isWalletVerified && (
@@ -739,6 +797,17 @@ export default function GroupDashboard() {
                     <Share2 className="h-4 w-4 mr-2" />
                     Invite
                   </Button>
+                  {isFundMode && isMember && group.treasury_address && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 sm:min-h-10"
+                      onClick={openCreateExpenseDialog}
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      Log Expense
+                    </Button>
+                  )}
                   {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
                     <Button
                       size="sm"
@@ -808,8 +877,8 @@ export default function GroupDashboard() {
                   fundingProgress={fundingProgress}
                   approvalThreshold={approvalThreshold}
                   membersCount={memberCount}
-                  contributorCount={contributorCount}
                   missingMembersForTreasury={missingMembersForTreasury}
+                  treasuryInitReadiness={treasuryInitReadiness}
                   contributions={contributions}
                   proposals={proposals}
                   members={members}
@@ -838,6 +907,8 @@ export default function GroupDashboard() {
                   onReviewProposal={reviewProposal}
                   onExecuteProposal={executeProposal}
                   onJoin={joinGroup}
+                  suggestedReimbursements={suggestedReimbursements}
+                  onCreateProposalFromSuggestion={handleCreateProposalFromSuggestion}
                 />
               )}
             </section>
@@ -845,7 +916,7 @@ export default function GroupDashboard() {
         </div>
       </main>
 
-      {!isFundMode && (
+      {showExpenseDialog && (
         <ExpenseDialog
           open={showExpenseDialog}
           onOpenChange={handleExpenseDialogOpenChange}
@@ -874,28 +945,30 @@ export default function GroupDashboard() {
         />
       )}
 
-      <CrossChainBridgeModal
-        open={showBridge}
-        onOpenChange={setShowBridge}
-        destinationAddress={walletAddress}
-        groupName={group.name}
-        flow={bridgeFlow}
-        initialAmount={bridgeInitialAmount}
-        onSuccess={(txHash, amount) => {
-          if (bridgeFlow === "contribution") {
-            setContributionAmount(amount)
-          }
-
-          toast.success(
-            bridgeFlow === "contribution"
-              ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
-              : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
-            {
-              description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
+      {showBridge && (
+        <CrossChainBridgeModal
+          open={showBridge}
+          onOpenChange={setShowBridge}
+          destinationAddress={walletAddress}
+          groupName={group.name}
+          flow={bridgeFlow}
+          initialAmount={bridgeInitialAmount}
+          onSuccess={(txHash, amount) => {
+            if (bridgeFlow === "contribution") {
+              setContributionAmount(amount)
             }
-          )
-        }}
-      />
+
+            toast.success(
+              bridgeFlow === "contribution"
+                ? `Top-up submitted for ${amount} USDC. Continue with a Contribution after funds arrive.`
+                : `Route submitted for ${amount} USDC. Continue the Settlement after funds arrive.`,
+              {
+                description: `Source tx: ${txHash.slice(0, 8)}...${txHash.slice(-6)}`,
+              }
+            )
+          }}
+        />
+      )}
 
       <ProfileNameDialog
         open={showProfileDialog}
@@ -907,13 +980,15 @@ export default function GroupDashboard() {
         onSave={handleSaveProfileDialog}
       />
 
-      <InviteGroupDialog
-        open={showInviteDialog}
-        onOpenChange={setShowInviteDialog}
-        groupId={groupId}
-        groupName={group.name}
-        groupCode={group.code}
-      />
+      {showInviteDialog && (
+        <InviteGroupDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          groupId={groupId}
+          groupName={group.name}
+          groupCode={group.code}
+        />
+      )}
 
       <Footer />
     </div>

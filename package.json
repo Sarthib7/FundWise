@@ -16,12 +16,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fund:rehearsal": "node scripts/fund-mode-beta-rehearsal.mjs",
+    "lifi:readiness": "node scripts/lifi-readiness.mjs",
+    "split:stress": "node scripts/split-mode-stress.mjs",
+    "supabase:verify-rls": "node scripts/verify-supabase-rls.mjs",
     "zerion:readiness": "node scripts/zerion-readiness.mjs"
   },
   "dependencies": {
     "@dicebear/collection": "^9.2.4",
     "@dicebear/core": "^9.2.4",
     "@lifi/sdk": "^3.16.3",
+    "@opentelemetry/api": "1.9.1",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
@@ -102,5 +106,12 @@
     "vercel": "47.0.4",
     "vitest": "^4.1.5",
     "wrangler": "^4.86.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@vercel/static-config>ajv": "8.18.0",
+      "next>postcss": "8.5.10",
+      "rpc-websockets>uuid": "11.1.1"
+    }
   }
 }

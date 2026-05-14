@@ -6,6 +6,8 @@ Scope: application code, Supabase schema and policies, wallet-driven settlement 
 
 Verdict: FundWise is not ready for mainnet-beta in its current trust model. The dominant issue is that the browser can currently author financial truth through a public Supabase client with permissive row-level security, and stored Settlement / Contribution receipts are not verified against chain data before being shown back to users.
 
+2026-05-14 update: this file is now historical audit context. The main trust-model findings were remediated on the `checklist` branch with server-side wallet-bound mutations, RLS lockdown, RPC transfer verification, atomic Settlement recording, unique `settlements.tx_sig`, and service-role-only execution for sensitive Supabase RPCs. Use `STATUS.md`, `issues.md`, `docs/ops-runbook.md`, and ADR-0030 for current readiness state.
+
 ## Findings
 
 ### 1. Critical: public browser writes can forge Group ledger state and Treasury metadata

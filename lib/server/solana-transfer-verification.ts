@@ -1,6 +1,6 @@
 import { getAssociatedTokenAddress } from "@solana/spl-token"
-import { PublicKey, type ParsedTransactionWithMeta, type TokenBalance } from "@solana/web3.js"
-import { createFundWiseConnection } from "@/lib/fallback-connection"
+import { Connection, PublicKey, type ParsedTransactionWithMeta, type TokenBalance } from "@solana/web3.js"
+import { createFundWiseConnection, createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 
 const VERIFICATION_COMMITMENT = "confirmed"
@@ -8,6 +8,7 @@ const MAX_VERIFICATION_ATTEMPTS = 12
 const VERIFICATION_RETRY_DELAY_MS = 1000
 
 const connection = createFundWiseConnection(VERIFICATION_COMMITMENT)
+const fundModeConnection = createFundWiseConnectionForCluster("devnet", VERIFICATION_COMMITMENT)
 
 type TokenBalanceSnapshot = {
   mint?: string
@@ -86,9 +87,9 @@ function assertSigner(transaction: ParsedTransactionWithMeta, walletAddress: str
   }
 }
 
-async function loadParsedTransaction(signature: string) {
+async function loadParsedTransaction(signature: string, transactionConnection: Connection) {
   for (let attempt = 0; attempt < MAX_VERIFICATION_ATTEMPTS; attempt += 1) {
-    const transaction = await connection.getParsedTransaction(signature, {
+    const transaction = await transactionConnection.getParsedTransaction(signature, {
       commitment: VERIFICATION_COMMITMENT,
       maxSupportedTransactionVersion: 0,
     })
@@ -121,6 +122,7 @@ async function verifyAtaTransfer(params: {
   signerWallet?: string
   expectedAmount: number
   actionLabel: string
+  transactionConnection?: Connection
 }) {
   const {
     txSig,
@@ -132,13 +134,14 @@ async function verifyAtaTransfer(params: {
     signerWallet,
     expectedAmount,
     actionLabel,
+    transactionConnection = connection,
   } = params
 
   if (!Number.isFinite(expectedAmount) || expectedAmount <= 0 || !Number.isInteger(expectedAmount)) {
     throw new FundWiseError(`${actionLabel} amount must be a positive integer token amount.`)
   }
 
-  const transaction = await loadParsedTransaction(txSig)
+  const transaction = await loadParsedTransaction(txSig, transactionConnection)
   const mintPubkey = new PublicKey(mint)
   const senderPubkey = new PublicKey(senderWallet)
   const recipientPubkey = new PublicKey(recipientWallet)
@@ -185,6 +188,22 @@ async function verifyAtaTransfer(params: {
       `${actionLabel} destination token delta did not match the requested amount.`
     )
   }
+
+  // FW-055: reject any side transfer that piggy-backs on the same signed tx.
+  // A correct settlement / contribution / proposal-execution touches exactly the
+  // two ATAs above. Any other ATA delta means an attacker (or a compromised
+  // wallet extension) tacked on an extra transfer before the user signed.
+  for (const [address, balance] of tokenBalances) {
+    if (address === expectedSourceAta || address === expectedDestinationAta) {
+      continue
+    }
+
+    if (balance.postAmount !== balance.preAmount) {
+      throw new FundWiseError(
+        `${actionLabel} transaction includes an unexpected token balance change on ${address}. FundWise only records transfers that move exactly the expected amount between the listed accounts.`
+      )
+    }
+  }
 }
 
 export async function verifySettlementTransfer(params: {
@@ -219,6 +238,7 @@ export async function verifyContributionTransfer(params: {
     recipientOwnerOffCurve: true,
     expectedAmount: params.amount,
     actionLabel: "Contribution",
+    transactionConnection: fundModeConnection,
   })
 }
 
@@ -239,5 +259,6 @@ export async function verifyProposalExecutionTransfer(params: {
     signerWallet: params.executorWallet,
     expectedAmount: params.amount,
     actionLabel: "Proposal execution",
+    transactionConnection: fundModeConnection,
   })
 }

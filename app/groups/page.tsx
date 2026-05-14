@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
 import { createGroup, getGroupByCode, getGroupsForWallet } from "@/lib/db"
-import { DEFAULT_STABLECOIN, STABLECOIN_MINTS } from "@/lib/expense-engine"
+import { findStablecoinByMint, getDefaultStablecoinForGroupMode } from "@/lib/expense-engine"
 import {
   Users,
   Plus,
@@ -43,6 +43,7 @@ export default function GroupsPage() {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false)
   const [isJoiningGroup, setIsJoiningGroup] = useState(false)
   const [isWalletVerified, setIsWalletVerified] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [joinError, setJoinError] = useState<string | null>(null)
   const [hasAutoOpenedZeroStateCreate, setHasAutoOpenedZeroStateCreate] = useState(false)
   const [hasCreateIntent, setHasCreateIntent] = useState(false)
@@ -159,12 +160,14 @@ export default function GroupsPage() {
       mode: "split" | "fund"
       fundingGoal?: number
       approvalThreshold?: number
+      groupTemplate?: GroupRow["group_template"]
     }) => {
       if (!walletAddress) {
         return
       }
 
       setIsCreatingGroup(true)
+      setCreateError(null)
 
       try {
         await ensureWalletSession({
@@ -175,10 +178,11 @@ export default function GroupsPage() {
         const createdGroup = await createGroup({
           name: values.name,
           mode: values.mode,
-          stablecoinMint: DEFAULT_STABLECOIN.mint,
+          stablecoinMint: getDefaultStablecoinForGroupMode(values.mode).mint,
           createdBy: walletAddress,
           fundingGoal: values.fundingGoal,
           approvalThreshold: values.approvalThreshold,
+          groupTemplate: values.groupTemplate,
         })
 
         setIsCreateDialogOpen(false)
@@ -189,13 +193,17 @@ export default function GroupsPage() {
         })
       } catch (error) {
         console.error("[FundWise] Failed to create group:", error)
-        toast.error(error instanceof Error ? error.message : "Failed to create your Group.")
+        const message = error instanceof Error ? error.message : "Failed to create your Group."
+        setCreateError(message)
+        toast.error(message)
       } finally {
         setIsCreatingGroup(false)
       }
     },
     [replaceCreateIntent, router, wallet?.adapter, walletAddress]
   )
+
+  const clearCreateError = useCallback(() => setCreateError(null), [])
 
   const handleJoinGroup = useCallback(
     async (inviteValue: string) => {
@@ -251,10 +259,7 @@ export default function GroupsPage() {
   )
 
   const getMintName = (mint: string) => {
-    for (const [, data] of Object.entries(STABLECOIN_MINTS)) {
-      if (data.mint === mint) return data.name
-    }
-    return "Unknown"
+    return findStablecoinByMint(mint)?.name ?? "Unknown"
   }
 
   if (!connected) {
@@ -440,6 +445,8 @@ export default function GroupsPage() {
         onOpenChange={handleCreateDialogChange}
         isSubmitting={isCreatingGroup}
         onSubmit={handleCreateGroup}
+        errorMessage={createError}
+        onClearError={clearCreateError}
       />
       <JoinGroupDialog
         open={isJoinDialogOpen}

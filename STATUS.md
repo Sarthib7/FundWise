@@ -1,10 +1,12 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-05-08
-**Phase:** Fund Mode beta acceleration on top of Split Mode devnet foundation
-**Hackathon:** Colosseum Frontier (April 6 - May 11, 2026)
+**Snapshot date:** 2026-05-14 (production-ready push)
+**Phase:** Dual-track delivery — Split Mode code-ready for tightly-invited mainnet rollout, Fund Mode devnet beta polished to checklist completion (Phase A + B). Operator-owned infra steps tracked in `docs/prod-secrets-runbook.md`.
+**Hackathon:** Colosseum Frontier (April 6 - May 11, 2026) — submission complete
+**Checklist branch:** 60 commits ahead of `main`, local Cloudflare Pages build-gate fix applied, `pnpm test`, `pnpm lint`, and `pnpm build:pages` passing
 **Active issue index:** [issues.md](./issues.md)
-**Handoff:** Product scope is now tightened for the next submission pass: Source Currency and Expense Proof are future-only, Split Mode stays free at launch, shipped/planned state is canonicalized, mini-games are out of FundWise scope, Compass research is indexed into ADRs, and Fund Mode is now the hero-product sprint for the next month. Split Mode remains the shipped wedge; Fund Mode beta must move fast on Proposals, integrations, and rehearsal without claiming unshipped flows as live.
+**Execution checklists:** [Split Mode mainnet](./docs/split-mode-mainnet-checklist.md) · [Fund Mode beta](./docs/fund-mode-beta-checklist.md)
+**Handoff:** Network strategy is locked: public app is mainnet only (Split Mode); Fund Mode stays devnet, invite-gated, hidden from public UI, used to test the monetization model with selected beta users coordinated in a Telegram group. Fundy ships alongside Split Mode mainnet from its separate repository. Yield routing via Meteora is planned but not in scope until Fund Mode is mainnet-stable. The two execution checklists own the phased work going forward.
 
 ---
 
@@ -12,10 +14,17 @@
 
 FundWise is still a two-mode product:
 
-1. Split Mode: track shared expenses in a Group, compute who owes whom, and settle in USDC on Solana.
-2. Fund Mode: pool USDC into a shared Treasury and spend from it via Proposals.
+1. Split Mode: track shared expenses in a Group, compute who owes whom, and settle in USDC on Solana. **Public, mainnet target.**
+2. Fund Mode: pool USDC into a shared Treasury and spend from it via Proposals. **Invite-only beta, devnet only, hidden from public UI.**
 
 The product direction is now sharper:
+
+- **Network strategy (locked 2026-05-11):** public production runs on Solana mainnet and exposes Split Mode only. Fund Mode is kept on devnet for invite-only beta testing, accessed via wallets listed in `FUNDWISE_FUND_MODE_INVITE_WALLETS`. Beta testers are coordinated in a private Telegram group. This keeps users from having to switch wallet networks and isolates real money from beta workflows. Fund Mode mainnet graduation is a separate decision after both the product and the monetization model are validated on devnet — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
+- **Cloudflare Pages build gate (verified 2026-05-14):** `pnpm build:pages` requires every dynamic `.well-known` discovery route to export `runtime = "edge"`. The build now passes on `checklist` and lists those routes as Edge Function Routes. This is tracked in FW-050 and `docs/ops-runbook.md`.
+- **Single deployment, dual-cluster awareness (Option A):** the same app reads both mainnet and devnet RPC URLs, picks per-Group cluster based on `Group.mode`, and shows a cluster badge in the header so the user always knows which network they're on.
+- **Monetization beta on devnet:** the Fund Mode devnet beta is the controlled environment for testing the pricing model — creation fee acceptance, subscription willingness-to-pay surveys, free-tier wall friction — before any real billing flips on. See [docs/monetization.md](./docs/monetization.md) and `docs/fund-mode-beta-checklist.md` Phase C.
+- **Fundy ships alongside Split Mode mainnet** from its separate repository, providing Telegram-based reminders, draft expenses, wallet-readiness, and the FundWise Agent surface. Money movement still wallet-confirmed in the web app.
+- **Yield routing via Meteora** is the future Fund Mode revenue line beyond subscription, planned for after Fund Mode mainnet is stable. Not in beta scope.
 
 - FundWise sits under the broader FundLabs umbrella: FundLabs builds the financial layer for groups, human or AI. FundWise is the shared-finance product, Fundy is the Telegram / personal-agent distribution product, and Receipt Endpoint is the planned agent-commerce audit-trail product.
 - Keep public copy aligned with [docs/positioning.md](./docs/positioning.md): lead with Groups, shared Expenses, live Balances, settle-up links, and Receipts; keep crypto mechanics behind the user action until wallet or Settlement context requires them.
@@ -43,6 +52,67 @@ The product direction is now sharper:
 - Visa/card/IBAN rails remain partner-dependent future work. They can support a settle-to-spend story later, but they should not be claimed or built as core product until a concrete provider path exists.
 - Mini-games and prediction-market-like mechanics are out of scope for FundWise and must stay out of the hackathon story.
 - Canonical product-state and monetization references: [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) and [docs/monetization.md](./docs/monetization.md).
+
+---
+
+## Branch Audit (2026-05-14)
+
+The `checklist` branch went through a deep security + UI audit pass before the Split Mode mainnet cutover. Full findings live under [issues.md → Branch Audit Snapshot](./issues.md#branch-audit-snapshot-2026-05-14) and the four follow-up issues:
+
+- **FW-053 (P0)** Critical fixes: expense `payer` field is not bound to the signed-in session (any member can credit an Expense to a different member's wallet), Settlement insert is non-atomic with its graph-match snapshot (TOCTOU race), and OFAC sanctions screening only fires at challenge issuance — a sanctioned wallet keeps its 12-hour session.
+- **FW-054 (P1)** Rate limiting is in-process only (resets per edge isolate) and is not applied to money-moving routes. Move to a distributed counter and cover every POST/PATCH/DELETE mutation.
+- **FW-055 (P1)** On-chain Settlement / Contribution / Proposal-execution verification matches expected deltas but doesn't reject extra side-transfers in the same signed transaction. Add a "no other token deltas" guard.
+- **FW-056 (P2)** UI polish and dead-code cleanup: duplicate "Settlement reached Solana" recovery banner in Split Mode dashboard, `STABLECOIN_MINTS_DEVNET.USDT` is the mainnet mint, dead `WalletAdapterNetwork.Devnet` constant and `lib/anchor/group_manager.ts` IDL, brittle `FUNDWISE_FUND_MODE_INVITE_WALLETS` parsing, CSP still has `script-src 'unsafe-inline'`, parse-usdc-amount regex accepts a bare `.`.
+
+**Smart-contract footprint:** there is no custom on-chain program in this branch — `programs/fundwise/` only contains a `.DS_Store`. The historical Rust source was deleted; the Anchor IDL at `lib/anchor/group_manager.ts` is orphaned. On-chain mechanics are SPL Token transfers (Split Mode + Fund Mode contributions) plus Squads multisig vault transactions (Fund Mode proposal create / review / execute), verified server-side via `lib/server/solana-transfer-verification.ts` and `lib/server/fundwise-mutations.ts`. No proprietary Solana program to audit.
+
+**Test posture:** `pnpm test` → 7 files, 112 tests, all pass (1.21s). Coverage gaps to fill alongside the fixes: settlement TOCTOU race, ATA side-transfer rejection, proposal review/execute lifecycle, sanctioned-wallet rejection mid-session, distributed rate-limit behavior.
+
+**Authentication review (no fix needed):** HMAC-signed cookies, Ed25519 wallet signatures, 5-minute challenge TTLs, 12-hour session TTLs, origin + cluster pinning on challenges, `__Host-` prefix in production. The session cookie itself does not re-pin origin or cluster — operationally minor, but worth knowing if `FUNDWISE_SESSION_SECRET` is ever shared across deployments.
+
+**Mainnet readiness call:** Split Mode should not flip to mainnet until at least FW-053 (all three sub-items) and FW-055 are merged. FW-054 is a hardening item that can ship alongside or shortly after.
+
+---
+
+## Production-Ready Push (2026-05-14, same day)
+
+Picked up immediately after the audit and executed the AFK fixes plus the Fund Mode beta polish round. Tests: **123/123 passing**. Working tree: clean.
+
+**Audit blockers landed:**
+
+- **FW-053.1** — `body.payer === session.wallet` is now enforced at POST and PATCH `/api/expenses`. No more silent attribution of an Expense to a different Member.
+- **FW-053.2** — New Postgres function `record_settlement_locked` takes `for update` on the parent Group row and deduplicates by `tx_sig`. The TS mutation falls back to the previous two-step path if the migration hasn't been replayed yet on prod, so devnet rehearsals keep moving in the interim. **Operator action:** replay `supabase/migrations/20260514104435_add_record_settlement_with_lock.sql` against prod Supabase before flipping the public app to mainnet (steps in `docs/prod-secrets-runbook.md` §4).
+- **FW-053.3** — `requireAuthenticatedWallet` now calls `assertWalletIsAllowed` on every protected request. A sanctioned wallet with a valid 12-hour session is blocked at the next call rather than living out its session.
+- **FW-055** — `verifyAtaTransfer` rejects extra token-balance deltas in the same signed transaction. Settlement / Contribution / Proposal-execution can no longer carry a hidden side transfer.
+
+**Fund Mode beta polish landed:**
+
+- **FW-057** — Threshold suggestion + plain-English explanation at Treasury init. Helper at `lib/fund-mode-threshold.ts`.
+- **FW-058** — Pre-Treasury SOL pre-flight (~0.02 SOL on devnet) surfaced on the dashboard before the wallet popup.
+- **FW-059** — Squads explorer deep-link on the live Treasury card (`https://app.squads.so/squads/<pda>?cluster=devnet`).
+- **FW-046** — Exit-refund suggestion helper. Picks the smaller of (Member's total contributions, pro-rata share of live Treasury, available balance), pre-fills the existing Proposal form. Lives at `lib/fund-mode-exit.ts` with full vitest coverage.
+
+**Operator runbooks:**
+
+- **`docs/prod-secrets-runbook.md`** — copy-paste-ready commands for session secret rotation, prod Supabase provisioning, RPC env wiring, migration replay, invite wallet management, pre-deploy smoke, and post-deploy verification.
+- **`docs/monitoring-runbook.md`** — GlitchTip (open-source, MIT, Sentry-API-compatible) plus `@sentry/cloudflare` SDK enablement. Cloudflare-friendly path that sidesteps `@sentry/nextjs` ↔ `@cloudflare/next-on-pages` incompatibility. Three-step opt-in: `pnpm add @sentry/cloudflare`, set `SENTRY_DSN`, call `initMonitoring()` from the edge bootstrap.
+- **`scripts/split-mode-stress.mjs`** (`pnpm split:stress`) — HTTP stress test for the audit guards. Covers malformed body, sanctioned wallet, challenge rate limit burst, expense payer binding, and concurrent settlement dedupe.
+
+**Supabase hardening verified after SQL Editor replay:**
+
+- `pnpm supabase:verify-rls` passed against the configured Supabase project on 2026-05-14.
+- `settlements.tx_sig` is protected by a unique index so duplicate Settlement transaction signatures are database-rejected, not only app-checked.
+- `record_settlement_locked` and `update_expense_with_splits` now expose `EXECUTE` only to `postgres` and `service_role`; `PUBLIC`, `anon`, and `authenticated` grants were removed.
+- The live SQL Editor changes are captured for future replays across `supabase/migrations/20260514102502_harden_supabase_rpc_and_settlement_ids.sql`, `supabase/migrations/20260514104435_add_record_settlement_with_lock.sql`, and ADR-0030.
+
+**Still HITL — operator owns the next moves:**
+
+1. Run `pnpm split:stress` against the local dev server (then the deployed devnet URL) before scheduling the mainnet rehearsal.
+2. Confirm the hardened Supabase project is the intended production project, not the devnet beta project, then paste its env vars into Cloudflare Pages production.
+3. Paste Alchemy mainnet + Helius / public-node fallback RPCs into Cloudflare Pages prod env.
+4. Generate and paste the prod `FUNDWISE_SESSION_SECRET` per §1.
+5. Open a GlitchTip project (hosted free tier or self-host) and follow `docs/monitoring-runbook.md` to enable.
+6. Schedule the mainnet rehearsal (Phase 4 of `docs/split-mode-mainnet-checklist.md`) with two funded wallets.
 
 ---
 
@@ -75,7 +145,7 @@ The product direction is now sharper:
 - Public Story page added for the problem narrative, Settlement Request Link loop, and LI.FI cross-chain Settlement routing angle
 - Group detail screen refactored into focused `components/group-dashboard/*` modules plus a dedicated `hooks/use-group-dashboard.ts` data/actions hook
 - Fund Mode vertical slice with invite-only creation support, funding-goal capture, approval-threshold capture, Treasury initialization, Contribution history, and on-chain Treasury balance display
-- LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, and mainnet-aware bridge UI
+- LI.FI groundwork with client-only SDK initialization, injected EVM wallet source plus Solana destination routing, mainnet-aware bridge UI, and `pnpm lifi:readiness` route metadata checks
 - Stablecoin transfer preflight for Settlements and Contributions: balance checks before wallet prompt, explicit SOL-for-gas guidance, and one-time token-account creation messaging
 - Group Treasury persistence stores both `multisig_address` and `treasury_address`
 - Wallet-signed session cookies for protected FundWise actions and browser-session verification
@@ -108,6 +178,13 @@ The product direction is now sharper:
 
 ## Next active work
 
+The post-submission execution path is now split across two checklists, both indexed in [issues.md](./issues.md) as `FW-033` and up:
+
+1. **Public mainnet launch of Split Mode** — see [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md). Phases: pre-flight code (cluster-aware mints, cluster badge, multi-RPC, footer + legal scaffold) → production environment setup → production env (separate Supabase project, prod RPC, Sentry) → mainnet rehearsal with real USDC → launch + comms.
+2. **Fund Mode devnet beta with easy UX + monetization testing** — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md). Phases: easy-UX pool management (templates, treasury overview, auto-suggested proposals, member roles, exit flow) → multisig polish → monetization tests (creation fee, willingness-to-pay surveys, free-tier wall) → beta ops (Telegram channel, admin dashboard).
+
+The order within Split Mode mainnet is sequential and gated. The Fund Mode beta work runs in parallel with mainnet prep and does not block the public launch.
+
 Use [issues.md](./issues.md) as the indexed execution backlog. Current order:
 
 Completed:
@@ -126,19 +203,30 @@ Completed:
 - **FW-029:** Proposal audit trail now supports one external proof link, Proposal-scoped comments, creator-only memo/proof edits before first outside approval, and visible edit history. Native file-upload storage rules are documented before upload ships. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-030:** LI.FI routing is now available as `Route funds for Contribution` inside Fund Mode. It routes USDC to the Member wallet, returns to the same Group Contribution context, and leaves the Contribution ledger/receipt path unchanged. `pnpm test tests/fundwise-mutations.test.ts` and `pnpm build` green.
 - **FW-031:** Zerion readiness now distinguishes Split Settlement, Fund Contribution, Proposal member action, and Treasury funding contexts while staying read-only. Docs cover CLI setup and optional x402 without inventing secrets. `node scripts/zerion-readiness.mjs --help`, `pnpm test tests/fundwise-mutations.test.ts`, and `pnpm build` green.
-- **FW-032:** Fund Mode beta rehearsal script/runbook exists and devnet rehearsal now reaches invite-only Group creation, invite join, Squads v4 Treasury initialization, and stablecoin Contribution. Full Proposal approval/execution rehearsal is blocked until the remote Supabase project receives the checked-in Fund Mode Proposal migrations.
+- **FW-032:** Fund Mode beta rehearsal script/runbook exists and devnet rehearsal now reaches invite-only Group creation, invite join, Squads v4 Treasury initialization, and stablecoin Contribution. Supabase migrations applied by owner on 2026-05-09; schema preflight confirmed. Full Proposal creation → approval → execution rehearsal is blocked on devnet RPC rate limits — needs a private RPC URL set as `NEXT_PUBLIC_SOLANA_RPC_URL` before rerunning `pnpm fund:rehearsal`.
 
 Next pick:
 
-- Apply pending Supabase migrations `20260509120000_anchor_proposals_to_squads_governance.sql` and `20260509123000_add_proposal_audit_trail.sql`, then rerun `pnpm fund:rehearsal`.
+- **FW-032 done:** Fund Mode beta rehearsal passed end-to-end on devnet: Group creation, invite join, Squads Treasury init, Contribution, Proposal creation, approval, execution, and Treasury-to-Member payout all verified on-chain with Helius devnet RPC. Group `9c0f9012`, Proposal `c14d795c`, execution tx `44JZK41J...`.
+- **FW-021 done:** LI.FI top-up amount now uses integer-string-math parser with 20 unit tests instead of `parseFloat`.
+- **LI.FI readiness done:** `pnpm lifi:readiness` checks the exact FundWise source set (Ethereum/Base/Arbitrum/Optimism/Polygon USDC -> Solana USDC) against live LI.FI metadata. Current result: mainnet routes ready, Sepolia probes have no usable route into Solana USDC, so FW-039 must use a tiny mainnet route.
+- **FW-022 done:** Direct browser Supabase ledger helpers removed from `lib/db.ts`; browser code exclusively uses HTTP API wrappers.
+- Remaining mainnet blocker: confirm the hardened Supabase project is the intended prod project, finish Cloudflare production env setup, then run FW-039 mainnet rehearsal. Supabase RLS/RPC/Settlement hardening is verified on the configured project.
+- Sentry (`@sentry/nextjs`) attempted and **reverted** — breaks `@cloudflare/next-on-pages` with a duplicated identifier error. Monitoring must use a Cloudflare-compatible alternative or wait for OpenNext adapter.
+- **FW-042 done:** Fund Mode pool templates (`Trip pool`, `Friend fund`, `DAO grant`, `Family budget`) shipped with `lib/fund-mode-templates.ts`, migration `20260511150000_add_fund_mode_template_to_groups.sql`, and UI selector in Group creation.
+- **FW-048 done:** Fund Mode beta Telegram onboarding link added to Group creation dialog and Fund Mode dashboard banner.
+- **FW-043 done:** Fund Mode dashboard now has a Treasury overview card with live balance, funding progress, pending Proposal summary, top contributors, recent activity, and shortcuts into reimbursement Proposal creation/list review.
+- **FW-038 Supabase hardening done on configured project:** `docs/ops-runbook.md`, `scripts/verify-supabase-rls.mjs`, ADR-0030, and the hardening migration now document the verified RLS/RPC/Settlement state. Owner must confirm prod project identity and configure Cloudflare env vars.
 
 Next:
 
-1. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero product sprint, and planned surfaces stay labeled as planned.
-2. Continue devnet/mainnet hardening for the free Split Mode launch because Fund Mode reuses the same wallet, session, receipt, and transfer trust boundaries.
-3. Finish the Fund Mode beta foundation: rehearse Treasury initialization and Contributions, then build reimbursement Proposals, approval/rejection, and execution.
-4. Add integrations only where they help Fund Mode: LI.FI for Contribution funding, Zerion for Treasury / Member readiness, FundWise Agent / Fundy for read-only and draft-safe Proposal workflows, and card / IBAN rails only after a concrete partner path exists.
-5. Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as planned unless separately implemented end to end.
+1. **FW-038 (HITL):** Owner creates production Supabase project, replays migrations, configures Cloudflare env vars.
+2. **FW-039 (HITL):** Mainnet rehearsal with real USDC after FW-038 lands.
+3. **FW-044:** Auto-suggested reimbursement proposals from Member expenses.
+4. **FW-047:** Fund Mode creation fee infrastructure (devnet beta monetization test).
+5. **FW-045:** Fund Mode member roles plus exit-flow proposal type.
+6. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero product sprint, and planned surfaces stay labeled as planned.
+7. Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as planned unless separately implemented end to end.
 
 Deferred:
 

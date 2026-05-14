@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
-import { PublicKey } from "@solana/web3.js"
 import {
   addContribution as dbAddContribution,
   addProposalComment as dbAddProposalComment,
@@ -25,29 +24,15 @@ import type { Database } from "@/lib/database.types"
 import {
   computeBalancesFromActivity,
   DEFAULT_STABLECOIN,
-  executeSettlement,
+  findStablecoinByMint,
   formatTokenAmount,
   parseTokenAmount,
   simplifySettlements,
-  STABLECOIN_MINTS,
   type Balance,
   type SettlementTransfer,
 } from "@/lib/expense-engine"
-import {
-  formatSolAmountFromLamports,
-  previewStablecoinTransfer,
-  type StablecoinTransferPreview,
-} from "@/lib/stablecoin-transfer"
-import { isLifiSupportedForCurrentCluster } from "@/lib/lifi-config"
-import { getFundWiseClusterLabel } from "@/lib/solana-cluster"
-import {
-  contributeStablecoinToTreasury,
-  createSquadsReimbursementProposal,
-  createSquadsMultisig,
-  executeSquadsReimbursementProposal,
-  getTreasuryStablecoinBalance,
-  reviewSquadsProposal,
-} from "@/lib/squads-multisig"
+import type { StablecoinTransferPreview } from "@/lib/stablecoin-transfer"
+import { getFundWiseClusterLabel, isSolanaMainnetCluster } from "@/lib/solana-cluster"
 import { toast } from "sonner"
 import { ensureWalletSession } from "@/lib/wallet-session-client"
 
@@ -65,6 +50,7 @@ export type PendingSettlementReceipt = {
 }
 
 export const PROFILE_DISPLAY_NAME_MAX_LENGTH = 32
+const LAMPORTS_PER_SOL = 1_000_000_000
 
 function shortWallet(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -156,6 +142,39 @@ function openSettlementReceipt(groupId: string, settlementId: string) {
   window.location.assign(`/groups/${groupId}/settlements/${settlementId}`)
 }
 
+function formatSolAmountFromLamports(lamports: number, fractionDigits: number = 4) {
+  return (lamports / LAMPORTS_PER_SOL).toFixed(fractionDigits)
+}
+
+async function previewStablecoinTransfer(params: {
+  fromAddress: string
+  toAddress: string
+  amount: number
+  mintAddress: string
+  recipientOwnerOffCurve?: boolean
+  cluster?: "mainnet-beta" | "devnet" | "custom"
+}) {
+  const { previewStablecoinTransfer: preview } = await import("@/lib/stablecoin-transfer")
+  return preview(params)
+}
+
+async function loadSquadsTreasuryBalance(treasuryAddress: string, mintAddress: string) {
+  const { getTreasuryStablecoinBalance } = await import("@/lib/squads-multisig")
+  return getTreasuryStablecoinBalance(treasuryAddress, mintAddress)
+}
+
+async function loadTreasuryInitReadiness(walletAddress: string) {
+  const { readTreasuryInitReadiness } = await import("@/lib/squads-multisig")
+  return readTreasuryInitReadiness(walletAddress)
+}
+
+export type TreasuryInitReadiness = {
+  walletSolBalance: number
+  estimatedTreasurySol: number
+  hasEnoughSol: boolean
+  shortfallSol: number
+}
+
 export function useGroupDashboard() {
   const params = useParams()
   const router = useRouter()
@@ -165,7 +184,7 @@ export function useGroupDashboard() {
 
   const walletAddress = publicKey?.toString() || ""
   const groupId = params.id as string
-  const lifiSupported = isLifiSupportedForCurrentCluster()
+  const lifiSupported = isSolanaMainnetCluster()
   const clusterLabel = getFundWiseClusterLabel()
 
   const [group, setGroup] = useState<GroupRow | null>(null)
@@ -176,6 +195,8 @@ export function useGroupDashboard() {
   const [contributions, setContributions] = useState<ContributionRow[]>([])
   const [proposals, setProposals] = useState<ProposalWithReviews[]>([])
   const [treasuryBalance, setTreasuryBalance] = useState(0)
+  const [treasuryInitReadiness, setTreasuryInitReadiness] =
+    useState<TreasuryInitReadiness | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [memberCount, setMemberCount] = useState(0)
   const [isMember, setIsMember] = useState(false)
@@ -263,9 +284,19 @@ export function useGroupDashboard() {
         return
       }
 
-      setBalances([])
-      setTransfers([])
-      setActivity([])
+      // Fund Mode now includes expenses in activity for reimbursement suggestions
+      const nextFundActivity = snapshot.activity
+      setActivity(nextFundActivity)
+
+      // Compute balances from expenses for Fund Mode (used by suggested reimbursements)
+      if (nextFundActivity.length > 0) {
+        const nextBalances = computeBalancesFromActivity(snapshot.members, nextFundActivity)
+        setBalances(nextBalances)
+        setTransfers(simplifySettlements(nextBalances))
+      } else {
+        setBalances([])
+        setTransfers([])
+      }
 
       if (!snapshot.isMember) {
         setContributions([])
@@ -275,7 +306,7 @@ export function useGroupDashboard() {
       }
 
       const nextTreasuryBalance = groupData.treasury_address
-        ? await getTreasuryStablecoinBalance(groupData.treasury_address, groupData.stablecoin_mint)
+        ? await loadSquadsTreasuryBalance(groupData.treasury_address, groupData.stablecoin_mint)
         : 0
 
       setContributions(snapshot.contributions)
@@ -336,16 +367,39 @@ export function useGroupDashboard() {
     [settlementTimestamps]
   )
 
-  const mintInfo = group
-    ? Object.values(STABLECOIN_MINTS).find((mint) => mint.mint === group.stablecoin_mint)
-    : null
+  const mintInfo = group ? findStablecoinByMint(group.stablecoin_mint) ?? null : null
   const tokenName = mintInfo?.name || "Token"
   const isFundMode = group?.mode === "fund"
+  const treasuryAddress = group?.treasury_address ?? null
   const isGroupCreator = group?.created_by === walletAddress
   const approvalThreshold = group?.approval_threshold ?? 1
   const missingMembersForTreasury = Math.max(0, approvalThreshold - memberCount)
+
+  // FW-058: surface "you need ~0.02 SOL to create the Treasury" before the
+  // Group creator hits the wallet popup. Only loads once per (wallet, group)
+  // and only when the user actually has a chance to initialize.
+  useEffect(() => {
+    let cancelled = false
+    if (!isFundMode || !isGroupCreator || treasuryAddress || !walletAddress) {
+      setTreasuryInitReadiness(null)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    loadTreasuryInitReadiness(walletAddress)
+      .then((readiness) => {
+        if (!cancelled) setTreasuryInitReadiness(readiness)
+      })
+      .catch(() => {
+        if (!cancelled) setTreasuryInitReadiness(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isFundMode, isGroupCreator, treasuryAddress, walletAddress])
   const contributionTotal = contributions.reduce((sum, contribution) => sum + contribution.amount, 0)
-  const contributorCount = new Set(contributions.map((contribution) => contribution.member_wallet)).size
   const fundingProgress =
     group?.funding_goal && group.funding_goal > 0
       ? Math.min(100, Math.round((contributionTotal / group.funding_goal) * 100))
@@ -361,6 +415,64 @@ export function useGroupDashboard() {
     (requestedToWallet ? shortWallet(requestedToWallet) : "")
   const viewerDisplayName =
     members.find((member) => member.wallet === walletAddress)?.display_name || ""
+
+  // FW-044: Auto-suggested reimbursements from Member expenses
+  // For each expense the viewer paid, check if there's already a matching Proposal
+  const suggestedReimbursements = useMemo(() => {
+    if (!isFundMode || !isMember || !treasuryAddress) {
+      return []
+    }
+
+    // Build a set of (recipient_wallet, amount) pairs from non-rejected Proposals
+    // to avoid suggesting duplicate reimbursements
+    const existingProposalKeys = new Set<string>()
+    for (const proposal of proposals) {
+      if (proposal.status !== "rejected") {
+        existingProposalKeys.add(`${proposal.recipient_wallet}:${proposal.amount}`)
+      }
+    }
+
+    // For each expense where the viewer is the payer, suggest reimbursement
+    // of the viewer's net positive contribution
+    const suggestions: Array<{
+      expenseId: string
+      payerWallet: string
+      amount: number
+      memo: string
+      createdAt: string
+    }> = []
+
+    for (const item of activity) {
+      if (item.type !== "expense") continue
+
+      const expense = item.data
+      // Only suggest for expenses the viewer paid
+      if (expense.payer !== walletAddress) continue
+
+      // Calculate how much the viewer is owed from this expense
+      const viewerSplit = expense.splits.find((split) => split.wallet === walletAddress)
+      if (!viewerSplit) continue
+
+      // The viewer paid the full amount but only owes their share.
+      // The reimbursable amount = total expense - viewer's share
+      const reimbursable = expense.amount - viewerSplit.share
+      if (reimbursable <= 0) continue
+
+      // Check if there's already a matching Proposal
+      const proposalKey = `${walletAddress}:${reimbursable}`
+      if (existingProposalKeys.has(proposalKey)) continue
+
+      suggestions.push({
+        expenseId: expense.id,
+        payerWallet: walletAddress,
+        amount: reimbursable,
+        memo: expense.memo || `Reimbursement for expense`,
+        createdAt: expense.created_at,
+      })
+    }
+
+    return suggestions
+  }, [activity, isFundMode, isMember, proposals, treasuryAddress, walletAddress])
 
   const describeStablecoinFundingGap = useCallback(
     ({
@@ -386,7 +498,7 @@ export function useGroupDashboard() {
         return `This wallet does not hold ${tokenName} for the ${actionLabel} yet. Route funds from another supported network if that is where your USDC is, then retry the ${actionLabel}.`
       }
 
-      return `This wallet does not hold ${tokenName} on ${clusterLabel}. Add ${tokenName} to the connected wallet first, then retry the ${actionLabel}.`
+      return `This wallet does not hold ${tokenName} on ${clusterLabel}. For devnet, add USDC from faucet.circle.com, then retry the ${actionLabel}.`
     },
     [clusterLabel, lifiSupported, tokenName]
   )
@@ -405,7 +517,7 @@ export function useGroupDashboard() {
         ? ` This transaction also needs to create ${destinationLabel}'s ${tokenName} token account once.`
         : ""
 
-      return `You have about ${currentSol} SOL available, but this transaction needs about ${requiredSol} SOL for fees.${ataMessage}`
+      return `You have about ${currentSol} SOL available, but this transaction needs about ${requiredSol} SOL for fees.${ataMessage} For devnet, add SOL from faucet.solana.com.`
     },
     [tokenName]
   )
@@ -585,6 +697,7 @@ export function useGroupDashboard() {
           memberNameByWallet.get(transfer.to) || shortWallet(transfer.to),
       })
 
+      const { executeSettlement } = await import("@/lib/expense-engine")
       const { signature } = await executeSettlement(
         signingWallet,
         walletAddress,
@@ -653,7 +766,6 @@ export function useGroupDashboard() {
     groupId,
     maybeExplainAtaCreation,
     memberNameByWallet,
-    router,
     tokenName,
     wallet?.adapter,
     walletAddress,
@@ -692,7 +804,6 @@ export function useGroupDashboard() {
     ensureWalletWriteAccess,
     groupId,
     pendingSettlementReceipt,
-    router,
     walletAddress,
   ])
 
@@ -748,6 +859,8 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
+      const { PublicKey } = await import("@solana/web3.js")
+      const { createSquadsMultisig } = await import("@/lib/squads-multisig")
       const memberKeys = members.map((member) => new PublicKey(member.wallet))
       const result = await createSquadsMultisig(
         publicKey,
@@ -812,6 +925,7 @@ export function useGroupDashboard() {
         amount: tokenAmount,
         mintAddress: group.stablecoin_mint,
         recipientOwnerOffCurve: true,
+        cluster: "devnet",
       })
 
       if (!preview.sourceTokenAccountExists || preview.sourceTokenBalance < tokenAmount) {
@@ -838,6 +952,7 @@ export function useGroupDashboard() {
         destinationLabel: "the Treasury",
       })
 
+      const { contributeStablecoinToTreasury } = await import("@/lib/squads-multisig")
       const { signature } = await contributeStablecoinToTreasury(
         signingWallet,
         walletAddress,
@@ -938,6 +1053,7 @@ export function useGroupDashboard() {
         throw new Error("Enter a valid Proposal amount")
       }
 
+      const { createSquadsReimbursementProposal } = await import("@/lib/squads-multisig")
       const squadsProposal = await createSquadsReimbursementProposal(
         signingWallet,
         walletAddress,
@@ -1074,6 +1190,7 @@ export function useGroupDashboard() {
         throw new Error("No wallet found")
       }
 
+      const { reviewSquadsProposal } = await import("@/lib/squads-multisig")
       const { signature } = await reviewSquadsProposal(
         signingWallet,
         walletAddress,
@@ -1131,6 +1248,7 @@ export function useGroupDashboard() {
         throw new Error("No wallet found")
       }
 
+      const { executeSquadsReimbursementProposal } = await import("@/lib/squads-multisig")
       const { signature } = await executeSquadsReimbursementProposal(
         signingWallet,
         walletAddress,
@@ -1250,8 +1368,8 @@ export function useGroupDashboard() {
     isGroupCreator,
     approvalThreshold,
     missingMembersForTreasury,
+    treasuryInitReadiness,
     contributionTotal,
-    contributorCount,
     fundingProgress,
     totalSettledVolume,
     memberNameByWallet,
@@ -1265,6 +1383,7 @@ export function useGroupDashboard() {
     viewerOutgoingTransfers,
     viewerIncomingTransfers,
     viewerDisplayName,
+    suggestedReimbursements,
     connectWallet,
     verifyWalletAccess,
     ensureWalletWriteAccess,

@@ -1,16 +1,13 @@
-import { Connection, PublicKey } from "@solana/web3.js"
-import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token"
 import type { Database } from "./database.types"
 import { getGroupDashboardSnapshot, type ActivityItem } from "./db"
-import { executeStablecoinTransfer } from "./stablecoin-transfer"
+import { getFundWiseClusterName, type FundWiseCluster } from "./solana-cluster"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+type GroupMode = Database["public"]["Tables"]["groups"]["Row"]["mode"]
 
-const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
-export const connection = new Connection(SOLANA_RPC_URL, "confirmed")
+export type StablecoinInfo = { mint: string; name: string; decimals: number }
 
-// Devnet stablecoin mints
-export const STABLECOIN_MINTS: Record<string, { mint: string; name: string; decimals: number }> = {
+const STABLECOIN_MINTS_DEVNET: Record<string, StablecoinInfo> = {
   USDC: {
     mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
     name: "USDC",
@@ -28,7 +25,62 @@ export const STABLECOIN_MINTS: Record<string, { mint: string; name: string; deci
   },
 }
 
-export const DEFAULT_STABLECOIN = STABLECOIN_MINTS.USDC
+const STABLECOIN_MINTS_MAINNET: Record<string, StablecoinInfo> = {
+  USDC: {
+    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    name: "USDC",
+    decimals: 6,
+  },
+  USDT: {
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ",
+    name: "USDT",
+    decimals: 6,
+  },
+  PYUSD: {
+    mint: "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo",
+    name: "PYUSD",
+    decimals: 6,
+  },
+}
+
+export const STABLECOIN_MINTS_BY_CLUSTER: Record<FundWiseCluster, Record<string, StablecoinInfo>> = {
+  devnet: STABLECOIN_MINTS_DEVNET,
+  "mainnet-beta": STABLECOIN_MINTS_MAINNET,
+  custom: STABLECOIN_MINTS_DEVNET,
+}
+
+export function getStablecoinMintsForCluster(
+  cluster: FundWiseCluster = getFundWiseClusterName()
+): Record<string, StablecoinInfo> {
+  return STABLECOIN_MINTS_BY_CLUSTER[cluster]
+}
+
+export function getDefaultStablecoinForCluster(
+  cluster: FundWiseCluster = getFundWiseClusterName()
+): StablecoinInfo {
+  return getStablecoinMintsForCluster(cluster).USDC
+}
+
+export function findStablecoinByMint(mintAddress: string): StablecoinInfo | undefined {
+  for (const clusterMints of Object.values(STABLECOIN_MINTS_BY_CLUSTER)) {
+    for (const stablecoin of Object.values(clusterMints)) {
+      if (stablecoin.mint === mintAddress) return stablecoin
+    }
+  }
+  return undefined
+}
+
+export function getClusterForGroupMode(mode: GroupMode): FundWiseCluster {
+  if (mode === "fund") return "devnet"
+  return getFundWiseClusterName()
+}
+
+export function getDefaultStablecoinForGroupMode(mode: GroupMode): StablecoinInfo {
+  return getDefaultStablecoinForCluster(getClusterForGroupMode(mode))
+}
+
+export const STABLECOIN_MINTS = getStablecoinMintsForCluster()
+export const DEFAULT_STABLECOIN = getDefaultStablecoinForCluster()
 
 // =============================================
 // BALANCE COMPUTATION
@@ -230,6 +282,7 @@ export async function executeSettlement(
   amount: number,
   mintAddress: string
 ): Promise<{ signature: string }> {
+  const { executeStablecoinTransfer } = await import("./stablecoin-transfer")
   const { signature } = await executeStablecoinTransfer(fromWallet, {
     fromAddress,
     toAddress,
@@ -245,6 +298,13 @@ export async function executeSettlement(
 
 export async function getTokenBalance(walletAddress: string, mintAddress: string): Promise<number> {
   try {
+    const [{ PublicKey }, { getAssociatedTokenAddress, getAccount }, { createFundWiseConnection }] =
+      await Promise.all([
+        import("@solana/web3.js"),
+        import("@solana/spl-token"),
+        import("./fallback-connection"),
+      ])
+    const connection = createFundWiseConnection("confirmed")
     const mint = new PublicKey(mintAddress)
     const wallet = new PublicKey(walletAddress)
     const ata = await getAssociatedTokenAddress(mint, wallet)
