@@ -5,6 +5,7 @@ const productLinks = [
   { href: "/#modes", label: "Modes" },
   { href: "/#how", label: "How it works" },
   { href: "/#features", label: "Features" },
+  { href: "/#agent", label: "Agent" },
   { href: "/story", label: "Story" },
   { href: "/groups", label: "Launch app" },
 ]
@@ -12,6 +13,8 @@ const productLinks = [
 const communityLinks = [
   { href: "https://x.com/funddotsol", label: "X", aria: "Follow FundWise on X" },
   { href: "https://t.me/funddotsol", label: "Telegram", aria: "Join FundWise on Telegram" },
+  { href: "https://t.me/fundyonSol_bot", label: "Fundy bot", aria: "Open Fundy on Telegram" },
+  { href: "https://github.com/Fund-labs/Fundy", label: "Fundy repo", aria: "Open the Fundy GitHub repository" },
 ]
 
 const legalLinks = [

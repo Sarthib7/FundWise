@@ -73,6 +73,7 @@ export function Header({ cluster }: HeaderProps = {}) {
     { href: "/#modes", label: "Modes", sectionId: "modes" },
     { href: "/#how", label: "How it works", sectionId: "how" },
     { href: "/#features", label: "Features", sectionId: "features" },
+    { href: "/#agent", label: "Agent", sectionId: "agent" },
   ]
   const appNavItems = [
     {
