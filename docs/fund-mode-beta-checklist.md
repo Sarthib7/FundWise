@@ -54,7 +54,7 @@ Goal: a user who's never used a multisig should be able to spin up a working poo
 | FW-044 | Auto-suggested reimbursement proposals — when a Member logs an expense flagged "from pool", the dashboard surfaces a one-click "Propose reimbursement for $X" with memo pre-filled | Biggest UX win; closes the Split-Mode-style "log → reconcile" loop for pools | New |
 | FW-045 | Member roles (light): Admin / Member / Viewer. Admin can change threshold + invite. Member can propose / approve / execute. Viewer is read-only. Stored in FundWise (not Squads — Squads stays the on-chain authority) | Squads roles are too low-level for non-crypto users | New |
 | FW-046 | Exit flow: an explicit "return funds to leaving Member" proposal type with one-click action. Calculates the Member's pro-rata share or accepts a custom amount, then runs the normal approval lifecycle | Without this, leaving a pool feels stuck | New |
-| FW-049 | Threshold suggestions at Treasury init: 2 members → 2/2, 3-5 → majority, 6+ → 1/2 + 1. Show "what this means" tooltip | Members don't know what threshold to pick | New |
+| FW-057 | Threshold suggestions at Treasury init: 2 members → 2/2, 3-5 → majority, 6+ → 1/2 + 1. Show "what this means" tooltip | Members don't know what threshold to pick | Ready |
 
 **Code locations expected to change:**
 - `components/create-group-dialog.tsx` (templates) ✅ done
@@ -76,9 +76,9 @@ Out of scope for first beta:
 
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
-| FW-050 | Pre-Treasury checklist UI: "you'll need ~0.05 SOL for multisig creation rent" — surface real-time Squads creation cost from devnet RPC | Users hit confusing "insufficient SOL" mid-flow | New |
-| FW-051 | Squads explorer link on Treasury card (deep-link to Squads UI in a new tab) | Power users want to verify state outside FundWise | New |
-| FW-052 | Threshold-change proposal type (Admin role can propose; standard approval lifecycle) | Pools grow/shrink; threshold should follow | New |
+| FW-058 | Pre-Treasury checklist UI: "you'll need ~0.05 SOL for multisig creation rent" — surface real-time Squads creation cost from devnet RPC | Users hit confusing "insufficient SOL" mid-flow | Ready |
+| FW-059 | Squads explorer link on Treasury card (deep-link to Squads UI in a new tab) | Power users want to verify state outside FundWise | Ready |
+| FW-060 | Threshold-change proposal type (Admin role can propose; standard approval lifecycle) | Pools grow/shrink; threshold should follow | Ready |
 
 ---
 
@@ -89,9 +89,9 @@ Goal: validate Fund Mode pricing on devnet with test USDC + test SOL before any 
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
 | FW-047 | Creation fee infrastructure: at Treasury init, prompt for a fixed creation fee (devnet test-USDC) sent to a FundWise dev wallet. Show what the equivalent mainnet fee would be ($3-$5 USD). Allow opt-out with a one-click "skip for beta" but record the choice | Tests whether users will pay a setup fee at the high-intent moment | New |
-| FW-053 | Monthly fee emulation: at Treasury init + on day 30 of pool age, show a non-blocking banner: "If this were mainnet, this pool would be $12/mo. Would you pay?" with thumbs up/down + optional comment. Stores response | Tests willingness-to-pay for subscription tier without actually billing |
-| FW-054 | Free-tier limits emulation: cap free pools at 5 members + $1k AUM (simulated, since devnet has no real value); when capped, show "upgrade required" with mock checkout flow. Track conversion intent | Tests where the free-tier wall hurts vs. helps |
-| FW-055 | Beta exit survey: when a Member leaves a pool, ask 3 questions: pricing fairness, feature requests, would-pay confidence (1-5). Anonymized | Cheapest signal we'll ever get |
+| FW-061 | Monthly fee emulation: at Treasury init + on day 30 of pool age, show a non-blocking banner: "If this were mainnet, this pool would be $12/mo. Would you pay?" with thumbs up/down + optional comment. Stores response | Tests willingness-to-pay for subscription tier without actually billing |
+| FW-062 | Free-tier limits emulation: cap free pools at 5 members + $1k AUM (simulated, since devnet has no real value); when capped, show "upgrade required" with mock checkout flow. Track conversion intent | Tests where the free-tier wall hurts vs. helps |
+| FW-063 | Beta exit survey: when a Member leaves a pool, ask 3 questions: pricing fairness, feature requests, would-pay confidence (1-5). Anonymized | Cheapest signal we'll ever get |
 
 **Output of monetization beta:** a decision doc (`docs/monetization-beta-findings.md`) updating `docs/monetization.md` with real numbers before any mainnet pricing decision.
 
@@ -102,8 +102,8 @@ Goal: validate Fund Mode pricing on devnet with test USDC + test SOL before any 
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
 | FW-048 | Telegram beta channel onboarding — Fund Mode entry page has a "Join beta Telegram" link to `t.me/funddotsol` (later: a private invite-only channel) | Coordination + support | **Done** |
-| FW-056 | Beta admin dashboard (internal) — list of active beta pools, contribution counts, proposal counts, last activity, willingness-to-pay responses | Without this, the owner has no way to see beta health |
-| FW-057 | Weekly beta digest email/Telegram post (manual, owner-sent): top pools, biggest reimbursements, common feedback | Keeps beta cohort engaged |
+| FW-064 | Beta admin dashboard (internal) — list of active beta pools, contribution counts, proposal counts, last activity, willingness-to-pay responses | Without this, the owner has no way to see beta health |
+| FW-065 | Weekly beta digest email/Telegram post (manual, owner-sent): top pools, biggest reimbursements, common feedback | Keeps beta cohort engaged |
 
 ---
 
