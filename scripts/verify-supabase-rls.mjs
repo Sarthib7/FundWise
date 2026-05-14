@@ -34,6 +34,8 @@ const PRIVATE_TABLES = [
   "contributions",
   "proposals",
   "proposal_approvals",
+  "proposal_comments",
+  "proposal_edits",
 ]
 
 function usage() {
