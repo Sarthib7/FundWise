@@ -21,9 +21,9 @@ import {
 } from "@solana/spl-token"
 import * as multisig from "@sqds/multisig"
 import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
-import { createFundWiseConnection } from "@/lib/fallback-connection"
+import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
 
-export const connection = createFundWiseConnection("confirmed")
+export const connection = createFundWiseConnectionForCluster("devnet", "confirmed")
 
 type WalletSigner = {
   sendTransaction?: (
@@ -230,6 +230,7 @@ export async function contributeStablecoinToTreasury(
     mintAddress,
     amount,
     recipientOwnerOffCurve: true,
+    cluster: "devnet",
   })
 
   return { signature }

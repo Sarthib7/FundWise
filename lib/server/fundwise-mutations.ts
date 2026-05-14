@@ -5,7 +5,7 @@ import {
   computeBalancesFromActivity,
   simplifySettlements,
 } from "@/lib/expense-engine"
-import { createFundWiseConnection } from "@/lib/fallback-connection"
+import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
 import { isFundModeTemplateId, type FundModeTemplateId } from "@/lib/fund-mode-templates"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
@@ -234,7 +234,7 @@ export async function verifyFundModeTreasuryAddresses(
     multisigAddress: string
     treasuryAddress: string
   },
-  accountReader: TreasuryAccountReader = createFundWiseConnection("confirmed")
+  accountReader: TreasuryAccountReader = createFundWiseConnectionForCluster("devnet", "confirmed")
 ) {
   const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
   const treasuryPubkey = parsePublicKey(data.treasuryAddress, "Treasury address")
@@ -285,7 +285,7 @@ export async function verifyFundModeTreasuryAddresses(
 
 async function loadSquadsProposal(
   proposalAddress: string,
-  accountReader: SquadsProposalReader = createFundWiseConnection("confirmed")
+  accountReader: SquadsProposalReader = createFundWiseConnectionForCluster("devnet", "confirmed")
 ) {
   const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
   const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")
