@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "fund:rehearsal": "node scripts/fund-mode-beta-rehearsal.mjs",
     "lifi:readiness": "node scripts/lifi-readiness.mjs",
+    "split:stress": "node scripts/split-mode-stress.mjs",
     "supabase:verify-rls": "node scripts/verify-supabase-rls.mjs",
     "zerion:readiness": "node scripts/zerion-readiness.mjs"
   },
