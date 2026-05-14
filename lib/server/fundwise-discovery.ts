@@ -189,6 +189,26 @@ export function buildOpenApiSpec(baseUrl?: string) {
           responses: { "200": { description: "Session status." } },
         },
       },
+      "/api/telegram/link-code": {
+        post: {
+          summary: "Create a five-minute one-time Telegram link code for the authenticated wallet.",
+          responses: { "200": { description: "Telegram link code and expiry." } },
+        },
+      },
+      "/api/telegram/link": {
+        get: {
+          summary: "Load the active Fundy Telegram-to-wallet link for a Telegram user id.",
+          responses: { "200": { description: "Telegram link status." } },
+        },
+        post: {
+          summary: "Consume a Fundy /link code and bind the Telegram user to the wallet that generated it.",
+          responses: { "200": { description: "Linked wallet." } },
+        },
+        delete: {
+          summary: "Deactivate a Fundy Telegram-to-wallet link.",
+          responses: { "200": { description: "Unlinked status." } },
+        },
+      },
       "/api/groups": {
         get: {
           summary: "Resolve an invite code or list Groups for an authenticated wallet.",
