@@ -298,6 +298,7 @@ export default function GroupDashboard() {
     isGroupCreator,
     approvalThreshold,
     missingMembersForTreasury,
+    treasuryInitReadiness,
     contributionTotal,
     fundingProgress,
     totalSettledVolume,
@@ -877,6 +878,7 @@ export default function GroupDashboard() {
                   approvalThreshold={approvalThreshold}
                   membersCount={memberCount}
                   missingMembersForTreasury={missingMembersForTreasury}
+                  treasuryInitReadiness={treasuryInitReadiness}
                   contributions={contributions}
                   proposals={proposals}
                   members={members}

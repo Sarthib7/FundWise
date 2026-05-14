@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Database } from "@/lib/database.types"
 import type { ProposalWithReviews } from "@/lib/db"
 import { formatTokenAmount } from "@/lib/expense-engine"
+import { describeApprovalThreshold, suggestApprovalThreshold } from "@/lib/fund-mode-threshold"
 import { getSolanaExplorerTxUrl } from "@/lib/solana-cluster"
 import {
   CheckCircle2,
@@ -35,6 +36,13 @@ import {
 
 type ContributionRow = Database["public"]["Tables"]["contributions"]["Row"]
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
+
+export type TreasuryInitReadinessProp = {
+  walletSolBalance: number
+  estimatedTreasurySol: number
+  hasEnoughSol: boolean
+  shortfallSol: number
+}
 
 export type SuggestedReimbursement = {
   expenseId: string
@@ -63,6 +71,7 @@ type FundModeDashboardProps = {
   approvalThreshold: number
   membersCount: number
   missingMembersForTreasury: number
+  treasuryInitReadiness: TreasuryInitReadinessProp | null
   contributions: ContributionRow[]
   proposals: ProposalWithReviews[]
   members: MemberRow[]
@@ -137,6 +146,7 @@ export function FundModeDashboard({
   approvalThreshold,
   membersCount,
   missingMembersForTreasury,
+  treasuryInitReadiness,
   contributions,
   proposals,
   members,
@@ -302,6 +312,13 @@ export function FundModeDashboard({
       )}
 
       {!treasuryAddress ? (
+        (() => {
+          const expectedMembers = membersCount + missingMembersForTreasury
+          const suggestion = suggestApprovalThreshold(expectedMembers)
+          const currentDescription = describeApprovalThreshold(approvalThreshold, expectedMembers)
+          const isSuggestedThreshold = suggestion.threshold === approvalThreshold
+
+          return (
         <Card className="p-6 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
@@ -312,9 +329,35 @@ export function FundModeDashboard({
               <p className="text-xs text-muted-foreground">
                 Treasury signers are captured from the current Member list when initialization happens. The creator needs devnet SOL for fees; Members need devnet SOL and USDC before Contributions.
               </p>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-3 text-xs">
+                <p className="font-medium text-foreground">
+                  Approval threshold: {approvalThreshold} of {expectedMembers}
+                </p>
+                <p className="mt-1 text-muted-foreground">{currentDescription}</p>
+                {!isSuggestedThreshold && (
+                  <p className="mt-2 text-amber-700 dark:text-amber-300">
+                    Suggested: {suggestion.threshold} of {expectedMembers} — {suggestion.rationale}
+                  </p>
+                )}
+              </div>
+              {treasuryInitReadiness && (
+                <div className="rounded-lg border border-border/60 bg-background/60 p-3 text-xs">
+                  <p className="font-medium text-foreground">
+                    Pre-flight: {treasuryInitReadiness.estimatedTreasurySol.toFixed(2)} SOL needed for Treasury creation
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Your wallet currently has {treasuryInitReadiness.walletSolBalance.toFixed(4)} SOL.
+                  </p>
+                  {!treasuryInitReadiness.hasEnoughSol && (
+                    <p className="mt-2 text-amber-700 dark:text-amber-300">
+                      Need ~{treasuryInitReadiness.shortfallSol.toFixed(4)} more SOL. Use the SOL faucet above before clicking Initialize.
+                    </p>
+                  )}
+                </div>
+              )}
               {missingMembersForTreasury > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Invite {missingMembersForTreasury} more Member{missingMembersForTreasury === 1 ? "" : "s"} before a {approvalThreshold}-of-{membersCount + missingMembersForTreasury} Treasury can be initialized.
+                  Invite {missingMembersForTreasury} more Member{missingMembersForTreasury === 1 ? "" : "s"} before a {approvalThreshold}-of-{expectedMembers} Treasury can be initialized.
                 </p>
               )}
             </div>
@@ -336,6 +379,8 @@ export function FundModeDashboard({
             )}
           </div>
         </Card>
+          )
+        })()
       ) : (
         <Card className="p-6">
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -360,6 +405,17 @@ export function FundModeDashboard({
                 Multisig Address
               </p>
               <p className="font-mono text-sm break-all">{multisigAddress}</p>
+              {multisigAddress && (
+                <a
+                  href={`https://app.squads.so/squads/${multisigAddress}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                >
+                  Open in Squads
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+              )}
             </div>
           </div>
 

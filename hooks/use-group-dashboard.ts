@@ -163,6 +163,18 @@ async function loadSquadsTreasuryBalance(treasuryAddress: string, mintAddress: s
   return getTreasuryStablecoinBalance(treasuryAddress, mintAddress)
 }
 
+async function loadTreasuryInitReadiness(walletAddress: string) {
+  const { readTreasuryInitReadiness } = await import("@/lib/squads-multisig")
+  return readTreasuryInitReadiness(walletAddress)
+}
+
+export type TreasuryInitReadiness = {
+  walletSolBalance: number
+  estimatedTreasurySol: number
+  hasEnoughSol: boolean
+  shortfallSol: number
+}
+
 export function useGroupDashboard() {
   const params = useParams()
   const router = useRouter()
@@ -183,6 +195,8 @@ export function useGroupDashboard() {
   const [contributions, setContributions] = useState<ContributionRow[]>([])
   const [proposals, setProposals] = useState<ProposalWithReviews[]>([])
   const [treasuryBalance, setTreasuryBalance] = useState(0)
+  const [treasuryInitReadiness, setTreasuryInitReadiness] =
+    useState<TreasuryInitReadiness | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [memberCount, setMemberCount] = useState(0)
   const [isMember, setIsMember] = useState(false)
@@ -360,6 +374,31 @@ export function useGroupDashboard() {
   const isGroupCreator = group?.created_by === walletAddress
   const approvalThreshold = group?.approval_threshold ?? 1
   const missingMembersForTreasury = Math.max(0, approvalThreshold - memberCount)
+
+  // FW-058: surface "you need ~0.02 SOL to create the Treasury" before the
+  // Group creator hits the wallet popup. Only loads once per (wallet, group)
+  // and only when the user actually has a chance to initialize.
+  useEffect(() => {
+    let cancelled = false
+    if (!isFundMode || !isGroupCreator || treasuryAddress || !walletAddress) {
+      setTreasuryInitReadiness(null)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    loadTreasuryInitReadiness(walletAddress)
+      .then((readiness) => {
+        if (!cancelled) setTreasuryInitReadiness(readiness)
+      })
+      .catch(() => {
+        if (!cancelled) setTreasuryInitReadiness(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isFundMode, isGroupCreator, treasuryAddress, walletAddress])
   const contributionTotal = contributions.reduce((sum, contribution) => sum + contribution.amount, 0)
   const fundingProgress =
     group?.funding_goal && group.funding_goal > 0
@@ -1329,6 +1368,7 @@ export function useGroupDashboard() {
     isGroupCreator,
     approvalThreshold,
     missingMembersForTreasury,
+    treasuryInitReadiness,
     contributionTotal,
     fundingProgress,
     totalSettledVolume,
