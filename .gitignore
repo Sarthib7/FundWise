@@ -74,11 +74,12 @@ jspm_packages/
 .parcel-cache
 
 # Next.js build output
-.next
-.open-next
-.vercel
-.wrangler
-out
+.next/
+.next.pre-*/
+.open-next/
+.vercel/
+.wrangler/
+out/
 
 # Cloudflare/OpenNext local files
 .dev.vars
