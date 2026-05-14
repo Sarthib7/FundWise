@@ -43,3 +43,4 @@ Historical duplicated ADR prose was removed from this file to prevent drift and 
 - ADR-027 → [0027-fund-mode-is-the-hero-product.md](./docs/adr/0027-fund-mode-is-the-hero-product.md)
 - ADR-028 → [0028-fundlabs-product-family-positioning.md](./docs/adr/0028-fundlabs-product-family-positioning.md)
 - ADR-029 → [0029-squads-governance-source-of-truth-for-fund-mode.md](./docs/adr/0029-squads-governance-source-of-truth-for-fund-mode.md)
+- ADR-030 → [0030-supabase-rpc-and-settlement-hardening.md](./docs/adr/0030-supabase-rpc-and-settlement-hardening.md)

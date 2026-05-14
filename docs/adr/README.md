@@ -38,6 +38,7 @@ If docs disagree, treat [STATUS.md](../../STATUS.md), [CONTEXT.md](../../CONTEXT
 | [0027](./0027-fund-mode-is-the-hero-product.md) | Fund Mode is the hero product |
 | [0028](./0028-fundlabs-product-family-positioning.md) | FundLabs product-family positioning |
 | [0029](./0029-squads-governance-source-of-truth-for-fund-mode.md) | Squads governance is the Fund Mode source of truth |
+| [0030](./0030-supabase-rpc-and-settlement-hardening.md) | Supabase RPC and Settlement hardening |
 
 ## Notes
 

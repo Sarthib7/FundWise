@@ -77,6 +77,7 @@ This directory holds detailed product, API, operations, research, and architectu
 | [Dependency Audit](./dependency-audit.md) | Dependency advisory triage and accepted risk notes. |
 | [Sanctions Screening](./sanctions-screening.md) | Minimal wallet screening approach and limitations. |
 | [Operations Runbook](./ops-runbook.md) | RLS verification and production environment procedures. |
+| [Supabase RPC and Settlement hardening](./adr/0030-supabase-rpc-and-settlement-hardening.md) | Service-role-only RPC grants and unique Settlement transaction signatures. |
 | [issues FW-053–FW-056](../issues.md#fw-053---branch-audit-follow-ups-critical-expense-payer-binding-settlement-toctou-sanctions-scope) | Current branch-audit remediation backlog. |
 
 ## Research Reports
@@ -130,6 +131,7 @@ Research is supporting context only. If research disagrees with [STATUS](../STAT
 | [0027](./adr/0027-fund-mode-is-the-hero-product.md) | Fund Mode is the hero product |
 | [0028](./adr/0028-fundlabs-product-family-positioning.md) | FundLabs product-family positioning |
 | [0029](./adr/0029-squads-governance-source-of-truth-for-fund-mode.md) | Squads governance is the Fund Mode source of truth |
+| [0030](./adr/0030-supabase-rpc-and-settlement-hardening.md) | Supabase RPC and Settlement hardening |
 
 ## Topic Groups
 
@@ -140,6 +142,7 @@ Research is supporting context only. If research disagrees with [STATUS](../STAT
 - [Off-chain metadata, on-chain money](./adr/0003-off-chain-metadata-on-chain-money.md)
 - [USDC as MVP settlement asset](./adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)
 - [Wallet-signed sessions](./adr/0015-wallet-signed-session-cookies-for-server-mutations.md)
+- [Supabase RPC and Settlement hardening](./adr/0030-supabase-rpc-and-settlement-hardening.md)
 - [Source Currency snapshots](./adr/0017-snapshot-source-currency-expenses-into-usdc-ledger.md)
 - [LI.FI Route Rehearsal](./lifi-route-rehearsal.md)
 
