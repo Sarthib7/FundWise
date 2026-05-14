@@ -152,6 +152,7 @@ async function previewStablecoinTransfer(params: {
   amount: number
   mintAddress: string
   recipientOwnerOffCurve?: boolean
+  cluster?: "mainnet-beta" | "devnet" | "custom"
 }) {
   const { previewStablecoinTransfer: preview } = await import("@/lib/stablecoin-transfer")
   return preview(params)
@@ -458,7 +459,7 @@ export function useGroupDashboard() {
         return `This wallet does not hold ${tokenName} for the ${actionLabel} yet. Route funds from another supported network if that is where your USDC is, then retry the ${actionLabel}.`
       }
 
-      return `This wallet does not hold ${tokenName} on ${clusterLabel}. Add ${tokenName} to the connected wallet first, then retry the ${actionLabel}.`
+      return `This wallet does not hold ${tokenName} on ${clusterLabel}. For devnet, add USDC from faucet.circle.com, then retry the ${actionLabel}.`
     },
     [clusterLabel, lifiSupported, tokenName]
   )
@@ -477,7 +478,7 @@ export function useGroupDashboard() {
         ? ` This transaction also needs to create ${destinationLabel}'s ${tokenName} token account once.`
         : ""
 
-      return `You have about ${currentSol} SOL available, but this transaction needs about ${requiredSol} SOL for fees.${ataMessage}`
+      return `You have about ${currentSol} SOL available, but this transaction needs about ${requiredSol} SOL for fees.${ataMessage} For devnet, add SOL from faucet.solana.com.`
     },
     [tokenName]
   )
@@ -726,7 +727,6 @@ export function useGroupDashboard() {
     groupId,
     maybeExplainAtaCreation,
     memberNameByWallet,
-    router,
     tokenName,
     wallet?.adapter,
     walletAddress,
@@ -765,7 +765,6 @@ export function useGroupDashboard() {
     ensureWalletWriteAccess,
     groupId,
     pendingSettlementReceipt,
-    router,
     walletAddress,
   ])
 
@@ -887,6 +886,7 @@ export function useGroupDashboard() {
         amount: tokenAmount,
         mintAddress: group.stablecoin_mint,
         recipientOwnerOffCurve: true,
+        cluster: "devnet",
       })
 
       if (!preview.sourceTokenAccountExists || preview.sourceTokenBalance < tokenAmount) {

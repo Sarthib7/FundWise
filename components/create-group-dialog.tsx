@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useId, useState, type FormEvent } from "react"
-import { Landmark, Loader2, Users } from "lucide-react"
+import { ExternalLink, Landmark, Loader2, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +36,8 @@ type CreateGroupDialogProps = {
 
 const DEFAULT_APPROVAL_THRESHOLD = "1"
 const FUND_MODE_BETA_TELEGRAM_URL = "https://t.me/funddotsol"
+const SOLANA_FAUCET_URL = "https://faucet.solana.com"
+const CIRCLE_FAUCET_URL = "https://faucet.circle.com"
 
 export function CreateGroupDialog({
   open,
@@ -228,18 +230,39 @@ export function CreateGroupDialog({
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               {mode === "fund"
-                ? "If your wallet is not on the beta list, creation will stop before a Group is created."
+                ? "Only beta admin wallets can create Fund Mode Groups. After creation, invite Members and initialize the Treasury when the approval threshold is reachable."
                 : "Track shared Expenses first; move to Fund Mode when the Group needs a Treasury."}
             </p>
             {mode === "fund" ? (
-              <a
-                href={FUND_MODE_BETA_TELEGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex min-h-10 items-center rounded-sm text-xs font-medium text-accent underline-offset-4 transition-colors hover:text-accent/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                Join the Fund Mode beta on Telegram
-              </a>
+              <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                <a
+                  href={FUND_MODE_BETA_TELEGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-sm font-medium text-accent underline-offset-4 transition-colors hover:text-accent/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  Join the Fund Mode beta
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+                <a
+                  href={SOLANA_FAUCET_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  Devnet SOL faucet
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+                <a
+                  href={CIRCLE_FAUCET_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  Devnet USDC faucet
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                </a>
+              </div>
             ) : null}
           </div>
 
@@ -257,9 +280,9 @@ export function CreateGroupDialog({
             <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium">Pool template</p>
+                  <p className="text-sm font-medium">Custom Treasury setup</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Optional. Templates prefill the approval threshold and explain expected roles for beta testers.
+                    Start custom, or choose a template to prefill the approval threshold and explain expected beta roles.
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -275,7 +298,7 @@ export function CreateGroupDialog({
                   >
                     <p className="text-sm font-semibold">Custom</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Start without a preset and tune the Treasury rules yourself.
+                      Use your own funding goal and approval threshold.
                     </p>
                   </button>
                   {FUND_MODE_TEMPLATES.map((template) => (
@@ -309,7 +332,7 @@ export function CreateGroupDialog({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                <Label htmlFor={fundingGoalId}>Funding goal</Label>
+                <Label htmlFor={fundingGoalId}>Funding goal (USDC)</Label>
                 <Input
                   id={fundingGoalId}
                   value={fundingGoal}
@@ -339,7 +362,7 @@ export function CreateGroupDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={approvalThresholdId}>Approval threshold</Label>
+                <Label htmlFor={approvalThresholdId}>Approval threshold (custom)</Label>
                 <Input
                   id={approvalThresholdId}
                   value={approvalThreshold}

@@ -49,6 +49,8 @@ const PROPOSAL_AMOUNT_INPUT_ID = "proposal-amount"
 const PROPOSAL_MEMO_INPUT_ID = "proposal-memo"
 const PROPOSALS_SECTION_ID = "reimbursement-proposals"
 const FUND_MODE_BETA_TELEGRAM_URL = "https://t.me/funddotsol"
+const SOLANA_FAUCET_URL = "https://faucet.solana.com"
+const CIRCLE_FAUCET_URL = "https://faucet.circle.com"
 
 type FundModeDashboardProps = {
   tokenName: string
@@ -200,15 +202,35 @@ export function FundModeDashboard({
             Invite-only devnet testing for pooled Treasuries, Proposals, and pricing feedback.
           </p>
         </div>
-        <a
-          href={FUND_MODE_BETA_TELEGRAM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-fund-blue-border bg-background px-3 text-sm font-medium text-brand-fund-blue transition-colors hover:bg-brand-fund-blue-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          Join beta Telegram
-          <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={FUND_MODE_BETA_TELEGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-brand-fund-blue-border bg-background px-3 text-sm font-medium text-brand-fund-blue transition-colors hover:bg-brand-fund-blue-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            Join beta Telegram
+            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+          </a>
+          <a
+            href={SOLANA_FAUCET_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            SOL faucet
+            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+          </a>
+          <a
+            href={CIRCLE_FAUCET_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            USDC faucet
+            <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+          </a>
+        </div>
       </div>
 
       <TreasuryOverviewCard
@@ -288,7 +310,7 @@ export function FundModeDashboard({
                 Create the Squads multisig and Treasury vault for this Fund Mode Group.
               </p>
               <p className="text-xs text-muted-foreground">
-                Treasury signers are captured from the current Member list when initialization happens.
+                Treasury signers are captured from the current Member list when initialization happens. The creator needs devnet SOL for fees; Members need devnet SOL and USDC before Contributions.
               </p>
               {missingMembersForTreasury > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-300">
@@ -320,7 +342,7 @@ export function FundModeDashboard({
             <div>
               <h2 className="text-lg font-semibold">Make a Contribution</h2>
               <p className="text-sm text-muted-foreground">
-                Transfer stablecoins from the connected wallet into this Group Treasury.
+                Transfer stablecoins from the connected wallet into this Group Treasury. If a Member is missing devnet SOL or USDC, use the faucet links above first.
               </p>
             </div>
             <Badge className="bg-accent/10 text-accent border-accent/20">Treasury Live</Badge>
