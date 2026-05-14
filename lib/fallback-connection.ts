@@ -1,5 +1,5 @@
 import { Connection, type Commitment } from "@solana/web3.js"
-import { getSolanaRpcUrls } from "./solana-cluster"
+import { getSolanaRpcUrls, getSolanaRpcUrlsForCluster, type FundWiseCluster } from "./solana-cluster"
 
 type ConnectionFactory = (url: string, commitment: Commitment) => Connection
 
@@ -145,6 +145,17 @@ export function createFundWiseConnection(
 
   const connections = endpoints.map((url) => factory(url, commitment))
   return createFallbackProxy(connections, endpoints, onFallback)
+}
+
+export function createFundWiseConnectionForCluster(
+  cluster: FundWiseCluster,
+  commitment: Commitment = "confirmed",
+  options: CreateFundWiseConnectionOptions = {}
+): Connection {
+  return createFundWiseConnection(commitment, {
+    ...options,
+    endpoints: options.endpoints ?? getSolanaRpcUrlsForCluster(cluster),
+  })
 }
 
 export { isRetriableRpcError as __isRetriableRpcError }
