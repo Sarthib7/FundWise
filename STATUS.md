@@ -1,9 +1,9 @@
 # FundWise - Status
 
-**Snapshot date:** 2026-05-11
-**Phase:** Dual-track delivery — Split Mode to mainnet (public), Fund Mode stays devnet (invite-only beta for monetization testing)
+**Snapshot date:** 2026-05-14 (security + UI audit pass)
+**Phase:** Dual-track delivery — Split Mode to mainnet (public), Fund Mode stays devnet (invite-only beta for monetization testing). Pre-mainnet audit blockers tracked under FW-053 / FW-054 / FW-055.
 **Hackathon:** Colosseum Frontier (April 6 - May 11, 2026) — submission complete
-**Checklist branch:** 10 commits on `checklist`, clean working tree, no push done
+**Checklist branch:** 22 commits on `checklist`, working tree dirty (7 `.well-known/*` route files modified, uncommitted)
 **Active issue index:** [issues.md](./issues.md)
 **Execution checklists:** [Split Mode mainnet](./docs/split-mode-mainnet-checklist.md) · [Fund Mode beta](./docs/fund-mode-beta-checklist.md)
 **Handoff:** Network strategy is locked: public app is mainnet only (Split Mode); Fund Mode stays devnet, invite-gated, hidden from public UI, used to test the monetization model with selected beta users coordinated in a Telegram group. Fundy ships alongside Split Mode mainnet from its separate repository. Yield routing via Meteora is planned but not in scope until Fund Mode is mainnet-stable. The two execution checklists own the phased work going forward.
@@ -51,6 +51,25 @@ The product direction is now sharper:
 - Visa/card/IBAN rails remain partner-dependent future work. They can support a settle-to-spend story later, but they should not be claimed or built as core product until a concrete provider path exists.
 - Mini-games and prediction-market-like mechanics are out of scope for FundWise and must stay out of the hackathon story.
 - Canonical product-state and monetization references: [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) and [docs/monetization.md](./docs/monetization.md).
+
+---
+
+## Branch Audit (2026-05-14)
+
+The `checklist` branch went through a deep security + UI audit pass before the Split Mode mainnet cutover. Full findings live under [issues.md → Branch Audit Snapshot](./issues.md#branch-audit-snapshot-2026-05-14) and the four follow-up issues:
+
+- **FW-053 (P0)** Critical fixes: expense `payer` field is not bound to the signed-in session (any member can credit an Expense to a different member's wallet), Settlement insert is non-atomic with its graph-match snapshot (TOCTOU race), and OFAC sanctions screening only fires at challenge issuance — a sanctioned wallet keeps its 12-hour session.
+- **FW-054 (P1)** Rate limiting is in-process only (resets per edge isolate) and is not applied to money-moving routes. Move to a distributed counter and cover every POST/PATCH/DELETE mutation.
+- **FW-055 (P1)** On-chain Settlement / Contribution / Proposal-execution verification matches expected deltas but doesn't reject extra side-transfers in the same signed transaction. Add a "no other token deltas" guard.
+- **FW-056 (P2)** UI polish and dead-code cleanup: duplicate "Settlement reached Solana" recovery banner in Split Mode dashboard, `STABLECOIN_MINTS_DEVNET.USDT` is the mainnet mint, dead `WalletAdapterNetwork.Devnet` constant and `lib/anchor/group_manager.ts` IDL, brittle `FUNDWISE_FUND_MODE_INVITE_WALLETS` parsing, CSP still has `script-src 'unsafe-inline'`, parse-usdc-amount regex accepts a bare `.`.
+
+**Smart-contract footprint:** there is no custom on-chain program in this branch — `programs/fundwise/` only contains a `.DS_Store`. The historical Rust source was deleted; the Anchor IDL at `lib/anchor/group_manager.ts` is orphaned. On-chain mechanics are SPL Token transfers (Split Mode + Fund Mode contributions) plus Squads multisig vault transactions (Fund Mode proposal create / review / execute), verified server-side via `lib/server/solana-transfer-verification.ts` and `lib/server/fundwise-mutations.ts`. No proprietary Solana program to audit.
+
+**Test posture:** `pnpm test` → 7 files, 112 tests, all pass (1.21s). Coverage gaps to fill alongside the fixes: settlement TOCTOU race, ATA side-transfer rejection, proposal review/execute lifecycle, sanctioned-wallet rejection mid-session, distributed rate-limit behavior.
+
+**Authentication review (no fix needed):** HMAC-signed cookies, Ed25519 wallet signatures, 5-minute challenge TTLs, 12-hour session TTLs, origin + cluster pinning on challenges, `__Host-` prefix in production. The session cookie itself does not re-pin origin or cluster — operationally minor, but worth knowing if `FUNDWISE_SESSION_SECRET` is ever shared across deployments.
+
+**Mainnet readiness call:** Split Mode should not flip to mainnet until at least FW-053 (all three sub-items) and FW-055 are merged. FW-054 is a hardening item that can ship alongside or shortly after.
 
 ---
 

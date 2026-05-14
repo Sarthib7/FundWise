@@ -1,10 +1,24 @@
 # FundWise Issues
 
-**Last indexed:** 2026-05-13
+**Last indexed:** 2026-05-14
 **Submission status:** Colosseum Frontier submission complete (deadline 2026-05-11)
 **Current focus:** Dual-track delivery — Split Mode to public mainnet, Fund Mode stays devnet as invite-only beta for easy-UX and monetization testing. See [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md) and [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
 
 This file is the local issue index for hackathon execution. Keep each issue as a vertical slice: a completed issue should be independently demoable, testable, or useful for submission.
+
+## Issue File Index
+
+- [Active Index](#active-index) — one-line status for every `FW-*` issue.
+- [Pick Queue](#pick-queue) — current execution order by workstream.
+- [Handoff Queue For Claude / Lot](#handoff-queue-for-claude--lot) — coordination rules for agents.
+- [FW-001 to FW-025](#fw-024-implementation-notes-shipped-2026-05-08) — legacy hackathon, hardening, and planning notes. Completed items before FW-024 are tracked in the Active Index only.
+- [FW-026 to FW-032](#fw-026---build-reimbursement-proposal-creation-for-fund-mode) — Fund Mode Proposal lifecycle and beta rehearsal.
+- [FW-033 to FW-041](#fw-033---cluster-aware-stablecoin-mints-devnet-vs-mainnet) — Split Mode mainnet pre-flight and production setup.
+- [FW-042 to FW-048](#fw-042---pool-templates-at-fund-mode-group-creation) — Fund Mode beta UX and Telegram onboarding.
+- [FW-049 to FW-052](#fw-049---add-beta-admin-wallets-for-fund-mode-group-creation) — Fund Mode admin access, build unblock, custom setup, and devnet RPC path.
+- [FW-053 to FW-056](#fw-053---branch-audit-follow-ups-critical-expense-payer-binding-settlement-toctou-sanctions-scope) — branch audit security and cleanup follow-ups.
+- [FW-057 to FW-065](#fw-057---threshold-suggestions-at-treasury-initialization) — remaining Fund Mode beta checklist items.
+- [Branch Audit Snapshot](#branch-audit-snapshot-2026-05-14) — audit context that produced FW-053 through FW-056.
 
 ## Active Index
 
@@ -54,9 +68,27 @@ This file is the local issue index for hackathon execution. Keep each issue as a
 | FW-042 | Done | P1 | AFK | Pool templates at Fund Mode Group creation | None |
 | FW-043 | Done | P1 | AFK | Treasury overview card on Fund Mode dashboard | None |
 | FW-044 | Ready | P1 | AFK | Auto-suggested reimbursement proposals from Member expenses | None |
-| FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) + exit flow proposal type | None |
+| FW-045 | Ready | P2 | AFK | Fund Mode member roles (Admin / Member / Viewer) | None |
+| FW-046 | Ready | P2 | AFK | Fund Mode exit/refund proposal flow | FW-045 |
 | FW-047 | Ready | P1 | AFK | Fund Mode creation fee infrastructure (devnet beta) | FW-033 |
 | FW-048 | Done | P2 | AFK | Telegram beta channel onboarding link from Fund Mode entry | None |
+| FW-049 | Ready | P0 | HITL | Add beta admin wallets for Fund Mode Group creation | Cloudflare deploy env access |
+| FW-050 | Done | P0 | AFK | Fix Next build for public `.well-known` discovery routes | None |
+| FW-051 | Done | P1 | AFK | Polish custom Fund Mode Group creation and faucet guidance | None |
+| FW-052 | Done | P0 | AFK | Keep Fund Mode on custom devnet RPC while Split Mode moves mainnet | FW-033 |
+| FW-053 | Open | P0 | AFK | Branch audit follow-ups: expense payer binding, settlement TOCTOU, sanctions screen scope | None |
+| FW-054 | Open | P1 | AFK | Distributed rate-limit + cover money-moving routes | None |
+| FW-055 | Open | P1 | AFK | Restrict on-chain settlement verification to expected ATAs only | None |
+| FW-056 | Open | P2 | AFK | Branch audit follow-ups: UI polish, dead code, devnet mint cleanup | None |
+| FW-057 | Ready | P1 | AFK | Threshold suggestions at Treasury initialization | None |
+| FW-058 | Ready | P1 | AFK | Pre-Treasury SOL/rent checklist UI | FW-052 |
+| FW-059 | Ready | P2 | AFK | Squads explorer link on Treasury card | FW-052 |
+| FW-060 | Ready | P2 | AFK | Threshold-change proposal type | FW-045 |
+| FW-061 | Ready | P1 | AFK | Monthly fee emulation banner | FW-047 |
+| FW-062 | Ready | P1 | AFK | Free-tier limits emulation | FW-047 |
+| FW-063 | Ready | P2 | AFK | Beta exit survey | FW-046 |
+| FW-064 | Ready | P2 | AFK | Beta admin dashboard | None |
+| FW-065 | Ready | P2 | HITL | Weekly beta digest process | FW-064 |
 
 ## Pick Queue
 
@@ -73,9 +105,12 @@ The hackathon submission is complete. Post-submission execution follows the two 
 7. **FW-018** Security headers (P1, AFK) — done
 8. **FW-023** Wallet-session abuse + origin binding (P1, AFK) — done
 9. **FW-041** Minimal OFAC SDN screening (P1, AFK) — done
-10. **FW-038** Prod Supabase project (P0, HITL)
-11. **FW-039** Mainnet rehearsal (P0, HITL)
-12. **FW-040** Public copy update post-launch (P1, AFK)
+10. **FW-053** Critical branch-audit fixes: payer binding, atomic Settlement insert, sanctions recheck (P0, AFK)
+11. **FW-054** Distributed rate-limit + money-moving route limits (P1, AFK)
+12. **FW-055** Strict expected-ATA-only on-chain verification (P1, AFK)
+13. **FW-038** Prod Supabase project (P0, HITL)
+14. **FW-039** Mainnet rehearsal (P0, HITL)
+15. **FW-040** Public copy update post-launch (P1, AFK)
 
 **Fund Mode devnet beta path (parallel, non-blocking):**
 
@@ -83,8 +118,22 @@ The hackathon submission is complete. Post-submission execution follows the two 
 2. **FW-043** Treasury overview card (P1, AFK) — done
 3. **FW-044** Auto-suggested reimbursement proposals (P1, AFK)
 4. **FW-047** Creation fee infrastructure (P1, AFK)
-5. **FW-045** Member roles + exit flow (P2, AFK)
-6. **FW-048** Telegram beta channel link (P2, AFK) — done
+5. **FW-045** Member roles (P2, AFK)
+6. **FW-046** Exit/refund proposal flow (P2, AFK)
+7. **FW-048** Telegram beta channel link (P2, AFK) — done
+8. **FW-049** Add beta admin wallets (P0, HITL)
+9. **FW-050** Build unblock for `.well-known` routes (P0, AFK) — done
+10. **FW-051** Custom Fund Mode creation UI + faucet guidance (P1, AFK) — done
+11. **FW-052** Dedicated devnet RPC path for Fund Mode on-chain flows (P0, AFK) — done
+12. **FW-057** Threshold suggestions at Treasury init (P1, AFK)
+13. **FW-058** Pre-Treasury SOL/rent checklist UI (P1, AFK)
+14. **FW-059** Squads explorer link on Treasury card (P2, AFK)
+15. **FW-060** Threshold-change proposal type (P2, AFK)
+16. **FW-061** Monthly fee emulation banner (P1, AFK)
+17. **FW-062** Free-tier limits emulation (P1, AFK)
+18. **FW-063** Beta exit survey (P2, AFK)
+19. **FW-064** Beta admin dashboard (P2, AFK)
+20. **FW-065** Weekly beta digest process (P2, HITL)
 
 ## Handoff Queue For Claude / Lot
 
@@ -1298,7 +1347,7 @@ When a Member logs an expense in a Fund Mode Group with a "pay from pool" flag, 
 - [ ] Dismissing the suggestion is sticky per expense (no re-nag).
 - [ ] `pnpm build` passes.
 
-## FW-045 - Fund Mode Member Roles + Exit Flow Proposal Type
+## FW-045 - Fund Mode Member Roles
 
 **Status:** Ready
 **Priority:** P2
@@ -1307,7 +1356,7 @@ When a Member logs an expense in a Fund Mode Group with a "pay from pool" flag, 
 
 ### What to build
 
-Add light member roles in FundWise: `Admin` / `Member` / `Viewer`. Admin can change threshold and invite. Member can propose / approve / execute. Viewer is read-only. Stored in FundWise (Squads stays the on-chain authority). Add an explicit "return funds to leaving Member" proposal type.
+Add light member roles in FundWise: `Admin` / `Member` / `Viewer`. Admin can change threshold and invite. Member can propose / approve / execute. Viewer is read-only. Stored in FundWise (Squads stays the on-chain authority).
 
 ### Acceptance Criteria
 
@@ -1315,9 +1364,28 @@ Add light member roles in FundWise: `Admin` / `Member` / `Viewer`. Admin can cha
 - [ ] Server enforces role-gated actions: only Admin can invite, only Admin can change threshold.
 - [ ] UI shows role badge next to Member name in dashboard.
 - [ ] Group creator becomes Admin by default.
-- [ ] New proposal type `member_exit` with recipient = leaving Member, amount = custom or pro-rata. Runs normal approval lifecycle.
-- [ ] Migration covers the new column + proposal type.
+- [ ] Migration covers the new role column.
 - [ ] Tests cover role enforcement edge cases.
+- [ ] `pnpm build` passes.
+
+## FW-046 - Fund Mode Exit/Refund Proposal Flow
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-045
+
+### What to build
+
+Add an explicit "return funds to leaving Member" Proposal type. It calculates the leaving Member's pro-rata share or accepts a custom amount, then runs the normal Fund Mode approval and execution lifecycle.
+
+### Acceptance Criteria
+
+- [ ] New proposal type `member_exit` with recipient = leaving Member.
+- [ ] Amount can be custom or suggested from the Member's pro-rata Treasury share.
+- [ ] Runs through normal Proposal approval, rejection, proof/history, and execution.
+- [ ] UI explains that exits are Proposal-based and not automatic withdrawals.
+- [ ] Tests cover the proposal type and Member authorization rules.
 - [ ] `pnpm build` passes.
 
 ## FW-047 - Fund Mode Creation Fee Infrastructure (Devnet Beta)
@@ -1367,3 +1435,398 @@ Add a "Join the Fund Mode beta on Telegram" link from the Fund Mode entry surfac
 ### Notes
 
 Completed on 2026-05-11 on `checklist` branch. Fund Mode creation now shows a focused `Join the Fund Mode beta on Telegram` link only after Fund Mode is selected, and the Fund Mode dashboard shows a beta onboarding banner with a `Join beta Telegram` CTA to `https://t.me/funddotsol`. Both links open in a new tab with `rel="noopener noreferrer"` and no tracking parameters. `pnpm test` and `pnpm build` passed.
+
+## FW-049 - Add Beta Admin Wallets For Fund Mode Group Creation
+
+**Status:** Ready
+**Priority:** P0
+**Type:** HITL
+**Blocked by:** Cloudflare deploy env access
+
+### What to build
+
+Give the owner/admin wallet permission to create invite-only Fund Mode Groups by configuring the server-side allowlist. This does not grant financial authority over existing Groups; it only permits beta Group creation.
+
+### Acceptance Criteria
+
+- [x] Owner supplies the Solana wallet address to add.
+- [x] Local `.env.local` includes the wallet in `FUNDWISE_FUND_MODE_INVITE_WALLETS`.
+- [ ] Cloudflare production env includes the wallet in `FUNDWISE_FUND_MODE_INVITE_WALLETS`.
+- [ ] Fund Mode Group creation succeeds for the allowlisted wallet.
+- [ ] Fund Mode Group creation still fails for non-allowlisted wallets.
+- [ ] README documents the env var.
+
+## FW-050 - Fix Next Build For Public `.well-known` Discovery Routes
+
+**Status:** Done
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Fix the production build failure where Next compiled `.well-known` route handlers as edge functions but then failed page-data collection with `PageNotFoundError` for those same public discovery routes.
+
+### Acceptance Criteria
+
+- [x] Public `.well-known` discovery routes still exist at the same URLs.
+- [x] Route handlers build as normal dynamic route handlers instead of edge-only handlers.
+- [x] `pnpm build` reaches final route output.
+
+### Notes
+
+Completed on 2026-05-14 by removing `runtime = "edge"` from the `.well-known` route handlers. The routes remain dynamic and continue returning JSON/linkset responses.
+
+## FW-051 - Polish Custom Fund Mode Group Creation And Faucet Guidance
+
+**Status:** Done
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Make Fund Mode creation clearer for beta admins: custom Treasury setup first, optional templates second, and explicit devnet SOL / USDC faucet guidance for creators and Members.
+
+### Acceptance Criteria
+
+- [x] Fund Mode creation explains beta admin access before submission.
+- [x] Custom setup is the default mental model, with templates as optional presets.
+- [x] Funding goal and approval threshold are clearly labeled as custom settings.
+- [x] Creation dialog links to `faucet.solana.com` for devnet SOL and `faucet.circle.com` for devnet USDC.
+- [x] Fund Mode dashboard repeats faucet guidance near Treasury / Contribution actions.
+- [x] `pnpm build` passes.
+
+### Notes
+
+Completed on 2026-05-14. The create dialog now frames Fund Mode as beta-admin-only, keeps custom Treasury setup as the default path, and links directly to Solana and Circle devnet faucets. The Fund Mode dashboard repeats faucet guidance near beta onboarding, Treasury initialization, and Contributions.
+
+## FW-052 - Keep Fund Mode On Custom Devnet RPC While Split Mode Moves Mainnet
+
+**Status:** Done
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** FW-033
+
+### What to build
+
+Ensure Fund Mode on-chain flows use a dedicated configurable devnet RPC even when the public Split Mode app is configured for Solana mainnet.
+
+### Acceptance Criteria
+
+- [x] Devnet RPC can be configured with `SOLANA_DEVNET_RPC_URL` / `NEXT_PUBLIC_SOLANA_DEVNET_RPC_URL`.
+- [x] Fund Mode Squads Treasury creation and reads use devnet RPC.
+- [x] Fund Mode Contribution preflight and transfer submission use devnet RPC.
+- [x] Fund Mode Contribution and Proposal execution verification use devnet RPC.
+- [x] Split Mode Settlement verification keeps using the default/public app RPC.
+- [x] `pnpm build` and focused tests pass.
+
+### Notes
+
+Completed on 2026-05-14. Added cluster-specific RPC helpers and routed Fund Mode Squads helpers, Contribution preflight/submission, and Fund Mode verification through configurable devnet endpoints while leaving Split Mode Settlements on the default app RPC. `pnpm exec tsc --noEmit`, `pnpm test tests/fundwise-mutations.test.ts`, `pnpm lint`, and `pnpm build` passed; lint still has two pre-existing router dependency warnings.
+
+## FW-053 - Branch Audit Follow-ups (Critical: Expense Payer Binding, Settlement TOCTOU, Sanctions Scope)
+
+**Status:** Open
+**Priority:** P0
+**Type:** AFK
+**Blocked by:** None
+**Source:** `checklist` branch audit on 2026-05-14 (security-oriented sweep + UI review + parallel adversarial sub-agents)
+
+### Context
+
+A multi-pass audit ran over the `checklist` branch (62 changed files, +4129 / -430 vs `main`). All 112 vitest tests pass. The Anchor IDL at `lib/anchor/group_manager.ts` is dead code — there is no Rust source under `programs/fundwise/` (only a stray `.DS_Store`); `git log --all --diff-filter=A --name-only` shows the original Rust sources existed historically but were deleted, leaving the IDL orphaned. The real on-chain governance lives in Squads multisig + SPL token verification, not a custom Anchor program. Findings below are restricted to issues that were verified by direct file/line reads, not just sub-agent claims.
+
+### Critical findings to fix
+
+1. **Expense payer attribution bypass** — `app/api/expenses/route.ts:59` only checks `body.createdBy === session.wallet`; `body.payer` is forwarded unchecked into `addExpenseMutation`. The mutation requires payer to be a Group Member (`assertWalletsAreMembers`) but does **not** require payer to equal the session wallet. As Alice, I can POST an Expense claiming Bob paid 100 USDC for everyone — that immediately credits Bob and debits everyone else in the balance graph, including me. Bob has no consent in the loop. Fix: bind `body.payer === session.wallet` at the route, OR add an explicit confirmation step where the listed payer must co-sign before the Expense lands on the ledger.
+
+2. **Settlement TOCTOU between snapshot and insert** — `lib/server/fundwise-mutations.ts:896` reads a Group dashboard snapshot, line 905 verifies the on-chain transfer, line 913 re-reads the snapshot, then line 922 inserts the settlement. The second snapshot and the insert are NOT atomic. Two concurrent settlement requests for the same Group can both pass the second snapshot check; the first insert mutates the graph while the second insert is in flight and lands an already-invalid settlement. Fix: use a Supabase transaction with row-level locking on the Group, OR re-run `assertSettlementMatchesCurrentGraph` inside a postgres function that also performs the insert atomically.
+
+3. **Sanctions screen runs only at challenge issuance, not on session-bearing mutations** — `assertWalletIsAllowed` is called exactly once: `app/api/auth/wallet/challenge/route.ts:25`. A wallet that authenticated before being added to `SANCTIONED_SOLANA_WALLETS` keeps a valid 12-hour session and can transact freely. Fix: call `assertWalletIsAllowed(session.wallet)` inside `requireAuthenticatedWallet()` so every protected route enforces the screen on every call. Bonus: hot-reload the list from a Supabase table instead of the in-process `Set`.
+
+### Acceptance criteria
+
+- [ ] `body.payer` on POST/PATCH `/api/expenses/*` is rejected unless it equals `session.wallet`, OR a payer-confirmation flow is shipped end-to-end.
+- [ ] `addSettlementMutation` performs the graph match + insert atomically (postgres function or transaction with `for update` lock on the Group row).
+- [ ] `requireAuthenticatedWallet()` calls `assertWalletIsAllowed` and returns 403 for sanctioned wallets even if their session cookie is still valid.
+- [ ] Vitest covers each of the above with a regression test under `tests/`.
+
+### Notes
+
+Verified file:lines on 2026-05-14: `app/api/expenses/route.ts:59`, `lib/server/fundwise-mutations.ts:896,905,913,922`, `app/api/auth/wallet/challenge/route.ts:25`, `lib/server/wallet-session.ts:235`, `lib/server/sanctions-screening.ts:11`.
+
+## FW-054 - Distributed Rate-Limit + Cover Money-Moving Routes
+
+**Status:** Open
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+**Source:** `checklist` branch audit on 2026-05-14
+
+### Context
+
+`lib/server/rate-limit.ts:16` uses an in-process `Map`. The app runs on edge runtime — every isolate/region carries its own counter, so the "30 per minute per IP" limit is multiplied by the number of live isolates worldwide. In Cloudflare Pages / Vercel Edge that is non-deterministic but easily 5-20x. Additionally, only the auth endpoints currently call `enforceRateLimit`. The state-changing endpoints (`/api/settlements`, `/api/contributions`, `/api/proposals`, `/api/proposals/[id]/{review,execute,comments}`, `/api/expenses`, `/api/expenses/[id]`, `/api/groups`, `/api/groups/[id]/treasury`, `/api/groups/[id]/members`, `/api/profile/display-name`) are uncapped — a single valid session can spam thousands of writes per second.
+
+### Acceptance criteria
+
+- [ ] Replace the in-memory bucket with a Supabase table or Upstash Redis backed counter so limits hold across isolates.
+- [ ] Add per-wallet limits to every POST/PATCH/DELETE money- or membership-changing route (suggested defaults: settlements/contributions/proposals/expenses 20 per minute; group create 5 per hour; profile-display-name 10 per hour).
+- [ ] Document the new limits in `docs/ops-runbook.md`.
+- [ ] Add a test that exercises the limiter and confirms 429 once exceeded.
+
+### Notes
+
+Edge-isolate split also means the `pruneExpiredBuckets` size cap at `lib/server/rate-limit.ts:17` (`MAX_TRACKED_KEYS = 2_000`) is essentially meaningless — each isolate hits 2,000 on its own before sharing pressure.
+
+## FW-055 - Restrict On-Chain Settlement Verification To Expected ATAs Only
+
+**Status:** Open
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+**Source:** `checklist` branch audit on 2026-05-14
+
+### Context
+
+`lib/server/solana-transfer-verification.ts:174-187` verifies that the **expected source ATA** decreased by exactly `expectedAmount` and the **expected destination ATA** increased by exactly `expectedAmount`. It does **not** assert that those are the only token balance deltas in the transaction. A signed transaction can contain additional unrelated transfers from the source ATA to attacker-controlled ATAs in the same atomic tx; FundWise will still record the settlement/contribution/execution as valid because the two expected deltas match.
+
+For Squads vault transactions this is partly mitigated by the multisig wrapper, but for plain settlements (`verifySettlementTransfer`) the sender wallet is the same signer that built the transaction client-side — a malicious client (e.g. a compromised browser extension) can append a side-transfer before signing.
+
+### Acceptance criteria
+
+- [ ] After matching the expected source/dest deltas, iterate the full `tokenBalances` map and reject the verification if any other ATA's pre/post delta is non-zero (or whitelist a fee/ATA-creation account if the destination ATA was created in-flight).
+- [ ] Test: a synthesized parsed tx with an extra transfer step is rejected by `verifySettlementTransfer`, `verifyContributionTransfer`, and `verifyProposalExecutionTransfer`.
+- [ ] Sanity-check that ATA-creation rent transfers (system-program lamports, not SPL) do not register as token-balance deltas and therefore do not trip the new guard.
+
+### Notes
+
+Verified file:lines: `lib/server/solana-transfer-verification.ts:114-187` (`verifyAtaTransfer`), `lib/server/fundwise-mutations.ts:905,987,1245` (call sites). The current `assertSigner` check only ensures the labelled signer signed; it does not constrain the payload of the signed transaction.
+
+## FW-056 - Branch Audit Follow-ups (UI Polish, Dead Code, Devnet Mint Cleanup)
+
+**Status:** Open
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** None
+**Source:** `checklist` branch audit on 2026-05-14
+
+### Context
+
+Lower-severity findings from the same audit pass. Grouped together because none of them are exploitable by themselves but they all pollute either correctness or maintainability.
+
+### Bug list
+
+- **High — Duplicate "Settlement reached Solana" recovery banner** at `components/group-dashboard/split-mode-dashboard.tsx:373` and `:565`. Both blocks render when `isMember && pendingSettlementReceipt` is truthy. A user with the recovery state set sees two banners and can double-fire `onRecoverSettlementReceipt` by clicking the lower one before the upper resolves. Consolidate into a single render branch.
+- **High — Confusing `__Host-` cookie name flip between dev and prod**. `lib/server/wallet-session.ts:9-16` uses the `__Host-` prefix only in production. Dev cookies do not get the same protections (path=/, secure, no domain), which means devnet rehearsals do not exercise the same browser invariants as prod. Use the `__Host-` prefix unconditionally and set `secure` based on `NODE_ENV` so dev/prod parity holds.
+- **High — `STABLECOIN_MINTS_DEVNET.USDT` and `.PYUSD` use mainnet-looking mint addresses**. `lib/expense-engine.ts:17-25`. The "devnet" USDT mint `Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ` is the canonical mainnet USDT mint, which does not exist on devnet — any Group created with this mint will fail at first transfer. Either remove USDT/PYUSD from the devnet map or replace with the correct devnet mints (or document why both maps reference the same address).
+- **Medium — Proposal review endpoint does not dedupe on `tx_sig`**. `lib/server/fundwise-mutations.ts:1159-1170` only uses the `(proposal_id, member_wallet)` unique constraint via the `23505` branch. A reviewer who races two PATCH calls with different on-chain reviews of the same proposal hits the unique-violation branch on the second, but the on-chain side may now show two approvals for one Member if the second write succeeded against Squads — FundWise will hide the second locally without flagging the discrepancy. Either dedupe on `tx_sig` or surface the divergence in the UI.
+- **Medium — CSP allows `script-src 'self' 'unsafe-inline'` in production**. `next.config.mjs:79`. `unsafe-inline` defeats most of CSP's XSS protection. Migrate inline scripts/styles to files and tighten the policy.
+- **Medium — `isFundModeInviteWallet` parsing is brittle**. `lib/server/fundwise-mutations.ts:214-221`. Splits `FUNDWISE_FUND_MODE_INVITE_WALLETS` on `,` and trims, but does not normalize through `new PublicKey(...).toBase58()`. A whitespace-only env var silently allows nobody; a wallet with a leading/trailing space in the env value silently mismatches; a list with one trailing comma yields an empty string in the allowlist. Normalize on read and warn loudly on parse errors.
+- **Medium — Hardcoded literal cluster string in client preview**. `hooks/use-group-dashboard.ts:891` passes `cluster: "devnet"` directly into the contribution preview. Today this matches the product decision (Fund Mode is devnet-only beta) but the literal should come from `getClusterForGroupMode("fund")` so a future flip of the policy does not require code changes in unrelated files.
+- **Low — Dead `WalletAdapterNetwork.Devnet` constant**. `components/solana-wallet-provider.tsx:47` declares `const network = WalletAdapterNetwork.Devnet` and never uses it. Either pass it into `WalletProvider` (and derive it from cluster) or delete the line.
+- **Low — Dead Anchor IDL**. `lib/anchor/group_manager.ts` is 1,249 lines and referenced by no file in the repo. Delete it or document that it is preserved for a future on-chain program.
+- **Low — `parse-usdc-amount` regex accepts a bare `.`**. `lib/parse-usdc-amount.ts:28` uses `/^\d*\.?\d*$/`, which matches `.`, `5.`, and `.5`. The bare-`.` case is caught by downstream zero-detection but the regex itself should require at least one digit.
+- **Low — Empty `programs/fundwise/` directory** with `.DS_Store`. The src/tests subdirectories exist but contain no source. Delete the directory or restore the Rust source under it. (Historical Rust files visible via `git log --all --diff-filter=A` confirm there used to be a program here; it was deleted.)
+
+### Acceptance criteria
+
+- [ ] Each bullet above is addressed or explicitly waived in the issue.
+- [ ] `pnpm test`, `pnpm lint`, `pnpm build` continue to pass.
+
+### Notes
+
+Findings cross-referenced from a parallel UI/security review against the source tree on 2026-05-14. All file:line references re-verified by direct reads, not relied on from sub-agent output.
+
+## FW-057 - Threshold Suggestions At Treasury Initialization
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Suggest sensible approval thresholds at Treasury initialization: 2 Members → 2/2, 3-5 Members → majority, 6+ Members → 1/2 + 1. Show plain-English copy explaining what the threshold means before the creator signs the Squads transaction.
+
+### Acceptance Criteria
+
+- [ ] Treasury init UI shows a recommended threshold from current Member count.
+- [ ] Creator can override the recommendation before creation.
+- [ ] UI explains the tradeoff between safety and speed.
+- [ ] Existing template threshold behavior still works.
+- [ ] `pnpm build` passes.
+
+## FW-058 - Pre-Treasury SOL/Rent Checklist UI
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-052
+
+### What to build
+
+Before Squads Treasury creation, show a checklist with estimated devnet SOL needed for multisig/rent/fees and faucet guidance.
+
+### Acceptance Criteria
+
+- [ ] Treasury init card shows required SOL estimate or a conservative fallback estimate.
+- [ ] If connected wallet SOL is below estimate, the primary action is disabled or clearly warns before wallet prompt.
+- [ ] Links to `https://faucet.solana.com` for devnet SOL.
+- [ ] `pnpm build` passes.
+
+## FW-059 - Squads Explorer Link On Treasury Card
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-052
+
+### What to build
+
+Add an external verification link from the Treasury overview to the corresponding Squads UI or explorer view for the multisig/Treasury addresses.
+
+### Acceptance Criteria
+
+- [ ] Link appears only after Treasury initialization.
+- [ ] Link opens in a new tab with `rel="noopener noreferrer"`.
+- [ ] Copy makes clear that FundWise remains the app workflow and Squads is the verification/governance surface.
+- [ ] `pnpm build` passes.
+
+## FW-060 - Threshold-Change Proposal Type
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-045
+
+### What to build
+
+Let Admins propose a threshold change for a Fund Mode Treasury. It should run through the normal Proposal lifecycle and update the FundWise metadata only after the approved on-chain governance action is executed or explicitly mirrored.
+
+### Acceptance Criteria
+
+- [ ] Admin-only UI can draft a threshold-change Proposal.
+- [ ] Non-admin Members cannot draft threshold-change Proposals.
+- [ ] Proposal history clearly shows old and new threshold.
+- [ ] `pnpm build` and role tests pass.
+
+## FW-061 - Monthly Fee Emulation Banner
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-047
+
+### What to build
+
+At Treasury init and around day 30 of pool age, show a non-blocking willingness-to-pay prompt for a hypothetical monthly Fund Mode subscription.
+
+### Acceptance Criteria
+
+- [ ] Prompt stores yes/no plus optional comment.
+- [ ] Prompt is non-blocking and clearly says devnet beta/no real charge.
+- [ ] Response can be viewed later in beta admin reporting.
+- [ ] `pnpm build` passes.
+
+## FW-062 - Free-Tier Limits Emulation
+
+**Status:** Ready
+**Priority:** P1
+**Type:** AFK
+**Blocked by:** FW-047
+
+### What to build
+
+Emulate future free-tier limits for beta pools, such as Member count or simulated AUM thresholds, with a mock upgrade intent flow.
+
+### Acceptance Criteria
+
+- [ ] Limit copy is clearly marked as beta research, not real billing.
+- [ ] User can express upgrade intent without paying.
+- [ ] Intent is stored for monetization analysis.
+- [ ] `pnpm build` passes.
+
+## FW-063 - Beta Exit Survey
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** FW-046
+
+### What to build
+
+When a Member leaves or completes an exit/refund flow, ask lightweight beta feedback questions about pricing fairness, feature gaps, and willingness to pay.
+
+### Acceptance Criteria
+
+- [ ] Survey has no more than 3 required questions.
+- [ ] Responses are tied to Group/pool context without exposing private data publicly.
+- [ ] User can skip.
+- [ ] `pnpm build` passes.
+
+## FW-064 - Beta Admin Dashboard
+
+**Status:** Ready
+**Priority:** P2
+**Type:** AFK
+**Blocked by:** None
+
+### What to build
+
+Build an internal beta admin surface showing active Fund Mode pools, Member counts, Contributions, Proposal counts, last activity, and monetization-response summaries.
+
+### Acceptance Criteria
+
+- [ ] Admin-only access is enforced server-side.
+- [ ] Shows active beta pools and latest activity.
+- [ ] Shows willingness-to-pay and fee-emulation responses.
+- [ ] `pnpm build` passes.
+
+## FW-065 - Weekly Beta Digest Process
+
+**Status:** Ready
+**Priority:** P2
+**Type:** HITL
+**Blocked by:** FW-064
+
+### What to build
+
+Create a simple weekly beta digest process for the owner to send in Telegram: active pools, biggest reimbursements, common feedback, and next asks.
+
+### Acceptance Criteria
+
+- [ ] Digest data can be copied from the admin dashboard or a script.
+- [ ] Template exists in docs.
+- [ ] Owner can send manually without needing new automation.
+
+## Branch Audit Snapshot (2026-05-14)
+
+This snapshot is the running record of the audit that produced FW-053 through FW-056. Kept here so future runs do not lose the context.
+
+**Scope:** `checklist` branch vs `main`. 62 files changed, +4,129 / -430 lines. 22 commits since branch point.
+
+**Tests:** `pnpm test` → 7 files, 112 tests, all pass (1.21s).
+
+**Smart-contract review:** there is no on-chain custom program in this branch. `programs/fundwise/` contains only a `.DS_Store`; the previously-committed Rust source (per `git log --all --diff-filter=A`: `programs/fundwise/src/{lib,state,accounts,errors,instructions,instructions/*.rs}` and root `Anchor.toml`/`Cargo.toml`) was deleted at some point. The Anchor IDL at `lib/anchor/group_manager.ts` is orphaned dead code. The actual on-chain mechanics that the app depends on are: SPL Token transfers (Split Mode settlements + Fund Mode contributions, signed by the user), and Squads multisig vault transactions (Fund Mode proposal create / review / execute). Verification of those flows happens server-side in `lib/server/solana-transfer-verification.ts` and `lib/server/fundwise-mutations.ts`.
+
+**Adversarial summary:**
+
+- Authentication uses HMAC-signed cookies, Ed25519 wallet signatures, 5-minute challenge TTLs, 12-hour session TTLs, and origin + cluster pinning on challenges. The flow is sound. Session cookies do NOT re-pin origin or cluster, which would let a captured session be reused if a different host runs the same `FUNDWISE_SESSION_SECRET` — operationally unlikely but worth noting.
+- Server-side mutations route through Supabase service-role from `lib/server/supabase-admin.ts`. The service-role key is never imported from client code (`grep SUPABASE_SERVICE_ROLE_KEY` confirms only `lib/server/` usage).
+- Most mutation routes correctly bind `body.actorWallet === session.wallet` before forwarding to the mutation layer. The one consistent exception is `body.payer` on Expense create (see FW-053).
+- The on-chain verification helpers cross-check the right PDAs (`getVaultPda`, `getProposalPda`, `getTransactionPda`) against multisig program ownership, which prevents PDA spoofing. They confirm Squads program ownership for the multisig and proposal accounts before decoding.
+- Settlement matching uses two snapshots around the on-chain verification — TOCTOU window described in FW-053.
+- SPL-transfer verification is delta-based and does not whitelist participants — extra side-transfers in the same signed tx slip through (see FW-055).
+- Rate limiting only covers `/api/auth/wallet/*` and is in-process — see FW-054.
+- Sanctions screening only fires on challenge issuance — see FW-053.
+
+**UI review summary:**
+
+- Split Mode dashboard: balance / activity / settlement preview flows look coherent. Duplicate "Settlement reached Solana" banner is the only material defect noticed (FW-056).
+- Fund Mode dashboard: TreasuryOverviewCard + suggested-reimbursements UX are a clean new surface. Memo and proof-URL fields are rendered as React text/href; `normalizeProofUrl` server-side restricts to http/https so `javascript:` payloads cannot land in the DB through the supported paths.
+- Cross-chain bridge modal: external `target="_blank"` link on line 348 lacks `rel="noopener noreferrer"`. Most other external links in `components/agent-section.tsx`, `components/footer.tsx`, and `components/group-dashboard/fund-mode-dashboard.tsx` also lack `rel`. Not a critical issue but worth a sweep.
+- The hardcoded `WalletAdapterNetwork.Devnet` in `components/solana-wallet-provider.tsx:47` is never wired into the actual `ConnectionProvider` — the endpoint comes from `NEXT_PUBLIC_SOLANA_RPC_URL` instead. So the constant is dead, not a misconfiguration that would force devnet at runtime.
+- Accessibility on dashboards is OK (Radix-based, focus-visible rings on Buttons). No `dangerouslySetInnerHTML` outside `components/ui/chart.tsx` (shadcn boilerplate).
+
+**Out of scope for this audit:** the production Supabase RLS policies (RLS is verified by `scripts/verify-supabase-rls.mjs` separately and not re-read here), the LI.FI route generation (covered by `docs/lifi-route-rehearsal.md`), and the Cloudflare deployment pipeline.
