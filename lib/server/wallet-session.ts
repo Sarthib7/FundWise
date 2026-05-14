@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { PublicKey } from "@solana/web3.js"
 import { FundWiseError } from "@/lib/server/fundwise-error"
+import { assertWalletIsAllowed } from "@/lib/server/sanctions-screening"
 import { getFundWiseClusterName, type FundWiseCluster } from "@/lib/solana-cluster"
 
 const WALLET_CHALLENGE_COOKIE_NAME = "fundwise_wallet_challenge"
@@ -238,6 +239,8 @@ export async function requireAuthenticatedWallet() {
   if (!session) {
     throw new FundWiseError("Wallet verification required before accessing protected FundWise data.", 401)
   }
+
+  assertWalletIsAllowed(session.wallet)
 
   return session
 }
