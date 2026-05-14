@@ -20,22 +20,33 @@ Most routes accept the same wallet-signed browser session used by the web app:
 3. \`POST /api/auth/wallet/verify\` with \`{ "wallet": "<solana-pubkey>", "signature": "<base64-signature>" }\`.
 4. Send the returned HTTP-only cookie on protected API calls.
 
-### Fundy service auth - planned
+### Fundy Telegram linking
 
-Fundy service-to-service auth is planned, not enabled on the current FundWise API routes. Until that work ships, protected routes require the browser wallet-session flow above.
+Fundy links a Telegram account to a FundWise wallet with a short-lived web-generated code:
 
-Planned headers:
+1. The Member signs into FundWise with the browser wallet session.
+2. The web app calls \`POST /api/telegram/link-code\` and shows a code like \`FW-7X9K2M\`.
+3. The code expires after 5 minutes and can be used once.
+4. The user DMs Fundy with \`/link FW-7X9K2M\`.
+5. Fundy calls \`POST /api/telegram/link\` with service auth to bind that Telegram account to the wallet.
+
+Fundy service-auth headers:
 
 \`\`\`http
 Authorization: Bearer <FUNDWISE_SERVICE_API_KEY>
-X-Fundy-Wallet: <linked-solana-wallet>
 Content-Type: application/json
 \`\`\`
 
-Planned rules:
+Fundy acting-wallet header for later linked-user API calls:
 
-- \`FUNDWISE_SERVICE_API_KEY\` must be configured on the FundWise web app deployment.
-- \`X-Fundy-Wallet\` is the linked Member wallet Fundy is acting for.
+\`\`\`http
+X-Fundy-Wallet: <linked-solana-wallet>
+\`\`\`
+
+Rules:
+
+- \`FUNDWISE_SERVICE_API_KEY\` must be configured on both the FundWise web app deployment and Fundy service.
+- \`X-Fundy-Wallet\` is the linked Member wallet Fundy is acting for when a route explicitly supports Fundy service auth.
 - Server-side membership and ownership checks still apply.
 - Fundy must not execute money movement. Settlement and Contribution transfers still require wallet confirmation in the web app; API routes only record verified transaction signatures after the user signs.
 - Third-party agents should not use the Fundy service key. Scoped Agent Access tokens are the planned external-agent auth path.
@@ -168,6 +179,62 @@ Response:
 
 \`\`\`json
 { "authenticated": true, "wallet": "<solana-pubkey>" }
+\`\`\`
+
+### Fundy Telegram auth
+
+#### POST /api/telegram/link-code
+
+Create a one-time Telegram link code for the authenticated wallet. The code is shown in the web app and pasted into Fundy's DM as \`/link FW-XXXXXX\`.
+
+Auth: browser wallet session.
+
+Response:
+
+\`\`\`json
+{ "code": "FW-7X9K2M", "expiresAt": "2026-05-14T14:35:00.000Z" }
+\`\`\`
+
+#### POST /api/telegram/link
+
+Consume a one-time Telegram link code and bind one Telegram user id to the wallet that generated the code.
+
+Auth: Fundy service auth.
+
+Request:
+
+\`\`\`json
+{
+  "code": "FW-7X9K2M",
+  "telegramId": "123456789",
+  "telegramUsername": "sarthi",
+  "telegramFirstName": "Sarthi",
+  "telegramLastName": "Borkar"
+}
+\`\`\`
+
+Response:
+
+\`\`\`json
+{ "linked": true, "wallet": "<solana-pubkey>", "link": { "telegramId": "123456789", "wallet": "<solana-pubkey>" } }
+\`\`\`
+
+#### GET /api/telegram/link?telegramId=<telegramId>
+
+Return the active wallet link for a Telegram user.
+
+Auth: Fundy service auth.
+
+#### DELETE /api/telegram/link
+
+Deactivate the active Telegram wallet link for a Telegram user.
+
+Auth: Fundy service auth.
+
+Request:
+
+\`\`\`json
+{ "telegramId": "123456789" }
 \`\`\`
 
 ### Groups
@@ -518,7 +585,7 @@ Current protected calls require a browser wallet session:
 - Read Receipts: \`GET /api/settlements/{settlementId}\`
 - Generate Settlement links in the client using the existing web URL: \`${origin}/groups/{groupId}?settle=<debtor-wallet>\`
 
-Use mutation routes only for explicit Member-directed actions. Money-moving actions still deep-link to the web app for wallet signing. Fundy service auth is planned and should not be treated as available until the API routes implement it.
+Use mutation routes only for explicit Member-directed actions. Money-moving actions still deep-link to the web app for wallet signing. Fundy service auth is currently available for Telegram link management; other protected routes require browser wallet sessions unless their docs explicitly say they support Fundy service auth.
 `
 }
 
@@ -550,7 +617,7 @@ Agents may help Members with read-only and draft-safe workflows:
 - Summarize who owes whom in a Group.
 - Suggest next actions, reminders, and Settlement Request Links.
 - Draft Expenses or proof-upload intents when a draft API is available.
-- For Fundy later, call FundWise APIs with service-to-service auth for linked Telegram users after that auth path ships.
+- For Fundy, link Telegram users to FundWise wallets through the 5-minute \`/api/telegram/link-code\` -> \`/link FW-XXXXXX\` -> \`/api/telegram/link\` flow.
 
 ## What agents must not do
 
@@ -566,19 +633,24 @@ Agents must not:
 
 ## Auth model
 
-### Fundy service auth - planned
+### Fundy service auth
 
-Fundy is the planned hosted Telegram bot that runs the FundWise Agent. Fundy will link a Telegram user to one active Solana wallet, then call the FundWise HTTP API as that wallet. This service-auth path is not enabled on the current API routes; protected routes currently require browser wallet sessions.
+Fundy is the hosted Telegram bot that runs the FundWise Agent. Fundy links a Telegram user to one active Solana wallet by having the signed-in web app generate a 5-minute code at \`POST /api/telegram/link-code\`; the user pastes that code in Fundy's DM with \`/link FW-XXXXXX\`; Fundy consumes it through \`POST /api/telegram/link\`.
 
-Planned headers:
+Service-auth headers:
 
 \`\`\`http
 Authorization: Bearer <FUNDWISE_SERVICE_API_KEY>
-X-Fundy-Wallet: <linked-solana-wallet>
 Content-Type: application/json
 \`\`\`
 
-When implemented, the FundWise server will treat \`X-Fundy-Wallet\` as the acting Member wallet only after the service key is verified. Group membership, creator ownership, and wallet-match checks will still apply.
+Later linked-user calls may also include:
+
+\`\`\`http
+X-Fundy-Wallet: <linked-solana-wallet>
+\`\`\`
+
+The FundWise server treats \`X-Fundy-Wallet\` as the acting Member wallet only on routes that explicitly support Fundy service auth after the service key is verified. Group membership, creator ownership, and wallet-match checks still apply.
 
 ### Browser wallet session
 
@@ -603,6 +675,13 @@ FundWise does not currently expose paid API access or commerce checkout routes. 
 ## Main API entry points
 
 Fetch ${origin}/api/docs for full request and response examples.
+
+Current auth/link APIs:
+
+- \`POST /api/telegram/link-code\` — create a 5-minute one-time code for the wallet-authenticated Member.
+- \`POST /api/telegram/link\` — Fundy consumes \`/link FW-XXXXXX\` and binds Telegram user -> wallet.
+- \`GET /api/telegram/link?telegramId=<telegramId>\` — Fundy checks the active link.
+- \`DELETE /api/telegram/link\` — Fundy unlinks a Telegram user.
 
 Current browser-session read APIs:
 
