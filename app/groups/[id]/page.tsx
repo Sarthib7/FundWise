@@ -27,6 +27,7 @@ import type { Database } from "@/lib/database.types"
 import { toast } from "sonner"
 import {
   AlertCircle,
+  Bot,
   Check,
   Copy,
   Landmark,
@@ -343,6 +344,10 @@ export default function GroupDashboard() {
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [profileName, setProfileName] = useState("")
+  const [fundyLinkCode, setFundyLinkCode] = useState<string | null>(null)
+  const [fundyLinkCodeExpiresAt, setFundyLinkCodeExpiresAt] = useState<string | null>(null)
+  const [isCreatingFundyLinkCode, setIsCreatingFundyLinkCode] = useState(false)
+  const [fundyLinkCommandCopied, setFundyLinkCommandCopied] = useState(false)
 
   const [expenseAmount, setExpenseAmount] = useState("")
   const [expenseMemo, setExpenseMemo] = useState("")
@@ -387,6 +392,38 @@ export default function GroupDashboard() {
       setShowProfileDialog(false)
     }
   }, [profileName, saveProfileName])
+
+  const copyFundyLinkCommand = useCallback(async (code: string) => {
+    const command = `/link ${code}`
+    await navigator.clipboard.writeText(command)
+    setFundyLinkCommandCopied(true)
+    toast.success("Fundy link command copied", { description: command })
+  }, [])
+
+  const createFundyLinkCode = useCallback(async () => {
+    setIsCreatingFundyLinkCode(true)
+    setFundyLinkCommandCopied(false)
+
+    try {
+      const response = await fetch("/api/telegram/link-code", { method: "POST" })
+      const payload = (await response.json()) as { code?: string; expiresAt?: string; error?: string }
+
+      if (!response.ok || !payload.code || !payload.expiresAt) {
+        throw new Error(payload.error || "Failed to create Fundy link code")
+      }
+
+      setFundyLinkCode(payload.code)
+      setFundyLinkCodeExpiresAt(payload.expiresAt)
+      await copyFundyLinkCommand(payload.code)
+      toast.success("Fundy link code ready", {
+        description: "Paste the copied /link command in your Fundy Telegram DM.",
+      })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create Fundy link code")
+    } finally {
+      setIsCreatingFundyLinkCode(false)
+    }
+  }, [copyFundyLinkCommand])
 
   const handleContribute = useCallback(async () => {
     const contributed = await contribute(contributionAmount)
@@ -788,6 +825,22 @@ export default function GroupDashboard() {
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
+                  {isMember && walletAddress ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 sm:min-h-10"
+                      onClick={() => void createFundyLinkCode()}
+                      disabled={isCreatingFundyLinkCode}
+                    >
+                      {isCreatingFundyLinkCode ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Bot className="h-4 w-4 mr-2" />
+                      )}
+                      Link Fundy
+                    </Button>
+                  ) : null}
                   <Button
                     variant="outline"
                     size="sm"
@@ -825,6 +878,34 @@ export default function GroupDashboard() {
                   )}
                 </div>
               </div>
+
+              {fundyLinkCode ? (
+                <Card className="border-accent/20 bg-accent/5 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">Fundy link code ready</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        DM Fundy this command to connect Telegram to your FundWise wallet.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 justify-start font-mono sm:min-h-10"
+                      onClick={() => void copyFundyLinkCommand(fundyLinkCode)}
+                    >
+                      {fundyLinkCommandCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                      /link {fundyLinkCode}
+                    </Button>
+                  </div>
+                  {fundyLinkCodeExpiresAt ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Expires at {new Date(fundyLinkCodeExpiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.
+                    </p>
+                  ) : null}
+                </Card>
+              ) : null}
 
               {!isFundMode && (
                 <SplitModeDashboard
