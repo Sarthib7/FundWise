@@ -79,18 +79,19 @@ Lead with shared spending and trust:
 
 Keep crypto mechanics in the background until the user is in a wallet, Settlement, Receipt, Treasury, or developer context.
 
-### Hackathon
+### Product / launch story
 
-Lead with one coherent demo path:
+Lead with one coherent path:
 
 `Group -> Expense -> Balance -> Settlement -> Receipt`
 
 Then explain:
 
 - Settlement Request Links are the acquisition loop.
-- LI.FI helps when the debtor's funds are not already Solana USDC.
+- CCTP + LI.FI help when the debtor's funds are not already Solana USDC (post-launch multi-chain phase).
+- Privy + MoonPay + Bridge.xyz cover fiat onboarding for non-crypto users (later phase); Squads Protocol stays the group-treasury layer.
 - Zerion helps with wallet readiness and agent-style analysis.
-- Fund Mode is the hero direction, but public claims wait for the Proposal lifecycle.
+- Fund Mode is the hero direction and ships alongside Split Mode at the Summit Berlin launch (2026-06-13).
 
 ### Investor
 

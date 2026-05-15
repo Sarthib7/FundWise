@@ -8,7 +8,7 @@ Competitive positioning: do not claim an empty category or "first crypto Splitwi
 
 | Surface | Current state | Public positioning |
 | --- | --- | --- |
-| Split Mode | Shipped devnet MVP | Primary product and hackathon demo path: Group, Expense, Balance, Settlement, Receipt |
+| Split Mode | Shipped devnet MVP | Primary product path: Group, Expense, Balance, Settlement, Receipt |
 | Settlement Request Links | Shipped / core loop | Shareable debtor flow that resolves the live Balance, requires wallet confirmation, and never auto-sends |
 | Source Currency entry | Future | Do not demo as real behavior until Exchange Rate Snapshots and converted USD/USDC ledger values are stored end to end |
 | Expense Proof upload | Future | Do not demo as real behavior until storage, preview, size limits, and access rules are implemented |
@@ -22,5 +22,5 @@ Competitive positioning: do not claim an empty category or "first crypto Splitwi
 | Fundy | Planned separate repo | Telegram/personal-finance companion after Split Mode; read-only and draft-safe first; money movement deep-links back to the web app |
 | Receipt Endpoint | Planned FundLabs product | Agent-commerce receipt API; should grow from FundWise Receipts and Payable Settlement Requests, not be claimed as live |
 | Visa / IBAN / Altitude-style top-ups | Future | Non-crypto onboarding and card/bank-rail partnerships after the crypto-native core is reliable |
-| Fund Mode mini-games | Out of scope for FundWise | Do not include in Split Mode, the hackathon story, or Fund Mode until separately justified outside prediction-market-like scope |
+| Fund Mode mini-games | Out of scope for FundWise | Do not include in Split Mode, the launch story, or Fund Mode until separately justified outside prediction-market-like scope |
 | Tax guidance | Future Fundy surface | Belongs to Fundy/personal-finance expansion, not the FundWise web MVP |

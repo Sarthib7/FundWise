@@ -15,10 +15,9 @@ Read these in order:
 3. [CONTEXT.md](./CONTEXT.md)
 4. [docs/positioning.md](./docs/positioning.md)
 5. [ROADMAP.md](./ROADMAP.md)
-6. [HACKATHON_PLAN.md](./HACKATHON_PLAN.md)
-7. [PRD.md](./PRD.md)
-8. [issues.md](./issues.md)
-9. [docs/adr/](./docs/adr/)
+6. [PRD.md](./PRD.md)
+7. [issues.md](./issues.md)
+8. [docs/adr/](./docs/adr/)
 
 Quick links:
 
@@ -27,8 +26,6 @@ Quick links:
 - [docs/positioning.md](./docs/positioning.md) - canonical tagline, FundLabs positioning, messaging hierarchy, and claims guardrails
 - [PRD.md](./PRD.md) - MVP scope, user stories, implementation decisions
 - [ROADMAP.md](./ROADMAP.md) - phased delivery plan
-- [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) - track strategy and sponsor framing
-- [SUBMISSION.md](./SUBMISSION.md) - judge-facing demo script and submission copy
 - [issues.md](./issues.md) - active indexed `FW-*` backlog, pick queue, handoff notes, and branch-audit findings
 - [docs/README.md](./docs/README.md) - full documentation index by root docs, execution checklists, API/agent docs, security docs, research, ADRs, and topic groups
 - [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md) - Split Mode production/mainnet launch checklist
@@ -132,7 +129,6 @@ Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical 
 /
 ├── AGENTS.md
 ├── CONTEXT.md
-├── HACKATHON_PLAN.md
 ├── PRD.md
 ├── ROADMAP.md
 ├── STATUS.md
@@ -171,7 +167,7 @@ Use [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) as the canonical 
 │   └── supabase.ts
 ├── docs/
 │   ├── adr/                         ← active architecture decisions
-│   └── archive/                      ← deferred ADRs (post-hackathon)
+│   └── archive/                      ← deferred ADRs
 ├── tests/
 │   └── *.test.ts                     ← vitest coverage for ledger, API, and audit guards
 ├── vitest.config.ts

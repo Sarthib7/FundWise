@@ -128,6 +128,5 @@ The intent is to strengthen the FundWise sponsor story (Zerion track) without mi
 
 ## Related
 
-- Track context: [HACKATHON_PLAN.md](../HACKATHON_PLAN.md)
 - Issue: `FW-005` in [issues.md](../issues.md)
 - Future: Fundy will reuse the same Zerion CLI behind `/analyze`, `/readiness`, `/verify` (see [ADR-0018](./adr/0018-fundy-telegram-bot.md)).

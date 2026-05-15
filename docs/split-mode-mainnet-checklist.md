@@ -168,7 +168,7 @@ Notes:
 | --- | --- |
 | Flip `NEXT_PUBLIC_SOLANA_RPC_URL` to mainnet on prod env | Pending Phase 4 |
 | Verify cluster badge reads `mainnet` for new Groups | Pending Phase 4 |
-| Update `README.md`, `STATUS.md`, `docs/shipped-vs-planned.md`, `SUBMISSION.md` to say "Split Mode is live on mainnet" | Pending Phase 4 |
+| Update `README.md`, `STATUS.md`, `docs/shipped-vs-planned.md` to say "Split Mode is live on mainnet" | Pending Phase 4 |
 | Update landing copy + footer copyright year if needed | Pending Phase 4 |
 | Announce on X + Telegram | Pending Phase 4 |
 | Monitor first 48h: error rate, settlement success rate, support requests in Telegram | Pending Phase 4 |
@@ -215,6 +215,6 @@ There is no rollback for on-chain transfers — once USDC moves, it's moved. The
 Split Mode is "live on mainnet" when:
 
 1. All Phase 1-4 items above are ✅
-2. README, STATUS, SUBMISSION, and `docs/shipped-vs-planned.md` all say "Split Mode mainnet"
+2. README, STATUS, and `docs/shipped-vs-planned.md` all say "Split Mode mainnet"
 3. At least one third-party (not owner) has completed an end-to-end Settlement on mainnet
 4. 48h of post-launch monitoring shows no P0/P1 incidents

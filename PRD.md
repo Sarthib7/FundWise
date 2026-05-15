@@ -23,7 +23,7 @@ FundWise is a web app with wallet-native identity and two product modes:
 
 Within the FundLabs product family, FundWise owns the shared-finance web product. Fundy owns Telegram and personal-agent distribution. Receipt Endpoint is the planned developer surface for structured, verifiable agent-payment receipts. These products should share language, auth boundaries, Spending Policies, and Receipt semantics, but they must not be claimed as shipped FundWise functionality until implemented.
 
-For the hackathon MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI and Zerion are supporting layers, not the core path. LI.FI should become the first sponsor-layer path after Split Mode hardening, helping EVM-first users route funds during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can later help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
+For the MVP, the source of truth is the web app and the default settlement asset is USDC. LI.FI is the inbound multi-chain rail (paired with Circle CCTP) that lets EVM-first users route funds into Solana USDC during Settlement through `Route funds for Settlement` language instead of bridge jargon. Zerion can help with wallet analysis, reminders, and agent flows. Neither should complicate the primary user journey:
 
 `Group -> Expense -> Balance -> Settlement -> Receipt`
 
@@ -75,9 +75,8 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 23. As an Expense creator, I want to edit or delete my own Expense before later Settlements make that unsafe, so that I can fix mistakes without corrupting the ledger.
 24. As a Member, I want to leave a Group only when my Balance is zero, so that the Group ledger does not end up with orphaned debts.
 25. As a group organizer, I want the product to work on mobile web, so that people can join and settle from their phones during real shared-spending moments.
-26. As a hackathon judge, I want to understand the main demo path in one pass, so that the product story feels coherent and not overloaded with sponsor features.
-27. As a future user with funds on another chain, I want LI.FI to help me arrive at Solana USDC, so that cross-chain funds do not block settlement.
-28. As a future user, I want sponsor integrations to reduce friction around funding and discovery, so that the app becomes easier to use without changing its core ledger model.
+26. As a future user with funds on another chain, I want CCTP and LI.FI to help me arrive at Solana USDC, so that cross-chain funds do not block settlement.
+27. As a future user, I want partner integrations to reduce friction around funding and discovery, so that the app becomes easier to use without changing its core ledger model.
 29. As a Fund Mode organizer, I want to create a Treasury-based Group later, so that a shared budget can be pooled before spending.
 30. As a Fund Mode Member, I want to make Contributions and approve Proposals later, so that pooled spending stays collaborative and auditable.
 31. As a disconnected visitor on `/groups`, I want one obvious wallet connect action, so that I can unlock the app without reading through extra marketing copy.
@@ -127,7 +126,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Fundy v1 is **command-based** (fixed commands); the end goal is an **LLM-backed** assistant (e.g. OpenRouter) with the same underlying tools. Fundy runs on **Railway** as a separate service from the Next.js app and now lives in a **separate repository** per ADR-0022. It calls FundWise through the **same HTTP API** as other clients, using service-to-service auth and later Scoped Agent Access, not ad-hoc direct Supabase access from the bot.
 - Fundy supports read-only views (Balances, Expenses, Settlements, Receipts), draft-safe actions (draft Expense, upload proof), comments, and history. **Proposal approve/reject** may run from Fundy when those updates are **database-only**; **on-chain** Settlement, Contribution, and Proposal **execution** bounce the Member to the web app with **Settlement Request Links** used for settle intents where applicable.
 - Fundy integrates **Zerion CLI** for **`/analyze`**, **`/readiness`**, and **`/verify`** (wallet + transaction history). Prefer **`ZERION_API_KEY`** (free dev tier) for v1; optional **x402** pay-per-call on Solana later.
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise. They are not Split Mode scope, Fund Mode beta scope, or hackathon submission scope.
+- Mini-games and prediction-market-like mechanics are out of scope for FundWise. They are not Split Mode scope, Fund Mode beta scope, or launch scope.
 - Scoped Agent Access includes **user-generated agent tokens** managed from **`/profile/agents`** (rotate, delete, renew, scopes) plus optional **wallet-signed** agent authentication for agents that can sign Solana messages.
 - The Agent Skill document lives at **`https://fundwise.fun/skill.md`** and is the shipped public discovery baseline. Scoped tokens, agent payment authority, and agent-paid Settlement execution remain planned.
 - Later onboarding work should help web2 users reach stablecoin balances with far less friction, potentially through Visa cards, IBAN/bank-transfer funding, fiat rails, and Altitude-style Solana banking flows, but only after the crypto-native core flow and agent surfaces are reliable.
@@ -180,7 +179,7 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 - Sponsor integration tests should mock LI.FI and Zerion boundaries and assert the app's decisions, not vendor SDK internals.
 - Wallet and token transfer tests should cover insufficient-USDC, insufficient-SOL, and recipient token-account creation decisions.
 - Mobile-focused smoke tests should cover join-from-link, settle-from-link, post-connect intent restoration, zero-state create flow, and receipt rendering on common narrow viewports.
-- The current codebase has limited formal test coverage, so post-hackathon work should start by extracting pure modules and testing those first.
+- The current codebase has limited formal test coverage; ongoing work should start by extracting pure modules and testing those first.
 
 ## Out of Scope
 
@@ -210,9 +209,9 @@ For the hackathon MVP, the source of truth is the web app and the default settle
 
 ## Further Notes
 
-- The main hackathon story should stay simple: private Group creation, structured Expense entry, live Balance view, one-click USDC settlement, and a clear Receipt. Source Currency and Expense Proof should be discussed only as future improvements unless implemented end to end.
+- The main product story should stay simple: private Group creation, structured Expense entry, live Balance view, one-click USDC settlement, and a clear Receipt. Source Currency and Expense Proof should be discussed only as future improvements unless implemented end to end.
 - Do not claim an empty market. The correct positioning is not "the first crypto Splitwise"; it is "wallet-native Group settlement with live USDC finality and verifiable Receipts."
-- Sponsor integrations should be framed as supporting layers. LI.FI helps when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
+- Multi-chain and wallet-readiness layers are supporting features. CCTP and LI.FI help when a debtor's funds are not already on Solana in USDC. Zerion helps with wallet analysis, reminders, and future agent functionality.
 - Fund Mode is the north-star product and should be documented as Treasury plus Proposal functionality. It should not be claimed as complete until Proposal creation, approval/rejection, proof/history, and execution are implemented end to end.
 - Treat live yield, automatic Settlement, any-chain / any-currency Settlement, gasless UX, Fundy execution, Receipt Endpoint APIs, and agent-paid money movement as future claims unless they are implemented end to end and reclassified in [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md).
 - Longer-term roadmap candidates include embedded wallets, social login, gas abstraction, multi-chain top-ups, FundWise Agent distribution surfaces, and broader mobile surfaces, but those should be added only after the core Group ledger and settlement experience is genuinely reliable.
