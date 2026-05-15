@@ -82,6 +82,7 @@ export interface Database {
           wallet: string
           display_name: string | null
           joined_at: string
+          role: "admin" | "member" | "viewer"
         }
         Insert: {
           id?: string
@@ -89,6 +90,7 @@ export interface Database {
           wallet: string
           display_name?: string | null
           joined_at?: string
+          role?: "admin" | "member" | "viewer"
         }
         Update: {
           id?: string
@@ -96,6 +98,7 @@ export interface Database {
           wallet?: string
           display_name?: string | null
           joined_at?: string
+          role?: "admin" | "member" | "viewer"
         }
         Relationships: []
       }
@@ -311,12 +314,14 @@ export interface Database {
           id: string
           group_id: string
           proposer_wallet: string
-          recipient_wallet: string
-          amount: number
-          mint: string
+          recipient_wallet: string | null
+          amount: number | null
+          mint: string | null
           memo: string | null
           proof_url: string | null
           status: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          kind: "reimbursement" | "threshold_change" | "exit_refund"
+          target_threshold: number | null
           squads_transaction_index: number | null
           squads_proposal_address: string | null
           squads_transaction_address: string | null
@@ -330,12 +335,14 @@ export interface Database {
           id?: string
           group_id: string
           proposer_wallet: string
-          recipient_wallet: string
-          amount: number
-          mint: string
+          recipient_wallet?: string | null
+          amount?: number | null
+          mint?: string | null
           memo?: string | null
           proof_url?: string | null
           status?: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          kind?: "reimbursement" | "threshold_change" | "exit_refund"
+          target_threshold?: number | null
           squads_transaction_index?: number | null
           squads_proposal_address?: string | null
           squads_transaction_address?: string | null
@@ -349,12 +356,14 @@ export interface Database {
           id?: string
           group_id?: string
           proposer_wallet?: string
-          recipient_wallet?: string
-          amount?: number
-          mint?: string
+          recipient_wallet?: string | null
+          amount?: number | null
+          mint?: string | null
           memo?: string | null
           proof_url?: string | null
           status?: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+          kind?: "reimbursement" | "threshold_change" | "exit_refund"
+          target_threshold?: number | null
           squads_transaction_index?: number | null
           squads_proposal_address?: string | null
           squads_transaction_address?: string | null
@@ -363,6 +372,75 @@ export interface Database {
           created_at?: string
           updated_at?: string
           executed_at?: string | null
+        }
+        Relationships: []
+      }
+      fund_mode_creation_fees: {
+        Row: {
+          id: string
+          group_id: string
+          payer_wallet: string
+          amount: number | null
+          mint: string | null
+          tx_sig: string | null
+          outcome: "paid" | "skipped"
+          emulated_usd_cents: number | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          payer_wallet: string
+          amount?: number | null
+          mint?: string | null
+          tx_sig?: string | null
+          outcome: "paid" | "skipped"
+          emulated_usd_cents?: number | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          payer_wallet?: string
+          amount?: number | null
+          mint?: string | null
+          tx_sig?: string | null
+          outcome?: "paid" | "skipped"
+          emulated_usd_cents?: number | null
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      monetization_responses: {
+        Row: {
+          id: string
+          kind: "monthly_fee_wtp" | "free_tier_cap" | "exit_survey"
+          group_id: string | null
+          member_wallet: string
+          emulated_usd_cents: number | null
+          payload: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          kind: "monthly_fee_wtp" | "free_tier_cap" | "exit_survey"
+          group_id?: string | null
+          member_wallet: string
+          emulated_usd_cents?: number | null
+          payload?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          kind?: "monthly_fee_wtp" | "free_tier_cap" | "exit_survey"
+          group_id?: string | null
+          member_wallet?: string
+          emulated_usd_cents?: number | null
+          payload?: Json
+          created_at?: string
         }
         Relationships: []
       }
@@ -477,6 +555,8 @@ export interface Database {
       group_mode: "split" | "fund"
       split_method: "equal" | "exact" | "shares" | "percentage"
       proposal_status: "pending" | "approved" | "executed" | "rejected" | "cancelled"
+      member_role: "admin" | "member" | "viewer"
+      proposal_kind: "reimbursement" | "threshold_change" | "exit_refund"
     }
     CompositeTypes: Record<string, never>
   }
