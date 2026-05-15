@@ -22,8 +22,27 @@ import {
 import * as multisig from "@sqds/multisig"
 import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
 import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
+import type { FundWiseCluster } from "@/lib/solana-cluster"
 
-export const connection = createFundWiseConnectionForCluster("devnet", "confirmed")
+// Fund Mode cluster is env-driven so the same Squads helpers can target
+// mainnet once the beta graduates without recompiling anything.
+function getFundModeCluster(): FundWiseCluster {
+  const raw =
+    (typeof process !== "undefined" && process.env
+      ? process.env.NEXT_PUBLIC_FUNDWISE_FUND_MODE_CLUSTER ??
+        process.env.FUNDWISE_FUND_MODE_CLUSTER ??
+        ""
+      : ""
+    )
+      .trim()
+      .toLowerCase()
+  if (raw === "mainnet" || raw === "mainnet-beta") return "mainnet-beta"
+  if (raw === "custom") return "custom"
+  return "devnet"
+}
+
+export const FUND_MODE_CLUSTER: FundWiseCluster = getFundModeCluster()
+export const connection = createFundWiseConnectionForCluster(FUND_MODE_CLUSTER, "confirmed")
 
 type WalletSigner = {
   sendTransaction?: (
@@ -274,7 +293,7 @@ export async function contributeStablecoinToTreasury(
     mintAddress,
     amount,
     recipientOwnerOffCurve: true,
-    cluster: "devnet",
+    cluster: FUND_MODE_CLUSTER,
   })
 
   return { signature }

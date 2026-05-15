@@ -1,14 +1,27 @@
 import { getAssociatedTokenAddress } from "@solana/spl-token"
 import { Connection, PublicKey, type ParsedTransactionWithMeta, type TokenBalance } from "@solana/web3.js"
 import { createFundWiseConnection, createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
+import type { FundWiseCluster } from "@/lib/solana-cluster"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 
 const VERIFICATION_COMMITMENT = "confirmed"
 const MAX_VERIFICATION_ATTEMPTS = 12
 const VERIFICATION_RETRY_DELAY_MS = 1000
 
+// Same env-driven Fund Mode cluster as the mutations layer so verification
+// reads against the right RPC pool when Fund Mode graduates from devnet.
+function getFundModeCluster(): FundWiseCluster {
+  const raw = (process.env.FUNDWISE_FUND_MODE_CLUSTER ?? "").trim().toLowerCase()
+  if (raw === "mainnet" || raw === "mainnet-beta") return "mainnet-beta"
+  if (raw === "custom") return "custom"
+  return "devnet"
+}
+
 const connection = createFundWiseConnection(VERIFICATION_COMMITMENT)
-const fundModeConnection = createFundWiseConnectionForCluster("devnet", VERIFICATION_COMMITMENT)
+const fundModeConnection = createFundWiseConnectionForCluster(
+  getFundModeCluster(),
+  VERIFICATION_COMMITMENT
+)
 
 type TokenBalanceSnapshot = {
   mint?: string

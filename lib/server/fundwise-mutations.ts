@@ -6,7 +6,22 @@ import {
   simplifySettlements,
 } from "@/lib/expense-engine"
 import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
+import type { FundWiseCluster } from "@/lib/solana-cluster"
 import { isFundModeTemplateId, type FundModeTemplateId } from "@/lib/fund-mode-templates"
+import {
+  FUND_MODE_ROLES,
+  isFundModeRole,
+  roleCan,
+  type FundModeAction,
+  type FundModeRole,
+} from "@/lib/fund-mode-roles"
+import {
+  FUND_MODE_BETA_PRICING,
+  evaluateFreeTier,
+  fundModeCreationFeeWallet,
+  tokenAmountToUsdCents,
+  type FundModeMonetizationKind,
+} from "@/lib/fund-mode-monetization"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getGroupDashboardSnapshot } from "@/lib/server/fundwise-reads"
 import {
@@ -50,6 +65,16 @@ type SquadsProposalReader = {
 
 function getAdmin() {
   return getSupabaseAdmin()
+}
+
+// Fund Mode currently runs on devnet for the invite-only beta, but the
+// graduation path needs an env-driven cluster choice so flipping to mainnet
+// after the beta requires zero code changes.
+function getFundModeCluster(): FundWiseCluster {
+  const raw = (process.env.FUNDWISE_FUND_MODE_CLUSTER ?? "").trim().toLowerCase()
+  if (raw === "mainnet" || raw === "mainnet-beta") return "mainnet-beta"
+  if (raw === "custom") return "custom"
+  return "devnet"
 }
 
 function isMissingColumnSchemaCacheError(error: SupabaseMutationError, column: string) {
@@ -234,7 +259,7 @@ export async function verifyFundModeTreasuryAddresses(
     multisigAddress: string
     treasuryAddress: string
   },
-  accountReader: TreasuryAccountReader = createFundWiseConnectionForCluster("devnet", "confirmed")
+  accountReader: TreasuryAccountReader = createFundWiseConnectionForCluster(getFundModeCluster(), "confirmed")
 ) {
   const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
   const treasuryPubkey = parsePublicKey(data.treasuryAddress, "Treasury address")
@@ -285,7 +310,7 @@ export async function verifyFundModeTreasuryAddresses(
 
 async function loadSquadsProposal(
   proposalAddress: string,
-  accountReader: SquadsProposalReader = createFundWiseConnectionForCluster("devnet", "confirmed")
+  accountReader: SquadsProposalReader = createFundWiseConnectionForCluster(getFundModeCluster(), "confirmed")
 ) {
   const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
   const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")
@@ -495,6 +520,53 @@ async function assertWalletIsMember(groupId: string, wallet: string, message: st
   }
 }
 
+async function getMemberRoleOrThrow(
+  groupId: string,
+  wallet: string,
+  message: string
+): Promise<FundModeRole> {
+  const { data, error } = await getAdmin()
+    .from("members")
+    .select("role")
+    .eq("group_id", groupId)
+    .eq("wallet", wallet)
+    .maybeSingle()
+
+  if (error) {
+    // Schema cache returns PGRST204 when the `role` column has not been added
+    // yet — fall back to "member" so devnet rehearsals continue while the
+    // operator replays migration 20260515100000_fund_mode_beta_completion.sql.
+    if (isMissingColumnSchemaCacheError(error, "role")) {
+      return "member"
+    }
+    throw new FundWiseError(`Failed to load Member role: ${error.message}`)
+  }
+
+  if (!data) {
+    throw new FundWiseError(message)
+  }
+
+  const value = (data as { role?: string }).role
+  return isFundModeRole(value) ? value : "member"
+}
+
+async function assertMemberCan(
+  groupId: string,
+  wallet: string,
+  action: FundModeAction,
+  deniedMessage: string
+): Promise<FundModeRole> {
+  const role = await getMemberRoleOrThrow(
+    groupId,
+    wallet,
+    "Only Group Members can perform this action."
+  )
+  if (!roleCan(role, action)) {
+    throw new FundWiseError(deniedMessage, 403)
+  }
+  return role
+}
+
 async function assertWalletsAreMembers(groupId: string, wallets: string[], message: string) {
   const uniqueWallets = Array.from(new Set(wallets))
 
@@ -517,14 +589,29 @@ async function assertWalletsAreMembers(groupId: string, wallets: string[], messa
   }
 }
 
-async function addMemberInternal(groupId: string, wallet: string, displayName?: string) {
+async function addMemberInternal(
+  groupId: string,
+  wallet: string,
+  displayName?: string,
+  role: FundModeRole = "member"
+) {
   const profile = displayName ? null : await getProfile(wallet)
 
-  const { error } = await getAdmin().from("members").insert({
+  const insertWithRole = {
     group_id: groupId,
     wallet,
     display_name: displayName || profile?.display_name || null,
-  })
+    role,
+  }
+
+  let { error } = await getAdmin().from("members").insert(insertWithRole)
+
+  if (error && isMissingColumnSchemaCacheError(error, "role")) {
+    // Fallback for projects that have not replayed the FW-045 migration yet.
+    const { role: _role, ...insertWithoutRole } = insertWithRole
+    const fallback = await getAdmin().from("members").insert(insertWithoutRole)
+    error = fallback.error
+  }
 
   if (error && error.code !== "23505") {
     throw new FundWiseError(`Failed to add member: ${error.message}`)
@@ -590,7 +677,7 @@ export async function createGroupMutation(data: {
     throw new FundWiseError("Failed to create group: no row returned.")
   }
 
-  await addMemberInternal(group.id, data.createdBy)
+  await addMemberInternal(group.id, data.createdBy, undefined, "admin")
 
   return group
 }
@@ -1068,16 +1155,20 @@ export async function addContributionMutation(data: {
   return contribution
 }
 
+export type ProposalKind = "reimbursement" | "threshold_change" | "exit_refund"
+
 export async function addProposalMutation(data: {
   groupId: string
   proposerWallet: string
-  recipientWallet: string
-  amount: number
-  mint: string
-  squadsTransactionIndex: number
-  squadsProposalAddress: string
-  squadsTransactionAddress: string
-  squadsCreateTxSig: string
+  recipientWallet?: string | null
+  amount?: number | null
+  mint?: string | null
+  kind?: ProposalKind
+  targetThreshold?: number | null
+  squadsTransactionIndex?: number | null
+  squadsProposalAddress?: string | null
+  squadsTransactionAddress?: string | null
+  squadsCreateTxSig?: string | null
   proofUrl?: string | null
   memo?: string | null
 }) {
@@ -1088,7 +1179,39 @@ export async function addProposalMutation(data: {
   }
 
   if (!group.multisig_address || !group.treasury_address) {
-    throw new FundWiseError("Treasury must be initialized before creating reimbursement Proposals.")
+    throw new FundWiseError("Treasury must be initialized before creating Proposals.")
+  }
+
+  await assertMemberCan(
+    data.groupId,
+    data.proposerWallet,
+    "create_proposal",
+    "Viewers cannot create Proposals."
+  )
+
+  const kind: ProposalKind = data.kind ?? "reimbursement"
+
+  if (kind === "threshold_change") {
+    return await addThresholdChangeProposalInternal({
+      groupId: data.groupId,
+      proposerWallet: data.proposerWallet,
+      targetThreshold: data.targetThreshold ?? 0,
+      memo: data.memo ?? null,
+    })
+  }
+
+  // reimbursement + exit_refund both require Squads metadata and a Member
+  // recipient.
+  if (
+    !data.recipientWallet ||
+    typeof data.amount !== "number" ||
+    !data.mint ||
+    typeof data.squadsTransactionIndex !== "number" ||
+    !data.squadsProposalAddress ||
+    !data.squadsTransactionAddress ||
+    !data.squadsCreateTxSig
+  ) {
+    throw new FundWiseError("Reimbursement Proposals require recipient, amount, mint, and Squads metadata.")
   }
 
   const { memo, proofUrl } = validateProposalInput({
@@ -1098,12 +1221,6 @@ export async function addProposalMutation(data: {
     memo: data.memo,
     proofUrl: data.proofUrl,
   })
-
-  await assertWalletIsMember(
-    data.groupId,
-    data.proposerWallet,
-    "Only Group Members can create reimbursement Proposals."
-  )
 
   await assertWalletIsMember(
     data.groupId,
@@ -1127,6 +1244,7 @@ export async function addProposalMutation(data: {
     memo,
     proof_url: proofUrl,
     status: "pending",
+    kind,
     squads_transaction_index: data.squadsTransactionIndex,
     squads_proposal_address: data.squadsProposalAddress,
     squads_transaction_address: data.squadsTransactionAddress,
@@ -1135,41 +1253,112 @@ export async function addProposalMutation(data: {
     executed_at: null,
   }
 
-  const { data: proposal, error } = await getAdmin()
-    .from("proposals")
-    .insert(insert)
-    .select("*")
-    .single()
+  const proposal = await insertProposalWithSchemaFallback(insert)
+  return proposal
+}
 
-  if (error && isMissingColumnSchemaCacheError(error, "proof_url")) {
-    // Lets beta rehearsal keep moving when the remote Supabase project has not
-    // received the optional Proposal audit migration yet.
-    const { proof_url: _proofUrl, ...insertWithoutProofUrl } = insert
-    const { data: fallbackProposal, error: fallbackError } = await getAdmin()
+async function insertProposalWithSchemaFallback(insert: ProposalInsert) {
+  let attempt: ProposalInsert = { ...insert }
+  const droppable: Array<keyof ProposalInsert> = [
+    "kind",
+    "target_threshold",
+    "proof_url",
+  ]
+
+  // Progressive fallback for projects that haven't replayed the latest
+  // migrations. We try the full insert, then drop one optional column at a
+  // time until the insert succeeds or we run out of optional columns.
+  for (let safety = 0; safety <= droppable.length; safety++) {
+    const { data, error } = await getAdmin()
       .from("proposals")
-      .insert(insertWithoutProofUrl as ProposalInsert)
+      .insert(attempt)
       .select("*")
       .single()
 
-    if (fallbackError) {
-      throw new FundWiseError(`Failed to create Proposal: ${fallbackError.message}`)
+    if (!error) {
+      return data
     }
 
-    return fallbackProposal
+    const missingColumn = droppable.find((column) =>
+      isMissingColumnSchemaCacheError(error, column as string)
+    )
+
+    if (!missingColumn) {
+      throw new FundWiseError(`Failed to create Proposal: ${error.message}`)
+    }
+
+    const { [missingColumn]: _dropped, ...rest } = attempt as Record<string, unknown>
+    attempt = rest as ProposalInsert
   }
 
-  if (error) {
-    throw new FundWiseError(`Failed to create Proposal: ${error.message}`)
+  throw new FundWiseError("Failed to create Proposal after schema fallback.")
+}
+
+async function addThresholdChangeProposalInternal(data: {
+  groupId: string
+  proposerWallet: string
+  targetThreshold: number
+  memo: string | null
+}) {
+  if (!Number.isInteger(data.targetThreshold) || data.targetThreshold < 1) {
+    throw new FundWiseError("Threshold-change Proposals require a positive integer target threshold.")
   }
 
-  return proposal
+  // Only Admins can propose changing the approval threshold.
+  const proposerRole = await getMemberRoleOrThrow(
+    data.groupId,
+    data.proposerWallet,
+    "Only Group Admins can propose threshold changes."
+  )
+  if (proposerRole !== "admin") {
+    throw new FundWiseError("Only Group Admins can propose threshold changes.", 403)
+  }
+
+  const { count: memberCount, error: countError } = await getAdmin()
+    .from("members")
+    .select("id", { count: "exact", head: true })
+    .eq("group_id", data.groupId)
+
+  if (countError) {
+    throw new FundWiseError(`Failed to count Group Members: ${countError.message}`)
+  }
+
+  if (data.targetThreshold > (memberCount ?? 0)) {
+    throw new FundWiseError("Target threshold cannot exceed the number of current Members.")
+  }
+
+  const memo = data.memo?.trim() || null
+  if (memo && memo.length > 240) {
+    throw new FundWiseError("Proposal memo must be 240 characters or fewer.")
+  }
+
+  const insert: ProposalInsert = {
+    group_id: data.groupId,
+    proposer_wallet: data.proposerWallet,
+    recipient_wallet: null,
+    amount: null,
+    mint: null,
+    memo,
+    proof_url: null,
+    status: "pending",
+    kind: "threshold_change",
+    target_threshold: data.targetThreshold,
+    squads_transaction_index: null,
+    squads_proposal_address: null,
+    squads_transaction_address: null,
+    squads_create_tx_sig: null,
+    tx_sig: null,
+    executed_at: null,
+  }
+
+  return await insertProposalWithSchemaFallback(insert)
 }
 
 export async function reviewProposalMutation(data: {
   proposalId: string
   memberWallet: string
   decision: "approved" | "rejected"
-  txSig: string
+  txSig?: string | null
 }) {
   if (data.decision !== "approved" && data.decision !== "rejected") {
     throw new FundWiseError("Proposal review decision must be approved or rejected.")
@@ -1186,6 +1375,28 @@ export async function reviewProposalMutation(data: {
     throw new FundWiseError("Only pending Proposals can be reviewed.")
   }
 
+  await assertMemberCan(
+    proposal.group_id,
+    data.memberWallet,
+    "review_proposal",
+    "Viewers cannot review Proposals."
+  )
+
+  if (proposal.proposer_wallet === data.memberWallet) {
+    throw new FundWiseError("Proposal creator cannot review their own Proposal.")
+  }
+
+  const kind = (proposal as { kind?: ProposalKind }).kind ?? "reimbursement"
+
+  if (kind === "threshold_change") {
+    return await reviewThresholdChangeInternal({
+      proposal,
+      group,
+      memberWallet: data.memberWallet,
+      decision: data.decision,
+    })
+  }
+
   if (
     !group.multisig_address ||
     proposal.squads_transaction_index === null ||
@@ -1194,14 +1405,8 @@ export async function reviewProposalMutation(data: {
     throw new FundWiseError("Proposal is missing Squads governance metadata.")
   }
 
-  await assertWalletIsMember(
-    proposal.group_id,
-    data.memberWallet,
-    "Only Group Members can review Proposals."
-  )
-
-  if (proposal.proposer_wallet === data.memberWallet) {
-    throw new FundWiseError("Proposal creator cannot review their own Proposal.")
+  if (!data.txSig) {
+    throw new FundWiseError("Reimbursement Proposal reviews must include a Squads review transaction signature.")
   }
 
   const squadsStatus = await verifySquadsProposalReview({
@@ -1244,10 +1449,72 @@ export async function reviewProposalMutation(data: {
   return reviewedProposal
 }
 
+async function reviewThresholdChangeInternal(data: {
+  proposal: ProposalRow
+  group: GroupRow
+  memberWallet: string
+  decision: "approved" | "rejected"
+}) {
+  // Threshold-change proposals are FundWise-internal governance: no Squads
+  // transaction. We use a synthetic tx_sig so the proposal_approvals table
+  // (which requires tx_sig) keeps a unique-per-review row.
+  const syntheticTxSig = `internal:threshold_change:${data.proposal.id}:${data.memberWallet}`
+
+  const { error: reviewError } = await getAdmin()
+    .from("proposal_approvals")
+    .insert({
+      proposal_id: data.proposal.id,
+      member_wallet: data.memberWallet,
+      decision: data.decision,
+      tx_sig: syntheticTxSig,
+    })
+
+  if (reviewError?.code === "23505") {
+    throw new FundWiseError("Each Member can review a Proposal at most once.")
+  }
+
+  if (reviewError) {
+    throw new FundWiseError(`Failed to record Proposal review: ${reviewError.message}`)
+  }
+
+  // Count current approvals; flip the status when we hit the Group threshold.
+  const { count: approvalsCount, error: countError } = await getAdmin()
+    .from("proposal_approvals")
+    .select("id", { count: "exact", head: true })
+    .eq("proposal_id", data.proposal.id)
+    .eq("decision", "approved")
+
+  if (countError) {
+    throw new FundWiseError(`Failed to count Proposal approvals: ${countError.message}`)
+  }
+
+  const requiredApprovals = data.group.approval_threshold ?? 1
+  let nextStatus: "pending" | "approved" | "rejected" = "pending"
+
+  if (data.decision === "rejected") {
+    nextStatus = "rejected"
+  } else if ((approvalsCount ?? 0) >= requiredApprovals) {
+    nextStatus = "approved"
+  }
+
+  const { data: reviewedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({ status: nextStatus, updated_at: new Date().toISOString() })
+    .eq("id", data.proposal.id)
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to update Proposal status: ${error.message}`)
+  }
+
+  return reviewedProposal
+}
+
 export async function executeProposalMutation(data: {
   proposalId: string
   executorWallet: string
-  txSig: string
+  txSig?: string | null
 }) {
   const proposal = await getProposalOrThrow(data.proposalId)
   const group = await getGroupOrThrow(proposal.group_id)
@@ -1264,6 +1531,19 @@ export async function executeProposalMutation(data: {
     throw new FundWiseError("Only approved Proposals can be executed.")
   }
 
+  await assertMemberCan(
+    proposal.group_id,
+    data.executorWallet,
+    "execute_proposal",
+    "Viewers cannot execute Proposals."
+  )
+
+  const kind = (proposal as { kind?: ProposalKind }).kind ?? "reimbursement"
+
+  if (kind === "threshold_change") {
+    return await executeThresholdChangeInternal({ proposal })
+  }
+
   if (
     !group.multisig_address ||
     !group.treasury_address ||
@@ -1273,11 +1553,13 @@ export async function executeProposalMutation(data: {
     throw new FundWiseError("Proposal is missing Squads execution metadata.")
   }
 
-  await assertWalletIsMember(
-    proposal.group_id,
-    data.executorWallet,
-    "Only Group Members can execute approved Proposals."
-  )
+  if (!data.txSig) {
+    throw new FundWiseError("Reimbursement Proposal execution requires the Squads transaction signature.")
+  }
+
+  if (proposal.amount === null || !proposal.recipient_wallet || !proposal.mint) {
+    throw new FundWiseError("Reimbursement Proposal is missing recipient or amount.")
+  }
 
   const { data: existingExecution, error: existingExecutionError } = await getAdmin()
     .from("proposals")
@@ -1322,6 +1604,40 @@ export async function executeProposalMutation(data: {
 
   if (error) {
     throw new FundWiseError(`Failed to mark Proposal executed: ${error.message}`)
+  }
+
+  return executedProposal
+}
+
+async function executeThresholdChangeInternal(data: { proposal: ProposalRow }) {
+  const targetThreshold = (data.proposal as { target_threshold?: number | null }).target_threshold
+  if (!targetThreshold || targetThreshold < 1) {
+    throw new FundWiseError("Threshold-change Proposal is missing target threshold.")
+  }
+
+  const { error: groupError } = await getAdmin()
+    .from("groups")
+    .update({ approval_threshold: targetThreshold })
+    .eq("id", data.proposal.group_id)
+
+  if (groupError) {
+    throw new FundWiseError(`Failed to apply threshold change: ${groupError.message}`)
+  }
+
+  const { data: executedProposal, error } = await getAdmin()
+    .from("proposals")
+    .update({
+      status: "executed",
+      executed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", data.proposal.id)
+    .eq("status", "approved")
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new FundWiseError(`Failed to mark threshold-change Proposal executed: ${error.message}`)
   }
 
   return executedProposal
@@ -1498,3 +1814,354 @@ export async function updateGroupTreasuryMutation(data: {
     throw new FundWiseError("Only the Group creator can initialize the Treasury")
   }
 }
+
+// =============================================
+// FW-045: Member role management
+// =============================================
+export async function setMemberRoleMutation(data: {
+  groupId: string
+  actorWallet: string
+  targetWallet: string
+  role: FundModeRole
+}) {
+  if (!isFundModeRole(data.role)) {
+    throw new FundWiseError(`Role must be one of: ${FUND_MODE_ROLES.join(", ")}.`)
+  }
+
+  const group = await getGroupOrThrow(data.groupId)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Role assignments are only available in Fund Mode Groups.")
+  }
+
+  await assertMemberCan(
+    data.groupId,
+    data.actorWallet,
+    "change_role",
+    "Only Group Admins can change Member roles."
+  )
+
+  // Don't allow the last admin to demote themselves — the Group would be stuck.
+  if (data.actorWallet === data.targetWallet && data.role !== "admin") {
+    const { count: adminCount, error: countError } = await getAdmin()
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .eq("group_id", data.groupId)
+      .eq("role", "admin")
+
+    if (countError && !isMissingColumnSchemaCacheError(countError, "role")) {
+      throw new FundWiseError(`Failed to count Group Admins: ${countError.message}`)
+    }
+
+    if ((adminCount ?? 0) <= 1) {
+      throw new FundWiseError("Cannot demote the last Admin. Assign another Admin first.")
+    }
+  }
+
+  const { data: updated, error } = await getAdmin()
+    .from("members")
+    .update({ role: data.role })
+    .eq("group_id", data.groupId)
+    .eq("wallet", data.targetWallet)
+    .select("id, role")
+    .maybeSingle()
+
+  if (error) {
+    if (isMissingColumnSchemaCacheError(error, "role")) {
+      throw new FundWiseError(
+        "Member roles require migration 20260515100000_fund_mode_beta_completion.sql to be replayed on this Supabase project.",
+        503
+      )
+    }
+    throw new FundWiseError(`Failed to update Member role: ${error.message}`)
+  }
+
+  if (!updated) {
+    throw new FundWiseError("Target wallet is not a Member of this Group.", 404)
+  }
+
+  return updated
+}
+
+// =============================================
+// FW-047: Creation fee + opt-out telemetry
+// =============================================
+export async function recordCreationFeeMutation(data: {
+  groupId: string
+  payerWallet: string
+  outcome: "paid" | "skipped"
+  amount?: number | null
+  mint?: string | null
+  txSig?: string | null
+  emulatedUsdCents?: number | null
+  notes?: string | null
+}) {
+  if (data.outcome !== "paid" && data.outcome !== "skipped") {
+    throw new FundWiseError("Creation fee outcome must be 'paid' or 'skipped'.")
+  }
+
+  const group = await getGroupOrThrow(data.groupId)
+
+  if (group.mode !== "fund") {
+    throw new FundWiseError("Creation fees are only tracked for Fund Mode Groups.")
+  }
+
+  await assertMemberCan(
+    data.groupId,
+    data.payerWallet,
+    "contribute",
+    "Viewers cannot record creation fees."
+  )
+
+  if (data.outcome === "paid") {
+    if (typeof data.amount !== "number" || data.amount <= 0) {
+      throw new FundWiseError("Paid creation fees must include a positive token amount.")
+    }
+    if (!data.mint) {
+      throw new FundWiseError("Paid creation fees must include the stablecoin mint.")
+    }
+    if (data.mint !== group.stablecoin_mint) {
+      throw new FundWiseError("Creation fee mint does not match the Group stablecoin.")
+    }
+    if (!data.txSig) {
+      throw new FundWiseError("Paid creation fees must include the on-chain transaction signature.")
+    }
+
+    const feeRecipient = fundModeCreationFeeWallet()
+    if (feeRecipient) {
+      await verifyContributionTransfer({
+        txSig: data.txSig,
+        mint: data.mint,
+        memberWallet: data.payerWallet,
+        treasuryAddress: feeRecipient,
+        amount: data.amount,
+      })
+    }
+  }
+
+  const { data: inserted, error } = await getAdmin()
+    .from("fund_mode_creation_fees")
+    .insert({
+      group_id: data.groupId,
+      payer_wallet: data.payerWallet,
+      amount: data.outcome === "paid" ? data.amount ?? null : null,
+      mint: data.outcome === "paid" ? data.mint ?? null : null,
+      tx_sig: data.outcome === "paid" ? data.txSig ?? null : null,
+      outcome: data.outcome,
+      emulated_usd_cents: data.emulatedUsdCents ?? FUND_MODE_BETA_PRICING.creationFeeUsdCents,
+      notes: data.notes ?? null,
+    })
+    .select("*")
+    .single()
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new FundWiseError(`This Group already has a recorded ${data.outcome} creation fee outcome.`)
+    }
+    if (isMissingColumnSchemaCacheError(error, "outcome") || error.message?.includes("fund_mode_creation_fees")) {
+      throw new FundWiseError(
+        "Creation fee telemetry requires migration 20260515100000_fund_mode_beta_completion.sql to be replayed on this Supabase project.",
+        503
+      )
+    }
+    throw new FundWiseError(`Failed to record creation fee: ${error.message}`)
+  }
+
+  return inserted
+}
+
+// =============================================
+// FW-061 / FW-062 / FW-063: Monetization telemetry
+// =============================================
+export async function recordMonetizationResponseMutation(data: {
+  kind: FundModeMonetizationKind
+  memberWallet: string
+  groupId?: string | null
+  emulatedUsdCents?: number | null
+  payload?: Record<string, unknown>
+}) {
+  if (!["monthly_fee_wtp", "free_tier_cap", "exit_survey"].includes(data.kind)) {
+    throw new FundWiseError("Unknown monetization response kind.")
+  }
+
+  // If a groupId is supplied the wallet must be a Member; otherwise it's an
+  // anonymous response that the admin dashboard still aggregates.
+  if (data.groupId) {
+    await assertWalletIsMember(
+      data.groupId,
+      data.memberWallet,
+      "Only Group Members can submit monetization responses for this Group."
+    )
+  }
+
+  const { data: inserted, error } = await getAdmin()
+    .from("monetization_responses")
+    .insert({
+      kind: data.kind,
+      group_id: data.groupId ?? null,
+      member_wallet: data.memberWallet,
+      emulated_usd_cents: data.emulatedUsdCents ?? null,
+      payload: (data.payload ?? {}) as Json,
+    })
+    .select("*")
+    .single()
+
+  if (error) {
+    if (error.message?.includes("monetization_responses")) {
+      throw new FundWiseError(
+        "Monetization telemetry requires migration 20260515100000_fund_mode_beta_completion.sql to be replayed on this Supabase project.",
+        503
+      )
+    }
+    throw new FundWiseError(`Failed to record monetization response: ${error.message}`)
+  }
+
+  return inserted
+}
+
+// =============================================
+// FW-063 helper: member leaves a Group (records the event; refund still goes
+// through the normal exit-refund Proposal flow).
+// =============================================
+export async function leaveGroupMutation(data: {
+  groupId: string
+  memberWallet: string
+  exitSurvey?: {
+    pricingFairness?: number
+    wouldPayConfidence?: number
+    featureRequests?: string
+  }
+}) {
+  const group = await getGroupOrThrow(data.groupId)
+
+  await assertWalletIsMember(
+    data.groupId,
+    data.memberWallet,
+    "Only current Members can leave the Group."
+  )
+
+  if (group.created_by === data.memberWallet) {
+    throw new FundWiseError("Group creators cannot leave the Group. Transfer ownership first.")
+  }
+
+  // Record the exit survey first (best-effort). If migration not replayed yet
+  // we still allow the leave to proceed.
+  if (data.exitSurvey && group.mode === "fund") {
+    try {
+      await recordMonetizationResponseMutation({
+        kind: "exit_survey",
+        memberWallet: data.memberWallet,
+        groupId: data.groupId,
+        emulatedUsdCents: FUND_MODE_BETA_PRICING.monthlySubscriptionUsdCents,
+        payload: data.exitSurvey as Record<string, unknown>,
+      })
+    } catch (error) {
+      if (!(error instanceof FundWiseError) || error.status !== 503) {
+        throw error
+      }
+    }
+  }
+
+  const { error } = await getAdmin()
+    .from("members")
+    .delete()
+    .eq("group_id", data.groupId)
+    .eq("wallet", data.memberWallet)
+
+  if (error) {
+    throw new FundWiseError(`Failed to leave Group: ${error.message}`)
+  }
+}
+
+// =============================================
+// FW-044 helper: compute auto-suggested reimbursement proposals
+// =============================================
+// Pure-data helper used by both the dashboard snapshot and tests. Given the
+// Fund Mode Group's expense activity and existing pending/approved proposals,
+// suggest reimbursements for any "pool" expense whose payer has not already
+// been reimbursed.
+export type SuggestedReimbursement = {
+  expenseId: string
+  payerWallet: string
+  amount: number
+  mint: string
+  memo: string
+  createdAt: string
+}
+
+export function computeSuggestedReimbursements(input: {
+  groupMode: "split" | "fund"
+  stablecoinMint: string
+  expenses: Array<{
+    id: string
+    payer: string
+    amount: number
+    mint: string
+    memo: string | null
+    category: string | null
+    created_at: string
+    deleted_at: string | null
+  }>
+  proposals: Array<{
+    recipient_wallet: string | null
+    amount: number | null
+    mint: string | null
+    status: string
+    kind: string
+  }>
+}): SuggestedReimbursement[] {
+  if (input.groupMode !== "fund") {
+    return []
+  }
+
+  // Sum (recipient, mint, amount) coverage for non-rejected reimbursement /
+  // exit-refund proposals so we don't suggest a refund for something already
+  // queued or paid.
+  const coveredByRecipient = new Map<string, number>()
+  for (const proposal of input.proposals) {
+    if (proposal.status === "rejected" || proposal.status === "cancelled") continue
+    if (proposal.kind !== "reimbursement" && proposal.kind !== "exit_refund") continue
+    if (!proposal.recipient_wallet || proposal.amount === null) continue
+    const key = `${proposal.recipient_wallet}:${proposal.mint ?? input.stablecoinMint}`
+    coveredByRecipient.set(key, (coveredByRecipient.get(key) ?? 0) + proposal.amount)
+  }
+
+  const suggestions: SuggestedReimbursement[] = []
+
+  for (const expense of input.expenses) {
+    if (expense.deleted_at) continue
+    if (expense.amount <= 0) continue
+    if (expense.mint !== input.stablecoinMint) continue
+    if ((expense.category ?? "") !== "pool") continue
+
+    const key = `${expense.payer}:${expense.mint}`
+    const alreadyCovered = coveredByRecipient.get(key) ?? 0
+
+    if (alreadyCovered >= expense.amount) {
+      // Reduce covered budget so the next expense from the same payer also
+      // gets evaluated correctly.
+      coveredByRecipient.set(key, alreadyCovered - expense.amount)
+      continue
+    }
+
+    suggestions.push({
+      expenseId: expense.id,
+      payerWallet: expense.payer,
+      amount: expense.amount,
+      mint: expense.mint,
+      memo: expense.memo
+        ? `Reimburse pool expense — ${expense.memo}`
+        : "Reimburse pool expense",
+      createdAt: expense.created_at,
+    })
+
+    // Subtract what we just covered so subsequent expenses from the same
+    // payer count.
+    coveredByRecipient.set(key, alreadyCovered)
+  }
+
+  return suggestions
+}
+
+// Re-export pricing surface for the API layer.
+export { FUND_MODE_BETA_PRICING, evaluateFreeTier, tokenAmountToUsdCents }

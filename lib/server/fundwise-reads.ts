@@ -1,4 +1,6 @@
 import type { Database } from "@/lib/database.types"
+import { computeSuggestedReimbursements } from "@/lib/server/fundwise-mutations"
+import { evaluateFreeTier, tokenAmountToUsdCents } from "@/lib/fund-mode-monetization"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin"
 
@@ -467,15 +469,57 @@ export async function getGroupDashboardSnapshot(groupId: string, viewerWallet?: 
   }
 
   // Fund Mode: include expenses so the dashboard can suggest reimbursements
+  const activity = await buildActivityFeed(groupId)
+  const contributions = await listContributions(groupId)
+  const proposals = await listProposals(groupId)
+
+  const fundExpenses = activity
+    .filter((item) => item.type === "expense")
+    .map((item) => (item as { data: ExpenseRow & { splits: ExpenseSplitRow[] } }).data)
+
+  const suggestedReimbursements = computeSuggestedReimbursements({
+    groupMode: group.mode,
+    stablecoinMint: group.stablecoin_mint,
+    expenses: fundExpenses.map((expense) => ({
+      id: expense.id,
+      payer: expense.payer,
+      amount: expense.amount,
+      mint: expense.mint,
+      memo: expense.memo,
+      category: expense.category,
+      created_at: expense.created_at,
+      deleted_at: expense.deleted_at,
+    })),
+    proposals: proposals.map((proposal) => ({
+      recipient_wallet: proposal.recipient_wallet,
+      amount: proposal.amount,
+      mint: proposal.mint,
+      status: proposal.status,
+      kind: (proposal as { kind?: string }).kind ?? "reimbursement",
+    })),
+  })
+
+  const contributionTotalTokens = contributions.reduce(
+    (total, contribution) => total + contribution.amount,
+    0
+  )
+  const freeTier = evaluateFreeTier({
+    memberCount: members.length,
+    contributionTotalTokens,
+    contributionTotalUsdCents: tokenAmountToUsdCents(contributionTotalTokens),
+  })
+
   return {
     authenticated: true,
     isMember: true,
     memberCount: members.length,
     group,
     members,
-    activity: await buildActivityFeed(groupId),
-    contributions: await listContributions(groupId),
-    proposals: await listProposals(groupId),
+    activity,
+    contributions,
+    proposals,
+    suggestedReimbursements,
+    freeTier,
   }
 }
 
