@@ -1,353 +1,204 @@
-# FundWise - Roadmap
+# FundWise — Roadmap
 
-Phased plan from pivot cleanup through hackathon submission and post-hackathon expansion. See [STATUS.md](./STATUS.md) for the current checkpoint, [PRD.md](./PRD.md) for the locked MVP shape, and [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for track-specific framing.
-
----
-
-## GTM and product order
-
-The strategic rollout order is being tightened for the post-submission sprint. See [ADR-021](./docs/adr/0021-gtm-rollout-order-split-fundy-fund-mode-beta.md) for the original public sequencing and [ADR-027](./docs/adr/0027-fund-mode-is-the-hero-product.md) for the current hero-product focus:
-
-FundLabs is the umbrella strategy: build the financial layer for groups, human or AI. FundWise proves the shared-finance loop, Fundy distributes that loop into Telegram and personal agents, and Receipt Endpoint turns verified payment outcomes into an agent-commerce API surface.
-
-1. **Split Mode on Solana mainnet** — the public, open wedge. Settlement asset is **USDC** ([ADR-011](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)). This proves wallet-native Groups, verified transfers, session-gated ledger access, and Receipts.
-2. **Fund Mode invite-only beta** — the hero product direction. Pooled USDC Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, and execution are the next one-month sprint.
-3. **Fundy companion agent** — a personalized finance Telegram agent built in a **separate repository** ([ADR-022](./docs/adr/0022-fundy-moves-to-a-separate-repository.md)) on a **PI agent framework**, using the **Zerion CLI** for wallet intelligence. Fundy manages personal finance for an individual user, plugs into FundWise to manage Group expenses, can be added to friends' Telegram groups, and grows a **tax filing / tax advisory** surface owned by Fundy ([ADR-023](./docs/adr/0023-tax-advisory-and-filing-live-in-fundy.md)). Fundy is a sibling product, not a feature of the FundWise repo.
-4. **Receipt Endpoint** — planned infrastructure product for structured, verifiable Receipts for agent and on-chain payments. It should grow from Payable Settlement Requests, Spending Policies, and FundWise Receipts rather than bypassing them.
-5. **Visa-rail card partnerships** — settled or Treasury-held USDC reaches Visa merchants through partners (KAST, Avici, Rain). Targeting the **Visa Frontier hackathon track (Germany)** as the first wedge ([ADR-024](./docs/adr/0024-visa-frontier-track-and-card-partnerships.md)); see the partner research brief inside Phase 3.
-
-The repo phases below describe engineering scope; this section is the order in which surfaces are exposed to users.
-
-Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise should not plan around novelty. The wedge is verified USDC Settlement for real private Groups, with Settlement Request Links as the acquisition loop. The hero product is Fund Mode because durable Groups eventually need shared Treasuries, governed spending, proof, exits, integrations, and eventually productive idle money. Fundy and Receipt Endpoint make the same stack legible to group chats, personal agents, and developer workflows. Visa/card rails come only after a concrete partner path exists.
-
-## One-month Fund Mode sprint - May 8 to June 8, 2026
-
-**Goal:** make Fund Mode credible as the hero product in invite-only beta, not just a visible mode selector.
-
-**Build order:**
-
-1. Remove legacy SOL vault helpers and keep Fund Mode stablecoin-only.
-2. Rehearse Treasury initialization and Contributions on devnet with real wallets.
-3. Build reimbursement Proposal creation with recipient restricted to Member wallets.
-4. Build approval and rejection with proposer-self-approval blocked.
-5. Add Proposal proof, comments, edit history, and visible rejection history without turning the Group into chat.
-6. Add explicit execution after threshold approval, callable by any Member, with Squads-backed Treasury movement.
-7. Add LI.FI support for Fund Mode Contributions when a Member needs Solana USDC.
-8. Add Zerion readiness context for Members and Treasuries.
-9. Prepare FundWise Agent / Fundy API surfaces for read-only, draft-safe, and database-only Proposal actions.
-10. Run invite-only beta rehearsal and keep shipped/planned docs honest.
-
-**Exit criterion:** an invited Group can initialize a Treasury, make Contributions, create a reimbursement Proposal, approve or reject it, execute an approved Treasury reimbursement, and understand every action from history, proof, and receipts.
+Phased plan from the current state through the Solana Summit Berlin launch and the multi-chain / fiat-onramp expansion that follows. See [STATUS.md](./STATUS.md) for the current checkpoint and [PRD.md](./PRD.md) for the locked MVP shape.
 
 ---
 
-## Phase 0 - Pivot cleanup (April 25-26) ✅
+## Headline milestone — Solana Summit Berlin (2026-06-13)
 
-**Goal:** remove prediction-market baggage and reframe the product around Group money with on-chain settlement.
+**Launch Split Mode and Fund Mode on Solana mainnet by the Summit.** Everything below is ordered around hitting that date with a coherent, single-product story.
 
-**Completed:**
+FundLabs is the umbrella strategy: build the financial layer for groups, human or AI. FundWise is the shared-finance product, Fundy is the personal-agent / Telegram surface, and Receipt Endpoint is the planned agent-commerce audit-trail product.
 
-- Removed prediction-market, Kalshi, ZK-compression, LP-yield, and related dependencies
-- Rewrote the landing page around FundWise
-- Renamed `circles` to `groups`
-- Moved off the inherited Firebase path and into the current Supabase-backed model
-- Verified `pnpm build`
+The current rollout order:
 
-**Exit criterion:** the repo and UI clearly describe FundWise instead of the old hackathon project.
+**Summit Berlin launch (2026-06-13) — items 1, 2, 3, plus Fundy companion ship together:**
+
+1. **Split Mode on Solana mainnet** — public, open wedge. Settlement asset is **USDC** ([ADR-011](./docs/adr/0011-fix-usdc-as-the-mvp-settlement-asset.md)). Wallet-native Groups, verified transfers, session-gated ledger access, Receipts.
+2. **Fund Mode on Solana mainnet** — graduating from invite-only devnet beta. Pooled USDC Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, execution.
+3. **Multi-chain participation** via Circle **CCTP + LI.FI** — EVM and other wallets can join Groups; CCTP/LI.FI converts inbound funds to USDC on Solana. Solana mainnet remains the ledger and Settlement venue. **Pulled into the Summit launch scope on 2026-05-16** — the LI.FI integration is built; the remaining work is mainnet pipeline, CCTP routing config, UX polish, and an end-to-end mainnet test.
+4. **Fundy companion agent** — separate-repo Telegram bot ([ADR-0022](./docs/adr/0022-fundy-moves-to-a-separate-repository.md)) that calls FundWise over public HTTP. Ships alongside the Summit launch. Personal finance + Group operations in DM; group-chat mode after authentication. Tax advisory/filing ([ADR-0023](./docs/adr/0023-tax-advisory-and-filing-live-in-fundy.md)) lives in Fundy, not FundWise.
+
+**Post-Summit:**
+
+5. **Fiat onboarding** via **Privy + MoonPay + Bridge.xyz + Squads Protocol** — per-user embedded Solana wallet (Privy, non-custodial via TEE shards), card top-ups (MoonPay), bank rails (Bridge.xyz SEPA / IBAN / wire), and group treasury (Squads Protocol, already integrated). Settles to USDC on Solana underneath. Altitude is ruled out (it's a competing consumer-business neobank, not embeddable infra).
+6. **Receipt Endpoint** — planned FundLabs infrastructure product for verifiable agent-and-on-chain payment receipts. Grows out of Payable Settlement Requests, Spending Policies, and FundWise Receipts.
+
+Planning thesis: the market already has strong web2 substitutes and several crypto-native bill-splitting attempts. FundWise's wedge is **verified USDC Settlement for real private Groups**, with Settlement Request Links as the acquisition loop, and pooled USDC Treasuries as the durable-group product. Multi-chain inbound (Circle CCTP) is now part of the Summit launch; fiat onboarding remains explicitly post-Summit.
 
 ---
 
-## Phase 1 - Split Mode MVP (core shipped, hardening active)
+## Now — Split Mode + Fund Mode mainnet for Summit Berlin
 
-**Goal:** a user can create a private Group, add Expenses, see live Balances, and settle exact USDC amounts on Solana.
+**Goal:** Split Mode public on mainnet, Fund Mode graduated from devnet beta to mainnet, both reliable enough to demo and onboard real Groups at the Summit.
 
-**Shipped:**
+### Split Mode mainnet
 
-- Group CRUD UI
-- Zero-state Group creation with Split Mode preselected
-- Invite link and QR join flow
-- Expense entry with familiar split methods:
-  equal, exact amounts, percentage, and shares
-- Balance computation
-- Simplified settlement graph
-- Settlement receipt route
-- Activity Feed
-- Creator-owned Expense edit/delete flow with later-Settlement guard
-- Shareable Settlement Request Link flow from the Group page
-- Group total settled volume display on the Group page
-- Global profile display-name editing with reuse across Groups
-- Final empty-state and copy pass across Group screens
-- Responsive pass across the landing page, Group list, Group page, Receipt, and modal surfaces
-- Consumer landing polish with product-first messaging, cleaner partner branding, and consistent iconography
-- Wallet-signed session cookies for protected FundWise actions
-- Authenticated server-side ledger writes for Groups, Members, Expenses, Settlements, Contributions, and profile updates
-- Session-aware Group and Receipt reads instead of public browser Supabase ledger reads
+**Already shipped:**
+
+- Group CRUD UI, zero-state Group creation, invite link + QR join flow
+- Expense entry with equal / exact / percentage / shares split methods
+- Balance computation and simplified settlement graph
+- Settlement receipt route, Activity Feed
+- Creator-owned Expense edit/delete with later-Settlement guard
+- Settlement Request Link flow, total settled volume display, Group profile editing
+- Responsive pass across landing, Group list, Group page, Receipt, modals
+- Wallet-signed session cookies for protected actions
+- Authenticated server-side ledger writes for Groups, Members, Expenses, Settlements, Contributions, profile updates
+- Session-aware Group and Receipt reads (no public browser ledger reads)
 - RPC verification before persisting Settlement and Contribution receipts
-
-**Still to finish before the next full devnet rehearsal:**
-
-- Manual breakpoint QA across landing, Group list, Group page, join flow, dialogs, and Receipt
-- Devnet settlement UX hardening around insufficient-USDC states, insufficient-SOL states, and clearer ATA-creation messaging
-- Post-submission Source Currency planning: Source Currency capture, current exchange-rate quote, Exchange Rate Snapshot storage, and USD/USDC ledger conversion without changing the USDC settlement asset
-- Post-submission Expense Proof planning: optional merchant receipt photo / PDF upload tied to Expense records
-- Ongoing frontend maintainability: context-aware app header, wallet-modal CTAs, split `app/groups/[id]/page.tsx` into components (no behavior change); optional Phantom Connect when Portal is ready
-
-**Execution order inside Phase 1:**
-
-1. Keep quality gates green while finishing on-chain settlement hardening and devnet wiring
-2. Manual QA and devnet rehearsal
-3. LI.FI support layer
-4. Zerion support layer
-5. Isolated audits and later mainnet readiness
-
-**Backend trust and mainnet-beta hardening inside Phase 1:**
-
-- Authenticated wallet-bound server-side ledger writes with protected Group / Receipt reads
-- RPC verification before persisting Settlement and Contribution receipts
-- Exchange-rate provider boundary plus stored Exchange Rate Snapshots for any Expense entered in a Source Currency other than the ledger value
-- Off-chain storage path and access rules for Expense Proof uploads
-- Supported mainnet USDC mint wiring
-- Clear insufficient-USDC and insufficient-SOL states
-- Recipient USDC token-account auto-creation inside settlement flow
-- Production RPC wiring
-
-**On-chain integration rule for this phase:**
-
-- Keep Split Mode on the simplest credible path:
-  direct Solana USDC settlement plus the minimum on-chain handling required for safety and devnet rehearsal
-- Do not invent new custom contracts unless the product actually needs them
-- If custom contract work is needed later, prefer it in Fund Mode or isolated sponsor / treasury surfaces instead of the core Split Mode flow
-
-**Exit criterion:** a real user can open the web app on mobile or desktop, join a Group, log Expenses, settle their current net Balance in USDC, and land on a usable Receipt flow that is structurally ready for mainnet-beta.
-Wallet connect should not break that path; it must restore the user's original intent instead of forcing re-navigation.
-
----
-
-## Phase 1.5 - Sponsor support layers
-
-This phase supports the MVP. It does not redefine it.
-
-This phase starts only after the frontend pass, backend trust pass, and on-chain settlement hardening are in place.
-
-### LI.FI support
-
-**Goal:** help an EVM-first debtor arrive at Solana USDC without needing to think in bridge jargon or manually reason about route details.
-
-**Shipped groundwork:**
-
-- LI.FI SDK installed
-- Route discovery and execution plumbing
-- Cross-chain UI groundwork
+- Distributed rate limit on every money-moving route ([FW-054](./issues.md))
 
 **Still to finish:**
 
-- `Route funds for Settlement` entry point inside the Settlement preview when a debtor's USDC is on another supported network
-- Clean handoff back into the normal Group Settlement flow
-- Mainnet-safe copy and error states
+- Manual breakpoint QA across landing, Group list, Group page, join, dialogs, Receipt
+- Mainnet USDC mint wiring, insufficient-USDC and insufficient-SOL states, ATA-creation messaging
+- Production RPC and recipient USDC token-account auto-creation inside the Settlement flow
+- Operator runbook execution (Supabase, Cloudflare, RLS verification) per [docs/ops-runbook.md](./docs/ops-runbook.md)
+- Mainnet cutover per [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md)
 
-**Exit criterion:** a user with funds on another chain can press Settle, route the needed USDC when prompted, and then complete the normal Group Settlement flow without learning the underlying route mechanics.
+**On-chain rule:** keep Split Mode on the simplest credible path — direct USDC settlement plus the minimum on-chain handling required for safety. No new custom contracts on this surface.
 
-### Zerion support
+**Exit criterion:** a real user opens the web app on mobile or desktop, joins a Group, logs Expenses, settles their net Balance in USDC on Solana mainnet, and lands on a usable Receipt.
 
-**Goal:** add wallet analysis and CLI-driven agent support that strengthens the product story without entering the primary settlement path.
+### Fund Mode mainnet
 
-**Near-term scope:**
+**Goal:** graduate Fund Mode from invite-only devnet beta to mainnet as the hero product for durable Groups. Beta validation work is captured in [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md).
 
-- Wallet analysis for insufficient-funds guidance
-- Optional reminder / suggestion layer
-- Zerion CLI agent prototype for the track
-
-**Explicitly not required in the MVP path:**
-
-- Social login
-- Embedded wallet auth
-- Replacing wallet-native identity
-
----
-
-## Phase 2 - Fund Mode MVP (invite-only closed beta)
-
-**Goal:** support pooled USDC Treasury flows as the hero product beta while keeping the shipped Split Mode proof stable.
-
-**Release model:** Fund Mode is the hero product but remains **invite-only closed beta** until the Proposal lifecycle is genuinely complete and the treasury surface has been stress-tested with real groups. Engineering starts now; open public availability waits for proof.
-
-**Already present in the repo:**
+**Already in the repo:**
 
 - Group creation supports Fund Mode
-- Treasury initialization exists
-- Contribution history and on-chain Treasury balance are surfaced
-- Multisig and vault addresses are both stored
+- Treasury initialization
+- Contribution history and on-chain Treasury balance display
+- Multisig + vault address storage
+- DB migration `20260515100000_fund_mode_beta_completion.sql` (roles, proposal kinds, monetization)
+- Server enforcement: role permissions, proposal kinds, monetization mutations, cluster-aware Fund Mode
+- Role / creation-fee / monetization / leave / admin endpoints
+- Fund Mode beta UI banners, exit survey, nullable proposal fields
 
-**Still to build in the one-month sprint:**
+**Still to ship before Summit:**
 
-- Proposal creation UI
-- Approval UI
-- Execution flow
-- Reimbursement-first proposal flow where Treasury payouts go to Member wallets only
-- Proposal-scoped comments and lightweight proof attachments, without expanding to Group-wide chat
-- Proposal evidence model: one lightweight uploaded file plus optional external link
-- Proposal edit history and pre-approval-only editing
-- Proposal review states with approve and reject
-- Proposal closure model where rejection ends the current Proposal and retries require a new one
-- Separate proposal execution step after approvals reach threshold
-- Approved proposal execution can be triggered by any Member
+- Proposal creation, approval/rejection, execution end-to-end with Squads-backed Treasury movement
+- Proposal proof, comments, edit history, visible rejection history (no Group-wide chat)
+- Reimbursement-first Proposals where Treasury payouts go to Member wallets only
+- Threshold-approval execution callable by any Member
 - Signer-management rules after Treasury initialization
-- Treasury policy design: keep MVP on strict proposal-based spending, then evaluate Squads permissions / spending limits for trusted low-value withdrawals
 - Better Contribution UX
-- LI.FI Contribution funding path for Members whose USDC is not on Solana
-- Zerion readiness context for Members before Contributions and Proposal execution
-- FundWise Agent / Fundy API support for read-only and draft-safe Proposal workflows
+- Mainnet cluster wiring + invite gate removal once stable
 
-**Exit criterion:** a Fund Mode Group can initialize a Treasury, accept Contributions, create a reimbursement Proposal, approve or reject it, and execute an approved reimbursement through the stored Squads identities.
+**Exit criterion:** a Fund Mode Group on mainnet can initialize a Treasury, accept Contributions, create a reimbursement Proposal, approve or reject it, and execute the approved reimbursement.
 
----
+### Fundy companion (alongside Summit launch)
 
-## Phase 3 - Submission polish (through May 11, 2026)
+Fundy lives in a separate repository ([ADR-0022](./docs/adr/0022-fundy-moves-to-a-separate-repository.md)) and calls FundWise over public HTTP plus the Agent Skill Endpoint. Hosted Telegram bot, command-first v1, LLM layer later.
 
-**Goal:** submit a coherent consumer product story instead of a pile of sponsor demos.
+The FundWise side of the linkage is shipped:
 
-**Must-have narrative:**
+- Telegram link-code flow (`/api/telegram/link-code`, wallet-session gated)
+- Service-key gated Fundy endpoints (`/api/telegram/link` GET/POST/DELETE)
+- DB tables with RLS on, service-role-only access
 
-- Web app first
-- Private Group creation
-- Fast Expense entry
-- Live Group Balances
-- One-click USDC Settlement
-- Clear Receipt
-- Settlement Request Links as the shareable loop: live Balance, exact debtor context, wallet-confirmed Settlement, Receipt
-- Source Currency and Expense Proof only as future direction unless implemented end to end before recording
-
-**Submission work:**
-
-- Demo videos
-- Submission copy
-- End-to-end rehearsals
-- End-to-end devnet testing after the full stack is rewired
-- Judge-oriented screenshots and notes
-- Mainnet-beta readiness review or clearly explained mainnet-beta target with devnet rehearsal evidence
-
-**Track priorities:**
-
-1. Visa Frontier
-2. LI.FI
-3. Zerion
-4. Eitherway, if time allows
-5. Fund Mode only as future-direction evidence unless the Proposal lifecycle is genuinely complete
-
-### Visa Frontier — partner research brief
-
-Reference brief for the Visa-track narrative. Each entry is what we verified plus how the partner plugs into FundWise.
-
-**1. Visa Frontier Hackathon Track (Superteam Germany)**
-- Sidetrack on the Solana Frontier Hackathon (online, April 6 – May 11, 2026), Germany-eligible only; prize pool 10,000 USDG (5k / 3k / 2k); winners announced May 27, 2026; sponsor contact `@zCasee` on Telegram.
-- Public listing on Superteam Earn does not enumerate explicit judging rubric or required Visa APIs. Frontier-wide messaging says the Visa payments track gives teams access to Visa SMEs and includes Visa staff on the judging panel — i.e. judged on payments fit, not a fixed Visa Direct integration.
-- Realistic FundWise framing: position USDC-on-Solana group settlement as a consumer payments use case and show a credible bridge to Visa rails (settled USDC → Visa-network card spend) via one of the partners below. No mandatory SDK to wire in.
-
-**2. KAST (kast.xyz)**
-- Stablecoin debit card on Visa rails; funded by USDC / USDT / USDe; deposits on Solana, Ethereum, Polygon, Arbitrum, Tron; founded by ex-Circle leadership; Apple/Google Pay; live "Solana Card" tier with staking rewards.
-- FundWise plug-in: after settlement, route a payer's USDC out of the Group to their KAST-funded address so the same balance is spendable at Visa merchants — closes the loop from "settled the trip" to "actually paid for the trip." Lightest wedge is a deep-link / "Top up KAST with this USDC" CTA on the Receipt page.
-- Hackathon-grade path: KAST has no public partner API today, so realistic integration is a deposit-address handoff plus co-marketing intro via Superteam. Treat as a narrative + UX partner, not an SDK dependency.
-
-**3. Avici (avici.money) — this is the "Avici/Avia" the user meant**
-- Confirmed real product. Self-custodial Solana neobank with a Visa debit card funded exclusively by USDC; deposits on Solana / Ethereum / Polygon; mobile app live on Google Play; frequently benchmarked head-to-head against KAST in Solana-card roundups.
-- FundWise plug-in: identical pattern to KAST — settled USDC routes to the user's Avici-funded address for Visa spend. Self-custody framing aligns better with FundWise's wallet-first model and is a cleaner story for the Frontier judges.
-- Hackathon-grade path: also no public partner API surfaced. Reach out via the Avici app / site contact and Superteam Germany; pitch as the consumer-card surface for FundWise settlements. Narrative partner, not an SDK.
-
-**4. Other Visa-rail options worth naming**
-- **Rain (rain.xyz)** — enterprise card-issuing platform, native Solana support, settles with Visa daily in stablecoins, has a developer-facing API for both custodial and non-custodial wallets. Of all the cards listed, Rain is the only one with a credible "wire it up in a hackathon" path; FundWise could issue a virtual card scoped to a Group treasury for shared expenses. Realistically: API access still requires a partner conversation, so v1 is a mock + design doc, not a live issue.
-- **Reap (reap.global)** — USD/HKD Visa cards backed by stablecoin collateral, Circle/Solana/Visa partner. Same shape as Rain but more APAC-anchored; reasonable backup if Rain doesn't reply.
-- **Skip for hackathon scope:** Gnosis Pay (EVM-only, doesn't fit Solana narrative), Crypto.com / Bitpanda Card (closed consumer products, no partner-grade hackathon path), Holyheld (EVM-first, similar issue).
-
-Recommended FundWise framing for the Visa Frontier submission: lead with USDC-on-Solana group settlement. Treat "settle -> spend" through KAST, Avici, Rain, or another card partner as future partner work until there is a concrete integration path. Do not build or claim card funding as core product for the hackathon.
+Capability scope at launch: personal finance for the individual user, read-only and draft-safe Group operations, group-chat mode after every Member authenticates. On-chain actions (settle, contribute, execute) deep-link back to the web app for wallet confirmation.
 
 ---
 
-## Phase 4 - Fundy companion agent (separate repo)
+## Summit launch — Multi-chain participation via CCTP + LI.FI
 
-**Goal:** ship a personal-finance Telegram agent that an individual user owns end-to-end, that knows their wallets and FundWise Groups, and that can be added to friends' Telegram chats to act as a shared finance copilot. Fundy is the second user-facing surface after Split Mode, and the wedge that opens up the invite-only Fund Mode beta.
+**Goal:** let Members on EVM and other non-Solana wallets participate in Groups without forcing the FundWise ledger off Solana. **In Summit launch scope as of 2026-05-16.**
 
-**Repository and runtime:**
+**Mechanism:**
 
-- **Separate repository** from the FundWise web app. Sibling product; calls FundWise over public HTTP APIs and the Agent Skill Endpoint, never reaches into the FundWise database directly.
-- Built on a **PI agent framework** for the agent loop, with the **Zerion CLI** as the primary wallet-intelligence and analytics tool.
-- Hosted Telegram bot on **Railway** (`grammy`); command-first v1, LLM layer later (e.g. OpenRouter).
+- **Circle CCTP** for native USDC across supported chains.
+- **LI.FI** for source-asset and route selection when the Member doesn't already hold USDC on a CCTP-supported chain.
+- Inbound funds **always convert to USDC on Solana** before they touch the FundWise ledger. Solana mainnet is still the only ledger and Settlement venue.
+- Surface in the Settlement / Contribution flow as a Member choice ("settle from another chain") rather than a separate dashboard.
 
-**Capabilities:**
+**Hard rules:**
 
-- **Personal finance for the individual user**: portfolio view, spend tracking, balance and runway alerts, wallet readiness checks before Group settlements
-- **FundWise Group operations**: drafting Expenses, attaching proof, reminders, Group summaries, and Proposal support — read-only and draft-safe inside Telegram
-- **Group-chat mode**: any FundWise Member may add Fundy to a Telegram chat; every participant must authenticate one-on-one in DM before Fundy acts for them in the group chat
-- **Tax advisory and tax filing** — long-arc surface inside Fundy. Starts as **tax advisory** (year-to-date taxable events, simple optimization prompts, jurisdiction-aware guidance) and grows into **assisted tax filing** as wallet-data coverage and partner integrations mature. Tax filing is explicitly Fundy's responsibility, not the FundWise web app's.
+- Settlement asset stays USDC on Solana. CCTP/LI.FI is an inbound rail, not a multi-ledger product.
+- Off-chain ledger model does not change.
+- No multi-chain claims in launch copy until each route actually works end-to-end with verified Receipts.
 
-**Auth and trust boundary:**
+**Already shipped:**
 
-- Authenticates users with **web-generated link codes** in DM; calls FundWise **HTTP APIs** with service key + wallet header
-- Zerion CLI behind **`/analyze`**, **`/readiness`**, **`/verify`** (`ZERION_API_KEY` first, x402 optional)
-- DB-only Proposal approve / reject is allowed in-chat; **on-chain** actions (settle, contribute, execute proposal) deep-link back to the web app for wallet confirmation. Settlements specifically use **Settlement Request Links** to bounce out of Telegram into the signing flow.
-- Telegram identity = one active wallet per Telegram account; relinking is an explicit later flow rather than multi-wallet ambiguity. Telegram chat mapping starts as one chat → one FundWise Group.
+- `lib/lifi-config.ts` — EVM (Ethereum/Base/Arbitrum/Optimism/Polygon) + Solana providers wired, USDC addresses mapped
+- `lib/lifi-bridge.ts` — full quote → sign → execute flow with status callbacks
+- `components/cross-chain-bridge-modal.tsx` — bridge UI surfaced in Settlement (FW-004) and Contribution (FW-030) flows
+- `pnpm lifi:readiness` — mainnet routes for Ethereum/Base/Arbitrum/Optimism/Polygon USDC → Solana USDC are validated
 
-**FundWise repo prerequisites for Fundy:**
+**Still to ship before Summit:**
 
-- **Agent Skill Endpoint** (`/skill.md`): public markdown at **`https://fundwise.fun/skill.md`** — purpose, allowed vs forbidden calls, auth (profile tokens + optional wallet-signed), limits, errors; any agent can `curl` it. Fundy is the first consumer.
-- **Scoped Agent Access API**: permission model for autonomous agents — scoped capabilities tied to Member wallet, Group, and action type (read, draft, comment), not broad permanent API keys. Money-moving action types still require direct wallet confirmation. Supports capability grants with expiration and revocation.
-- **Payable Settlement Request research**: evaluate x402, MPP, and pay.sh-style flows for agent-paid Settlement Requests. The first prototype should be USDC-only, exact amount, short expiry, idempotent, and Receipt-producing only after verified payment proof. See [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md).
-- **Agent Spending Policy**: define Member-configured payment caps, Group scope, asset scope, counterparty scope, expiry, revocation, and human fallback before any agent-paid Settlement ships. See [docs/agent-payment-policy.md](./docs/agent-payment-policy.md).
-- **Ownership transfer**: define Group ownership as administrative metadata and add a transfer/recovery rule before agent-created Groups become first-class.
-- Backend schema additions before Fundy can ship: Telegram-to-wallet links, agent-access grants, Proposal comments and proof attachments, Proposal edit history, and later agent capability grants.
+- Devnet → mainnet release pipeline with a staging/beta gate before public mainnet
+- Default-to-mainnet cluster switch in `components/solana-wallet-provider.tsx` / `components/wallet-provider.tsx` with env-var override
+- CCTP routing config in LI.FI (`preferBridges`/`allowBridges`) — decision pending: CCTP-only vs prefer-CCTP-with-fallback
+- "Powered by Circle CCTP" branding inside the bridge modal; surface which rail the active quote used
+- End-to-end mainnet test with a tiny (~1 USDC) Base → Solana route, documented and reproducible
 
-**Exit criterion:** an individual user can DM Fundy, link their FundWise account, see personal finance and Group context, draft Expenses, get tax-advisory summaries, and add Fundy to a friends' Telegram group where every Member authenticates and uses Fundy without leaving the chat (except for on-chain confirmations).
+**Open verifications:** fee/quote display polish, route-success monitoring, recipient ATA handling for cross-chain originated flows.
 
 ---
 
-## Phase 5 - Post-hackathon expansion
+## Later — Fiat onboarding for non-crypto users
 
-Only pursue these after the core Group ledger, USDC settlement flow, and Fundy companion are reliable.
+**Goal:** make FundWise usable by people who don't currently hold crypto or a wallet.
 
-**Product expansion:**
+**Stack (locked 2026-05-16):**
+
+- **Privy** — per-user embedded Solana wallet, non-custodial via TEE shards, silent provisioning on email / Apple / Google signup, invisible gas via Privy's native fee-payer.
+- **MoonPay** — headless card top-up (Apple Pay etc.); USDC-on-Solana straight to the Privy wallet.
+- **Bridge.xyz** — bank rails (SEPA / SEPA Instant / IBAN / wire) → USDC-on-Solana to the Privy wallet. Stripe-owned; documented EUR IBAN issuance.
+- **Squads Protocol** — already integrated; each FundWise Group is a Squads multisig holding USDC. Contributions flow from the user's Privy wallet → the Group's Squads multisig.
+- **Altitude is ruled out** — it's Squads' own consumer-business neobank built on Squads API, not embeddable infra. Using it would mean sending users to a competing app instead of building on infrastructure.
+
+**Hard rules:**
+
+- Wallet provisioning via Privy is opt-in (email/social signup path). Self-custody via wallet-adapter remains the default for crypto-native users.
+- KYC, holding limits, and offboarding rails follow what the partner provides — do not invent these in-house.
+- Do not claim "no crypto needed" in copy until top-up → Group contribution actually works for a fiat-only user end-to-end.
+
+**Open verification before spike:** does Bridge.xyz let SEPA/IBAN settle USDC directly to a Privy-managed Solana address, or is there a "destination must be Bridge-provisioned" gotcha in the EU flow?
+
+**Sibling card-rail track (long-range):** USDC settled in a Group should eventually be spendable at Visa merchants via partners like **KAST**, **Avici**, or **Rain** (Rain is the only one with a developer-facing card-issuing API today). Treat as partner work, not core product, until a concrete integration exists.
+
+---
+
+## Sibling work — Fundy, Agent Skill Endpoint, Scoped Agent Access
+
+These move on Fundy's own track but depend on FundWise contracts staying stable.
+
+- **Agent Skill Endpoint** (`/skill.md`): live at `https://fundwise.fun/skill.md`. Purpose, allowed/forbidden calls, auth, limits, errors. Any agent can `curl` it.
+- **Scoped Agent Access API**: permission model for autonomous agents — scoped capabilities tied to Member wallet, Group, and action type (read, draft, comment). Money-moving action types still require direct wallet confirmation. Capability grants with expiration and revocation.
+- **Payable Settlement Requests** (research, [docs/agentic-settlement-endpoint.md](./docs/agentic-settlement-endpoint.md)): x402, MPP, pay.sh-style flows. First prototype is USDC-only, exact amount, short expiry, idempotent, Receipt-only after verified payment proof.
+- **Agent Spending Policy** ([docs/agent-payment-policy.md](./docs/agent-payment-policy.md)): Member-configured payment caps, Group scope, asset scope, counterparty scope, expiry, revocation, human fallback.
+
+---
+
+## Out-of-scope and explicit non-claims
+
+These should not appear in launch copy or be built into the core product unless a phase explicitly ships them:
+
+- Multi-chain settlement (Solana stays the ledger)
+- Any-chain or any-currency Settlement
+- Gas abstraction / gasless settlement
+- Social login as a replacement for wallet identity
+- Embedded-wallet-only onboarding
+- Live yield-bearing Treasuries
+- AI-native expense entry beyond draft-safe Fundy/FundWise Agent flows
+- Mini-games or prediction-market mechanics — out of FundWise entirely
+- Scoped Agent Access or autonomous-agent payment as shipped features (planned)
+- Receipt Endpoint as a shipped product (planned)
+- Source Currency entry and Expense Proof upload until each is implemented end to end
+- Unlimited agent spending, broad API keys, or prompt-only authorization for money movement
+
+---
+
+## Long-range expansion (after the three launch phases above are reliable)
 
 - Multi-stablecoin support
-- Broader Source Currency support for Expense entry, including exchange-rate provider redundancy and better display of original amount vs converted ledger amount. This remains future-only until Exchange Rate Snapshot storage is complete.
-- Cross-chain direct flows beyond Settlement routing
-- Embedded wallets
-- Social login
-- Gas abstraction / gasless settlement
-- Stablecoin-only user experience where fees and bridging are abstracted away from the end user
-- Easier web2 onboarding and offboarding:
-  bank-transfer style funding, fiat-to-stablecoin ramps, Visa/card top-ups, IBAN-like funding, and later Altitude-style Solana banking interfaces for non-crypto users
-- FundWise Agent as the umbrella assistant layer for drafting Expenses, attaching proof, reminders, Group summaries, and Proposal support (the in-app counterpart to Fundy)
-- Telegram mini app as an additional FundWise Agent distribution surface
-- Wallet mini dapp distribution
+- Broader Source Currency capture with Exchange Rate Snapshot storage
 - Native mobile app once the shared engine and secondary surfaces are stable
-- AI bill parsing beyond basic receipt-photo upload and natural-language Expense entry beyond draft-safe FundWise Agent flows
-- **Visa-rail card partnerships in production**: graduate the partner research from Phase 3 into a real "settle -> spend" and "top up -> settle" handoff. Near-term partners: **KAST** and **Avici** (consumer Solana cards, USDC funding); production-grade issuer path: **Rain** (developer-facing card-issuing API with native Solana support) for FundWise-branded Group cards. Keep Altitude-style Solana banking rails on the research list for card and IBAN-like top-ups. Frame Germany / EU presence around the Visa Frontier track relationship.
-
-**Channel strategy:**
-
-- Keep one core product engine: wallet-bound ledger APIs, proposal rules, and settlement logic must be shared across every surface. Fundy reuses the existing Group model rather than redefining it.
-- Expand surfaces in this order:
-  web app -> Fundy (hosted Telegram bot) -> Scoped Agent Access + Payable Settlement Requests -> Telegram mini app -> wallet mini dapp -> native mobile app
-- The Agent Skill Endpoint should be the first thing an autonomous agent fetches when discovering FundWise. It should describe all available actions, the Scoped Agent Access auth model, and link to the API surface.
-- For long-range onboarding and fee abstraction research, Bridge is the more direct infrastructure candidate today; Altitude is better treated as UX and operating-model inspiration unless its consumer surface changes materially.
-
-**Fund Mode expansion:**
-
-- Better treasury UX
-- Refund / closeout flow
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise unless separately justified later outside the current Split Mode and Fund Mode roadmap
-- Yield integrations if user demand justifies them
-- Custom Anchor vault if Squads UX becomes the bottleneck
-
-**Operations and analytics:**
-
-- Activation and settlement analytics
-- Better production monitoring
-- Mainnet support tooling
-
----
-
-## Implementation skills
-
-- `review-and-iterate` before each phase exit
-- `frontend-design-guidelines` and `brand-design` for user-facing polish
-- `openai-docs` or `find-docs` when vendor docs are needed
-- `deploy-to-mainnet` once the core path is actually production-ready
+- Telegram mini app and wallet mini-dapp distribution
+- AI bill parsing beyond receipt-photo upload
+- Yield routing (e.g. Meteora) for idle Treasury USDC, only after Fund Mode mainnet is stable
+- Production card rails through Rain / KAST / Avici partners
+- Activation, settlement, and treasury analytics; production monitoring; mainnet support tooling
