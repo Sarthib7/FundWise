@@ -7,7 +7,7 @@ FundWise is a shared-finance app for private Groups with two modes:
 
 ## Positioning
 
-**Company umbrella:** FundLabs builds the financial layer for groups, human or AI. FundWise is the first product in that strategy; Fundy and Receipt Endpoint are planned expansion products.
+**Company umbrella:** FundLabs builds the financial layer for groups — human or AI. Shared spending, agent finance, and on-chain receipts on Solana. FundWise (shared finance with Split + Fund Modes), Fundy (Telegram-native agent + MCP server), and Receipt Endpoint (Solana tx → structured receipts) are the three FundLabs products. The "human or AI" framing is load-bearing: a human can create a Fund Mode Group, allocate budget through Fundy to an AI agent, have that agent join the Group via FundWise's skill/MCP endpoints, and let the agent log Expenses, hold an allocation, and query Receipt Endpoint for its own payment history. Earlier framing of Fundy and Receipt Endpoint as "planned expansion products" is superseded — both are shipped or shipping by Solana Summit (2026-06-13).
 
 **Canonical public tagline:** Split expenses. Earn together.
 
@@ -72,7 +72,10 @@ An unpaid, machine-readable request generated for a Payable Settlement Request. 
 Avoid: Receipt, confirmed settlement
 
 **Spending Policy**:
-A Member-granted policy that defines how much payment capacity an agent has. It scopes agent payment authority by Member wallet, agent identity, Group, action, asset, counterparty, per-Settlement cap, daily or weekly cap, expiry, and revocation. Anything outside the policy must fall back to a Settlement Request Link for human wallet confirmation.
+A human-Member-granted policy that defines how much payment capacity an agent has. It works in two modes:
+1. **Agent-as-hands:** the agent acts under a human Member's wallet via a scoped token; the policy caps what the agent can do under that Member's identity.
+2. **Agent-as-Member:** the agent has its own wallet that joined the Group as a Member; the policy is set by the human who funded/invited it and caps what the agent can do with its own funds (e.g. per-Settlement cap, daily/weekly cap, allowed Groups, allowed asset, expiry, revocation).
+Anything outside the policy must fall back to a Settlement Request Link for human wallet confirmation. The agent-as-Member path is the north-star; agent-as-hands is the lighter slice that exists today.
 Avoid: Unlimited approval, broad API key
 
 **Contribution**:
@@ -83,8 +86,12 @@ Avoid: Deposit, payment
 A request to spend from a Fund Mode Treasury. In the first Fund Mode shape, this is a reimbursement request filed by a Member who already paid out of pocket, and the Treasury reimburses a Member wallet after approval. It includes recipient, amount, memo, and may include lightweight proof such as one uploaded image or PDF plus an optional external link. It requires approval before execution.
 Avoid: Vote, request, withdrawal
 
+**Mirrored Proposal Status**:
+The FundWise-side mirror of a Squads on-chain Proposal status — one of `pending`, `approved`, `rejected`, `executed`, `cancelled`. Squads on-chain governance is the source of truth (see ADR-0029); the mirror is a UX-only cache used to render Proposal state without an RPC round-trip on every read. Mirrored values are written only after server-side verification that the on-chain Squads Proposal account matches.
+Avoid: Proposal status (without "mirrored"), cached state
+
 **Member**:
-A wallet address that has joined a Group. A Member is identified by their Solana public key and shown in the UI with a profile display name.
+A wallet address that has joined a Group. A Member is identified by their Solana public key and shown in the UI with a profile display name. A Member's wallet is human-controlled by default, but may be controlled by an autonomous agent — in which case the human who funded or invited that agent retains policy oversight via Spending Policy and Scoped Agent Access. The "Members of a Group can be human or AI" claim in public copy reduces to this rule.
 Avoid: User, participant, signer
 
 **Profile Display Name**:
@@ -100,24 +107,55 @@ The umbrella name for later assistant surfaces that help Members read Group stat
 Avoid: Telegram agent, generic AI agent
 
 **Fundy**:
-The hosted Telegram bot that runs the FundWise Agent. It is command-first in v1 (fixed commands, no natural-language parsing); the end goal is an LLM-backed agent (e.g. OpenRouter) on top of the same tools. Fundy runs as a **separate Node service on Railway** (library: `grammy`) in a **separate repository** per ADR-0022, and calls the **same FundWise HTTP API** as the web app using service-to-service auth and later Scoped Agent Access, not direct Supabase writes from the bot process. Users link Telegram to wallet via **short-lived codes** generated in the authenticated web app (`/link FW-…` in DM). Users authenticate by linking their Telegram account to their FundWise wallet address, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe actions run in Telegram; **database-only** Proposal approve/reject may run in Telegram; **on-chain** Settlement, Contribution, and Proposal execution deep-link back to the web app (reuse **Settlement Request Links** for settle flows). Fundy later owns personal finance, tax guidance, and any Telegram-native companion workflows.
-Avoid: FundWise Telegram, the bot
+A FundLabs product: a personal finance agent that lives in Telegram and exposes the same tools over MCP for external agents. Fundy is both a standalone product users adopt and FundWise's primary distribution surface — those roles do not conflict. It is command-first in v1 (fixed commands, no natural-language parsing); the end goal is an LLM-backed agent (e.g. OpenRouter) on top of the same tools. Fundy runs as a **separate Node service on Railway** (library: `grammy`) in a **separate repository** per ADR-0022, and calls the **same FundWise HTTP API** as the web app using service-to-service auth and later Scoped Agent Access, not direct Supabase writes from the bot process. Users link Telegram to wallet via **short-lived codes** generated in the authenticated web app (`/link FW-…` in DM). Users authenticate by linking their Telegram account to their FundWise wallet address, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Read-only and draft-safe actions run in Telegram; **database-only** Proposal approve/reject may run in Telegram; **on-chain** Settlement, Contribution, and Proposal execution deep-link back to the web app (reuse **Settlement Request Links** for settle flows). Fundy later owns personal finance, tax guidance, and any Telegram-native companion workflows.
+Avoid: FundWise Telegram, the bot, "just a surface"
 
 **Receipt Endpoint**:
-A planned FundLabs developer/API product that returns structured, verifiable Receipts for agent and on-chain payments. It should grow from FundWise Receipts, Payable Settlement Requests, Scoped Agent Access, and Spending Policies. It is not shipped in the FundWise MVP.
-Avoid: claiming live API revenue or agent-paid settlement before implementation
+A FundLabs product: a Railway-hosted, MCP-catalog-listed, x402/MPP-payable endpoint that turns any Solana transaction into a structured, archivable receipt JSON (IPFS-pinned, on-chain-verifiable). The public surface accepts any Solana tx sig and returns a generic receipt; FundWise Settlements are the **premium first-class source** because they carry richer metadata (Group, Members, Expense linkage, Settlement context). Receipt Endpoint does **not** require FundWise's Payable Settlement Request, Scoped Agent Access, or Spending Policy primitives to ship — earlier guidance tying it to those was superseded on 2026-05-16 in favour of a standalone Railway service that can ship by Solana Summit (2026-06-13). FundWise integration grows the moat over time but is not a release blocker.
+Avoid: framing as a FundWise-only feature, claiming Stripe-grade compliance before audit, claiming richer receipts on non-FundWise txs than what Solana RPC plus DEX/protocol metadata actually return.
 
 **Agent Skill Endpoint** (`/skill.md`):
 A public URL on the production FundWise host (`https://fundwise.fun/skill.md`) that returns a machine-readable markdown document describing what FundWise is for, what actions autonomous agents may call, what they must not call, how to authenticate, rate limits, errors, and terms of use. Any personal AI agent can `curl` this URL to discover FundWise capabilities and integrate without manual configuration.
 Avoid: API docs, developer portal
 
 **Scoped Agent Access**:
-The permission model for autonomous agents interacting with FundWise on behalf of a Member. Agents receive scoped capabilities tied to the Member wallet, specific Group, and action type — not broad permanent API keys. Actions that move money still require direct wallet confirmation unless a later Payable Settlement Request flow grants explicit, narrow, revocable payment authority for a specific Member, Group, asset, limit, and expiry.
-Avoid: API keys, bot tokens
+The permission model for autonomous agents interacting with FundWise. Covers two cases:
+1. **Agent-as-hands** (shipped today): an agent acts on behalf of a human Member. The Member generates a scoped token from `/profile/agents` (or signs a Solana wallet challenge); the token is tied to that Member's wallet, specific Group(s), and action type.
+2. **Agent-as-Member** (north-star, partial slice at Summit): the agent has its own wallet that joined the Group as a Member. The human who funded or invited it sets Spending Policy on the agent's own-wallet behavior. The agent authenticates with its own wallet/key; the human's role is policy-setter and revoker, not principal.
+Actions that move money still require direct wallet confirmation in both modes unless a Payable Settlement Request flow grants explicit, narrow, revocable payment authority for a specific wallet, Group, asset, limit, and expiry.
+Avoid: API keys, bot tokens, conflating "scoped token" with "Member identity"
 
 **Treasury**:
 The on-chain USDC holding account for a Fund Mode Group. In the MVP direction, this is backed by a Squads multisig and related vault addresses.
 Avoid: Wallet, pool
+
+**Creation Fee**:
+A flat $5 USDC charged once at Fund Mode Treasury initialization. Paid from the creator's wallet to the Platform Fee Wallet. Operator-tunable, non-refundable.
+Avoid: setup fee, signup fee
+
+**Contribution Fee**:
+A 0.5% take applied when a Member contributes USDC to the Treasury. Buyer-pays — Treasury receives the gross contribution; the fee is added on top of what the Member signs.
+Avoid: deposit fee, pool entry fee
+
+**Reimbursement Fee**:
+A 0.5% take applied when a Treasury reimburses a Member via Proposal execution. Buyer-pays — Member receives the gross requested amount; the fee is debited from the Treasury alongside (in the same Squads vault transaction).
+Avoid: withdrawal fee, payout fee
+
+**Routing Fee**:
+A 25 bps take on cross-chain inbound funds routed via Circle CCTP and LI.FI before they land as USDC on the Solana side. Surfaced transparently in the route quote.
+Avoid: bridge fee, swap fee
+
+**Holding Fee** (planned, post-Summit):
+A recurring 0.5%/year take on idle Treasury AUM, prorated daily. Requires a billing job and a Squads-compatible debit mechanism that does not yet exist. Not in Summit launch scope.
+Avoid: AUM fee, management fee
+
+**Yield Fee** (planned, post-Meteora):
+A 30% take on yield generated when Treasury USDC is routed to Meteora or similar yield venues. Opt-in per Treasury; default off. Not in Summit launch scope.
+Avoid: performance fee, yield spread
+
+**Platform Fee Wallet**:
+A FundWise-controlled Solana wallet (different per cluster) that receives all collected fees on-chain. Configured via `FUNDWISE_PLATFORM_FEE_WALLET`. Collection is recorded in the `platform_fee_ledger` table for reconciliation.
+Avoid: dev wallet, fee sink
 
 **Balance**:
 A Member's net position inside a Split Mode Group. Positive means they are owed USDC. Negative means they owe USDC.
@@ -197,7 +235,7 @@ Avoid: Optimized debts, minimum transfers
 - Wallet connect is a gate, not a detour. After connect, the app should restore the user's exact intent: invite-linked Group, Settlement Request Link, or first Group creation.
 - Telegram is a distribution surface, not a signing surface. It may support read-only views, draft-safe actions, comments, and history, but approvals, executions, and money-moving actions must return the Member to the app for wallet confirmation.
 - The later Telegram bot and Telegram mini app should be framed as FundWise Agent surfaces, not as a separate "Telegram agent" product.
-- Fundy is the hosted Telegram bot that runs the FundWise Agent. It is not a separate product; it is a distribution surface.
+- Fundy is a FundLabs product (Telegram-native personal finance agent + MCP server for external agents) that also serves as FundWise's primary distribution surface. The "product" and "distribution surface" roles co-exist; public copy may lead with the product framing, while engineering invariants below (money-moving actions deep-link to the web app, no direct Supabase writes from Fundy) still apply.
 - Fundy starts as a **command-based bot** (fixed commands like `/balance`, `/owe`, `/draft`). The end goal is an AI agent with an LLM brain (OpenRouter), but the first version uses commands only.
 - Fundy runs as a **separate service on Railway**, not inside the Next.js Cloudflare Workers deployment. It uses `grammy` as the Telegram bot library and lives in a separate repository per ADR-0022.
 - Fundy authenticates against the FundWise API using service-to-service auth and later Scoped Agent Access, not direct Supabase access. This keeps one consistent API surface for Fundy, external agents, and the web app.
@@ -211,7 +249,7 @@ Avoid: Optimized debts, minimum transfers
 - One Telegram account maps to one active wallet at a time. Re-linking soft-deletes the old link and creates a new one.
 - One Telegram chat maps to one FundWise Group at a time. Any Member may `/connect` a chat to a Group, but every participant must authenticate in a private DM before Fundy acts for them in the group.
 - Fundy uses Zerion CLI for wallet analysis via `/analyze` (portfolio overview), `/readiness` (FundWise balances + Zerion readiness), and `/verify` (on-chain history to confirm a Settlement or counterparty payment). Zerion CLI auth starts with a free **`ZERION_API_KEY`** (dev tier); optional **x402** pay-per-call on Solana later for demos (`SOLANA_PRIVATE_KEY` + `ZERION_X402`).
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise. They are not Split Mode scope, Fund Mode beta scope, or hackathon submission scope.
+- Mini-games and prediction-market-like mechanics are out of scope for FundWise. They are not Split Mode scope, Fund Mode beta scope, or launch scope.
 - Plain `/groups` with no existing Groups should open Group creation immediately after connect.
 - Plain `/groups` with existing Groups should remain a Group list after connect.
 - Group creation defaults to Split Mode, while the public create flow keeps Fund Mode visible as an invite-only beta until the Proposal lifecycle is ready.
@@ -220,14 +258,15 @@ Avoid: Optimized debts, minimum transfers
 - Split Mode stays free for launch, including normal USDC Settlements.
 - Multi-currency Expense entry does not mean multi-currency Settlement. Source Currency values convert into the USD/USDC ledger before Balance and Settlement logic.
 - SOL is required for gas on Solana mainnet-beta.
-- Split Mode is the primary product path for the hackathon MVP.
+- Split Mode is the primary product path for the launch MVP.
 - Fund Mode remains separate from Split Mode and uses Treasury plus Proposal concepts, not direct Settlements.
 - LI.FI is the primary sponsor support path when a Member's USDC is on another supported network. It belongs inside the Settlement path as `Route funds for Settlement`; the dashboard should not present a separate top-up task before the Member presses Settle.
 - The audience rollout is crypto-native Groups first, then agents, then non-crypto users through Visa/card, IBAN, and Altitude-style Solana banking rails once the core product is reliable.
 - **Zerion** in this product is the **Zerion CLI** track (wallet analysis, agent-style flows). It is not a user-facing “connect with Zerion wallet” SDK; it does not replace Solana wallet connection.
 - FundWise Agent, Telegram bot, Telegram mini app, wallet mini dapp, and AI chat are later distribution surfaces, not the MVP source of truth.
 - Fund Mode is the north-star product surface for the next one-month sprint. It remains invite-only until Proposal creation, approval/rejection, proof/history, and execution work end to end.
-- Live yield-bearing Treasuries, automatic Settlement, any-chain / any-currency Settlement, gasless UX, Fundy execution, Receipt Endpoint APIs, and agent-paid money movement are future claims until implemented end to end.
+- Live yield-bearing Treasuries, automatic Settlement, any-chain / any-currency Settlement, gasless UX, Fundy execution, and agent-paid money movement are future claims until implemented end to end.
+- Receipt Endpoint ships as a **standalone Railway service** by Solana Summit (2026-06-13): wallet/tx sig in, structured receipt JSON out, IPFS-pinned, payable per call via x402/MPP, listed in the pay-skill / x402 MCP catalog. It does not depend on FundWise's Payable Settlement Request, Scoped Agent Access, or Spending Policy primitives. FundWise Settlements are the **premium first-class source** with the richest receipt metadata, but any Solana tx is accepted at the public endpoint.
 
 ## Example dialogue
 
@@ -248,6 +287,9 @@ Avoid: Optimized debts, minimum transfers
 
 > Dev: "Can an autonomous agent settle a debt on behalf of a Member?"
 > Domain expert: "Not by default. In the MVP, the agent can draft the settlement intent and show the debtor what they owe, but the on-chain Settlement requires direct wallet confirmation from the Member. A later Payable Settlement Request can support agent-paid settlement only if the Member grants narrow `settlement:pay` authority with amount, Group, asset, expiry, and revocation limits."
+
+> Dev: "Can an AI agent be a Member of a Fund Mode Group in its own right — with its own wallet and its own allocation, not just as the human's hands?"
+> Domain expert: "Yes — that's the north-star model. A Member is any wallet that joined a Group; nothing in the data model requires the wallet to be human-controlled. The agent's wallet is funded by the human (directly, or via a reimbursement Proposal targeting the agent's wallet from the Treasury); the human sets Spending Policy on the agent's own-wallet behavior; the agent signs its own transactions but is bounded by the policy. The fuller slice (Treasury → agent wallet allocations via approved Proposals, agent-driven Expense logging with own-wallet attribution, Receipt Endpoint queries scoped to the agent's wallet) is the direction. The Summit-shippable slice today is the lighter version (agent-as-hands via Scoped Agent Access)."
 
 > Dev: "What power does the Group owner have?"
 > Domain expert: "Today, almost none in Split Mode. `created_by` is mostly the creator label; Fund Mode currently uses it to initialize Treasury addresses. Future ownership can manage metadata and transfer the title, but it must not override Member balances, Expense ownership, Settlement verification, or Receipt integrity."
@@ -317,4 +359,4 @@ Resolved: use FundWise Agent as the assistant product name. Telegram is one chan
 Resolved: use Agent Skill Endpoint for the public `/skill.md` URL that any autonomous agent can curl. This is distinct from AGENTS.md (instructions for code-level AI agents working on the codebase).
 
 - "Fundy" could sound like a separate product.
-Resolved: Fundy is the name of the hosted Telegram bot that runs the FundWise Agent. It is a distribution surface, not a separate product.
+Resolved (2026-05-16): Fundy is a FundLabs product (Telegram-native personal finance agent + MCP server) which also serves as FundWise's primary distribution surface. Earlier resolution that flattened Fundy into "just a distribution surface, not a separate product" is superseded — both roles co-exist. Engineering invariants (money-moving actions deep-link to the web app) still apply regardless of framing.
