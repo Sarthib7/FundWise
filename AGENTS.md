@@ -11,7 +11,7 @@ This file is the shared instruction set for all AI agents (Claude Codex, GLM, Cu
 1. **Split Mode** (MVP): Track expenses, compute who owes whom, and settle exact USDC amounts on Solana.
 2. **Fund Mode** (Phase 2): Pool stablecoins into a shared treasury with proposal-based spending.
 
-**Hackathon context:** We are submitting to the Colosseum Frontier hackathon (deadline May 11, 2026) with active sponsor focus on Visa Frontier, LI.FI, and Zerion CLI. See [HACKATHON_PLAN.md](./HACKATHON_PLAN.md) for full strategy.
+**Status:** Colosseum Frontier hackathon submission (May 11, 2026) is done. The active milestone is **Split Mode + Fund Mode on Solana mainnet plus Circle CCTP / LI.FI EVM support for Solana Summit Berlin (2026-06-13)**. Multi-chain inbound (EVM → USDC on Solana via Circle CCTP, orchestrated by LI.FI) was pulled into the launch scope on 2026-05-16. See [ROADMAP.md](./ROADMAP.md) and [STATUS.md](./STATUS.md).
 
 ---
 
@@ -24,8 +24,7 @@ Every agent must read these files before touching code:
 3. **[CONTEXT.md](./CONTEXT.md)** — domain language, relationships, and product invariants. Use these terms in code, comments, and commit messages. Do not invent new terms.
 4. **[PRD.md](./PRD.md)** — MVP scope, user stories, implementation decisions, and out-of-scope boundaries.
 5. **[ROADMAP.md](./ROADMAP.md)** — phased delivery plan.
-6. **[HACKATHON_PLAN.md](./HACKATHON_PLAN.md)** — judge-facing story and sponsor framing.
-7. **[docs/adr/](./docs/adr/)** — architecture decisions. Check these before making architectural choices. A new ADR is needed when a decision is hard to reverse, surprising without context, and the result of a genuine trade-off.
+6. **[docs/adr/](./docs/adr/)** — architecture decisions. Check these before making architectural choices. A new ADR is needed when a decision is hard to reverse, surprising without context, and the result of a genuine trade-off.
 
 If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the latest ADRs as the source of truth.
 
@@ -73,7 +72,6 @@ If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the lates
 ├── README.md               ← Project overview + docs map
 ├── CONTEXT.md              ← Domain model, language (READ FIRST)
 ├── AGENTS.md               ← This file
-├── HACKATHON_PLAN.md       ← Hackathon track strategy
 ├── PRD.md                  ← Product requirements
 ├── ROADMAP.md              ← Phased delivery plan
 ├── STATUS.md               ← Current state, next actions
@@ -96,23 +94,33 @@ If docs disagree, treat **STATUS.md**, **CONTEXT.md**, **PRD.md**, and the lates
 
 ### Key source files
 
+| File                                                  | Purpose                                                          |
+| ----------------------------------------------------- | ---------------------------------------------------------------- |
+| `lib/api-client.ts` *(planned, FW-074)*               | Browser → API: typed `apiFetch<T>` + shared types. Replaces `lib/db.ts` |
+| `lib/expense-engine.ts`                               | Split math, balances, settlement graph                           |
+| `lib/expense-suggestions.ts` *(planned, FW-073)*      | Pure derived view: `computeSuggestedReimbursements`              |
+| `lib/simple-payment.ts`                               | SPL transfer impl                                                |
+| `lib/supabase.ts`                                     | Supabase client                                                  |
+| `lib/squads/` *(planned, ADR-0035)*                   | Fenced Squads governance: instructions, verification, status mapping. Replaces `lib/squads-multisig.ts` |
+| `lib/fees/` *(planned, ADR-0036)*                     | Per-fee operations + uniform `FeeQuote`; `Fees.record` ledger write |
+| `lib/lifi-bridge.ts`                                  | LI.FI route + CCTP routing (Summit scope)                        |
+| `lib/server/with-authenticated-handler.ts` *(planned, ADR-0037)* | Wallet-session route HOF (auth + rate limit + body parse + wallet-match + envelope) |
+| `lib/server/mutations/` *(planned, ADR-0038)*         | Per-concept mutations: `group`, `member`, `expense`, `settlement`, `contribution`, `proposal`, `treasury`, `monetization` + `_internal.ts` helpers. Replaces `lib/server/fundwise-mutations.ts` |
+| `lib/server/solana-transfer-verification.ts`          | On-chain transfer verification; extended to verify N legs        |
+| `components/wallet-provider.tsx`                      | Solana wallet adapter setup                                      |
+| `components/solana-wallet-provider.tsx`               | Solana wallet context                                            |
+| `app/page.tsx`                                        | Landing page                                                     |
+| `app/groups/[id]/page.tsx`                            | Group dashboard                                                  |
+| `app/groups/[id]/settlements/[settlementId]/page.tsx` | Settlement receipt view                                          |
+| `app/skill.md/route.ts`                               | Agent Skill Endpoint — `https://fundwise.fun/skill.md`           |
+| `services/fundy/`                                     | Fundy Telegram bot (separate repo per ADR-0022) — Railway, `grammy`, calls FundWise HTTP API |
 
-| File                                    | Purpose                                               |
-| --------------------------------------- | ----------------------------------------------------- |
-| `lib/db.ts`                             | Group, Expense, Settlement, and Contribution CRUD     |
-| `lib/expense-engine.ts`                 | Split math, balances, settlement graph, settlement UX |
-| `lib/simple-payment.ts`                 | SPL transfer implementation                           |
-| `lib/supabase.ts`                       | Supabase client configuration                         |
-| `lib/squads-multisig.ts`                | Squads multisig for Fund Mode treasury                |
-| `lib/lifi-bridge.ts`                    | LI.FI route and execution helpers                     |
-| `components/wallet-provider.tsx`        | Solana wallet adapter setup                           |
-| `components/solana-wallet-provider.tsx` | Solana wallet context                                 |
-| `app/page.tsx`                          | Landing page                                          |
-| `app/groups/[id]/page.tsx`              | Group dashboard                                       |
-| `app/groups/[id]/settlements/[settlementId]/page.tsx` | Settlement receipt view                    |
-| `app/skill.md/route.ts`                | Agent Skill Endpoint (planned) — `https://fundwise.fun/skill.md` |
-| `services/fundy/`                     | Fundy Telegram bot (planned) — Railway, `grammy`, calls FundWise HTTP API |
-| `lib/server/` (extend)                  | Scoped Agent Access + bot auth validation (planned)   |
+**Module discipline (post-refactor, ADR-0035…0038):**
+
+- Squads SDK use lives only inside `lib/squads/`. Don't import `@sqds/multisig` outside it.
+- Fee math + ledger row shape lives only inside `lib/fees/`. Don't compute fees at callsites.
+- Per-concept mutation imports: `import { addExpenseMutation } from "@/lib/server/mutations/expense"`. The barrel at `fundwise-mutations.ts` is transitional; gone after FW-072 PR3.
+- API routes use `withAuthenticatedHandler` for wallet-session auth. Service routes keep `requireFundyServiceAuth`. Public routes stay raw.
 
 
 ---
@@ -168,7 +176,7 @@ docs(adr): add ADR-0009 for LI.FI SDK integration
 
 ### Testing expectations
 
-- No tests yet (hackathon MVP). After hackathon, add tests for:
+- Test coverage is still light. Priority additions for the Summit Berlin launch and the phases after:
   - Balance computation and simplified settlement graph
   - SPL token transfer flow
   - Supabase read/write operations
@@ -200,7 +208,7 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 
 | Skill                             | When to use                           | Key idea                                                  |
 | --------------------------------- | ------------------------------------- | --------------------------------------------------------- |
-| **tdd**                           | When building features post-hackathon | Red-green-refactor loop, one vertical slice at a time     |
+| **tdd**                           | When building durable features        | Red-green-refactor loop, one vertical slice at a time     |
 | **triage-issue**                  | When investigating a bug              | Explore codebase, identify root cause, file GitHub issue  |
 | **improve-codebase-architecture** | When the codebase gets messy          | Find shallow modules, deepen them, propose boundary tests |
 
@@ -224,61 +232,60 @@ This project follows patterns from the [designskills](https://github.com/mattpoc
 
 ---
 
-## Hackathon-Specific Notes
+## Roadmap notes
 
-### LI.FI Integration (Track 1 — P1)
+### Multi-chain (Summit launch scope) — Circle CCTP + LI.FI
 
-- Install `@lifi/sdk` as a dependency
-- Key methods: `getQuote()`, `executeRoute()`, `getContractCallsQuote()`
-- Primary integration point: top-up or recovery into Solana USDC, then return to the normal Group Settlement flow
-- Secondary integration point: Fund Mode Contributions if time allows
-- Must support at least 2 chains (Ethereum + Solana or Base + Solana)
-- Docs: [https://docs.li.fi/](https://docs.li.fi/)
+- **Pulled into the Summit Berlin launch scope on 2026-05-16.** Integration is built (`lib/lifi-config.ts`, `lib/lifi-bridge.ts`, `components/cross-chain-bridge-modal.tsx`); remaining work is mainnet pipeline, CCTP routing config, UX branding, and end-to-end mainnet test.
+- Inbound rail only: Members on EVM or other non-Solana wallets participate; all funds convert to **USDC on Solana** before touching the FundWise ledger.
+- LI.FI SDK methods of interest: `getQuote()`, `executeRoute()`, `getContractCallsQuote()`.
+- LI.FI route preferences: prefer Circle CCTP routes for USDC → USDC paths (cleanest story, native USDC, no slippage). Fallback to LI.FI's general router only when CCTP has no route for the chain/amount; surface in the UI which rail the active quote used.
+- Settlement asset stays USDC on Solana; this is not a multi-ledger product.
+- Surface as `Route funds for Settlement` and `Route funds for Contribution` inside the existing flows — not a standalone bridge dashboard.
+- LI.FI docs: [https://docs.li.fi/](https://docs.li.fi/) · Circle CCTP docs: [https://developers.circle.com/stablecoins/docs/cctp-getting-started](https://developers.circle.com/stablecoins/docs/cctp-getting-started)
 
-### Visa Frontier (Track 2 — P1)
+### Fiat onramp phase (later) — Privy + MoonPay + Bridge.xyz + Squads Protocol
 
-- No extra code needed — core payment flows ARE the submission
-- Focus on UX polish: receipt views, settlement speed, mobile clarity, and USDC payment simplicity
-- Emphasize: one-click settlements, instant finality, consumer payments use case
+- **Privy:** per-user embedded Solana wallet, non-custodial via TEE shards, silent provisioning on email / Apple / Google signup, invisible gas via Privy's native fee-payer.
+- **MoonPay:** headless card top-up; Apple Pay; USDC-on-Solana straight to the Privy wallet.
+- **Bridge.xyz:** SEPA / SEPA Instant / IBAN / wire → USDC-on-Solana to the Privy wallet. Stripe-owned; documented EUR IBAN issuance.
+- **Squads Protocol:** already integrated; each Group is a Squads multisig holding USDC. Contributions flow from the user's Privy wallet → the Group's Squads multisig.
+- **Altitude is ruled out** — it's Squads' own consumer-business neobank built on Squads API, not embeddable infra.
+- Wallet provisioning via Privy is opt-in; self-custody via wallet-adapter remains the default for crypto-native users.
+- Settles to USDC on Solana underneath; ledger model is unchanged.
 
-### Zerion CLI Agent (Track 3 — active sponsor track)
+### Wallet readiness — Zerion CLI
 
-- Install `zerion-cli` globally
-- Build a wallet-intelligence layer or background agent that analyzes wallets and suggests next actions without disrupting the primary Split Mode settlement flow
-- Uses `zerion-cli wallet analyze <address>` for wallet data
-- Can use x402 pay-per-call (no API key needed)
+- Read-only wallet analysis; not a wallet connector.
+- Uses `zerion-cli wallet analyze <address>` for wallet data.
+- Auth: `ZERION_API_KEY` (free dev tier) preferred; optional x402 pay-per-call.
 - Docs: [https://developers.zerion.io/build-with-ai/zerion-cli](https://developers.zerion.io/build-with-ai/zerion-cli)
 
-### Fundy (Planned — Post-Hackathon)
+### Fundy (separate repo per ADR-0022)
 
-- Hosted Telegram bot that runs the FundWise Agent; **command-first v1**, **LLM** (e.g. OpenRouter) as a later layer on the same tools
-- **Railway** deployment; code in **`services/fundy/`**; library **`grammy`**
-- Calls FundWise **HTTP API routes** with **`FUNDWISE_SERVICE_API_KEY`** + **`X-Fundy-Wallet`** (same API surface as the web app; extend routes for Scoped Agent Access)
-- Users authenticate with **web-generated short-lived codes** in DM: `/link FW-…`
-- Read-only views (Balances, Expenses, Settlements, Receipts) and draft-safe actions (draft Expense, upload proof); **Proposal approve/reject** when **database-only**
-- **On-chain** Settlement, Contribution, and Proposal **execution** still require wallet confirmation in the app — deep-link; use existing **Settlement Request Links** for settle intents
-- **Zerion CLI** from the bot: `/analyze`, `/readiness`, `/verify` — prefer **`ZERION_API_KEY`**; optional **x402** on Solana later
-- One Telegram account maps to one active wallet at a time; one Telegram chat maps to one FundWise Group; DM auth before group actions
-- **Env (Fundy service):** `TELEGRAM_BOT_TOKEN`, `FUNDWISE_SERVICE_API_KEY`, `FUNDWISE_API_BASE_URL` (e.g. `https://fundwise.fun`), `ZERION_API_KEY` (and optionally `SOLANA_PRIVATE_KEY` + `ZERION_X402`), `OPENROUTER_API_KEY` (optional, later), `NEXT_PUBLIC_SOLANA_RPC_URL` if needed for direct reads
+- Hosted Telegram bot that runs the FundWise Agent; command-first v1, LLM (e.g. OpenRouter) as a later layer on the same tools.
+- **Railway** deployment; library **`grammy`**.
+- Calls FundWise HTTP API routes with `FUNDWISE_SERVICE_API_KEY` Bearer + `X-Fundy-Wallet` (same API surface as the web app; extend routes for Scoped Agent Access).
+- Users authenticate with web-generated short-lived codes in DM: `/link FW-…`.
+- Read-only views (Balances, Expenses, Settlements, Receipts) and draft-safe actions (draft Expense, upload proof); Proposal approve/reject when database-only.
+- On-chain Settlement, Contribution, and Proposal execution still require wallet confirmation in the web app — deep-link; use existing Settlement Request Links for settle intents.
+- Zerion CLI from the bot: `/analyze`, `/readiness`, `/verify` — prefer `ZERION_API_KEY`; optional x402 on Solana later.
+- One Telegram account maps to one active wallet at a time; one Telegram chat maps to one FundWise Group; DM auth before group actions.
+- **Env (Fundy service):** `TELEGRAM_BOT_TOKEN`, `FUNDWISE_SERVICE_API_KEY`, `FUNDWISE_API_BASE_URL` (e.g. `https://fundwise.fun`), `ZERION_API_KEY` (and optionally `SOLANA_PRIVATE_KEY` + `ZERION_X402`), `OPENROUTER_API_KEY` (optional, later), `NEXT_PUBLIC_SOLANA_RPC_URL` if needed for direct reads.
 
-### Agent Skill Endpoint (Planned — Post-Hackathon)
+### Agent Skill Endpoint
 
-- Public URL: **`https://fundwise.fun/skill.md`** — `Content-Type: text/markdown`
-- Any autonomous agent can `curl` it; document **purpose**, **what to call / what not to call**, auth (**profile agent tokens** + optional wallet-signed), rate limits, errors, safety
-- Does not require authentication to fetch the document and does not expose private Member data in the skill file itself
-- Implementation: `app/skill.md/route.ts` (planned)
+- Public URL: `https://fundwise.fun/skill.md` — `Content-Type: text/markdown`. Shipped.
+- Any autonomous agent can `curl` it; documents purpose, what to call / what not to call, auth (profile agent tokens + optional wallet-signed), rate limits, errors, safety.
+- Does not require authentication to fetch the document and does not expose private Member data in the skill file itself.
 
-### Web app env (planned additions for agents + Fundy)
+### Web app env
 
-- `FUNDWISE_SERVICE_API_KEY` — shared secret validated on API routes for bot/service calls
-- `FUNDWISE_AGENT_TOKEN_SECRET` (or equivalent) — signing secret for scoped agent tokens issued from `/profile/agents` and optional wallet-signed agent auth
+- `FUNDWISE_SERVICE_API_KEY` — shared secret validated on API routes for bot/service calls.
+- `FUNDWISE_AGENT_TOKEN_SECRET` (or equivalent) — signing secret for scoped agent tokens issued from `/profile/agents` and optional wallet-signed agent auth.
 
-### Key deadlines
+### Key dates
 
-
-| Date         | Event                                    |
-| ------------ | ---------------------------------------- |
-| May 11, 2026 | Colosseum Frontier submission deadline   |
-| May 12, 2026 | Demo Day (Superteam Germany)             |
-| May 26, 2026 | LI.FI / Zerion track winner announcement |
-| May 27, 2026 | Visa track winner announcement           |
+| Date         | Event                                                |
+| ------------ | ---------------------------------------------------- |
+| 2026-06-13   | **Solana Summit Berlin — Split + Fund Mode launch** |

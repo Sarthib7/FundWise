@@ -2,7 +2,7 @@
 
 **Snapshot date:** 2026-05-14 (production-ready push)
 **Phase:** Dual-track delivery — Split Mode code-ready for tightly-invited mainnet rollout, Fund Mode devnet beta polished to checklist completion (Phase A + B). Operator-owned infra steps tracked in `docs/prod-secrets-runbook.md`.
-**Hackathon:** Colosseum Frontier (April 6 - May 11, 2026) — submission complete
+**Next milestone:** Split Mode + Fund Mode on Solana mainnet **plus Circle CCTP / LI.FI EVM support** for **Solana Summit Berlin (2026-06-13)**. Multi-chain inbound (EVM → USDC on Solana via Circle CCTP, orchestrated by LI.FI) was pulled forward into the launch scope on 2026-05-16 — the integration already exists (`lib/lifi-bridge.ts`, `components/cross-chain-bridge-modal.tsx`), so the remaining work is the devnet → mainnet pipeline, CCTP routing config, UX polish, and an end-to-end mainnet test. Colosseum Frontier (May 11) submission is done; the repo is now organized around the launch milestone, not a hackathon.
 **Checklist branch:** 60 commits ahead of `main`, local Cloudflare Pages build-gate fix applied, `pnpm test`, `pnpm lint`, and `pnpm build:pages` passing
 **Active issue index:** [issues.md](./issues.md)
 **Execution checklists:** [Split Mode mainnet](./docs/split-mode-mainnet-checklist.md) · [Fund Mode beta](./docs/fund-mode-beta-checklist.md)
@@ -44,13 +44,13 @@ The product direction is now sharper:
 - The assistant surface should be called **FundWise Agent**. Telegram bot and Telegram mini app are channels for it, not the product name.
 - **Fundy** is the name of the hosted Telegram bot that runs the FundWise Agent. Users authenticate by linking their Telegram account to their FundWise wallet, then interact with Groups, Balances, Expenses, and Settlements from Telegram. Fundy handles read-only and draft-safe actions; money movement still requires wallet confirmation in the app.
 - The **Agent Skill Endpoint** (`/skill.md`) is live as a public discovery document on the production host (`https://fundwise.fun/skill.md`). Public API reference markdown is also exposed at `https://fundwise.fun/api/docs`. Scoped Agent Access and agent-paid Settlements remain planned.
-- The audience rollout is crypto-native Groups first, then agents, then non-crypto users through Visa/card, IBAN, and Altitude-style Solana banking rails after the core flow is reliable.
+- The audience rollout is crypto-native Groups first (Split/Fund Mode + Circle CCTP EVM support for the Summit launch), then agents, then non-crypto users via the locked post-Summit fiat stack — Privy embedded wallet + MoonPay (card) + Bridge.xyz (SEPA/IBAN/wire) + Squads Protocol (treasury). Altitude is ruled out (see [reference_squads_ecosystem.md](../memory/reference_squads_ecosystem.md)).
 - Fund Mode is still incomplete but is now the active hero-product sprint. Treasury initialization and Contributions exist; Proposal flows, proposal proof/history, and integration support must ship before Fund Mode can be presented as complete product behavior.
 - Settlement Request Links are the primary growth loop: a Member shares a live settle intent, the debtor opens the current Balance state, signs the exact USDC Settlement, and both sides get a Receipt.
 - A scripted agent devnet rehearsal now exists at `scripts/devnet-agent-rehearsal.mjs`. The latest run created a Group, added Expenses from two wallets, joined the second wallet, settled, and produced a devnet explorer transaction URL. The rehearsal used a temporary SPL stablecoin mint because the public devnet faucet was rate-limited, so it proves the FundWise Settlement/Receipt machinery rather than final mainnet USDC readiness.
 - Fundy still matters as a distribution surface, but it no longer blocks Fund Mode engineering. The next month should push Fund Mode to invite-only beta while Fundy and agent integrations are designed around the same API boundaries.
 - Visa/card/IBAN rails remain partner-dependent future work. They can support a settle-to-spend story later, but they should not be claimed or built as core product until a concrete provider path exists.
-- Mini-games and prediction-market-like mechanics are out of scope for FundWise and must stay out of the hackathon story.
+- Mini-games and prediction-market-like mechanics are out of scope for FundWise and must stay out of the launch story.
 - Canonical product-state and monetization references: [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md) and [docs/monetization.md](./docs/monetization.md).
 
 ---
@@ -178,7 +178,7 @@ Picked up immediately after the audit and executed the AFK fixes plus the Fund M
 
 ## Next active work
 
-The post-submission execution path is now split across two checklists, both indexed in [issues.md](./issues.md) as `FW-033` and up:
+The execution path to the Summit Berlin launch is split across two checklists, both indexed in [issues.md](./issues.md) as `FW-033` and up:
 
 1. **Public mainnet launch of Split Mode** — see [docs/split-mode-mainnet-checklist.md](./docs/split-mode-mainnet-checklist.md). Phases: pre-flight code (cluster-aware mints, cluster badge, multi-RPC, footer + legal scaffold) → production environment setup → production env (separate Supabase project, prod RPC, Sentry) → mainnet rehearsal with real USDC → launch + comms.
 2. **Fund Mode devnet beta with easy UX + monetization testing** — see [docs/fund-mode-beta-checklist.md](./docs/fund-mode-beta-checklist.md). Phases: easy-UX pool management (templates, treasury overview, auto-suggested proposals, member roles, exit flow) → multisig polish → monetization tests (creation fee, willingness-to-pay surveys, free-tier wall) → beta ops (Telegram channel, admin dashboard).
@@ -192,7 +192,7 @@ Completed:
 - **FW-001:** Full Split Mode devnet rehearsal passed per owner report.
 - **FW-002:** Settlement failure states hardened for insufficient-USDC, insufficient-SOL-for-gas, token-account creation, wallet cancellation, simulation/send/confirmation failures, duplicate recording, and receipt-recording failure.
 - **FW-003:** Responsive QA signed off for public, disconnected, wallet-modal, demo Settlement, Receipt, and Group-not-found recovery surfaces at `375`, `768`, and `1280`; live connected-wallet path was already checked by owner.
-- **FW-006:** Judge-facing submission brief created in [SUBMISSION.md](./SUBMISSION.md) with demo script, screenshot checklist, submission copy, track framing, and claims to avoid.
+- **FW-006:** Hackathon submission brief was created (now removed post-submission); demo script, screenshot checklist, and track framing have been retired.
 - **FW-004:** LI.FI handoff copy now uses `Route funds for Settlement`, returns to the Group after route submission, and preserves the normal Settlement / Receipt path.
 - **FW-005:** Zerion CLI wallet-readiness support shipped as `scripts/zerion-readiness.mjs` plus `pnpm zerion:readiness` and `docs/zerion-readiness.md`. Wraps `zerion analyze <address>`, summarizes USDC/SOL/broader context, prints a `READY` / `NOT READY` verdict with reasons, and falls back to a clear install message if the CLI is missing. Auth is pass-through (`ZERION_API_KEY`); optional x402 is documented, not required. `pnpm build` green.
 - **FW-019:** Fund Mode Treasury addresses now require on-chain Squads verification before persistence.
@@ -220,13 +220,40 @@ Next pick:
 
 Next:
 
-1. **FW-038 (HITL):** Owner creates production Supabase project, replays migrations, configures Cloudflare env vars.
-2. **FW-039 (HITL):** Mainnet rehearsal with real USDC after FW-038 lands.
-3. **FW-044:** Auto-suggested reimbursement proposals from Member expenses.
-4. **FW-047:** Fund Mode creation fee infrastructure (devnet beta monetization test).
-5. **FW-045:** Fund Mode member roles plus exit-flow proposal type.
-6. Keep the next public submission pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero product sprint, and planned surfaces stay labeled as planned.
-7. Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, and any autonomous payment authority as planned unless separately implemented end to end.
+**14-PR Summit launch backlog** (foundations 1-6 ship before feature work 7-14; see [`docs/adr/0035`-`0038`] + ADR-0032 + FW-066…074):
+
+Foundations (architecture refactor — no behavior change):
+
+1. **FW-038 (HITL):** Owner creates prod Supabase project, replays migrations, sets Cloudflare env vars.
+2. **FW-039 (HITL):** Mainnet rehearsal w/ real USDC after FW-038 lands.
+3. **FW-072 PR1:** `withAuthenticatedHandler` HOF + unit tests. No route migrations. ADR-0037.
+4. **FW-073:** Split `fundwise-mutations.ts` (2167 lines, 9 concepts) into `lib/server/mutations/*` w/ transitional barrel. Move `computeSuggestedReimbursements` to `lib/expense-suggestions.ts`. Tests split per-concept. ADR-0038.
+5. **FW-072 PR2:** Migrate ~10 simpler routes — HOF + per-concept imports in one touch.
+6. **FW-072 PR3:** Migrate remaining ~11 dynamic-param routes; delete mutations barrel.
+7. **FW-074 PR1:** Create `lib/api-client.ts` w/ `apiFetch<T>` + shared types.
+8. **FW-074 PR2:** Migrate 8 caller files to `apiFetch<T>`; delete `lib/db.ts`.
+
+Squads + Fees feature work (FW-066…070 ship on clean foundations):
+
+9. **Squads PR1:** Lift verify helpers to `lib/squads/lifecycle.ts`. Force `AccountReader` injection on every verify op. ADR-0035.
+10. **Squads PR2:** Lift wallet-signed ops; split `createMultisig` from `deriveMultisigAddresses`. Keep `lib/squads-multisig.ts` as re-export shim.
+11. **FW-066:** Platform Fee Wallet env + `platform_fee_ledger` migration + Fee Module scaffolding + `Fees.record` wired. ADR-0036.
+12. **FW-069:** Creation Fee end-to-end on-chain ($5 USDC) wired through new ledger.
+13. **FW-067:** Buyer-pays Contribution Fee (0.5%) — single Member-signed two-leg tx.
+14. **FW-068 + Squads:** Reimbursement Fee (0.5%) + `Squads.proposeReimbursement({ platformFee })` two-leg Squads vault tx — coordinated PR.
+15. **Squads PR3:** Delete `lib/squads-multisig.ts` shim.
+16. **FW-070:** Routing Fee (25 bps) on CCTP/LI.FI inbound, in LI.FI flow.
+
+Other open:
+
+- **FW-071 (decision):** Threshold-change Proposal — hide for Summit (option A); build real Squads `configTransactionCreate` post-Summit (option B). ADR-0034 tracks.
+- **FW-044:** Auto-suggested reimbursement proposals from Member expenses. (Backend exists; UI shipped.)
+- **FW-045:** Fund Mode member roles + exit-flow proposal type. (Server done; UI partial.)
+
+Guardrails:
+
+- Keep public copy pass aligned to [docs/shipped-vs-planned.md](./docs/shipped-vs-planned.md): shipped Split Mode is the proof, Fund Mode is the hero sprint, planned surfaces stay labeled planned.
+- Treat Source Currency, Expense Proof, Scoped Agent Access, Payable Settlement Requests, rails, tax, autonomous payment authority as planned unless implemented end to end.
 
 Deferred:
 
@@ -240,12 +267,12 @@ FW-024 was completed on 2026-05-08: Compass research was moved into `docs/resear
 
 Next:
 
-1. Keep [SUBMISSION.md](./SUBMISSION.md) and public copy aligned with FW-007: Source Currency and Expense Proof are future-only for the current demo.
+1. Keep public copy aligned with FW-007: Source Currency and Expense Proof are future-only for the current demo.
 2. Keep [docs/positioning.md](./docs/positioning.md) as the working FundLabs/FundWise strategy reference: FundLabs umbrella, FundWise wedge/product direction, Fundy distribution, Receipt Endpoint infrastructure, and claims guardrails.
 3. Keep [docs/monetization.md](./docs/monetization.md) as the working business-model reference: free Split Mode launch, paid Fund Mode / Fundy / Receipt Endpoint / partner rails later.
 4. Pick FW-026 next: build reimbursement Proposal creation now that the legacy SOL vault helpers are gone.
 
-Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the May 11 submission deadline.
+Do not touch unrelated dirty files unless the owner explicitly assigns them. Current handoff expectation is to work from the indexed backlog, keep commits small, and avoid broad rewrites before the Summit Berlin launch.
 
 ## Foundation-first delivery order
 
@@ -271,7 +298,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 
 ## Product decisions locked on 2026-04-27
 
-- Split Mode is the primary MVP path for the hackathon demo.
+- Split Mode is the primary MVP path for the launch.
 - The Group page owns the full flow:
   Group -> Expense -> Balance -> Settlement -> Receipt
 - Members join by invite link or QR after connecting a wallet.
@@ -297,9 +324,9 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Historical Balances should not float with live exchange-rate changes. Live exchange values are for quoting at entry/edit time, not for silently repricing old Expenses.
 - Expense Proof should support one lightweight receipt photo / PDF upload or proof link per Expense.
 - Public-client Supabase ledger writes are dev-only scaffolding and cannot ship to mainnet-beta.
-- LI.FI is the primary sponsor support layer after Split Mode hardening. It should be presented inside Settlement as `Route funds for Settlement`, not as a user-managed bridge workflow or a standalone dashboard task.
+- LI.FI is the primary inbound multi-chain layer (paired with Circle CCTP). It should be presented inside Settlement as `Route funds for Settlement`, not as a user-managed bridge workflow or a standalone dashboard task. ~~Multi-chain rollout is post-launch.~~ **Superseded 2026-05-16:** multi-chain via Circle CCTP + LI.FI is now part of the Summit Berlin launch scope.
 - LI.FI still routes funds into the normal Settlement path rather than paying the creditor directly across chains.
-- Zerion CLI is an active sponsor track for wallet analysis, guidance, and agent-style flows around the core product.
+- Zerion CLI provides wallet analysis, guidance, and agent-style flows around the core product.
 - Future expansion should keep one shared engine across surfaces: web first, then FundWise Agent, Telegram, wallet-mini-app, and native-mobile clients on top of the same wallet-bound backend.
 - The FundWise Agent name should cover Telegram bot / mini app, scoped agent access, reminders, draft Expense creation, proof upload, and wallet-aware suggestions.
 - Fundy is the hosted Telegram bot that runs the FundWise Agent. It is not a separate product; it is a distribution surface for the same wallet-bound engine.
@@ -339,9 +366,9 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Keep the devnet quality gates green:
   `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`
 - Manual breakpoint QA and sign-off across landing, Group list, Group detail, Receipt, join flow, and modal surfaces
-- Post-submission product/design pass for multi-currency Expense entry:
+- Post-launch product/design pass for multi-currency Expense entry:
   Source Currency selector, current exchange-rate quote, visible converted USD/USDC amount, stored Exchange Rate Snapshot, and edit behavior
-- Post-submission product/design pass for Expense Proof upload:
+- Post-launch product/design pass for Expense Proof upload:
   receipt photo / PDF upload, preview, storage limits, and access rules
 - Devnet settlement and Contribution rehearsal on real wallets after the new preflight checks:
   verify insufficient-USDC, insufficient-SOL, and recipient / Treasury token-account creation messaging against actual wallet prompts
@@ -370,10 +397,10 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 - Native mobile app
 - Long-range stablecoin-only UX:
   gas / fee abstraction, automatic routing paths, and easier web2 onboarding / offboarding into stablecoin balances
-- Long-range fiat bridge research:
-  evaluate providers such as Bridge for virtual accounts, on/off ramps, wallets, and cards; keep Altitude-style Solana banking rails in the roadmap for Visa/card and IBAN-like top-up flows once non-crypto onboarding becomes a priority
+- Post-launch fiat onramp phase (stack locked 2026-05-16):
+  Privy (embedded Solana wallet, non-custodial via TEE) + MoonPay (card top-ups) + Bridge.xyz (SEPA / IBAN / wire) + Squads Protocol (group treasury, already integrated). Still settles to USDC on Solana underneath. Altitude ruled out.
 - Mini-games / prediction-market-like mechanics:
-  out of FundWise scope unless separately justified later; keep out of Split Mode, Fund Mode beta, and the hackathon story
+  out of FundWise scope unless separately justified later; keep out of Split Mode, Fund Mode beta, and the launch story
 - AI bill parsing beyond basic receipt-photo upload, or natural-language expense entry beyond draft-safe FundWise Agent flows
 - **FundWise-native** email/password or social identity as the primary account system (optional Phantom Connect for wallet onboarding is a separate, additive path; see ADR-0014)
 - Gas abstraction / gasless settlement
@@ -383,7 +410,7 @@ Do not touch unrelated dirty files unless the owner explicitly assigns them. Cur
 
 ## Fund Mode status
 
-Fund Mode remains a real product mode, but it is no longer part of the devnet-ready definition for the hackathon story. The first requirement is a polished Split Mode web app, then coherent LI.FI routing inside Settlement, then later support layers.
+Fund Mode is graduating from invite-only devnet beta to mainnet alongside Split Mode for the Summit Berlin launch. The first requirement is a polished Split Mode web app, then a complete Fund Mode Proposal lifecycle. **Circle CCTP / LI.FI EVM support is also part of the Summit launch scope** (pulled forward 2026-05-16) — the integration is built; the remaining work is mainnet pipeline, CCTP routing config, UX polish, and an end-to-end mainnet test. The Privy + MoonPay + Bridge.xyz + Squads Protocol fiat-onboarding stack remains a post-launch phase.
 
 **Already present:**
 
@@ -459,12 +486,12 @@ Full roast in `review.md`. Weighted score: **51/110** (needs significant work).
 - **Dashboard + Expense UX overhaul** (ADR-0020): 7→4 sections on mobile, expense dialog simplified to 3 fields, category dropdown killed, photo button added. **Next to build.**
 - **Currency conversion** (ADR-0020): future-only; CoinGecko free tier, 5 currencies (USD/EUR/GBP/INR/AED), rate snapshot. Do not demo as shipped until ledger storage is complete.
 - **Photo upload** (ADR-0020): future-only; Supabase Storage, JPEG/PNG only, client-side compress, one per expense. Do not demo as shipped until storage/access rules are complete.
-- **Fundy Lite** (ADR-0018): Hackathon Telegram bot. Command-based, Zerion wallet analysis, draft expenses, settlement nudges. **Parallel track — second developer.**
-- **Fundy Full** (ADR-0018): Post-hackathon. LLM via OpenRouter, personal finance manager, budgets, spending patterns, receipt parsing, proactive reminders.
-- **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-hackathon.
+- **Fundy Lite** (ADR-0018): launch-phase Telegram bot. Command-based, Zerion wallet analysis, draft expenses, settlement nudges. **Parallel track — separate repo (ADR-0022).**
+- **Fundy Full** (ADR-0018): post-launch. LLM via OpenRouter, personal finance manager, budgets, spending patterns, receipt parsing, proactive reminders.
+- **Expense Dispute Handling** (ADR-0019): Members flag expenses, disputed expenses excluded from balance math, Group consensus vote resolves. Post-launch.
 - **Fund Mode Proposals**: creation, approval, execution UI still pending.
-- **Agent Skill Endpoint** (`/skill.md`) and **API docs** (`/api/docs`): public discovery/reference documents added for Fundy and external agent clients. Scoped Agent Access remains post-hackathon.
-- **Scoped Agent Access**: permission model for autonomous agents. Post-hackathon.
+- **Agent Skill Endpoint** (`/skill.md`) and **API docs** (`/api/docs`): public discovery/reference documents added for Fundy and external agent clients. Scoped Agent Access remains post-launch.
+- **Scoped Agent Access**: permission model for autonomous agents. Post-launch.
 
 ---
 

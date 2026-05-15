@@ -1247,13 +1247,12 @@ Run the 17-step mainnet test plan from `docs/split-mode-mainnet-checklist.md` Ph
 
 ### What to update
 
-After mainnet rehearsal passes, update `README.md`, `STATUS.md`, `SUBMISSION.md`, `docs/shipped-vs-planned.md`, and landing copy to reflect that Split Mode is live on mainnet. Keep Fund Mode language as "devnet beta, invite-only".
+After mainnet rehearsal passes, update `README.md`, `STATUS.md`, `docs/shipped-vs-planned.md`, and landing copy to reflect that Split Mode is live on mainnet. Keep Fund Mode language as "devnet beta, invite-only".
 
 ### Acceptance Criteria
 
 - [ ] README updated.
 - [ ] STATUS updated (TL;DR + Phase header).
-- [ ] SUBMISSION updated.
 - [ ] `docs/shipped-vs-planned.md` updated.
 - [ ] Landing page hero + claims aligned.
 - [ ] Footer copyright year correct.
@@ -1865,3 +1864,234 @@ Production-readiness session that landed on `checklist` after the branch audit. 
 **Mainnet readiness call:** Split Mode is code-ready for a tightly-invited mainnet rollout after the hardened Supabase project is confirmed as prod and the Alchemy RPC + session secret are pasted into Cloudflare. The remaining audit items (FW-054, FW-056) are hardening, not correctness, and can ship in the post-launch week.
 
 **Fund Mode beta status:** Phase A and Phase B of `docs/fund-mode-beta-checklist.md` are now complete (FW-042/043/044/046/057/058/059). Phase C monetization telemetry (FW-047/061/062/063) and Phase D ops (FW-064/065) remain as the actual beta-running work, but the product is shippable to the first invite cohort as-is.
+
+---
+
+## FW-066 - Platform Fee Wallet env + ledger table
+
+**Status:** Ready
+**Priority:** P0 (blocks Summit fee collection)
+**Type:** AFK
+**Blocked by:** —
+**Source:** [ADR-0032](./docs/adr/0032-fund-mode-take-rate-monetization.md), grilling session 2026-05-16
+
+### What to build
+
+Foundation for all take-rate fees. No fees can collect without this.
+
+- Env var `FUNDWISE_PLATFORM_FEE_WALLET` (per cluster: devnet, mainnet). Operator-controlled wallet.
+- Supabase migration: `platform_fee_ledger` table. Cols: `id`, `fee_kind` (creation | contribution | reimbursement | routing | holding | yield), `group_id` (nullable for routing), `member_wallet` (nullable), `amount` (bigint, token base units), `mint`, `tx_sig`, `cluster`, `recorded_at`. Indexes on `fee_kind`, `group_id`, `tx_sig`. RLS off (service-role only).
+- `recordPlatformFeeMutation(input)` helper in `lib/server/fundwise-mutations.ts`. Idempotent on `tx_sig`.
+- Unit test covering insert + duplicate-tx_sig reject.
+
+### Acceptance Criteria
+
+- [ ] Migration applied to devnet Supabase project.
+- [ ] `FUNDWISE_PLATFORM_FEE_WALLET` validated on server boot (fail fast if missing or malformed).
+- [ ] Helper rejects duplicate `tx_sig` w/ 23505 → friendly error.
+- [ ] `pnpm test` passes.
+
+## FW-067 - Buyer-pays Contribution fee on-chain
+
+**Status:** Ready
+**Priority:** P0 (blocks Fund Mode mainnet launch)
+**Type:** AFK
+**Blocked by:** FW-066
+**Source:** [ADR-0032](./docs/adr/0032-fund-mode-take-rate-monetization.md)
+
+### What to build
+
+0.5% Contribution Fee, buyer-pays. Member signs gross + fee; Treasury receives gross.
+
+- `contributeStablecoinToTreasury` in `lib/squads-multisig.ts` (or new helper alongside): build one transaction with two `transferInstruction` calls — gross to Treasury ATA, fee to Platform Fee Wallet ATA. Atomic.
+- `addContributionMutation` server validates fee math against op-global rate (env `FUNDWISE_CONTRIBUTION_FEE_BPS`, default 50 = 0.5%); rejects if client sends mismatched fee.
+- Verify both legs in `verifyContributionTransfer`: sender = Member, recipient_1 = Treasury (gross), recipient_2 = Platform Fee Wallet (fee). Existing helper at `lib/server/solana-transfer-verification.ts:240` covers one leg today — extend.
+- Insert into `platform_fee_ledger` on success.
+- UI: Contribute dialog shows "Contribute $X to Treasury. FundWise fee: $Y. Total: $X+Y."
+
+### Acceptance Criteria
+
+- [ ] One signed transaction, two transfers, atomic.
+- [ ] Server math matches client math or rejects.
+- [ ] Treasury ATA balance increases by gross; Platform Fee Wallet ATA increases by fee.
+- [ ] Ledger row inserted w/ `fee_kind = 'contribution'`.
+- [ ] UI breakdown matches on-chain math to the cent.
+- [ ] `pnpm test` passes; new integration test for two-leg verification.
+
+## FW-068 - Buyer-pays Reimbursement fee via Squads vault tx
+
+**Status:** Ready
+**Priority:** P0 (blocks Fund Mode mainnet launch)
+**Type:** AFK
+**Blocked by:** FW-066
+**Source:** [ADR-0032](./docs/adr/0032-fund-mode-take-rate-monetization.md)
+
+### What to build
+
+Hardest piece. 0.5% Reimbursement Fee, buyer-pays — Member receives requested amount, Treasury debits gross + fee in same Squads vault transaction.
+
+- `createSquadsReimbursementProposal` in `lib/squads-multisig.ts:317`: change `TransactionMessage` to include two `transferInstruction` calls — gross from Treasury ATA → Member ATA, fee from Treasury ATA → Platform Fee Wallet ATA. Squads vault PDA signs both.
+- ATA creation for Platform Fee Wallet's USDC ATA may be needed on first fee — add lazy create instruction if missing.
+- `verifyProposalExecutionTransfer` at `lib/server/solana-transfer-verification.ts:258`: extend to verify both transfer legs and assert the fee leg amount = `expected_amount * fee_bps / 10000`.
+- `addProposalMutation` records `gross_amount` (what Member receives) and `fee_amount` separately. Existing `amount` column = gross; new `fee_amount` column (migration).
+- `executeProposalMutation` inserts into `platform_fee_ledger` after on-chain verification.
+- UI: Proposal create dialog shows "Reimburse $X to Member. FundWise fee: $Y. Treasury debits $X+Y." Proposal detail view shows breakdown.
+
+### Acceptance Criteria
+
+- [ ] One Squads `vaultTransactionCreate` with two transfers in the `TransactionMessage`.
+- [ ] On execution, Member ATA receives exactly the gross amount; Platform Fee Wallet ATA receives exactly the fee.
+- [ ] `proposals.fee_amount` column populated.
+- [ ] Ledger row inserted w/ `fee_kind = 'reimbursement'`.
+- [ ] Existing devnet rehearsal script (`scripts/fund-mode-beta-rehearsal.mjs`) updated + passes end-to-end with fee math verified on-chain.
+- [ ] `pnpm test` passes; integration test for two-leg vault tx verification.
+
+## FW-069 - Creation Fee at Treasury init
+
+**Status:** Ready
+**Priority:** P1 (load-bearing for Summit pricing story)
+**Type:** AFK
+**Blocked by:** FW-066
+**Source:** [ADR-0032](./docs/adr/0032-fund-mode-take-rate-monetization.md)
+
+### What to build
+
+$5 flat USDC at Treasury init. Server logic exists (`recordCreationFeeMutation` at `lib/server/fundwise-mutations.ts:1889`) — wire to actual on-chain fee transfer + ledger.
+
+- Treasury init flow: after Squads multisig creates, before FundWise records the Treasury, prompt Member for a $5 USDC fee transfer to Platform Fee Wallet. Cluster-aware (devnet test-USDC vs mainnet USDC).
+- Verify on-chain via `verifyAtaTransfer` helper. Reject Treasury init if fee tx unconfirmed.
+- Insert into `platform_fee_ledger` w/ `fee_kind = 'creation'`. Existing `creation_fee_records` table (FW-047) can stay or merge into the new ledger — pick one, document.
+- Operator-tunable amount via `FUNDWISE_CREATION_FEE_USDC_CENTS` env (default 500 = $5).
+- UI: Treasury init checklist surfaces the fee w/ "skip for beta" only on devnet (no skip on mainnet).
+
+### Acceptance Criteria
+
+- [ ] On-chain $5 USDC transfer confirmed before Treasury row persists.
+- [ ] Ledger row inserted; idempotent on tx_sig.
+- [ ] Mainnet cluster gates the "skip" path.
+- [ ] `pnpm build` passes.
+
+## FW-070 - Routing Fee (25 bps) on CCTP/LI.FI inbound
+
+**Status:** Ready
+**Priority:** P1 (Summit scope w/ multi-chain)
+**Type:** AFK
+**Blocked by:** FW-066, multi-chain pipeline work
+**Source:** [ADR-0032](./docs/adr/0032-fund-mode-take-rate-monetization.md), CCTP launch scope
+
+### What to build
+
+25 bps markup on top of LI.FI/CCTP provider fees for inbound EVM → Solana USDC routes. Fee deducted before USDC lands in Member's wallet or Treasury.
+
+- `lib/lifi-bridge.ts`: post-route handler that splits the inbound USDC — `(amount - fee) → destination`, `fee → Platform Fee Wallet ATA`. Two-leg transfer on the Solana side, atomic.
+- Quote UI in `components/cross-chain-bridge-modal.tsx`: show "Route fee: 25 bps. You receive: $X. FundWise: $Y." Transparent.
+- Insert into `platform_fee_ledger` w/ `fee_kind = 'routing'`.
+- Operator-tunable via `FUNDWISE_ROUTING_FEE_BPS` (default 25).
+
+### Acceptance Criteria
+
+- [ ] Mainnet route shows 25 bps clearly in quote.
+- [ ] On-chain: destination receives `amount - fee`; Platform Fee Wallet receives fee.
+- [ ] Ledger row inserted.
+- [ ] Mainnet rehearsal w/ tiny route confirms math end-to-end.
+- [ ] `pnpm test` passes.
+
+## FW-071 - Threshold-change Proposal type — Summit decision
+
+**Status:** Pending decision (chat 2026-05-16 — open)
+**Priority:** P2 (not Summit-critical)
+**Type:** Decision + cleanup
+**Blocked by:** owner decision
+
+### Decision needed
+
+Three options:
+- (A) Remove `threshold_change` kind from server + UI. Users can't change Squads threshold from FundWise. Clean.
+- (B) Wire to real Squads `configTransactionCreate`. Real on-chain threshold change. ~2-3 days post-Summit work.
+- (C) Document as FundWise-internal governance only. Existing code stays; semantic divergence stays. Avoid.
+
+**Recommendation:** ship (A) for Summit (hide UI, server logic stays inactive), build (B) post-Summit as an ADR.
+
+### Acceptance Criteria (if A chosen)
+
+- [ ] `addProposalMutation` rejects `kind = 'threshold_change'` w/ "not yet supported" message until B ships.
+- [ ] No "propose threshold change" affordance in Fund Mode UI.
+- [ ] Existing display labels for `kind = 'threshold_change'` retained for back-compat w/ any test data.
+- [ ] ADR-0034 drafted to capture the decision + path to B.
+
+## FW-072 - withAuthenticatedHandler HOF
+
+**Status:** Ready
+**Priority:** P0 (blocks FW-066+)
+**Type:** AFK
+**Blocked by:** —
+**Source:** [ADR-0037](./docs/adr/0037-with-authenticated-handler-hof-for-api-routes.md), arch grilling 2026-05-16
+
+### What to build
+
+HOF at `lib/server/with-authenticated-handler.ts` absorbs session check, rate limit, body JSON parse, wallet-match assertion, Next.js params await, error envelope, success wrap. Wallet-session only. 3 PRs:
+
+1. Add HOF + tests (unit-test auth-bypass, rate-limit invoke, wallet-match success/fail, params passthrough, error envelope shape).
+2. Migrate ~10 simpler routes (settlements, expenses, contributions, proposals POST, profile, monetization).
+3. Migrate remaining ~11 dynamic-param routes. Delete `lib/server/fundwise-mutations.ts` barrel at end (after FW-073 lands).
+
+Service routes keep `requireFundyServiceAuth` inline. Public routes stay raw. No Zod yet.
+
+### Acceptance Criteria
+
+- [ ] PR1: HOF + tests, all green. No route migrations.
+- [ ] PR2: 10 routes migrated, `pnpm test` + `pnpm lint` + `pnpm build` green.
+- [ ] PR3: remaining routes migrated, mutations barrel deleted.
+- [ ] Net code shrinks ~200 lines across 21 routes.
+- [ ] Auth-bypass risk centralized in one tested helper.
+
+## FW-073 - Split fundwise-mutations.ts into per-concept Modules
+
+**Status:** Ready
+**Priority:** P0 (blocks FW-072 PR2/PR3 per-concept imports)
+**Type:** AFK
+**Blocked by:** FW-072 PR1
+**Source:** [ADR-0038](./docs/adr/0038-mutations-split-by-concept.md), arch grilling 2026-05-16
+
+### What to build
+
+`lib/server/fundwise-mutations.ts` (2167 lines, 9 concepts colocated) splits into `lib/server/mutations/`:
+- `_internal.ts` — shared helpers (getAdmin, getGroupOrThrow, assertMemberCan, …), not re-exported
+- `group.ts`, `member.ts` (Profile folded in), `expense.ts`, `settlement.ts`, `contribution.ts`, `proposal.ts`, `treasury.ts`, `monetization.ts`
+
+`computeSuggestedReimbursements` moves OUT to `lib/expense-suggestions.ts` (pure derived view, not a mutation).
+
+Single PR: split files, transitional barrel (`fundwise-mutations.ts → mutations/index.ts → mutations/*`). FW-072 PR2/PR3 migrate callsites to per-concept imports.
+
+Tests: `tests/fundwise-mutations.test.ts` (421 lines) splits into `tests/mutations/{concept}.test.ts`.
+
+### Acceptance Criteria
+
+- [ ] All 9 files exist in `lib/server/mutations/`.
+- [ ] Shared helpers in `_internal.ts`; not re-exported from `index.ts`.
+- [ ] Transitional barrel re-exports everything; existing callers unchanged this PR.
+- [ ] Tests split per-concept; all pass.
+- [ ] `pnpm test` + `pnpm lint` + `pnpm build` green.
+
+## FW-074 - Replace lib/db.ts with typed api-client
+
+**Status:** Ready
+**Priority:** P1 (tactical cleanup)
+**Type:** AFK
+**Blocked by:** FW-072
+**Source:** arch grilling 2026-05-16, Candidate #5
+
+### What to build
+
+`lib/db.ts` (344 lines, ~30 thin HTTP wrappers) replaced by `lib/api-client.ts`: single typed `apiFetch<T>(method, path, body?)` helper + shared types (`ProposalWithReviews`, `ActivityItem`, `GroupDashboardSnapshot`, `SettlementReceiptView`). Symmetric w/ HOF server-side envelope.
+
+2 PRs:
+1. Create `lib/api-client.ts` w/ helper + types. Keep `lib/db.ts` for one PR.
+2. Migrate 8 caller files (`app/groups/[id]/settlements/[settlementId]/page.tsx`, `app/groups/[id]/page.tsx`, `app/groups/page.tsx`, `components/group-dashboard/{split-mode,fund-mode,treasury-overview,expense-dialog}.tsx`, `hooks/use-group-dashboard.ts`). Delete `lib/db.ts`.
+
+### Acceptance Criteria
+
+- [ ] `apiFetch<T>` handles GET/POST/PATCH/DELETE.
+- [ ] Error envelope `{ error: string }` parsed correctly; throws on !ok.
+- [ ] All 8 callers import from `lib/api-client`; `lib/db.ts` deleted.
+- [ ] `pnpm test` + `pnpm lint` + `pnpm build` green.
