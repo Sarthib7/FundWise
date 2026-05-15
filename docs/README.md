@@ -19,7 +19,7 @@ This directory holds detailed product, API, operations, research, and architectu
 - **Fund Mode devnet beta:** [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md) → [Fund Mode Beta Rehearsal](./fund-mode-beta-rehearsal.md) → [issues FW-042+](../issues.md#fw-042---pool-templates-at-fund-mode-group-creation).
 - **Security / audit follow-up:** [issues FW-053–FW-056](../issues.md#fw-053---branch-audit-follow-ups-critical-expense-payer-binding-settlement-toctou-sanctions-scope) → [audit.md](../audit.md) → [dependency audit](./dependency-audit.md) → [sanctions screening](./sanctions-screening.md).
 - **Agent / Fundy / API discovery:** [Agent Skill Endpoint research](./agentic-settlement-endpoint.md) → [Agent Payment Policy](./agent-payment-policy.md) → [API reference](./api.md) → live `/skill.md` and `/api/docs` routes.
-- **Public copy / product claims:** [Positioning](./positioning.md) → [Shipped vs Planned](./shipped-vs-planned.md) → [SUBMISSION.md](../SUBMISSION.md).
+- **Public copy / product claims:** [Positioning](./positioning.md) → [Shipped vs Planned](./shipped-vs-planned.md).
 - **Monetization:** [Monetization model](./monetization.md) → [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md#phase-c--monetization-model-testing-the-point-of-beta) → [research reports](./research/).
 
 ## Root Documentation
@@ -32,8 +32,6 @@ This directory holds detailed product, API, operations, research, and architectu
 | [CONTEXT.md](../CONTEXT.md) | Canonical domain model, language, invariants, examples. |
 | [PRD.md](../PRD.md) | Product requirements, user stories, implementation decisions, out-of-scope boundaries. |
 | [ROADMAP.md](../ROADMAP.md) | Phased delivery plan from Split Mode through Fund Mode, Fundy, and expansion. |
-| [HACKATHON_PLAN.md](../HACKATHON_PLAN.md) | Colosseum / sponsor-track story and messaging guardrails. |
-| [SUBMISSION.md](../SUBMISSION.md) | Judge-facing demo script, submission copy, screenshot checklist. |
 | [issues.md](../issues.md) | Indexed local backlog with `FW-*` IDs and pick queue. |
 | [DECISIONS.md](../DECISIONS.md) | ADR index only; points to active ADR files. |
 | [audit.md](../audit.md) | Security findings and mainnet blockers. |
@@ -47,9 +45,9 @@ This directory holds detailed product, API, operations, research, and architectu
 | [Split Mode Mainnet Checklist](./split-mode-mainnet-checklist.md) | Public mainnet launch plan for Split Mode. | [issues FW-038–FW-040](../issues.md#active-index), [ops runbook](./ops-runbook.md) |
 | [Fund Mode Beta Checklist](./fund-mode-beta-checklist.md) | Devnet invite-only beta plan for Fund Mode UX, monetization, and ops. | [issues FW-042–FW-065](../issues.md#fw-042---pool-templates-at-fund-mode-group-creation), [beta rehearsal](./fund-mode-beta-rehearsal.md) |
 | [Fund Mode Beta Rehearsal](./fund-mode-beta-rehearsal.md) | Scripted Fund Mode rehearsal path and devnet evidence. | [Fund Mode checklist](./fund-mode-beta-checklist.md), [STATUS](../STATUS.md) |
-| [LI.FI Route Rehearsal](./lifi-route-rehearsal.md) | Mainnet-only EVM USDC → Solana USDC route rehearsal. | [Split Mode checklist](./split-mode-mainnet-checklist.md), [HACKATHON_PLAN](../HACKATHON_PLAN.md) |
+| [LI.FI Route Rehearsal](./lifi-route-rehearsal.md) | Mainnet-only EVM USDC → Solana USDC route rehearsal. | [Split Mode checklist](./split-mode-mainnet-checklist.md) |
 | [Operations Runbook](./ops-runbook.md) | Supabase, Cloudflare, RLS verification, and production ops steps. | [Split Mode checklist](./split-mode-mainnet-checklist.md), [issues FW-038](../issues.md#active-index) |
-| [Zerion Readiness](./zerion-readiness.md) | Zerion CLI readiness script usage and context modes. | [ROADMAP](../ROADMAP.md), [HACKATHON_PLAN](../HACKATHON_PLAN.md) |
+| [Zerion Readiness](./zerion-readiness.md) | Zerion CLI readiness script usage and context modes. | [ROADMAP](../ROADMAP.md) |
 
 ## Product, Positioning, And Business Model
 
@@ -132,6 +130,14 @@ Research is supporting context only. If research disagrees with [STATUS](../STAT
 | [0028](./adr/0028-fundlabs-product-family-positioning.md) | FundLabs product-family positioning |
 | [0029](./adr/0029-squads-governance-source-of-truth-for-fund-mode.md) | Squads governance is the Fund Mode source of truth |
 | [0030](./adr/0030-supabase-rpc-and-settlement-hardening.md) | Supabase RPC and Settlement hardening |
+| [0031](./adr/0031-fund-mode-pricing-decision.md) | Fund Mode pricing decision (superseded by ADR-0032) |
+| [0032](./adr/0032-fund-mode-take-rate-monetization.md) | Fund Mode take-rate monetization (supersedes ADR-0031) |
+| [0033](./adr/0033-staged-release-pipeline.md) | Staged release pipeline |
+| [0034](./adr/0034-threshold-change-proposal-semantics.md) | Threshold-change Proposal semantics |
+| [0035](./adr/0035-squads-module-fences-governance-plumbing.md) | `lib/squads/` Module fences Squads governance plumbing |
+| [0036](./adr/0036-fees-module-deep-by-design.md) | `lib/fees/` Module is deep by design |
+| [0037](./adr/0037-with-authenticated-handler-hof-for-api-routes.md) | `withAuthenticatedHandler` HOF for wallet-session API routes |
+| [0038](./adr/0038-mutations-split-by-concept.md) | Split `fundwise-mutations.ts` into per-concept Modules |
 
 ## Topic Groups
 
