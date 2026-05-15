@@ -3,6 +3,7 @@ export const runtime = "edge"
 import { NextResponse } from "next/server"
 import { updateGroupTreasuryMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
 export async function PATCH(
@@ -11,6 +12,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireAuthenticatedWallet()
+    await enforceFundWiseRateLimit("treasury_init", session.wallet)
     const { groupId } = await context.params
     const body = (await request.json()) as {
       creatorWallet?: string

@@ -3,6 +3,7 @@ export const runtime = "edge"
 import { NextResponse } from "next/server"
 import { reviewProposalMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
 ) {
   try {
     const session = await requireAuthenticatedWallet()
+    await enforceFundWiseRateLimit("proposal_review", session.wallet)
     const { proposalId } = await context.params
     const body = (await request.json()) as {
       memberWallet?: string
@@ -18,7 +20,7 @@ export async function POST(
       txSig?: string
     }
 
-    if (!proposalId || !body.memberWallet || !body.decision || !body.txSig) {
+    if (!proposalId || !body.memberWallet || !body.decision) {
       throw new FundWiseError("Missing required Proposal review fields.")
     }
 

@@ -3,11 +3,13 @@ export const runtime = "edge"
 import { NextResponse } from "next/server"
 import { addSettlementMutation } from "@/lib/server/fundwise-mutations"
 import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
 import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
 export async function POST(request: Request) {
   try {
     const session = await requireAuthenticatedWallet()
+    await enforceFundWiseRateLimit("settlement_create", session.wallet)
     const body = (await request.json()) as {
       groupId?: string
       fromWallet?: string
