@@ -13,11 +13,12 @@ const STABLECOIN_MINTS_DEVNET: Record<string, StablecoinInfo> = {
     name: "USDC",
     decimals: 6,
   },
-  USDT: {
-    mint: "Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ",
-    name: "USDT",
-    decimals: 6,
-  },
+  // FW-056: removed the USDT entry — the previous mint address
+  // (Es9vMFrzaCERmJfrF4H2FYD4KfNBYYwzXwYFr7gNDfGJ) is the mainnet USDT mint,
+  // not a devnet token, and accidentally selecting it on a devnet Group
+  // would emit transfers against an address with no real devnet token state.
+  // There is no canonical devnet USDT; add one back here only if a real
+  // devnet faucet ships its own.
   PYUSD: {
     mint: "CXFaY4cXf25ZhFlexqroBfBceJ8YqWBsfaY3HQd9qucz",
     name: "PYUSD",

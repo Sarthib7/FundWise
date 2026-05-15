@@ -97,6 +97,18 @@ describe("parseUsdcAmount", () => {
     expect(result.ok).toBe(false)
   })
 
+  it("rejects a bare '.' (FW-056 audit)", () => {
+    const result = parseUsdcAmount(".")
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/plain number/)
+  })
+
+  it("accepts leading decimal like '.5'", () => {
+    const result = parseUsdcAmount(".5")
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.smallestUnit).toBe("500000")
+  })
+
   it("rejects special characters", () => {
     const result = parseUsdcAmount("10,00")
     expect(result.ok).toBe(false)

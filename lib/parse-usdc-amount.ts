@@ -24,8 +24,10 @@ export function parseUsdcAmount(input: string): ParsedUsdcAmount {
     return { ok: false, error: "Enter a USDC amount." }
   }
 
-  // Reject obvious non-numeric garbage early
-  if (!/^\d*\.?\d*$/.test(trimmed)) {
+  // Reject obvious non-numeric garbage early. The previous regex /^\d*\.?\d*$/
+  // accepted a bare "." (both \d* match empty); FW-056 tightens it so at
+  // least one digit must appear on either side of the optional decimal point.
+  if (!/^(\d+(\.\d*)?|\.\d+)$/.test(trimmed)) {
     return { ok: false, error: "Amount must be a plain number." }
   }
 
