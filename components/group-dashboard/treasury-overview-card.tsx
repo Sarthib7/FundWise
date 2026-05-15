@@ -83,10 +83,10 @@ export function TreasuryOverviewCard({
     for (const proposal of proposals) {
       if (proposal.status === "pending") {
         pendingCount += 1
-        pendingAmount += proposal.amount
+        pendingAmount += proposal.amount ?? 0
       } else if (proposal.status === "approved") {
         approvedCount += 1
-        approvedAmount += proposal.amount
+        approvedAmount += proposal.amount ?? 0
       }
     }
 
@@ -126,21 +126,28 @@ export function TreasuryOverviewCard({
 
     for (const proposal of proposals) {
       const proposerName = displayName(proposal.proposer_wallet, memberNameByWallet, walletAddress)
-      const recipientName = displayName(proposal.recipient_wallet, memberNameByWallet, walletAddress)
+      const recipientName = proposal.recipient_wallet
+        ? displayName(proposal.recipient_wallet, memberNameByWallet, walletAddress)
+        : "—"
+      const kind = (proposal as { kind?: string }).kind ?? "reimbursement"
+      const subject =
+        kind === "threshold_change"
+          ? `threshold change to ${(proposal as { target_threshold?: number | null }).target_threshold ?? "?"}`
+          : `reimbursement to ${recipientName}`
       events.push({
         id: `p-${proposal.id}`,
         at: proposal.created_at,
         icon: "proposed",
-        label: `${proposerName} proposed reimbursement to ${recipientName}`,
-        amount: proposal.amount,
+        label: `${proposerName} proposed ${subject}`,
+        amount: proposal.amount ?? 0,
       })
       if (proposal.status === "executed" && proposal.executed_at) {
         events.push({
           id: `pe-${proposal.id}`,
           at: proposal.executed_at,
           icon: "executed",
-          label: `Reimbursement to ${recipientName} executed`,
-          amount: proposal.amount,
+          label: `${subject} executed`,
+          amount: proposal.amount ?? 0,
         })
       }
 
@@ -150,8 +157,8 @@ export function TreasuryOverviewCard({
           id: `pr-${review.id}`,
           at: review.reviewed_at,
           icon: review.decision,
-          label: `${reviewerName} ${review.decision} reimbursement to ${recipientName}`,
-          amount: proposal.amount,
+          label: `${reviewerName} ${review.decision} ${subject}`,
+          amount: proposal.amount ?? 0,
         })
       }
     }

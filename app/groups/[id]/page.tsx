@@ -8,6 +8,7 @@ import { useCallback, useMemo, useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import type { ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
+import { FundModeBetaSurfaces } from "@/components/group-dashboard/fund-mode-beta-surfaces"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
 import { Card } from "@/components/ui/card"
@@ -949,6 +950,17 @@ export default function GroupDashboard() {
                   onOpenEditExpenseDialog={openEditExpenseDialog}
                   onDeleteExpense={deleteExpense}
                   canDeleteExpense={canDeleteExpense}
+                />
+              )}
+
+              {isFundMode && isMember && walletAddress && (
+                <FundModeBetaSurfaces
+                  groupId={group.id}
+                  authenticatedWallet={walletAddress}
+                  groupCreatedAt={group.created_at}
+                  memberCount={memberCount}
+                  contributionTotal={contributionTotal}
+                  isGroupCreator={isGroupCreator}
                 />
               )}
 

@@ -702,7 +702,11 @@ export function FundModeDashboard({
                     <div className="min-w-0">
                       <div className="mb-1 flex flex-wrap items-center gap-2">
                         <p className="font-medium text-sm">
-                          Reimburse {memberNameByWallet.get(proposal.recipient_wallet) || shortWallet(proposal.recipient_wallet)}
+                          {proposal.recipient_wallet
+                            ? `Reimburse ${memberNameByWallet.get(proposal.recipient_wallet) || shortWallet(proposal.recipient_wallet)}`
+                            : (proposal as { kind?: string }).kind === "threshold_change"
+                              ? `Change approval threshold${(proposal as { target_threshold?: number | null }).target_threshold ? ` to ${(proposal as { target_threshold?: number }).target_threshold}` : ""}`
+                              : "Proposal"}
                         </p>
                         <Badge variant="outline" className="capitalize">
                           {proposal.status === "approved" ? "Ready to execute" : proposal.status}
@@ -851,7 +855,9 @@ export function FundModeDashboard({
                     </div>
                     <div className="flex flex-col items-start gap-3 sm:items-end">
                       <p className="font-mono font-semibold tabular-nums">
-                        {formatTokenAmount(proposal.amount)} {tokenName}
+                        {proposal.amount !== null
+                          ? `${formatTokenAmount(proposal.amount)} ${tokenName}`
+                          : "—"}
                       </p>
                       {canEdit && !isEditing && (
                         <Button
