@@ -17,7 +17,16 @@ export interface BridgeQuote {
   toAmountMin: string
   estimatedDuration: string
   tool: string
+  /** True when the active route uses Circle's CCTP bridge (any version). */
+  isCctp: boolean
   route: RouteExtended
+}
+
+const CCTP_TOOL_SLUGS = new Set(["cctp", "cctpv2", "cctp-v2"])
+
+export function isCctpTool(tool: string | undefined | null): boolean {
+  if (!tool) return false
+  return CCTP_TOOL_SLUGS.has(tool.toLowerCase())
 }
 
 export interface BridgeStatus {
@@ -61,9 +70,11 @@ export async function getBridgeQuote(params: {
     fromAddress: params.fromAddress,
     toAddress: params.toAddress,
     slippage: 0.005,
+    preferBridges: ["cctp", "cctpV2"],
   })
 
   const route = convertQuoteToRoute(quote)
+  const tool = quote.tool || "LI.FI"
 
   return {
     fromChain: params.fromChain,
@@ -74,7 +85,8 @@ export async function getBridgeQuote(params: {
     toAmount: (Number(quote.estimate.toAmount) / 1e6).toFixed(2),
     toAmountMin: (Number(quote.estimate.toAmountMin) / 1e6).toFixed(2),
     estimatedDuration: quote.estimate.executionDuration?.toString() || "~2 min",
-    tool: quote.tool || "LI.FI",
+    tool,
+    isCctp: isCctpTool(tool),
     route,
   }
 }

@@ -156,7 +156,7 @@ export function CrossChainBridgeModal({
         <DialogHeader>
           <DialogTitle>Route Funds For {flowLabel}</DialogTitle>
           <DialogDescription>
-            If the USDC for this {flowLabel} is on another supported network, FundWise uses LI.FI to route it and then returns you to {groupName}.
+            If the USDC for this {flowLabel} is on another supported network, FundWise routes it to Solana via <span className="font-medium">Circle CCTP</span> when available (falling back through LI.FI otherwise), then returns you to {groupName}.
           </DialogDescription>
         </DialogHeader>
 
@@ -296,7 +296,13 @@ export function CrossChainBridgeModal({
             <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Route</span>
-                <Badge variant="secondary">{quote.tool}</Badge>
+                {quote.isCctp ? (
+                  <Badge className="bg-emerald-100 text-emerald-900 hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-100">
+                    Circle CCTP
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">via {quote.tool}</Badge>
+                )}
               </div>
 
               <div className="flex flex-col items-center justify-center gap-3 py-2 text-center sm:flex-row">
@@ -382,9 +388,17 @@ export function CrossChainBridgeModal({
             </Button>
           )}
 
-          {/* LI.FI Attribution */}
+          {/* Attribution */}
           <p className="text-xs text-center text-muted-foreground">
-            Powered by <span className="font-medium">LI.FI</span> — cross-chain routing
+            {quote?.isCctp ? (
+              <>
+                Powered by <span className="font-medium">Circle CCTP</span> — native USDC, orchestrated by LI.FI
+              </>
+            ) : (
+              <>
+                Powered by <span className="font-medium">Circle CCTP</span> when available, with <span className="font-medium">LI.FI</span> fallback
+              </>
+            )}
           </p>
         </div>
       </DialogContent>

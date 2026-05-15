@@ -7,7 +7,7 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base"
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom"
 import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare"
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui"
-import { isSolanaMainnetCluster } from "@/lib/solana-cluster"
+import { getFundWiseClusterName, getSolanaRpcUrl, isSolanaMainnetCluster } from "@/lib/solana-cluster"
 import type { SignerWalletAdapter } from "@solana/wallet-adapter-base"
 
 import "@solana/wallet-adapter-react-ui/styles.css"
@@ -44,19 +44,21 @@ function LifiProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
-  const network = WalletAdapterNetwork.Devnet
-
-  const endpoint = useMemo(
-    () => process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com",
-    []
+  const endpoint = useMemo(() => getSolanaRpcUrl(), [])
+  const network = useMemo(
+    () =>
+      getFundWiseClusterName(endpoint) === "mainnet-beta"
+        ? WalletAdapterNetwork.Mainnet
+        : WalletAdapterNetwork.Devnet,
+    [endpoint]
   )
 
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
     ],
-    []
+    [network]
   )
 
   return (
