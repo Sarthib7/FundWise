@@ -84,14 +84,20 @@ Out of scope for first beta:
 
 ## Phase C — Monetization model testing (the point of beta)
 
-Goal: validate Fund Mode pricing on devnet with test USDC + test SOL before any mainnet move. No real money changes hands; this is **behavioral telemetry** plus willingness-to-pay signals.
+> **2026-05-16 update:** monetization model pivoted from subscription to take-rate ([ADR-0032](./adr/0032-fund-mode-take-rate-monetization.md)). The WTP-survey items below are stale — beta now measures **fee acceptance and abandonment** under real take-rates instead of subscription-banner thumbs-up. Plumbing in FW-066…FW-070 must land before this phase can run for real. The old line items are kept for historical context.
+
+Goal: validate Fund Mode pricing on devnet (and the Summit invite cohort on mainnet) with the locked fee structure — $5 Creation Fee, 0.5% Contribution Fee, 0.5% Reimbursement Fee, 25 bps Routing Fee. Operator-tunable rates via env. Real fees collected on mainnet for the invited cohort; no subscription, no banner surveys.
 
 | ID | Task | Why | Status |
 | --- | --- | --- | --- |
-| FW-047 | Creation fee infrastructure: at Treasury init, prompt for a fixed creation fee (devnet test-USDC) sent to a FundWise dev wallet. Show what the equivalent mainnet fee would be ($3-$5 USD). Allow opt-out with a one-click "skip for beta" but record the choice | Tests whether users will pay a setup fee at the high-intent moment | New |
-| FW-061 | Monthly fee emulation: at Treasury init + on day 30 of pool age, show a non-blocking banner: "If this were mainnet, this pool would be $12/mo. Would you pay?" with thumbs up/down + optional comment. Stores response | Tests willingness-to-pay for subscription tier without actually billing |
-| FW-062 | Free-tier limits emulation: cap free pools at 5 members + $1k AUM (simulated, since devnet has no real value); when capped, show "upgrade required" with mock checkout flow. Track conversion intent | Tests where the free-tier wall hurts vs. helps |
-| FW-063 | Beta exit survey: when a Member leaves a pool, ask 3 questions: pricing fairness, feature requests, would-pay confidence (1-5). Anonymized | Cheapest signal we'll ever get |
+| FW-047 / FW-069 | Creation Fee infrastructure: at Treasury init, prompt for $5 USDC (cluster-aware) sent to Platform Fee Wallet via on-chain transfer. Devnet "skip for beta" only; mainnet has no skip. FW-047 server scaffold exists; FW-069 wires to ADR-0032 take-rate plumbing | Tests whether users complete Treasury init under a real fee | Ready (decision-locked) |
+| FW-066 | Platform Fee Wallet env + `platform_fee_ledger` Supabase table | Foundation for all take-rate fees — every fee surface depends on this | Ready |
+| FW-067 | Buyer-pays Contribution Fee (0.5%) — single Member-signed tx, two transfers, atomic | Tests willingness to fund Treasuries when 0.5% is added on top | Ready |
+| FW-068 | Buyer-pays Reimbursement Fee (0.5%) — Squads vault tx with two transfers in TransactionMessage | Hardest piece; on-chain governance accommodation | Ready |
+| FW-070 | Routing Fee (25 bps) on CCTP/LI.FI inbound | Tests cross-chain inbound friction | Ready |
+| ~~FW-061~~ | ~~Monthly fee emulation banner~~ | **Superseded** — no subscription in the new take-rate model ([ADR-0032](./adr/0032-fund-mode-take-rate-monetization.md)) | Dropped |
+| ~~FW-062~~ | ~~Free-tier wall emulation~~ | **Superseded** — free tier is now "for everyone"; no wall. Pro tier with perks is a post-Summit decision | Dropped |
+| FW-063 | Beta exit survey: when a Member leaves a pool, ask 3 questions about fee fairness, feature requests, and would-stay confidence (1-5). Anonymized | Cheapest signal we'll ever get; reframe questions around the take-rate model |
 
 **Output of monetization beta:** a decision doc (`docs/monetization-beta-findings.md`) updating `docs/monetization.md` with real numbers before any mainnet pricing decision.
 

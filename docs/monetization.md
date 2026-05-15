@@ -1,5 +1,7 @@
 # FundWise Monetization Model
 
+> **2026-05-16 update:** the subscription-centric model below is **superseded** by the take-rate model locked in [ADR-0032](./adr/0032-fund-mode-take-rate-monetization.md). Read ADR-0032 as authoritative. The body of this file is retained for the research/decision history and will be rewritten in a separate pass.
+
 FundWise should keep Split Mode free at launch. The early product needs trust, repeat use, and easy sharing more than it needs a small fee on the exact moment a Member is trying to repay a friend.
 
 This is also the competitive response. Shared-expense tracking is crowded, and several crypto-native bill splitters already exist. Charging the core Settlement loop too early would weaken the only acquisition loop that can make FundWise stand out: a Member shares a Settlement Request Link, the debtor signs the exact USDC Settlement, and the Group gets a verifiable Receipt.
