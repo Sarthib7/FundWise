@@ -12,6 +12,8 @@ import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { InvitePanel } from "@/components/group-dashboard/invite-panel"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
 import { SettlementPanel } from "@/components/group-dashboard/settlement-panel"
+import { ModeBadge } from "@/components/brand/mode-badge"
+import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -720,7 +722,6 @@ export default function GroupDashboard() {
       viewerName={viewerDisplayName}
       viewerAddress={walletAddress}
       mobileBackHref="/groups"
-      mobileTitle={group.name}
       fabAction={
         isMember && (!isFundMode || Boolean(group.treasury_address))
           ? { label: "Add expense", onClick: openCreateExpenseDialog }
@@ -793,6 +794,28 @@ export default function GroupDashboard() {
       }
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        {/* Mobile-only inline title row with cover thumb (design canon) */}
+        <div className="mb-5 flex items-center gap-3 lg:hidden">
+          <div
+            aria-hidden
+            className={cn(
+              "h-9 w-9 shrink-0 rounded-xl",
+              isFundMode ? "bg-brand-fund-grad" : "bg-brand-grad",
+            )}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-serif text-xl tracking-[-0.3px] text-foreground">
+              {group.name}
+            </div>
+            <div className="mt-0.5 flex items-center gap-2 text-xs text-brand-text-2">
+              <ModeBadge mode={group.mode} />
+              <span>
+                {memberCount} member{memberCount === 1 ? "" : "s"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {connected && !isWalletVerified && (
           <div className="mb-5 flex flex-col gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
