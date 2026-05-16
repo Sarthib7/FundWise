@@ -1,10 +1,9 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
 import { isFundModeBetaAdminWallet } from "@/lib/fund-mode-monetization"
+import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
 type BetaRow = {
   group_id: string
@@ -26,10 +25,9 @@ type BetaRow = {
   creation_fees_skipped: number
 }
 
-export async function GET() {
-  try {
-    const session = await requireAuthenticatedWallet()
-
+export const GET = withAuthenticatedHandler(
+  { fallbackMessage: "Failed to load beta admin dashboard." },
+  async ({ session }) => {
     if (!isFundModeBetaAdminWallet(session.wallet)) {
       throw new FundWiseError("This wallet is not configured as a Fund Mode beta admin.", 403)
     }
@@ -55,12 +53,9 @@ export async function GET() {
       throw new FundWiseError(`Failed to load monetization responses: ${wtpError.message}`)
     }
 
-    return NextResponse.json({
+    return {
       pools: (rows ?? []) as BetaRow[],
       monetizationResponses: wtpResponses ?? [],
-    })
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to load beta admin dashboard.")
-    return NextResponse.json({ error: message }, { status })
+    }
   }
-}
+)

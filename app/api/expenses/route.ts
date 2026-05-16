@@ -1,14 +1,13 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { addExpenseMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { FundWiseError } from "@/lib/server/fundwise-error"
 import { listExpensesForGroupRead } from "@/lib/server/fundwise-reads"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { addExpenseMutation } from "@/lib/server/mutations/expense"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function GET(request: Request) {
-  try {
-    const session = await requireAuthenticatedWallet()
+export const GET = withAuthenticatedHandler(
+  { fallbackMessage: "Failed to list Expenses." },
+  async ({ request, session }) => {
     const url = new URL(request.url)
     const groupId = url.searchParams.get("groupId")?.trim()
 
@@ -16,34 +15,30 @@ export async function GET(request: Request) {
       throw new FundWiseError("Missing required groupId query parameter.")
     }
 
-    const expenses = await listExpensesForGroupRead(groupId, session.wallet)
-    return NextResponse.json(expenses)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to list Expenses.")
-    return NextResponse.json({ error: message }, { status })
+    return listExpensesForGroupRead(groupId, session.wallet)
   }
+)
+
+type AddExpenseBody = {
+  groupId?: string
+  payer?: string
+  createdBy?: string
+  amount?: number
+  mint?: string
+  memo?: string
+  category?: string
+  splitMethod?: "equal" | "exact" | "shares" | "percentage"
+  splits?: { wallet: string; share: number }[]
+  sourceCurrency?: string
+  sourceAmount?: number
+  exchangeRate?: number
+  exchangeRateSource?: string
+  exchangeRateAt?: string
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    const body = (await request.json()) as {
-      groupId?: string
-      payer?: string
-      createdBy?: string
-      amount?: number
-      mint?: string
-      memo?: string
-      category?: string
-      splitMethod?: "equal" | "exact" | "shares" | "percentage"
-      splits?: { wallet: string; share: number }[]
-      sourceCurrency?: string
-      sourceAmount?: number
-      exchangeRate?: number
-      exchangeRateSource?: string
-      exchangeRateAt?: string
-    }
-
+export const POST = withAuthenticatedHandler<AddExpenseBody>(
+  { fallbackMessage: "Failed to create Expense.", walletField: "createdBy" },
+  async ({ session, body }) => {
     if (
       !body.groupId ||
       !body.payer ||
@@ -56,10 +51,6 @@ export async function POST(request: Request) {
       throw new FundWiseError("Missing required Expense fields.")
     }
 
-    if (body.createdBy !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Expense creator.", 401)
-    }
-
     if (body.payer !== session.wallet) {
       throw new FundWiseError(
         "Expense payer must match the authenticated wallet. Ask the payer to log this Expense from their own wallet.",
@@ -67,7 +58,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const expense = await addExpenseMutation({
+    return addExpenseMutation({
       groupId: body.groupId,
       payer: body.payer,
       createdBy: body.createdBy,
@@ -83,10 +74,5 @@ export async function POST(request: Request) {
       exchangeRateSource: body.exchangeRateSource,
       exchangeRateAt: body.exchangeRateAt,
     })
-
-    return NextResponse.json(expense)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to create Expense.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)

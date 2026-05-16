@@ -1,37 +1,34 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { addProposalMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { addProposalMutation } from "@/lib/server/mutations/proposal"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(request: Request) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    await enforceFundWiseRateLimit("proposal_create", session.wallet)
-    const body = (await request.json()) as {
-      groupId?: string
-      proposerWallet?: string
-      recipientWallet?: string
-      amount?: number
-      mint?: string
-      kind?: "reimbursement" | "threshold_change" | "exit_refund"
-      targetThreshold?: number
-      squadsTransactionIndex?: number
-      squadsProposalAddress?: string
-      squadsTransactionAddress?: string
-      squadsCreateTxSig?: string
-      proofUrl?: string
-      memo?: string
-    }
+type AddProposalBody = {
+  groupId?: string
+  proposerWallet?: string
+  recipientWallet?: string
+  amount?: number
+  mint?: string
+  kind?: "reimbursement" | "threshold_change" | "exit_refund"
+  targetThreshold?: number
+  squadsTransactionIndex?: number
+  squadsProposalAddress?: string
+  squadsTransactionAddress?: string
+  squadsCreateTxSig?: string
+  proofUrl?: string
+  memo?: string
+}
 
+export const POST = withAuthenticatedHandler<AddProposalBody>(
+  {
+    fallbackMessage: "Failed to create Proposal.",
+    rateLimit: "proposal_create",
+    walletField: "proposerWallet",
+  },
+  async ({ body }) => {
     if (!body.groupId || !body.proposerWallet) {
       throw new FundWiseError("Missing required Proposal fields.")
-    }
-
-    if (body.proposerWallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Proposal creator.", 401)
     }
 
     const kind = body.kind ?? "reimbursement"
@@ -41,15 +38,13 @@ export async function POST(request: Request) {
         throw new FundWiseError("Threshold-change Proposals require targetThreshold.")
       }
 
-      const proposal = await addProposalMutation({
+      return addProposalMutation({
         groupId: body.groupId,
         proposerWallet: body.proposerWallet,
         kind,
         targetThreshold: body.targetThreshold,
         memo: body.memo,
       })
-
-      return NextResponse.json(proposal)
     }
 
     if (
@@ -64,7 +59,7 @@ export async function POST(request: Request) {
       throw new FundWiseError("Missing required reimbursement Proposal fields.")
     }
 
-    const proposal = await addProposalMutation({
+    return addProposalMutation({
       groupId: body.groupId,
       proposerWallet: body.proposerWallet,
       recipientWallet: body.recipientWallet,
@@ -78,10 +73,5 @@ export async function POST(request: Request) {
       proofUrl: body.proofUrl,
       memo: body.memo,
     })
-
-    return NextResponse.json(proposal)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to create Proposal.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)
