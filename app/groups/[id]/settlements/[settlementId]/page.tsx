@@ -13,7 +13,8 @@ import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { getSettlementReceiptView } from "@/lib/db"
+import { apiFetch } from "@/lib/api-client"
+import type { SettlementReceiptView } from "@/lib/api-types"
 import type { Database } from "@/lib/database.types"
 import {
   findStablecoinByMint,
@@ -66,7 +67,9 @@ export default function SettlementReceiptPage() {
         walletAdapter: wallet?.adapter,
       })
 
-      const receipt = await getSettlementReceiptView(settlementId)
+      const receipt = await apiFetch<SettlementReceiptView>(
+        `/api/settlements/${settlementId}`
+      )
       setGroup(receipt.group)
       setMembers(receipt.members)
       setSettlement(receipt.settlement)

@@ -6,7 +6,7 @@ import { ContributorStrip } from "@/components/group-dashboard/contributor-strip
 import { Card } from "@/components/ui/card"
 import { formatTokenAmount } from "@/lib/expense-engine"
 import type { Database } from "@/lib/database.types"
-import type { ProposalWithReviews } from "@/lib/db"
+import type { ProposalWithReviews } from "@/lib/api-types"
 import { cn } from "@/lib/utils"
 import {
   CheckCircle2,
