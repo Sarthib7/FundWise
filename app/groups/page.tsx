@@ -4,14 +4,15 @@ import { startTransition, useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { AppShell } from "@/components/app-shell"
 import { CreateGroupDialog } from "@/components/create-group-dialog"
 import { JoinGroupDialog } from "@/components/join-group-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
+import { ModeBadge } from "@/components/brand/mode-badge"
+import { getFundWiseClusterName } from "@/lib/solana-cluster"
 import { createGroup, getGroupByCode, getGroupsForWallet } from "@/lib/db"
 import { findStablecoinByMint, getDefaultStablecoinForGroupMode } from "@/lib/expense-engine"
 import {
@@ -313,9 +314,14 @@ export default function GroupsPage() {
 
   if (!connected) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex flex-1 items-center px-4 py-10 sm:px-6">
+      <AppShell
+        activeRoute="groups"
+        title="Your Groups"
+        breadcrumb="Groups"
+        cluster={getFundWiseClusterName()}
+        viewerName="Connect wallet"
+      >
+        <div className="flex flex-1 items-center px-4 py-10 sm:px-6">
           <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center">
             <div className="space-y-5">
               <Badge className="bg-accent/10 text-accent border-accent/20">Wallet required</Badge>
@@ -381,16 +387,21 @@ export default function GroupsPage() {
               </div>
             </Card>
           </div>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </AppShell>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 py-12 md:py-20">
+    <AppShell
+      activeRoute="groups"
+      title="Your Groups"
+      breadcrumb="Groups"
+      cluster={getFundWiseClusterName()}
+      viewerAddress={walletAddress}
+      fabAction={{ label: "New Group", onClick: openCreateDialog }}
+    >
+      <div className="flex-1 py-12 md:py-20">
         <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -521,9 +532,7 @@ export default function GroupsPage() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg truncate">{group.name}</h3>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
-                            {group.mode === "split" ? "Split Mode" : "Fund Mode"}
-                          </span>
+                          <ModeBadge mode={group.mode} />
                           <span>{getMintName(group.stablecoin_mint)}</span>
                           <span>Code: {group.code}</span>
                         </div>
@@ -536,7 +545,7 @@ export default function GroupsPage() {
             </div>
           )}
         </div>
-      </main>
+      </div>
       <CreateGroupDialog
         open={isCreateDialogOpen}
         onOpenChange={handleCreateDialogChange}
@@ -552,7 +561,6 @@ export default function GroupsPage() {
         errorMessage={joinError}
         onSubmit={handleJoinGroup}
       />
-      <Footer />
-    </div>
+    </AppShell>
   )
 }

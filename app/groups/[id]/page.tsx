@@ -5,15 +5,15 @@ export const runtime = "edge"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useCallback, useMemo, useState } from "react"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { AppShell } from "@/components/app-shell"
 import type { ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
 import { FundModeBetaSurfaces } from "@/components/group-dashboard/fund-mode-beta-surfaces"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
+import { ModeBadge } from "@/components/brand/mode-badge"
+import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useGroupDashboard, PROFILE_DISPLAY_NAME_MAX_LENGTH } from "@/hooks/use-group-dashboard"
 import { addExpense as dbAddExpense, type ActivityItem, updateExpense as dbUpdateExpense } from "@/lib/db"
 import {
@@ -30,6 +30,7 @@ import {
   AlertCircle,
   Bot,
   Check,
+  ChevronRight,
   Copy,
   Landmark,
   Loader2,
@@ -641,25 +642,36 @@ export default function GroupDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
+      <AppShell
+        activeRoute="groups"
+        title="Loading group…"
+        breadcrumb="Groups"
+        mobileBackHref="/groups"
+        viewerName={viewerDisplayName}
+        viewerAddress={walletAddress}
+      >
+        <div className="flex min-h-[60vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-accent" />
         </div>
-        <Footer />
-      </div>
+      </AppShell>
     )
   }
 
   if (!group) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
+      <AppShell
+        activeRoute="groups"
+        title="Group not found"
+        breadcrumb="Groups"
+        mobileBackHref="/groups"
+        viewerName={viewerDisplayName}
+        viewerAddress={walletAddress}
+      >
+        <div className="flex min-h-[60vh] items-center justify-center px-4 py-10">
           <Card className="max-w-lg p-8 text-center sm:p-10">
-            <Badge variant="outline" className="mb-4">
+            <span className="mb-4 inline-flex rounded-full border border-brand-border-c bg-brand-surface px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-2">
               Group link issue
-            </Badge>
+            </span>
             <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
             <h1 className="text-3xl font-bold tracking-tight">Group Not Found</h1>
             <p className="mx-auto mt-3 max-w-md text-muted-foreground">
@@ -681,16 +693,33 @@ export default function GroupDashboard() {
             </div>
           </Card>
         </div>
-        <Footer />
-      </div>
+      </AppShell>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header cluster={getClusterForGroupMode(group.mode)} />
-
-      <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+    <AppShell
+      activeRoute="groups"
+      title={group.name}
+      breadcrumb={
+        <span className="inline-flex items-center gap-1.5">
+          Groups
+          <ChevronRight className="h-3 w-3 opacity-60" aria-hidden />
+          {isFundMode ? "Fund mode" : "Split mode"}
+        </span>
+      }
+      cluster={getClusterForGroupMode(group.mode)}
+      viewerName={viewerDisplayName}
+      viewerAddress={walletAddress}
+      mobileBackHref="/groups"
+      mobileTitle={group.name}
+      fabAction={
+        isMember && (!isFundMode || Boolean(group.treasury_address))
+          ? { label: "Add expense", onClick: openCreateExpenseDialog }
+          : undefined
+      }
+    >
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {connected && !isWalletVerified && (
           <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -769,116 +798,100 @@ export default function GroupDashboard() {
           </Card>
         )}
 
-        <div className="overflow-hidden rounded-[22px] border border-brand-border-c bg-card shadow-[0_0_0_1px_#d5e8da,0_32px_72px_rgba(13,31,20,0.08),0_12px_24px_rgba(13,31,20,0.05)]">
-          <div className="flex items-center gap-[7px] border-b border-brand-border-c bg-brand-surface px-[18px] py-3">
-            <div className="h-[11px] w-[11px] rounded-full bg-[#ff5f57]" />
-            <div className="h-[11px] w-[11px] rounded-full bg-[#febc2e]" />
-            <div className="h-[11px] w-[11px] rounded-full bg-[#28c840]" />
-          </div>
+        <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
+          <aside className="order-2 rounded-2xl border border-brand-border-c bg-brand-surface/70 p-4 sm:p-5 xl:order-1">
+            <GroupSidebar
+              isFundMode={isFundMode}
+              isMember={isMember}
+              walletAddress={walletAddress}
+              memberCount={memberCount}
+              members={members}
+              groupCreatorWallet={group.created_by}
+              onInvite={() => setShowInviteDialog(true)}
+              onEditProfile={openProfileDialog}
+            />
+          </aside>
 
-          <div className="grid xl:grid-cols-[320px_1fr]">
-            <aside className="order-2 border-t border-brand-border-c bg-brand-surface/70 p-4 sm:p-5 xl:order-1 xl:border-r xl:border-t-0">
-              <GroupSidebar
-                isFundMode={isFundMode}
-                isMember={isMember}
-                walletAddress={walletAddress}
-                memberCount={memberCount}
-                members={members}
-                groupCreatorWallet={group.created_by}
-                onInvite={() => setShowInviteDialog(true)}
-                onEditProfile={openProfileDialog}
-              />
-            </aside>
+          <section className="order-1 min-w-0 space-y-5 xl:order-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+              <ModeBadge mode={group.mode} size="md" />
+              <button
+                onClick={copyGroupCode}
+                className="inline-flex min-h-9 items-center gap-1 rounded-md px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "Copied!" : group.code}
+              </button>
+              <span>·</span>
+              <span>{tokenName}</span>
+              <span>·</span>
+              <span>
+                {memberCount} Member{memberCount !== 1 ? "s" : ""}
+              </span>
+              {!isFundMode && totalSettledVolume > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                    <Receipt className="h-3.5 w-3.5" />
+                    {formatTokenAmount(totalSettledVolume)} {tokenName} settled
+                  </span>
+                </>
+              )}
+            </div>
 
-            <section className="order-1 min-w-0 space-y-6 p-4 sm:p-6 xl:order-2 xl:p-7">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div className="min-w-0">
-                  <div className="mb-2 flex flex-wrap items-center gap-3">
-                    <h1 className="text-3xl font-bold tracking-tight">{group.name}</h1>
-                    <Badge className="bg-accent/10 text-accent border-accent/20">
-                      {isFundMode ? "Fund Mode" : "Split Mode"}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-                    <button
-                      onClick={copyGroupCode}
-                      className="inline-flex min-h-10 items-center gap-1 rounded-md px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                      {copied ? "Copied!" : group.code}
-                    </button>
-                    <span>·</span>
-                    <span>{tokenName}</span>
-                    <span>·</span>
-                    <span>
-                      {memberCount} Member{memberCount !== 1 ? "s" : ""}
-                    </span>
-                    {!isFundMode && totalSettledVolume > 0 && (
-                      <>
-                        <span>·</span>
-                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                          <Receipt className="h-3.5 w-3.5" />
-                          {formatTokenAmount(totalSettledVolume)} {tokenName} settled
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
-                  {isMember && walletAddress ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="min-h-11 sm:min-h-10"
-                      onClick={() => void createFundyLinkCode()}
-                      disabled={isCreatingFundyLinkCode}
-                    >
-                      {isCreatingFundyLinkCode ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Bot className="h-4 w-4 mr-2" />
-                      )}
-                      Link Fundy
-                    </Button>
-                  ) : null}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="min-h-11 sm:min-h-10"
-                    onClick={() => setShowInviteDialog(true)}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Invite
-                  </Button>
-                  {isFundMode && isMember && group.treasury_address && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="min-h-11 sm:min-h-10"
-                      onClick={openCreateExpenseDialog}
-                    >
-                      <Receipt className="h-4 w-4 mr-2" />
-                      Log Expense
-                    </Button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              {isMember && walletAddress ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11 sm:min-h-10"
+                  onClick={() => void createFundyLinkCode()}
+                  disabled={isCreatingFundyLinkCode}
+                >
+                  {isCreatingFundyLinkCode ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Bot className="h-4 w-4 mr-2" />
                   )}
-                  {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
-                    <Button
-                      size="sm"
-                      className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
-                      onClick={() => void createTreasury()}
-                      disabled={isCreatingTreasury || missingMembersForTreasury > 0}
-                    >
-                      {isCreatingTreasury ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Landmark className="h-4 w-4 mr-2" />
-                      )}
-                      Initialize Treasury
-                    </Button>
+                  Link Fundy
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-h-11 sm:min-h-10"
+                onClick={() => setShowInviteDialog(true)}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Invite
+              </Button>
+              {isFundMode && isMember && group.treasury_address && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-11 sm:min-h-10"
+                  onClick={openCreateExpenseDialog}
+                >
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Log Expense
+                </Button>
+              )}
+              {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
+                <Button
+                  size="sm"
+                  className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
+                  onClick={() => void createTreasury()}
+                  disabled={isCreatingTreasury || missingMembersForTreasury > 0}
+                >
+                  {isCreatingTreasury ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Landmark className="h-4 w-4 mr-2" />
                   )}
-                </div>
-              </div>
+                  Initialize Treasury
+                </Button>
+              )}
+            </div>
 
               {fundyLinkCode ? (
                 <Card className="border-accent/20 bg-accent/5 p-4">
@@ -1011,8 +1024,7 @@ export default function GroupDashboard() {
               )}
             </section>
           </div>
-        </div>
-      </main>
+      </div>
 
       {showExpenseDialog && (
         <ExpenseDialog
@@ -1088,7 +1100,6 @@ export default function GroupDashboard() {
         />
       )}
 
-      <Footer />
-    </div>
+    </AppShell>
   )
 }
