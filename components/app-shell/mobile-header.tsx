@@ -45,7 +45,7 @@ export function MobileHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-brand-border-c bg-background/92 px-4 py-3 backdrop-blur-xl lg:hidden",
+        "sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-brand-border-c bg-background/92 px-4 pt-[calc(env(safe-area-inset-top)+12px)] pb-3 backdrop-blur-xl lg:hidden lg:pt-3",
         className,
       )}
     >
