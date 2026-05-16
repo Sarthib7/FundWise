@@ -1,205 +1,247 @@
-# FundLabs and FundWise Positioning
+# FundLabs + FundWise Positioning — Post-Hackathon, Summit-Ready
 
-This is the repo-safe adaptation of `FundLabs_Positioning_Strategy.docx`.
-Use it as the source of truth for FundLabs umbrella positioning, FundWise public copy, investor narrative, and claims guardrails.
+**Source of truth** for FundLabs umbrella positioning, public copy, investor narrative, claims guardrails. Hackathon complete. Next milestone: **Solana Summit 2026-06-13**.
 
-The strategy is intentionally ambitious. The docs and product must still distinguish what is shipped, what is in beta, and what is a roadmap or fundraising claim.
+Last lock: 2026-05-16. Supersedes hackathon-era framings in `FundLabs_Positioning_Strategy.docx`. Aligned with [ADR-0039](./adr/0039-fundy-is-a-product-and-agent-as-member-north-star.md), [ADR-0040](./adr/0040-receipt-endpoint-ships-standalone.md), [ADR-0041](./adr/0041-fund-mode-mainnet-closed-beta-gated-stretch.md).
+
+---
 
 ## Canonical Lines
 
-**FundLabs:** FundLabs builds the financial layer for groups, human or AI.
+- **FundLabs:** Financial layer for groups — human or AI.
+- **FundWise:** Split expenses. Earn together.
+- **Fundy:** Finance agent. Lives in your group chat.
+- **Receipt Endpoint:** Receipts for any Solana payment. Payable per call.
 
-**FundWise:** Split expenses. Earn together.
+Subtitle (extended umbrella, when one line isn't enough): *Shared spending, agent finance, and on-chain receipts on Solana.*
 
-**Fundy:** Finance agent for the group chat era.
+---
 
-**Receipt Endpoint:** Audit trail for agentic commerce.
+## FundLabs Umbrella
 
-## Company Umbrella
+Three products in market by Summit. Not "one product + planned expansions" — three.
 
-FundLabs is the company and product family. The umbrella category is group financial infrastructure, not "crypto bill splitting."
+| Product | What it is | Status (2026-05-16) | Primary user | Revenue hypothesis |
+|---|---|---|---|---|
+| **FundWise** | Shared-finance web app. Split Mode (track + settle Expenses) + Fund Mode (shared USDC Treasury, Proposals, approvals). | Split Mode = shipped on devnet, mainnet cutover firm by Summit. Fund Mode = invite-only beta on devnet; mainnet closed beta = gated stretch (ADR-0041). | Private Groups (friends, travel, flatmates, small DAOs) | Fund Mode fees: Creation, Contribution, Reimbursement, Routing. Yield take post-Meteora integration. Split Mode stays free. |
+| **Fundy** | Telegram-native personal finance agent + MCP server for external agents. | Live on Railway since 2026-05-15. 11 tools exposed, MCP token-authenticated, Zerion CLI live, 56/56 tests passing. | Individuals using FundWise; external autonomous agents | Premium personal-finance + tax advisory (ADR-0023); later B2B agent platform fees. |
+| **Receipt Endpoint** | Standalone Solana tx → structured receipt service. Railway-hosted, x402/MPP payable, listed in pay-skill / x402 MCP catalog. Any Solana tx accepted; FundWise Settlements = premium first-class source. | Shipping by Summit (ADR-0040). | Any agent doing any Solana payment; accounting/tax/audit platforms long-term. | Per-call API pricing via x402/MPP. |
 
-The long-term stack has three products:
+**Shared thesis:** Groups already coordinate money. Existing tools split workflow across chat, spreadsheets, bank apps, wallets, receipts. FundLabs collapses that surface into wallet-native ledgers, agent-readable APIs, and verifiable receipts on Solana.
 
-| Product | Primary user | Core job | Revenue hypothesis |
-| --- | --- | --- | --- |
-| FundWise | Friend Groups, later DAOs and recurring shared treasuries | Track shared spending, settle, pool USDC, approve spend, and eventually make idle Group money productive | Fund Mode subscription, later yield spread or treasury fee |
-| Fundy | Individuals, Telegram Groups, and later agent networks | Bring FundWise actions, reminders, drafts, readiness checks, and personal-finance help into the group chat | Premium subscription, later transaction or B2B fees |
-| Receipt Endpoint | AI agents, developers, auditors, and payment-aware services | Return structured, verifiable Receipts for agent and on-chain payments | Per-call API pricing via x402 / MPP-style rails |
+**The "human or AI" framing is load-bearing, not hand-waving.** Concrete scenario:
 
-The shared thesis: Groups already coordinate money, but current tools split the workflow across chat, spreadsheets, bank apps, wallets, and receipts. FundLabs should become the standard financial layer that lets groups and agents track obligations, move stablecoins, verify outcomes, and keep an audit trail.
+> Human creates a Fund Mode Group on FundWise. Allocates budget through Fundy to an AI agent. Agent joins the Group via FundWise's skill/MCP endpoints. Agent logs Expenses, holds an allocation, queries Receipt Endpoint for its own payment history.
+
+Today: agent participates via Scoped Agent Access tokens (**agent-as-hands**, ships at Summit). Direction: agent has own wallet, joins as its own Member, holds own allocation (**agent-as-Member**, north-star — see ADR-0039).
+
+---
 
 ## FundWise Positioning
 
-FundWise is the first FundLabs product.
+First FundLabs product. Shared-finance web app for private Groups.
 
-Public product copy should make FundWise feel like a better shared-finance app first:
+**Consumer copy (lead familiar):**
 
-> FundWise helps private Groups track shared spending, see live Balances, and settle up with verifiable USDC Receipts. Fund Mode turns those Groups into shared Treasuries for Contributions, Proposals, approvals, proof, and eventually productive idle money.
+> FundWise helps private Groups track shared spending, see live Balances, and settle up with verifiable USDC Receipts on Solana. Fund Mode pools USDC into shared Treasuries for Contributions, Proposals, and approvals — pay together before spending instead of chasing reimbursements after.
 
-For users, lead with the familiar:
+**Mode breakdown:**
 
-- Create a private Group.
-- Log shared Expenses.
-- See live Balances.
-- Share settle-up links.
-- Confirm exact USDC Settlement.
-- Get a clear Receipt.
-- Move into Fund Mode when the Group wants to fund before spending instead of chasing reimbursements after.
+- **Split Mode** — wedge. Group, Expense, Balance, Settlement, Receipt. Free at launch. Wallet-native, USDC on Solana mainnet by Summit. Settlement Request Links = acquisition loop. *Shipped devnet today; mainnet by 2026-06-13.*
+- **Fund Mode** — hero direction. Shared Treasury, Contributions, reimbursement Proposals, approvals, proof/history, execution. Squads multisig backing. Fees: Creation $5 USDC + Contribution 0.5% + Reimbursement 0.5%. *Devnet invite-only beta today; mainnet closed beta is a **gated stretch** for Summit (ADR-0041).*
 
-For investors and roadmap discussion, the sharper thesis is:
+**Investor sharper thesis:**
 
-- Split Mode is the wedge because it is easy to understand and demo.
-- Fund Mode is the product because durable Groups need shared Treasuries, governance, proof, exit mechanics, integrations, and eventually yield.
-- Fundy is the distribution layer because real Groups already coordinate in Telegram and personal agents.
-- Receipt Endpoint is the infrastructure expansion because agentic commerce needs structured receipts, not just payment rails.
+- Split Mode = wedge. Easy to demo, easy to understand.
+- Fund Mode = product. Durable Groups need shared Treasuries, governance, proof, exit mechanics, integrations.
+- Fundy = product and distribution. Real Groups coordinate in Telegram and personal agents already.
+- Receipt Endpoint = infrastructure. Agent commerce needs structured receipts, not just payment rails.
 
-## Shipped vs Direction
+---
 
-**Shipped/demoable now:** Split Mode devnet MVP: Group, Expense, Balance, Settlement, Receipt, Settlement Request Links, protected reads/writes, and sponsor support groundwork.
+## Fundy Positioning
 
-**Active beta direction:** Fund Mode: shared USDC Treasuries, Contributions, reimbursement Proposals, approvals, proof/history, and explicit execution. Treasury initialization and Contributions exist; Proposal lifecycle is not complete yet.
+FundLabs product, not "just a distribution surface" (ADR-0039). Both roles co-exist — public copy leads with product framing; engineering invariants (money movement deep-links to web app, no direct Supabase writes from Fundy) still apply.
 
-**Planned:** Fundy, Scoped Agent Access, Payable Settlement Requests, Receipt Endpoint, productive treasury/yield strategy, gas abstraction, fiat/card/IBAN rails, broader AI-agent participation, and non-crypto onboarding.
+**Current public framing:**
 
-**Out of scope for current FundWise:** prediction markets, mini-games, broad autonomous spending, automatic settlement, yield claims as live behavior, any-chain settlement as core behavior, and any product claim that bypasses wallet-confirmed money movement.
+- Telegram-native. Personal finance agent + MCP server for external agents.
+- Live on Railway. Separate repo (ADR-0022). Calls FundWise over public HTTP.
+- Reads Group state, drafts Expenses, surfaces Settlement deep-links, runs Zerion CLI for wallet readiness.
+- Money movement deep-links back to web app for wallet confirmation.
+- Group-chat mode after every Member authenticates in DM.
+
+**Future framing (post-Summit, no live claims yet):**
+
+- LLM-backed natural-language finance agent (OpenRouter underneath).
+- Tax advisory + filing (ADR-0023).
+- Premium subscription tier.
+- Agent-to-agent coordination via MCP.
+
+---
+
+## Receipt Endpoint Positioning
+
+Standalone Railway service (ADR-0040). Decoupled from FundWise's Payable Settlement Requests + Scoped Agent Access — does not require those primitives to ship.
+
+**Current public framing:**
+
+- Solana tx sig in → structured receipt JSON out, IPFS-pinned.
+- Payable per call via x402 / MPP. Free tier for developer testing.
+- Listed in pay-skill / x402 MCP catalog.
+- Any Solana tx accepted at the public endpoint.
+- FundWise Settlements = **premium first-class source** (richer metadata: Group, Members, Expense linkage, Settlement context).
+
+**Future framing (post-Summit, no live claims yet):**
+
+- Arweave permanent archive tier (enterprise).
+- Accounting / tax / DAO tooling / agent-platform integrations.
+- Per-merchant tax-category metadata.
+
+**Hard avoid:** Stripe-grade compliance claims before audit. Receipts on non-FundWise txs cannot claim richer attribution than Solana RPC + DEX/protocol metadata actually returns.
+
+---
+
+## Shipped vs Direction (Summit Frame)
+
+**Live at Summit (claimable as shipped):**
+
+- FundWise Split Mode on **Solana mainnet** — wallet-native Groups, on-chain USDC Settlement, Receipts.
+- FundWise web app on Cloudflare Pages.
+- Fundy in Telegram — group ledger reads, draft Expenses, Settlement deep-links, Zerion CLI wallet readiness.
+- Fundy as MCP server — token-authenticated, 11 tools, external agents can call FundWise read paths.
+- Agent Skill Endpoint at `https://fundwise.fun/skill.md`.
+- Receipt Endpoint v1 — Solana tx → structured receipt JSON, x402/MPP payable, MCP-catalog listed.
+
+**Shipping at Summit (announce + open):**
+
+- Fund Mode invite-only beta — **devnet by default, mainnet iff ADR-0041 gate clears by 2026-06-06.**
+- Agent-as-hands flow polished — Scoped Agent Access token issuance from `/profile/agents` (or wallet-signed challenge), agent joins Group via MCP, logs Expenses, queries Receipt Endpoint.
+
+**Direction (named so audience knows it's coming, not claimed live):**
+
+- Payable Settlement Requests → agent-paid Settlement (`settlement:pay` authority with caps + expiry).
+- Treasury → agent wallet allocations via approved reimbursement Proposals; **agent-as-Member** full path.
+- Yield-bearing Treasuries (Meteora / sUSD).
+- Multi-chain inbound via Circle CCTP + LI.FI (LI.FI integration built; mainnet pipeline pending).
+- Fiat onboarding via Privy + MoonPay + Bridge.xyz.
+- Native mobile, Telegram mini app, wallet mini-dapp.
+
+**Out of scope at Summit:**
+
+- Multi-chain Settlement (Solana stays the ledger).
+- Gasless settlement as a live claim.
+- Live yield APY claims.
+- Autonomous-agent money movement (planned via Payable Settlement Requests post-Summit).
+- Mini-games / prediction-market mechanics — out of FundWise entirely.
+
+---
 
 ## Messaging Hierarchy
 
 ### Consumer
 
-Lead with shared spending and trust:
+Lead familiar:
 
 - Split expenses.
 - Settle up.
-- Share live settle-up links.
+- Live settle-up links.
 - See who owes whom.
-- Get a verifiable Receipt.
+- Verifiable Receipt.
 - Fund a shared Treasury when the Group wants to pay before spending.
 
-Keep crypto mechanics in the background until the user is in a wallet, Settlement, Receipt, Treasury, or developer context.
+Crypto mechanics stay behind the user benefit. Surface USDC / Solana / wallets when the Member is in a wallet, Settlement, Receipt, Treasury, or developer context.
 
-### Product / launch story
+### Product / Launch Story
 
-Lead with one coherent path:
+One coherent path:
 
-`Group -> Expense -> Balance -> Settlement -> Receipt`
+`Group → Expense → Balance → Settlement → Receipt`
 
-Then explain:
+Beats:
 
-- Settlement Request Links are the acquisition loop.
-- CCTP + LI.FI help when the debtor's funds are not already Solana USDC (post-launch multi-chain phase).
-- Privy + MoonPay + Bridge.xyz cover fiat onboarding for non-crypto users (later phase); Squads Protocol stays the group-treasury layer.
-- Zerion helps with wallet readiness and agent-style analysis.
-- Fund Mode is the hero direction and ships alongside Split Mode at the Summit Berlin launch (2026-06-13).
+- Settlement Request Links = acquisition loop.
+- Fund Mode = durable-group product, opens at Summit (devnet or mainnet per ADR-0041 gate).
+- Fundy = agent product + distribution surface, already live in users' Telegrams.
+- Receipt Endpoint = developer-facing receipts API, also shipping at Summit.
 
 ### Investor
 
-Lead with FundLabs:
+Lead with FundLabs umbrella:
 
-> FundLabs builds the financial layer for groups, human or AI. FundWise starts with shared expenses and grows into yield-aware shared Treasuries. Fundy brings the system into Telegram and personal agents. Receipt Endpoint gives agentic commerce a verifiable audit trail.
+> FundLabs builds the financial layer for groups — human or AI. FundWise starts with shared expenses and grows into yield-aware shared Treasuries. Fundy brings the system into Telegram and personal agents. Receipt Endpoint gives the agent economy a verifiable audit trail. Three shipping or shipped products by Solana Summit 2026-06-13.
 
-Useful investor hooks:
+Hooks:
 
-- Shared expenses are a proven behavior, but tracked balances earn nothing and settle poorly.
-- Group chats are where coordination already happens, but they do not produce financial state.
-- AI agents can pay, but they still need approvals, limits, receipts, and audit trails.
-- Solana makes low-cost, fast stablecoin settlement credible for consumer Groups and agent workflows.
+- Shared expenses are proven behavior; tracked balances earn nothing and settle poorly.
+- Group chats are where coordination already happens; they don't produce financial state.
+- AI agents can pay; they still need approvals, limits, receipts, audit trails.
+- Solana = low-cost, fast stablecoin settlement, credible for consumer Groups + agent workflows.
 
-## Product Narrative
+---
 
-### FundWise
+## Monetization
 
-**Current public story:** split shared Expenses and settle exact USDC Balances with verifiable Receipts.
+Sequence (locked direction):
 
-**Next product story:** fund the Group upfront, earn together later, and reimburse Members through Proposal-based spending.
+1. **Fund Mode fees** — Creation Fee ($5 flat, one-time), Contribution Fee (0.5%, buyer-pays), Reimbursement Fee (0.5%, buyer-pays), Routing Fee (25 bps on CCTP/LI.FI inbound). All flows land in Platform Fee Wallet, reconciled in `platform_fee_ledger`. (See ADR-0031, ADR-0032.)
+2. **Fundy premium** — reminders, personal finance automation, tax advisory (ADR-0023).
+3. **Receipt Endpoint** — per-call x402/MPP pricing. Free tier for developer testing.
+4. **Yield Fee** (post-Meteora) — 30% take on yield generated when Treasury USDC routes to yield venues. Opt-in per Treasury; default off.
+5. **Holding Fee** (planned, post-Summit) — 0.5%/year AUM, prorated daily. Requires billing job + Squads-compatible debit mechanism not yet in place.
 
-Fund Mode should be framed as "pay before, earn together" only when the copy also explains its current state. Until yield routing is implemented, use "shared Treasury" and "productive idle money direction" instead of claiming live APY.
+Split Mode stays free at launch — acquisition loop, trust builder.
 
-### Fundy
+**Do not present** yield spread, automated agent execution fees, or per-receipt API revenue as live FundWise revenue. Treat as roadmap.
 
-Fundy is the hosted Telegram and personal-finance companion for FundWise. It is planned as a separate service and repository.
-
-Repo-safe current framing:
-
-- Starts command-first.
-- Reads Balances, Expenses, Settlements, Receipts, and later Proposals.
-- Creates drafts and reminders.
-- Uses Zerion readiness where useful.
-- Deep-links back to the FundWise web app for wallet-confirmed money movement.
-
-Future framing:
-
-- Natural-language finance agent.
-- Group chat interface for shared spending.
-- Human and AI-agent coordination surface.
-- Premium personal-finance and later tax-advisory layer.
-
-### Receipt Endpoint
-
-Receipt Endpoint is the planned developer and agent-commerce infrastructure surface.
-
-Repo-safe current framing:
-
-- It is not shipped in the FundWise web app.
-- It should grow from Payable Settlement Requests and the existing Receipt model.
-- It should return structured, verifiable payment records only after payment verification.
-- It requires Scoped Agent Access and Spending Policies before private or money-moving use.
-
-Future framing:
-
-- Structured receipts for x402, MPP, and other agent-payment rails.
-- IPFS/Arweave-style receipt archives where appropriate.
-- Accounting, tax, DAO tooling, and agent-platform integrations.
-
-## Monetization Position
-
-Keep Split Mode free at launch. It is the acquisition loop and trust builder.
-
-Preferred revenue sequence:
-
-1. Fund Mode subscription or beta plan for serious Groups with Treasuries, Proposals, proof, and admin value.
-2. Fundy premium for reminders, readiness, personal finance, automation, and later tax support.
-3. Receipt Endpoint per-call pricing after the API exists and has real users.
-4. Routing, card, IBAN, top-up, or yield revenue only when provider integrations and risk controls are real.
-
-Do not present yield spread, automated agent execution fees, or per-receipt API revenue as live FundWise revenue.
+---
 
 ## Claims Guardrails
 
-Use these claims freely:
+### Use freely
 
-- FundLabs builds the financial layer for groups, human or AI.
-- FundWise starts with private Groups, shared Expenses, live Balances, USDC Settlement, and verifiable Receipts.
-- Split Mode is the shipped wedge.
-- Fund Mode is the hero product direction and invite-only beta focus.
-- Fundy and Receipt Endpoint are planned expansion products in the same FundLabs stack.
+- FundLabs builds the financial layer for groups — human or AI.
+- FundWise: private Groups, shared Expenses, live Balances, USDC Settlement, verifiable Receipts on Solana.
+- Split Mode = shipped wedge; mainnet by Solana Summit 2026-06-13.
+- Fund Mode = hero direction; invite-only beta on devnet (mainnet closed beta = gated stretch per ADR-0041).
+- Fundy = FundLabs product, live in Telegram + MCP server for external agents, on Railway since 2026-05-15.
+- Receipt Endpoint = standalone Solana tx → receipt JSON service, x402/MPP payable, ships by Summit.
+- Members of a Group can be human or AI (Member = any wallet that joined; agent-as-hands ships at Summit, agent-as-Member is direction).
 - Settlement Request Links resolve the live Balance and require wallet confirmation.
 
-Use these only with clear future/beta wording:
+### Use only with explicit future/beta wording
 
-- shared Treasuries earning yield
-- automatic settlement
-- any-currency or any-chain settlement
-- gasless UX
-- AI agents joining or spending from Group Treasuries
-- x402 / MPP payment execution
-- IPFS or Arweave receipt archives
-- Visa, card, IBAN, Altitude, Privy, Kora, CCTP, Meteora, Solayer, or other specific partner/infrastructure claims
+- Shared Treasuries earning yield → "direction; not live."
+- Automatic settlement → never; settlement always requires wallet confirmation.
+- Any-currency or any-chain settlement → Solana stays the ledger; CCTP/LI.FI = inbound rail.
+- Gasless UX → planned via Kora / Privy fee-payer, not live.
+- AI agents spending from Group Treasuries autonomously → planned via Payable Settlement Requests post-Summit; not live.
+- x402 / MPP payment execution beyond Receipt Endpoint → planned.
+- Arweave permanent receipt archives → enterprise tier, post-Summit.
+- Visa, card, IBAN, Privy, Kora, CCTP, Meteora, Solayer, MoonPay, Bridge.xyz → name partners only with status caveats.
 
-Avoid these claims:
+### Never claim
 
-- "first crypto Splitwise"
-- "FundWise settles automatically"
-- "FundWise supports any chain and any currency"
-- "FundWise yield is live"
-- "Fundy is shipped"
-- "Receipt Endpoint is live"
-- "Agents can spend without user limits"
-- "Prompt instructions authorize money movement"
-- "Settlement is gasless"
-- "FundWise is Telegram-first"
+- "First crypto Splitwise."
+- "FundWise settles automatically."
+- "FundWise supports any chain and any currency."
+- "FundWise yield is live."
+- "Agents can spend without user limits."
+- "Prompt instructions authorize money movement."
+- "Settlement is gasless."
+- "FundWise is Telegram-first" — FundWise is wallet-native web app; Fundy is the Telegram surface.
+- Receipt Endpoint claims richer attribution on non-FundWise txs than what Solana RPC actually returns.
+
+### Updated avoid list (changes from prior version)
+
+- ~~"Fundy is shipped"~~ → **Fundy IS shipped** (live on Railway 2026-05-15). Use freely.
+- ~~"Receipt Endpoint is live"~~ → **Receipt Endpoint is shipping by Summit.** Once live (post-deploy), use freely.
+- ~~"Fundy and Receipt Endpoint are planned expansion products"~~ → **superseded.** Both are products in market by Summit.
+
+---
 
 ## Source Notes
 
-The Desktop strategy doc includes market-size, investor, partner, APY, audit, and protocol adoption claims. Treat those as pitch inputs that require source verification before publishing externally. Keep this repo's docs focused on positioning, product order, and claims boundaries unless a claim has been verified separately.
+- The Desktop `FundLabs_Positioning_Strategy.docx` is the hackathon-era artifact. Investor stats inside it (OpenClaw stars, Pay.sh launch date, MPP launch date, Altitude raise, x402 tx volume, Splitwise $90B, Gartner $1.7T) **require source verification before any external use.** Treat as pitch inputs, not load-bearing facts.
+- This doc replaces the hackathon-era 3-min pitch script, Colosseum spine, ARR scenarios, and comparable-raises tables. Those remain in the `.docx` for reference but are no longer canon.
+- This doc is the source of truth for public copy through Summit (2026-06-13). Update at Summit + 1 week with actual launch status.
