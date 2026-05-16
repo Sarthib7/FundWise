@@ -1,41 +1,34 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { executeProposalMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { executeProposalMutation } from "@/lib/server/mutations/proposal"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ proposalId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    await enforceFundWiseRateLimit("proposal_execute", session.wallet)
-    const { proposalId } = await context.params
-    const body = (await request.json()) as {
-      executorWallet?: string
-      txSig?: string
-    }
+type ExecuteProposalBody = {
+  executorWallet?: string
+  txSig?: string
+}
 
-    if (!proposalId || !body.executorWallet) {
+type ExecuteProposalParams = { proposalId: string }
+
+export const POST = withAuthenticatedHandler<
+  ExecuteProposalBody,
+  ExecuteProposalParams
+>(
+  {
+    fallbackMessage: "Failed to execute Proposal.",
+    rateLimit: "proposal_execute",
+    walletField: "executorWallet",
+  },
+  async ({ body, params }) => {
+    if (!params.proposalId || !body.executorWallet) {
       throw new FundWiseError("Missing required Proposal execution fields.")
     }
 
-    if (body.executorWallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Proposal executor.", 401)
-    }
-
-    const proposal = await executeProposalMutation({
-      proposalId,
+    return executeProposalMutation({
+      proposalId: params.proposalId,
       executorWallet: body.executorWallet,
       txSig: body.txSig,
     })
-
-    return NextResponse.json(proposal)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to execute Proposal.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)

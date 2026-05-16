@@ -519,6 +519,45 @@ export interface Database {
         }
         Relationships: []
       }
+      platform_fee_ledger: {
+        Row: {
+          id: string
+          kind: "creation" | "contribution" | "reimbursement" | "routing"
+          fee_amount: number
+          mint: string
+          cluster: "mainnet-beta" | "devnet" | "custom"
+          fee_wallet: string
+          payer_wallet: string
+          group_id: string | null
+          tx_sig: string
+          recorded_at: string
+        }
+        Insert: {
+          id?: string
+          kind: "creation" | "contribution" | "reimbursement" | "routing"
+          fee_amount: number
+          mint: string
+          cluster: "mainnet-beta" | "devnet" | "custom"
+          fee_wallet: string
+          payer_wallet: string
+          group_id?: string | null
+          tx_sig: string
+          recorded_at?: string
+        }
+        Update: {
+          id?: string
+          kind?: "creation" | "contribution" | "reimbursement" | "routing"
+          fee_amount?: number
+          mint?: string
+          cluster?: "mainnet-beta" | "devnet" | "custom"
+          fee_wallet?: string
+          payer_wallet?: string
+          group_id?: string | null
+          tx_sig?: string
+          recorded_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {

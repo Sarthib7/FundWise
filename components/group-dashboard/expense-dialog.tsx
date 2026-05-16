@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Database } from "@/lib/database.types"
-import type { ActivityItem } from "@/lib/db"
+import type { ActivityItem } from "@/lib/api-types"
 import {
   SUPPORTED_CURRENCIES,
   CURRENCY_SYMBOLS,

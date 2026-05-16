@@ -1,28 +1,37 @@
 /**
- * Squads Protocol treasury helpers for FundWise Fund Mode.
+ * Transitional re-export shim for the Squads governance Module.
  *
- * Treasury funds live in the Squads vault PDA while governance actions target
- * the Squads multisig PDA.
+ * The wallet-signed Squads ops moved into `lib/squads/governance.ts` per
+ * ADR-0035; the verify helpers moved into `lib/squads/lifecycle.ts`. This
+ * file keeps the legacy export names (`createSquadsMultisig`,
+ * `createSquadsReimbursementProposal`, `reviewSquadsProposal`,
+ * `executeSquadsReimbursementProposal`) wired up so existing callers
+ * continue working unchanged. Squads PR3 deletes this file once callers
+ * migrate to `@/lib/squads`.
+ *
+ * Non-governance helpers used by `hooks/use-group-dashboard.ts`
+ * (`contributeStablecoinToTreasury`, `readTreasuryInitReadiness`,
+ * `getTreasuryStablecoinBalance`) and the constants
+ * (`FUND_MODE_CLUSTER`, `connection`, `TREASURY_INIT_SOL_ESTIMATE`) still
+ * live here. They are out of scope for the Squads Module — Squads owns the
+ * governance plumbing, not generic SPL-token transfers or treasury reads.
  */
 
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js"
 import {
-  Connection,
-  PublicKey,
-  Transaction,
-  TransactionMessage,
-  VersionedTransaction,
-  Keypair,
-} from "@solana/web3.js"
-import {
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction,
   getAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token"
-import * as multisig from "@sqds/multisig"
 import { executeStablecoinTransfer } from "@/lib/stablecoin-transfer"
 import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
 import type { FundWiseCluster } from "@/lib/solana-cluster"
+import {
+  createMultisig,
+  execute as squadsExecute,
+  proposeReimbursement,
+  review as squadsReview,
+  type WalletSigner,
+} from "@/lib/squads/governance"
 
 // Fund Mode cluster is env-driven so the same Squads helpers can target
 // mainnet once the beta graduates without recompiling anything.
@@ -43,56 +52,6 @@ function getFundModeCluster(): FundWiseCluster {
 
 export const FUND_MODE_CLUSTER: FundWiseCluster = getFundModeCluster()
 export const connection = createFundWiseConnectionForCluster(FUND_MODE_CLUSTER, "confirmed")
-
-type WalletSigner = {
-  sendTransaction?: (
-    transaction: Transaction | VersionedTransaction,
-    connection: Connection,
-    options?: unknown
-  ) => Promise<string>
-  signAndSendTransaction?: (
-    transaction: Transaction | VersionedTransaction
-  ) => Promise<string | { signature: string }>
-  signTransaction?: (
-    transaction: Transaction | VersionedTransaction
-  ) => Promise<Transaction | VersionedTransaction>
-}
-
-async function sendWalletTransaction(
-  wallet: WalletSigner,
-  transaction: Transaction | VersionedTransaction,
-  blockhash: string,
-  lastValidBlockHeight: number
-) {
-  let signature: string
-
-  if (wallet.sendTransaction) {
-    signature = await wallet.sendTransaction(transaction, connection)
-  } else if (wallet.signAndSendTransaction) {
-    const result = await wallet.signAndSendTransaction(transaction)
-    signature = typeof result === "string" ? result : result.signature
-  } else if (wallet.signTransaction) {
-    const signed = await wallet.signTransaction(transaction)
-    signature = await connection.sendRawTransaction(signed.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: "confirmed",
-    })
-  } else {
-    throw new Error("Wallet does not support transaction signing")
-  }
-
-  const confirmation = await connection.confirmTransaction({
-    signature,
-    blockhash,
-    lastValidBlockHeight,
-  }, "confirmed")
-
-  if (confirmation.value.err) {
-    throw new Error("Squads transaction failed: " + JSON.stringify(confirmation.value.err))
-  }
-
-  return signature
-}
 
 /**
  * Approximate SOL cost to create a new Squads v4 multisig + vault PDA on
@@ -116,8 +75,6 @@ export async function readTreasuryInitReadiness(
   walletAddress: string
 ): Promise<TreasuryReadinessCheck> {
   try {
-    const { PublicKey } = await import("@solana/web3.js")
-    const { LAMPORTS_PER_SOL } = await import("@solana/web3.js")
     const pubkey = new PublicKey(walletAddress)
     const lamports = await connection.getBalance(pubkey, "confirmed")
     const walletSolBalance = lamports / LAMPORTS_PER_SOL
@@ -139,144 +96,65 @@ export async function readTreasuryInitReadiness(
 }
 
 /**
- * Create a new Squads multisig for a group
- * This is the group's treasury where all funds are collected
- *
- * For MVP: creates the Squads multisig and its first vault PDA on-chain.
+ * Legacy wrapper around `Squads.createMultisig`. Preserves the original
+ * positional signature so existing callers (and PR3-targeted call sites)
+ * keep working without touching the call. The `groupName` argument is
+ * still accepted for log compatibility; the `wallet` argument remains
+ * optional so PDAs-only mode keeps working for offline/testing flows.
  */
 export async function createSquadsMultisig(
   creator: PublicKey,
   groupName: string,
   members: PublicKey[] = [],
   threshold: number = 1,
-  wallet?: any // Optional wallet for on-chain initialization
+  // Legacy callers pass wallet-adapter objects that satisfy `WalletSigner`
+  // structurally. The optional `any` is kept for backward compatibility so
+  // browser-side dynamic imports keep their loose typing.
+  wallet?: any
 ): Promise<{ multisigPDA: PublicKey; vaultPDA: PublicKey; signature: string }> {
-  try {
-    console.log("[Squads] Creating multisig for group:", groupName)
-    console.log("[Squads] Creator:", creator.toString())
-    console.log("[Squads] Initial members:", members.length)
+  console.log("[Squads] Creating multisig for group:", groupName)
 
-    // Squads requires createKey to sign the creation transaction.
-    const createKey = Keypair.generate()
-
-    // Derive multisig PDA
-    const [multisigPda] = multisig.getMultisigPda({
-      createKey: createKey.publicKey,
+  if (wallet) {
+    const signer: WalletSigner = wallet as WalletSigner
+    if (!signer.publicKey) {
+      // Some wallet-adapter shapes expose `publicKey` only after connect.
+      // The original implementation relied on `creator` for `feePayer`, so
+      // we forward `creator` as the signer's public key when the wallet
+      // object does not surface its own.
+      signer.publicKey = creator
+    }
+    const result = await createMultisig({
+      signer,
+      threshold,
+      members,
     })
-
-    console.log("[Squads] Multisig PDA:", multisigPda.toString())
-
-    // Derive vault PDA (index 0)
-    const [vaultPda] = multisig.getVaultPda({
-      multisigPda,
-      index: 0,
-    })
-
-    console.log("[Squads] Vault PDA:", vaultPda.toString())
-
-    const uniqueMembers = Array.from(
-      new Set([creator.toString(), ...members.map((member) => member.toString())])
-    ).map((member) => new PublicKey(member))
-
-    const multisigMembers = uniqueMembers.map((member) => ({
-      key: member,
-      permissions: multisig.types.Permissions.all(),
-    }))
-
-    if (threshold < 1) {
-      throw new Error("Approval threshold must be at least 1")
-    }
-
-    if (threshold > multisigMembers.length) {
-      throw new Error(
-        `Approval threshold ${threshold} exceeds current member count ${multisigMembers.length}`
-      )
-    }
-
-    const resolvedThreshold = threshold
-
-    console.log(`[Squads] Configuring ${resolvedThreshold}/${multisigMembers.length} multisig`)
-
-    // If wallet is provided, actually create the multisig on-chain
-    if (wallet) {
-      console.log("[Squads] Creating multisig on-chain...")
-
-      const [programConfigPda] = multisig.getProgramConfigPda({})
-      const programConfig = await multisig.accounts.ProgramConfig.fromAccountAddress(
-        connection,
-        programConfigPda
-      )
-      const createMultisigIx = multisig.instructions.multisigCreateV2({
-        treasury: programConfig.treasury,
-        createKey: createKey.publicKey,
-        creator,
-        multisigPda,
-        configAuthority: null,
-        threshold: resolvedThreshold,
-        members: multisigMembers,
-        timeLock: 0,
-        rentCollector: null,
-      })
-
-      const tx = new Transaction().add(createMultisigIx)
-
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-      tx.recentBlockhash = blockhash
-      tx.feePayer = creator
-
-      console.log("[Squads] 🎉 WALLET POPUP WILL APPEAR - Please approve multisig creation")
-
-      let signature: string
-
-      if (wallet.sendTransaction) {
-        signature = await wallet.sendTransaction(tx, connection, {
-          signers: [createKey],
-        })
-      } else {
-        tx.partialSign(createKey)
-        const signedTx = await wallet.signTransaction(tx)
-        signature = await connection.sendRawTransaction(signedTx.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: "confirmed",
-        })
-      }
-
-      console.log("[Squads] Waiting for confirmation...")
-
-      const confirmation = await connection.confirmTransaction({
-        signature,
-        blockhash,
-        lastValidBlockHeight,
-      }, "confirmed")
-
-      if (confirmation.value.err) {
-        throw new Error("Multisig creation failed: " + JSON.stringify(confirmation.value.err))
-      }
-
-      console.log("[Squads] ✅ Multisig created on-chain!")
-      console.log("[Squads] Transaction:", signature)
-      console.log("[Squads] Explorer:", `https://explorer.solana.com/tx/${signature}?cluster=devnet`)
-
-      return {
-        multisigPDA: multisigPda,
-        vaultPDA: vaultPda,
-        signature,
-      }
-    }
-
-    // If no wallet provided, just return the PDAs (for offline/testing)
-    console.log("[Squads] ℹ️  No wallet provided - returning PDAs only")
-    console.log("[Squads] ⚠️  Multisig NOT initialized on-chain")
-    console.log("[Squads] Vault address can still receive payments")
-
     return {
-      multisigPDA: multisigPda,
-      vaultPDA: vaultPda,
-      signature: `multisig_pda_only_${Date.now()}`,
+      multisigPDA: result.multisigPda,
+      vaultPDA: result.treasuryPda,
+      signature: result.signature,
     }
-  } catch (error) {
-    console.error("[Squads] Error creating multisig:", error)
-    throw new Error("Failed to create Squads multisig: " + (error instanceof Error ? error.message : String(error)))
+  }
+
+  // PDAs-only fallback used by offline/test flows: derive the addresses
+  // and return a synthetic signature so the caller can persist the
+  // addresses without a real on-chain initialization.
+  const { deriveMultisigAddresses } = await import("@/lib/squads/governance")
+  const { multisigPda, treasuryPda } = deriveMultisigAddresses({
+    creator,
+    threshold,
+    members,
+  })
+
+  console.log("[Squads] Multisig PDA:", multisigPda.toString())
+  console.log("[Squads] Vault PDA:", treasuryPda.toString())
+  console.log("[Squads] ℹ️  No wallet provided - returning PDAs only")
+  console.log("[Squads] ⚠️  Multisig NOT initialized on-chain")
+  console.log("[Squads] Vault address can still receive payments")
+
+  return {
+    multisigPDA: multisigPda,
+    vaultPDA: treasuryPda,
+    signature: `multisig_pda_only_${Date.now()}`,
   }
 }
 
@@ -314,8 +192,28 @@ export async function getTreasuryStablecoinBalance(
   }
 }
 
+// Browser wallets reach here through `getSigningWallet(wallet?.adapter)` and
+// can be loosely typed as `unknown` at the call site. The shim accepts that
+// looseness and forces the wallet object's `publicKey` to the caller-supplied
+// address so the new `WalletSigner` contract is satisfied without touching
+// the caller code paths.
+function adaptLegacyWallet(wallet: unknown, fallbackPublicKey: PublicKey): WalletSigner {
+  const signer = wallet as WalletSigner
+  if (!signer.publicKey) {
+    signer.publicKey = fallbackPublicKey
+  }
+  return signer
+}
+
+/**
+ * Legacy wrapper around `Squads.proposeReimbursement`. Translates the old
+ * positional, all-string-addresses signature into the named-argument
+ * Module Interface. The `wallet` parameter stays loosely typed so legacy
+ * browser callers that thread `unknown` wallets through dynamic imports
+ * keep compiling without modification.
+ */
 export async function createSquadsReimbursementProposal(
-  wallet: WalletSigner,
+  wallet: unknown,
   creatorAddress: string,
   multisigAddress: string,
   treasuryAddress: string,
@@ -328,156 +226,48 @@ export async function createSquadsReimbursementProposal(
   proposalAddress: string
   transactionAddress: string
 }> {
-  const creator = new PublicKey(creatorAddress)
-  const multisigPda = new PublicKey(multisigAddress)
-  const treasuryPda = new PublicKey(treasuryAddress)
-  const recipient = new PublicKey(recipientAddress)
-  const mint = new PublicKey(mintAddress)
-
-  const [expectedTreasuryPda] = multisig.getVaultPda({
-    multisigPda,
-    index: 0,
+  return proposeReimbursement({
+    signer: adaptLegacyWallet(wallet, new PublicKey(creatorAddress)),
+    multisigAddress,
+    treasuryAddress,
+    recipient: new PublicKey(recipientAddress),
+    amount: BigInt(amount),
+    mint: new PublicKey(mintAddress),
   })
-
-  if (!treasuryPda.equals(expectedTreasuryPda)) {
-    throw new Error("Treasury address does not match the Squads vault PDA")
-  }
-
-  const multisigInfo = await multisig.accounts.Multisig.fromAccountAddress(
-    connection,
-    multisigPda
-  )
-  const nextTransactionIndex = BigInt(Number(multisigInfo.transactionIndex) + 1)
-  const [proposalPda] = multisig.getProposalPda({
-    multisigPda,
-    transactionIndex: nextTransactionIndex,
-  })
-  const [transactionPda] = multisig.getTransactionPda({
-    multisigPda,
-    index: nextTransactionIndex,
-  })
-
-  const treasuryAta = await getAssociatedTokenAddress(mint, treasuryPda, true)
-  const recipientAta = await getAssociatedTokenAddress(mint, recipient)
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-  const transaction = new Transaction()
-
-  try {
-    await getAccount(connection, recipientAta)
-  } catch {
-    transaction.add(
-      createAssociatedTokenAccountInstruction(creator, recipientAta, recipient, mint)
-    )
-  }
-
-  const transferInstruction = createTransferInstruction(
-    treasuryAta,
-    recipientAta,
-    treasuryPda,
-    BigInt(amount)
-  )
-
-  transaction.add(
-    multisig.instructions.vaultTransactionCreate({
-      multisigPda,
-      transactionIndex: nextTransactionIndex,
-      creator,
-      rentPayer: creator,
-      vaultIndex: 0,
-      ephemeralSigners: 0,
-      transactionMessage: new TransactionMessage({
-        payerKey: treasuryPda,
-        recentBlockhash: blockhash,
-        instructions: [transferInstruction],
-      }),
-    }),
-    multisig.instructions.proposalCreate({
-      multisigPda,
-      transactionIndex: nextTransactionIndex,
-      creator,
-      isDraft: false,
-    })
-  )
-
-  transaction.recentBlockhash = blockhash
-  transaction.feePayer = creator
-
-  const signature = await sendWalletTransaction(
-    wallet,
-    transaction,
-    blockhash,
-    lastValidBlockHeight
-  )
-
-  return {
-    signature,
-    transactionIndex: Number(nextTransactionIndex),
-    proposalAddress: proposalPda.toString(),
-    transactionAddress: transactionPda.toString(),
-  }
 }
 
+/**
+ * Legacy wrapper around `Squads.review`. Translates the positional
+ * signature into the named-argument Module Interface.
+ */
 export async function reviewSquadsProposal(
-  wallet: WalletSigner,
+  wallet: unknown,
   memberAddress: string,
   multisigAddress: string,
   transactionIndex: number,
   decision: "approved" | "rejected"
 ): Promise<{ signature: string }> {
-  const member = new PublicKey(memberAddress)
-  const multisigPda = new PublicKey(multisigAddress)
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-  const instruction =
-    decision === "approved"
-      ? multisig.instructions.proposalApprove({
-          multisigPda,
-          transactionIndex: BigInt(transactionIndex),
-          member,
-        })
-      : multisig.instructions.proposalReject({
-          multisigPda,
-          transactionIndex: BigInt(transactionIndex),
-          member,
-        })
-
-  const transaction = new Transaction().add(instruction)
-  transaction.recentBlockhash = blockhash
-  transaction.feePayer = member
-
-  const signature = await sendWalletTransaction(
-    wallet,
-    transaction,
-    blockhash,
-    lastValidBlockHeight
-  )
-
-  return { signature }
+  return squadsReview({
+    signer: adaptLegacyWallet(wallet, new PublicKey(memberAddress)),
+    multisigAddress,
+    transactionIndex,
+    decision,
+  })
 }
 
+/**
+ * Legacy wrapper around `Squads.execute`. Translates the positional
+ * signature into the named-argument Module Interface.
+ */
 export async function executeSquadsReimbursementProposal(
-  wallet: WalletSigner,
+  wallet: unknown,
   memberAddress: string,
   multisigAddress: string,
   transactionIndex: number
 ): Promise<{ signature: string }> {
-  const member = new PublicKey(memberAddress)
-  const multisigPda = new PublicKey(multisigAddress)
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
-  const transaction = await multisig.transactions.vaultTransactionExecute({
-    connection,
-    blockhash,
-    feePayer: member,
-    multisigPda,
-    transactionIndex: BigInt(transactionIndex),
-    member,
+  return squadsExecute({
+    signer: adaptLegacyWallet(wallet, new PublicKey(memberAddress)),
+    multisigAddress,
+    transactionIndex,
   })
-
-  const signature = await sendWalletTransaction(
-    wallet,
-    transaction,
-    blockhash,
-    lastValidBlockHeight
-  )
-
-  return { signature }
 }

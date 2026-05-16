@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import type { ActivityItem } from "@/lib/db"
+import type { ActivityItem } from "@/lib/api-types"
 import {
   formatTokenAmount,
   type Balance,
