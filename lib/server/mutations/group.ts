@@ -1,5 +1,6 @@
 import { isFundModeTemplateId, type FundModeTemplateId } from "@/lib/fund-mode-templates"
 import { FundWiseError } from "@/lib/server/fundwise-error"
+import * as Squads from "@/lib/squads/lifecycle"
 import {
   getAdmin,
   getGroupOrThrow,
@@ -7,7 +8,6 @@ import {
   type GroupInsert,
 } from "./_internal"
 import { addMemberInternal } from "./member"
-import { verifyFundModeTreasuryAddresses } from "./treasury"
 
 function isFundModeInviteWallet(wallet: string) {
   const inviteWallets = (process.env.FUNDWISE_FUND_MODE_INVITE_WALLETS ?? "")
@@ -98,7 +98,7 @@ export async function updateGroupTreasuryMutation(data: {
     throw new FundWiseError("Treasury is already initialized for this Group.")
   }
 
-  await verifyFundModeTreasuryAddresses({
+  await Squads.verifyTreasury({
     creatorWallet: data.creatorWallet,
     multisigAddress: data.multisigAddress,
     treasuryAddress: data.treasuryAddress,
