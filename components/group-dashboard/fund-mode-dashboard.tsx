@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { WalletAvatar } from "@/components/avatar"
+import { VoteBar } from "@/components/brand/vote-bar"
 import { TreasuryOverviewCard } from "@/components/group-dashboard/treasury-overview-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -708,16 +710,51 @@ export function FundModeDashboard({
                               ? `Change approval threshold${(proposal as { target_threshold?: number | null }).target_threshold ? ` to ${(proposal as { target_threshold?: number }).target_threshold}` : ""}`
                               : "Proposal"}
                         </p>
-                        <Badge variant="outline" className="capitalize">
-                          {proposal.status === "approved" ? "Ready to execute" : proposal.status}
-                        </Badge>
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em]",
+                            proposal.status === "pending" &&
+                              "border-brand-amber/40 bg-brand-amber-pale text-brand-amber",
+                            proposal.status === "approved" &&
+                              "border-brand-border-2 bg-brand-green-pale text-brand-green-forest",
+                            proposal.status === "executed" &&
+                              "border-brand-gold/40 bg-brand-gold-pale text-brand-gold",
+                            !["pending", "approved", "executed"].includes(proposal.status) &&
+                              "border-brand-border-c bg-brand-surface text-brand-text-2",
+                          )}
+                        >
+                          {proposal.status === "approved"
+                            ? "Ready to execute"
+                            : proposal.status === "executed"
+                              ? "Executed"
+                              : proposal.status}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Proposed by {memberNameByWallet.get(proposal.proposer_wallet) || shortWallet(proposal.proposer_wallet)} · {new Date(proposal.created_at).toLocaleDateString()}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {approvalCount} of {approvalThreshold} approval{approvalThreshold === 1 ? "" : "s"}
-                      </p>
+                      <div className="mt-2 space-y-1.5">
+                        <VoteBar
+                          yes={approvalCount}
+                          no={rejectionReviews.length}
+                          total={Math.max(membersCount, approvalThreshold)}
+                          threshold={approvalThreshold}
+                          yesColor="var(--brand-blue-mid)"
+                        />
+                        <p className="text-xs text-brand-text-2">
+                          <strong className="text-brand-blue-mid">{approvalCount}</strong>
+                          {" of "}
+                          {approvalThreshold} approval{approvalThreshold === 1 ? "" : "s"}
+                          {rejectionReviews.length > 0 ? (
+                            <>
+                              {" · "}
+                              <strong className="text-brand-red">{rejectionReviews.length}</strong>
+                              {" rejection"}
+                              {rejectionReviews.length === 1 ? "" : "s"}
+                            </>
+                          ) : null}
+                        </p>
+                      </div>
                       {proposal.memo && (
                         <p className="mt-2 text-sm text-muted-foreground">{proposal.memo}</p>
                       )}
