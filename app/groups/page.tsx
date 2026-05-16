@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { GroupAvatar } from "@/components/avatar"
 import { ModeBadge } from "@/components/brand/mode-badge"
 import { getFundWiseClusterName } from "@/lib/solana-cluster"
+import { cn } from "@/lib/utils"
 import { createGroup, getGroupByCode, getGroupsForWallet } from "@/lib/db"
 import { findStablecoinByMint, getDefaultStablecoinForGroupMode } from "@/lib/expense-engine"
 import {
@@ -405,8 +406,10 @@ export default function GroupsPage() {
         <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Your Groups</h1>
-              <p className="text-muted-foreground mt-1">
+              <h1 className="font-serif text-3xl tracking-[-0.5px] text-foreground sm:text-4xl">
+                Your groups
+              </h1>
+              <p className="mt-1 text-sm text-brand-text-2">
                 {isWalletVerified
                   ? `${groups.length} group${groups.length !== 1 ? "s" : ""}`
                   : "Verify your wallet to load your Groups"}
@@ -519,27 +522,46 @@ export default function GroupsPage() {
               </div>
             </Card>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {groups.map((group) => (
                 <Link
                   key={group.id}
                   href={`/groups/${group.id}`}
-                  className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="group/card overflow-hidden rounded-2xl border border-brand-border-c bg-background shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-accent/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <Card className="cursor-pointer p-5 transition-all hover:border-accent/50 hover:shadow-md">
-                    <div className="flex items-start gap-4 sm:items-center">
-                      <GroupAvatar name={group.name} size={48} className="h-12 w-12 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg truncate">{group.name}</h3>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                          <ModeBadge mode={group.mode} />
-                          <span>{getMintName(group.stablecoin_mint)}</span>
-                          <span>Code: {group.code}</span>
-                        </div>
-                      </div>
-                      <ArrowRight className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground sm:mt-0" />
+                  <div
+                    className={cn(
+                      "relative h-20 overflow-hidden",
+                      group.mode === "split" ? "bg-brand-grad" : "bg-brand-fund-grad",
+                    )}
+                  >
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/20 blur-2xl"
+                    />
+                    <div className="absolute left-3 top-3">
+                      <ModeBadge
+                        mode={group.mode}
+                        className="border-white/40 bg-white/15 text-white"
+                      />
                     </div>
-                  </Card>
+                    <div className="absolute -bottom-5 left-4 rounded-xl ring-4 ring-background">
+                      <GroupAvatar name={group.name} size={40} />
+                    </div>
+                  </div>
+                  <div className="p-4 pt-7">
+                    <h3 className="truncate font-serif text-lg tracking-[-0.3px] text-foreground">
+                      {group.name}
+                    </h3>
+                    <p className="mt-0.5 truncate text-xs text-brand-text-2">
+                      {getMintName(group.stablecoin_mint)} · code{" "}
+                      <span className="font-mono text-brand-text-2">{group.code}</span>
+                    </p>
+                    <div className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-green-mid transition-transform duration-200 group-hover/card:translate-x-0.5">
+                      Open
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>
