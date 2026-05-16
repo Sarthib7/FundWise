@@ -1,56 +1,47 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { deleteExpenseMutation, updateExpenseMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getExpenseRead } from "@/lib/server/fundwise-reads"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import {
+  deleteExpenseMutation,
+  updateExpenseMutation,
+} from "@/lib/server/mutations/expense"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function GET(
-  _request: Request,
-  context: { params: Promise<{ expenseId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    const { expenseId } = await context.params
+type ExpenseParams = { expenseId: string }
 
-    if (!expenseId) {
+export const GET = withAuthenticatedHandler<Record<string, unknown>, ExpenseParams>(
+  { fallbackMessage: "Failed to load Expense." },
+  async ({ session, params }) => {
+    if (!params.expenseId) {
       throw new FundWiseError("Missing Expense id.")
     }
 
-    const expense = await getExpenseRead(expenseId, session.wallet)
-    return NextResponse.json(expense)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to load Expense.")
-    return NextResponse.json({ error: message }, { status })
+    return getExpenseRead(params.expenseId, session.wallet)
   }
+)
+
+type UpdateExpenseBody = {
+  actorWallet?: string
+  payer?: string
+  amount?: number
+  mint?: string
+  memo?: string
+  category?: string
+  splitMethod?: "equal" | "exact" | "shares" | "percentage"
+  splits?: { wallet: string; share: number }[]
+  sourceCurrency?: string
+  sourceAmount?: number
+  exchangeRate?: number
+  exchangeRateSource?: string
+  exchangeRateAt?: string
 }
 
-export async function PATCH(
-  request: Request,
-  context: { params: Promise<{ expenseId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    const { expenseId } = await context.params
-    const body = (await request.json()) as {
-      actorWallet?: string
-      payer?: string
-      amount?: number
-      mint?: string
-      memo?: string
-      category?: string
-      splitMethod?: "equal" | "exact" | "shares" | "percentage"
-      splits?: { wallet: string; share: number }[]
-      sourceCurrency?: string
-      sourceAmount?: number
-      exchangeRate?: number
-      exchangeRateSource?: string
-      exchangeRateAt?: string
-    }
-
+export const PATCH = withAuthenticatedHandler<UpdateExpenseBody, ExpenseParams>(
+  { fallbackMessage: "Failed to update Expense.", walletField: "actorWallet" },
+  async ({ session, body, params }) => {
     if (
-      !expenseId ||
+      !params.expenseId ||
       !body.actorWallet ||
       !body.payer ||
       typeof body.amount !== "number" ||
@@ -61,10 +52,6 @@ export async function PATCH(
       throw new FundWiseError("Missing required Expense update fields.")
     }
 
-    if (body.actorWallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Expense editor.", 401)
-    }
-
     if (body.payer !== session.wallet) {
       throw new FundWiseError(
         "Expense payer must match the authenticated wallet. Ask the payer to log this Expense from their own wallet.",
@@ -73,7 +60,7 @@ export async function PATCH(
     }
 
     await updateExpenseMutation({
-      expenseId,
+      expenseId: params.expenseId,
       actorWallet: body.actorWallet,
       payer: body.payer,
       amount: body.amount,
@@ -89,35 +76,21 @@ export async function PATCH(
       exchangeRateAt: body.exchangeRateAt,
     })
 
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to update Expense.")
-    return NextResponse.json({ error: message }, { status })
+    return { ok: true }
   }
-}
+)
 
-export async function DELETE(
-  request: Request,
-  context: { params: Promise<{ expenseId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    const { expenseId } = await context.params
-    const body = (await request.json()) as { actorWallet?: string }
+type DeleteExpenseBody = { actorWallet?: string }
 
-    if (!expenseId || !body.actorWallet) {
+export const DELETE = withAuthenticatedHandler<DeleteExpenseBody, ExpenseParams>(
+  { fallbackMessage: "Failed to delete Expense.", walletField: "actorWallet" },
+  async ({ body, params }) => {
+    if (!params.expenseId || !body.actorWallet) {
       throw new FundWiseError("Missing Expense delete details.")
     }
 
-    if (body.actorWallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Expense creator.", 401)
-    }
+    await deleteExpenseMutation(params.expenseId, body.actorWallet)
 
-    await deleteExpenseMutation(expenseId, body.actorWallet)
-
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to delete Expense.")
-    return NextResponse.json({ error: message }, { status })
+    return { ok: true }
   }
-}
+)

@@ -1,23 +1,21 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { setMemberRoleMutation } from "@/lib/server/fundwise-mutations"
 import { isFundModeRole } from "@/lib/fund-mode-roles"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { setMemberRoleMutation } from "@/lib/server/mutations/member"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ groupId: string; wallet: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    await enforceFundWiseRateLimit("member_role", session.wallet)
-    const { groupId, wallet } = await context.params
-    const body = (await request.json()) as { role?: string }
+type SetMemberRoleBody = { role?: string }
 
-    if (!groupId || !wallet) {
+type SetMemberRoleParams = { groupId: string; wallet: string }
+
+export const POST = withAuthenticatedHandler<SetMemberRoleBody, SetMemberRoleParams>(
+  {
+    fallbackMessage: "Failed to update Member role.",
+    rateLimit: "member_role",
+  },
+  async ({ session, body, params }) => {
+    if (!params.groupId || !params.wallet) {
       throw new FundWiseError("Missing Group or target wallet.")
     }
 
@@ -25,16 +23,11 @@ export async function POST(
       throw new FundWiseError("Role must be admin, member, or viewer.")
     }
 
-    const updated = await setMemberRoleMutation({
-      groupId,
+    return setMemberRoleMutation({
+      groupId: params.groupId,
       actorWallet: session.wallet,
-      targetWallet: wallet,
+      targetWallet: params.wallet,
       role: body.role,
     })
-
-    return NextResponse.json(updated)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to update Member role.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)

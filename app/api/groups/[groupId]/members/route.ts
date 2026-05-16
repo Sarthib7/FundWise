@@ -1,39 +1,29 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { addMemberMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { addMemberMutation } from "@/lib/server/mutations/member"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ groupId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    const { groupId } = await context.params
-    const body = (await request.json()) as {
-      wallet?: string
-      displayName?: string
-    }
+type AddMemberBody = {
+  wallet?: string
+  displayName?: string
+}
 
-    if (!groupId || !body.wallet) {
+type AddMemberParams = { groupId: string }
+
+export const POST = withAuthenticatedHandler<AddMemberBody, AddMemberParams>(
+  { fallbackMessage: "Failed to join Group.", walletField: "wallet" },
+  async ({ body, params }) => {
+    if (!params.groupId || !body.wallet) {
       throw new FundWiseError("Missing Group or wallet details.")
     }
 
-    if (body.wallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the joining Member.", 401)
-    }
-
     await addMemberMutation({
-      groupId,
+      groupId: params.groupId,
       wallet: body.wallet,
       displayName: body.displayName,
     })
 
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to join Group.")
-    return NextResponse.json({ error: message }, { status })
+    return { ok: true }
   }
-}
+)
