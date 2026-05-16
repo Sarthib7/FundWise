@@ -282,31 +282,25 @@ export function SplitModeDashboard({
         </Card>
       )}
 
-      {/* Hero balance card — gradient when you're owed; surface otherwise */}
+      {/* Hero balance card — neutral surface + corner green glow + folded member chips */}
       {isMember ? (
-        <Card
-          className={cn(
-            "relative overflow-hidden p-6 sm:p-7",
-            isOwed
-              ? "border-transparent bg-brand-grad text-white shadow-[0_18px_48px_rgba(13,107,58,0.18)]"
-              : "border-brand-border-c bg-background",
-          )}
-        >
-          {isOwed && (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full bg-white/20 blur-3xl"
-            />
-          )}
+        <Card className="relative overflow-hidden border-brand-border-c bg-background p-6 sm:p-7">
+          <div
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full blur-3xl",
+              isOweing ? "bg-brand-red/25" : "bg-brand-green-light/45",
+            )}
+          />
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <div
                 className={cn(
                   "text-[11px] font-bold uppercase tracking-[0.08em]",
-                  isOwed
-                    ? "text-white/85"
-                    : isOweing
-                      ? "text-brand-red"
+                  isOweing
+                    ? "text-brand-red"
+                    : isOwed
+                      ? "text-brand-green-mid"
                       : "text-brand-text-2",
                 )}
               >
@@ -315,23 +309,12 @@ export function SplitModeDashboard({
               <div
                 className={cn(
                   "font-serif text-[44px] leading-none tracking-[-1.2px] sm:text-[56px] sm:tracking-[-1.5px]",
-                  isOwed
-                    ? "text-white"
-                    : isOweing
-                      ? "text-brand-red"
-                      : "text-foreground",
+                  isOweing ? "text-brand-red" : "text-foreground",
                 )}
               >
-                <MoneyCounter
-                  value={Math.abs(viewerBalanceAmount) / 1e6}
-                />
+                <MoneyCounter value={Math.abs(viewerBalanceAmount) / 1e6} />
               </div>
-              <p
-                className={cn(
-                  "text-sm",
-                  isOwed ? "text-white/85" : "text-brand-text-2",
-                )}
-              >
+              <p className="text-sm text-brand-text-2">
                 {otherMemberCount > 0
                   ? `Across ${otherMemberCount} ${otherMemberCount === 1 ? "other" : "others"} · ${tokenName} on Solana`
                   : `${tokenName} on Solana`}
@@ -340,12 +323,7 @@ export function SplitModeDashboard({
             <div className="flex flex-col gap-2 sm:items-end">
               {primaryOutgoingTransfer ? (
                 <Button
-                  className={cn(
-                    "min-h-11 sm:min-h-10",
-                    isOwed
-                      ? "bg-white text-brand-green-forest shadow hover:bg-white/95"
-                      : "bg-accent hover:bg-accent/90",
-                  )}
+                  className="min-h-11 bg-brand-grad text-white shadow hover:brightness-110 sm:min-h-10"
                   disabled={isSettling}
                   onClick={() => setPreviewTransfer(primaryOutgoingTransfer)}
                 >
@@ -358,10 +336,7 @@ export function SplitModeDashboard({
                 </Button>
               ) : isOwed && primaryIncomingTransfer ? (
                 <Button
-                  className={cn(
-                    "min-h-11 sm:min-h-10",
-                    "bg-white text-brand-green-forest shadow hover:bg-white/95",
-                  )}
+                  className="min-h-11 bg-brand-grad text-white shadow hover:brightness-110 sm:min-h-10"
                   disabled={
                     sharingTransferKey ===
                     `${primaryIncomingTransfer.from}:${primaryIncomingTransfer.to}`
@@ -379,10 +354,7 @@ export function SplitModeDashboard({
               ) : null}
               <Button
                 variant="outline"
-                className={cn(
-                  "min-h-11 sm:min-h-10",
-                  isOwed && "border-white/40 bg-white/10 text-white hover:bg-white/20",
-                )}
+                className="min-h-11 sm:min-h-10"
                 onClick={onOpenCreateExpenseDialog}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -390,56 +362,53 @@ export function SplitModeDashboard({
               </Button>
             </div>
           </div>
-        </Card>
-      ) : null}
 
-      {/* Member balance chips — horizontal scroll on mobile */}
-      {isMember && balances.length > 0 ? (
-        <Card className="border-brand-border-c bg-background p-4 sm:p-5">
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-brand-text-3">
-            Member balances
-          </div>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-            {balances.map((balance) => {
-              const isMe = balance.wallet === walletAddress
-              const owed = balance.amount > 0
-              return (
-                <div
-                  key={balance.wallet}
-                  className={cn(
-                    "flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2",
-                    isMe
-                      ? "border-accent/30 bg-accent/5"
-                      : "border-brand-border-c bg-brand-surface",
-                  )}
-                >
-                  <WalletAvatar address={balance.wallet} size={28} />
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold leading-tight text-foreground">
-                      {isMe ? "You" : balance.displayName}
+          {/* Folded member balance chips — replaces separate card */}
+          {balances.length > 0 ? (
+            <div className="relative mt-6 border-t border-brand-border-c pt-5">
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                {balances.map((balance) => {
+                  const isMe = balance.wallet === walletAddress
+                  const owed = balance.amount > 0
+                  return (
+                    <div
+                      key={balance.wallet}
+                      className={cn(
+                        "flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2",
+                        isMe
+                          ? "border-accent/30 bg-accent/5"
+                          : "border-brand-border-c bg-brand-surface",
+                      )}
+                    >
+                      <WalletAvatar address={balance.wallet} size={28} />
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold leading-tight text-foreground">
+                          {isMe ? "You" : balance.displayName}
+                        </div>
+                        <div className="mt-0.5 flex items-baseline gap-1.5">
+                          <span className="text-[10px] text-brand-text-3">
+                            {owed ? "gets" : balance.amount < 0 ? "owes" : "even"}
+                          </span>
+                          <span
+                            className={cn(
+                              "font-serif text-sm tracking-tight",
+                              owed
+                                ? "text-brand-green-mid"
+                                : balance.amount < 0
+                                  ? "text-brand-red"
+                                  : "text-brand-text-3",
+                            )}
+                          >
+                            {formatTokenAmount(Math.abs(balance.amount))}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-0.5 flex items-baseline gap-1.5">
-                      <span className="text-[10px] text-brand-text-3">
-                        {owed ? "gets" : balance.amount < 0 ? "owes" : "even"}
-                      </span>
-                      <span
-                        className={cn(
-                          "font-serif text-sm tracking-tight",
-                          owed
-                            ? "text-brand-green-mid"
-                            : balance.amount < 0
-                              ? "text-brand-red"
-                              : "text-brand-text-3",
-                        )}
-                      >
-                        {formatTokenAmount(Math.abs(balance.amount))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : null}
         </Card>
       ) : null}
 

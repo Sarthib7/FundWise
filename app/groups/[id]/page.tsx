@@ -12,7 +12,6 @@ import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { InvitePanel } from "@/components/group-dashboard/invite-panel"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
 import { SettlementPanel } from "@/components/group-dashboard/settlement-panel"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -795,81 +794,71 @@ export default function GroupDashboard() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {connected && !isWalletVerified && (
-          <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <Badge variant="outline" className="mb-2">
-                  Wallet verification
-                </Badge>
-                <h3 className="font-semibold mb-1">
-                  {isInviteLink ? `Verify your wallet for ${group.name}` : "Verify your wallet to open this Group"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  FundWise reveals Group ledgers only to wallets that verify this browser session. Sign one short message to load the live Balance, Treasury, and Member state.
-                </p>
-              </div>
-              <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto" onClick={() => void verifyWalletAccess()}>
-                Verify Wallet
-              </Button>
+          <div className="mb-5 flex flex-col gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                Verify your wallet to open this Group
+              </p>
+              <p className="text-xs text-brand-text-2">
+                Sign one message to confirm this browser session.
+              </p>
             </div>
-          </Card>
+            <Button
+              size="sm"
+              className="min-h-10 shrink-0 bg-accent hover:bg-accent/90"
+              onClick={() => void verifyWalletAccess()}
+            >
+              Verify
+            </Button>
+          </div>
         )}
 
         {!isMember && connected && isWalletVerified && (
-          <Card className="p-6 mb-6 border-accent/30 bg-accent/5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                {isInviteLink ? (
-                  <Badge variant="outline" className="mb-2">
-                    Invite link
-                  </Badge>
-                ) : null}
-                <h3 className="font-semibold mb-1">
-                  {`Join ${group.name}`}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isFundMode
-                    ? isInviteLink
-                      ? "This invite returns you to the Group Treasury context after wallet connect. Join to start making Contributions."
-                      : "Join to make Contributions and participate in this Group Treasury."
-                    : isInviteLink
-                      ? "This is FundWise in action: a private Group ledger, exact Balances, and wallet-confirmed Settlements. Join to see how this Group works."
-                      : "Join to start tracking Expenses and Settlements in this Group."}
-                </p>
-              </div>
-              <Button className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto" onClick={() => void joinGroup()}>
-                Join {group.name}
-              </Button>
+          <div className="mb-5 flex flex-col gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Join {group.name}</p>
+              <p className="text-xs text-brand-text-2">
+                {isInviteLink ? "Invite link · " : ""}
+                {isFundMode
+                  ? "Start contributing to this Treasury."
+                  : "Start tracking shared Expenses."}
+              </p>
             </div>
-          </Card>
+            <Button
+              size="sm"
+              className="min-h-10 shrink-0 bg-accent hover:bg-accent/90"
+              onClick={() => void joinGroup()}
+            >
+              Join
+            </Button>
+          </div>
         )}
 
         {!connected && (
-          <Card className="mb-6 overflow-hidden border-accent/20 bg-gradient-to-br from-accent/8 via-background to-background">
-            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
-                <Badge className="bg-accent/10 text-accent border-accent/20">
-                  {isInviteLink ? "Invite link" : "Wallet required"}
-                </Badge>
-                <h2 className="text-xl font-semibold">
-                  {isInviteLink ? "Connect your wallet to open this invite" : "Connect your wallet to open this Group"}
-                </h2>
-                <p className="max-w-2xl text-sm text-muted-foreground">
-                  {isInviteLink
-                    ? `Someone invited you to ${group.name}. Connect first, then join from this exact Group context and see the ledger before anything moves.`
-                    : "FundWise is wallet-native. Connect first, then join this Group, view the live Balance state, and settle exact USDC amounts from the same screen."}
-                </p>
-              </div>
-              <Button
-                type="button"
-                className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10 sm:w-auto"
-                onClick={connectWallet}
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                Connect Wallet
-              </Button>
+          <div className="mb-5 flex flex-col gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {isInviteLink
+                  ? "Connect wallet to open this invite"
+                  : "Connect wallet to open this Group"}
+              </p>
+              <p className="text-xs text-brand-text-2">
+                FundWise is wallet-native.{" "}
+                {isInviteLink
+                  ? "Connect first, then join."
+                  : "Connect first to view live Balance + settle USDC."}
+              </p>
             </div>
-          </Card>
+            <Button
+              size="sm"
+              type="button"
+              className="min-h-10 shrink-0 bg-accent hover:bg-accent/90"
+              onClick={connectWallet}
+            >
+              <Wallet className="mr-1.5 h-3.5 w-3.5" />
+              Connect
+            </Button>
+          </div>
         )}
 
         <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
