@@ -1,8 +1,6 @@
 import type { Database } from "@/lib/database.types"
-import { PublicKey, type AccountInfo } from "@solana/web3.js"
-import * as multisig from "@sqds/multisig"
-import { createFundWiseConnectionForCluster } from "@/lib/fallback-connection"
 import { FundWiseError } from "@/lib/server/fundwise-error"
+import * as Squads from "@/lib/squads/lifecycle"
 import {
   verifyProposalExecutionTransfer,
 } from "@/lib/server/solana-transfer-verification"
@@ -10,24 +8,17 @@ import {
   assertMemberCan,
   assertWalletIsMember,
   getAdmin,
-  getFundModeCluster,
   getGroupOrThrow,
   isMissingColumnSchemaCacheError,
-  parsePublicKey,
   type GroupRow,
 } from "./_internal"
 import { getMemberRoleOrThrow } from "./member"
-import type { SolanaAccountInfo } from "./treasury"
 
 export type ProposalInsert = Database["public"]["Tables"]["proposals"]["Insert"]
 export type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 export type ProposalEditInsert = Database["public"]["Tables"]["proposal_edits"]["Insert"]
 
 export type ProposalKind = "reimbursement" | "threshold_change" | "exit_refund"
-
-export type SquadsProposalReader = {
-  getAccountInfo(address: PublicKey, commitment: "confirmed"): Promise<SolanaAccountInfo | null>
-}
 
 export function validateProposalInput(data: {
   amount: number
@@ -90,133 +81,6 @@ function normalizeProposalComment(body?: string | null) {
   }
 
   return trimmedBody
-}
-
-async function loadSquadsProposal(
-  proposalAddress: string,
-  accountReader: SquadsProposalReader = createFundWiseConnectionForCluster(getFundModeCluster(), "confirmed")
-) {
-  const proposalPubkey = parsePublicKey(proposalAddress, "Squads Proposal address")
-  const proposalAccount = await accountReader.getAccountInfo(proposalPubkey, "confirmed")
-
-  if (!proposalAccount) {
-    throw new FundWiseError("Squads Proposal account is not confirmed on the configured Solana RPC.")
-  }
-
-  if (!proposalAccount.owner.equals(multisig.PROGRAM_ID)) {
-    throw new FundWiseError("Squads Proposal account is not owned by the Squads program.")
-  }
-
-  try {
-    const [proposal] = multisig.accounts.Proposal.fromAccountInfo(
-      proposalAccount as AccountInfo<Buffer>
-    )
-    return proposal
-  } catch {
-    throw new FundWiseError("Squads Proposal account data could not be decoded.")
-  }
-}
-
-async function verifySquadsProposalMetadata(data: {
-  multisigAddress: string
-  transactionIndex: number
-  proposalAddress: string
-  transactionAddress: string
-}) {
-  if (!Number.isSafeInteger(data.transactionIndex) || data.transactionIndex < 1) {
-    throw new FundWiseError("Squads transaction index must be a positive safe integer.")
-  }
-
-  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
-  const proposalPubkey = parsePublicKey(data.proposalAddress, "Squads Proposal address")
-  const transactionPubkey = parsePublicKey(data.transactionAddress, "Squads transaction address")
-  const transactionIndex = BigInt(data.transactionIndex)
-  const [expectedProposalPda] = multisig.getProposalPda({
-    multisigPda: multisigPubkey,
-    transactionIndex,
-  })
-  const [expectedTransactionPda] = multisig.getTransactionPda({
-    multisigPda: multisigPubkey,
-    index: transactionIndex,
-  })
-
-  if (!proposalPubkey.equals(expectedProposalPda)) {
-    throw new FundWiseError("Squads Proposal address does not match the expected PDA.")
-  }
-
-  if (!transactionPubkey.equals(expectedTransactionPda)) {
-    throw new FundWiseError("Squads transaction address does not match the expected PDA.")
-  }
-
-  const proposal = await loadSquadsProposal(data.proposalAddress)
-
-  if (!proposal.multisig.equals(multisigPubkey)) {
-    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
-  }
-
-  if (BigInt(proposal.transactionIndex.toString()) !== transactionIndex) {
-    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
-  }
-}
-
-async function verifySquadsProposalReview(data: {
-  multisigAddress: string
-  transactionIndex: number
-  proposalAddress: string
-  memberWallet: string
-  decision: "approved" | "rejected"
-}) {
-  const proposal = await loadSquadsProposal(data.proposalAddress)
-  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
-  const memberPubkey = parsePublicKey(data.memberWallet, "Reviewer wallet")
-
-  if (!proposal.multisig.equals(multisigPubkey)) {
-    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
-  }
-
-  if (BigInt(proposal.transactionIndex.toString()) !== BigInt(data.transactionIndex)) {
-    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
-  }
-
-  const reviewedWallets = data.decision === "approved" ? proposal.approved : proposal.rejected
-  const hasReview = reviewedWallets.some((wallet) => wallet.equals(memberPubkey))
-
-  if (!hasReview) {
-    throw new FundWiseError("Squads Proposal does not include this wallet review yet.")
-  }
-
-  return proposal.pretty().status
-}
-
-async function verifySquadsProposalExecuted(data: {
-  multisigAddress: string
-  transactionIndex: number
-  proposalAddress: string
-}) {
-  const proposal = await loadSquadsProposal(data.proposalAddress)
-  const multisigPubkey = parsePublicKey(data.multisigAddress, "Multisig address")
-
-  if (!proposal.multisig.equals(multisigPubkey)) {
-    throw new FundWiseError("Squads Proposal does not belong to this Group Multisig.")
-  }
-
-  if (BigInt(proposal.transactionIndex.toString()) !== BigInt(data.transactionIndex)) {
-    throw new FundWiseError("Squads Proposal transaction index does not match the FundWise Proposal.")
-  }
-
-  if (proposal.pretty().status !== "Executed") {
-    throw new FundWiseError("Squads Proposal has not been executed on-chain yet.")
-  }
-}
-
-function mapSquadsStatusToFundWiseStatus(
-  status: "Draft" | "Active" | "Rejected" | "Approved" | "Executing" | "Executed" | "Cancelled"
-) {
-  if (status === "Approved") return "approved"
-  if (status === "Rejected") return "rejected"
-  if (status === "Executed") return "executed"
-  if (status === "Cancelled") return "cancelled"
-  return "pending"
 }
 
 async function getProposalOrThrow(proposalId: string): Promise<ProposalRow> {
@@ -501,7 +365,7 @@ export async function addProposalMutation(data: {
     "Reimbursement recipient must be a current Group Member."
   )
 
-  await verifySquadsProposalMetadata({
+  await Squads.verifyProposalMetadata({
     multisigAddress: group.multisig_address,
     transactionIndex: data.squadsTransactionIndex,
     proposalAddress: data.squadsProposalAddress,
@@ -585,14 +449,13 @@ export async function reviewProposalMutation(data: {
     throw new FundWiseError("Reimbursement Proposal reviews must include a Squads review transaction signature.")
   }
 
-  const squadsStatus = await verifySquadsProposalReview({
+  const nextStatus = await Squads.verifyProposalReview({
     multisigAddress: group.multisig_address,
     transactionIndex: proposal.squads_transaction_index,
     proposalAddress: proposal.squads_proposal_address,
     memberWallet: data.memberWallet,
     decision: data.decision,
   })
-  const nextStatus = mapSquadsStatusToFundWiseStatus(squadsStatus)
 
   const { error: reviewError } = await getAdmin()
     .from("proposal_approvals")
@@ -689,7 +552,7 @@ export async function executeProposalMutation(data: {
     throw new FundWiseError("This Proposal execution transaction has already been recorded.")
   }
 
-  await verifySquadsProposalExecuted({
+  await Squads.verifyExecution({
     multisigAddress: group.multisig_address,
     transactionIndex: proposal.squads_transaction_index,
     proposalAddress: proposal.squads_proposal_address,
