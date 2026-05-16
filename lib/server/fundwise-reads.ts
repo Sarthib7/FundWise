@@ -1,5 +1,5 @@
 import type { Database } from "@/lib/database.types"
-import { computeSuggestedReimbursements } from "@/lib/server/fundwise-mutations"
+import { computeSuggestedReimbursements } from "@/lib/expense-suggestions"
 import { evaluateFreeTier, tokenAmountToUsdCents } from "@/lib/fund-mode-monetization"
 import { FundWiseError } from "@/lib/server/fundwise-error"
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin"
