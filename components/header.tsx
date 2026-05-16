@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Wallet, Home } from "lucide-react"
 import { FundWiseLogo } from "@/components/fundwise-logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { WalletButton } from "@/components/wallet-button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
@@ -158,6 +159,7 @@ export function Header({ cluster }: HeaderProps = {}) {
 
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             {!isMarketingRoute ? <ClusterBadge cluster={activeCluster} /> : null}
+            <ThemeToggle />
             <WalletButton />
           </div>
         </div>

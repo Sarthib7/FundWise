@@ -37,6 +37,51 @@
   --sidebar-accent-foreground: oklch(0.15 0.03 155);
   --sidebar-border: oklch(0.9 0.02 155);
   --sidebar-ring: oklch(0.53 0.16 155);
+
+  /* ── Brand tokens (Strata) ────────────────────────────────────────────────
+     Split = green, Fund = blue. Mode chip is the single visual anchor —
+     "green for Split, blue for Fund, never both" (design canon).
+     Light-mode values; .dark below mirrors with luminous shifts.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  /* Greens — Split + primary brand */
+  --brand-green-deep:   #0A4D2C;
+  --brand-green-forest: #0D6B3A;
+  --brand-green-mid:    #1A9151;
+  --brand-green-fresh:  #2DB870;
+  --brand-green-light:  #72D4A0;
+  --brand-green-mint:   #4EC98A;
+  --brand-green-pale:   #E6F7EE;
+
+  /* Blues — Fund mode (premium navy depth) */
+  --brand-blue-deep:    #0F2466;
+  --brand-blue-mid:     #2A4FA8;
+  --brand-blue-fresh:   #4671D8;
+  --brand-blue-pale:    #EEF2FC;
+  --brand-blue-border:  #B6C8EF;
+
+  /* Neutrals — warm cream + ink hierarchy */
+  --brand-bg:           #FBFCF9;
+  --brand-surface:      #F5FAF6;
+  --brand-surface-2:    #EAF3EC;
+  --brand-border:       #D5E8DA;
+  --brand-border-2:     #C0D9C7;
+  --brand-ink:          #0D1F14;
+  --brand-ink-2:        #4A6B55;
+  --brand-ink-3:        #8DAB97;
+
+  /* Semantics + premium gold (Fund-mode accent) */
+  --brand-red:          #C73B3B;
+  --brand-red-pale:     #FBECEC;
+  --brand-amber:        #D88A2C;
+  --brand-amber-pale:   #FBF1DC;
+  --brand-gold:         #B8852A;
+  --brand-gold-pale:    #FBF4E0;
+
+  /* Mode gradients (background-image values, not solid colors) */
+  --brand-grad:           linear-gradient(135deg, #0D6B3A 0%, #2DB870 100%);
+  --brand-fund-grad:      linear-gradient(135deg, #0F2466 0%, #2A4FA8 60%, #4671D8 100%);
+  --brand-fund-grad-soft: linear-gradient(135deg, #2A4FA8 0%, #4671D8 100%);
 }
 
 .dark {
@@ -72,6 +117,45 @@
   --sidebar-accent-foreground: oklch(0.96 0.005 155);
   --sidebar-border: oklch(0.24 0.02 155);
   --sidebar-ring: oklch(0.6 0.16 155);
+
+  /* Greens — pushed slightly more luminescent for dark bg */
+  --brand-green-deep:   #0D6B3A;
+  --brand-green-forest: #1A9151;
+  --brand-green-mid:    #3DC880;
+  --brand-green-fresh:  #5BD898;
+  --brand-green-light:  #86E0AE;
+  --brand-green-mint:   #7DDFA8;
+  --brand-green-pale:   #0F2418;
+
+  /* Blues — deeper, premium edge */
+  --brand-blue-deep:    #0B1E4D;
+  --brand-blue-mid:     #2A4FA8;
+  --brand-blue-fresh:   #6A8FE8;
+  --brand-blue-pale:    #101A33;
+  --brand-blue-border:  #2A3D6E;
+
+  /* Neutrals — deep luminous ink */
+  --brand-bg:           #06100B;
+  --brand-surface:      #0D1A14;
+  --brand-surface-2:    #13241D;
+  --brand-border:       #1B2D24;
+  --brand-border-2:     #2A4438;
+  --brand-ink:          #F2F8F3;
+  --brand-ink-2:        #A7BEAD;
+  --brand-ink-3:        #6B8378;
+
+  /* Semantics + premium gold for fund accents */
+  --brand-red:          #E15A5A;
+  --brand-red-pale:     #2A1414;
+  --brand-amber:        #E6A050;
+  --brand-amber-pale:   #2A1F10;
+  --brand-gold:         #E8C77A;
+  --brand-gold-pale:    #2A2418;
+
+  /* Mode gradients — luminous variants */
+  --brand-grad:           linear-gradient(135deg, #1A9151 0%, #3DC880 60%, #5BD898 100%);
+  --brand-fund-grad:      linear-gradient(135deg, #0B1E4D 0%, #2A4FA8 50%, #6A8FE8 100%);
+  --brand-fund-grad-soft: linear-gradient(135deg, #2A4FA8 0%, #6A8FE8 100%);
 }
 
 @theme inline {
@@ -122,21 +206,53 @@
   --container-max-width-xl: 1280px;
   --container-max-width-2xl: 1536px;
 
-  --color-brand-deep: #0d6b3a;
-  --color-brand-mid: #1a9151;
-  --color-brand-fresh: #2db870;
-  --color-brand-light: #72d4a0;
-  --color-brand-pale: #e6f7ee;
-  --color-brand-surface: #f5faf6;
-  --color-brand-surface-2: #eaf3ec;
-  --color-brand-border-c: #d5e8da;
-  --color-brand-border-2: #c0d9c7;
-  --color-brand-text: #0d1f14;
-  --color-brand-text-2: #4a6b55;
-  --color-brand-text-3: #8dab97;
-  --color-brand-fund-blue: #2a4fa8;
-  --color-brand-fund-blue-bg: #e8f0fb;
-  --color-brand-fund-blue-border: #a8c0f0;
+  /* Brand tokens (theme-responsive — see :root and .dark above) */
+  /* Backwards-compatible aliases — existing UI uses these names */
+  --color-brand-deep:             var(--brand-green-forest);
+  --color-brand-mid:              var(--brand-green-mid);
+  --color-brand-fresh:            var(--brand-green-fresh);
+  --color-brand-light:            var(--brand-green-light);
+  --color-brand-pale:             var(--brand-green-pale);
+  --color-brand-surface:          var(--brand-surface);
+  --color-brand-surface-2:        var(--brand-surface-2);
+  --color-brand-border-c:         var(--brand-border);
+  --color-brand-border-2:         var(--brand-border-2);
+  --color-brand-text:             var(--brand-ink);
+  --color-brand-text-2:           var(--brand-ink-2);
+  --color-brand-text-3:           var(--brand-ink-3);
+  --color-brand-fund-blue:        var(--brand-blue-mid);
+  --color-brand-fund-blue-bg:     var(--brand-blue-pale);
+  --color-brand-fund-blue-border: var(--brand-blue-border);
+
+  /* New tokens — Split (greens) full set */
+  --color-brand-green-deep:       var(--brand-green-deep);
+  --color-brand-green-forest:     var(--brand-green-forest);
+  --color-brand-green-mid:        var(--brand-green-mid);
+  --color-brand-green-fresh:      var(--brand-green-fresh);
+  --color-brand-green-light:      var(--brand-green-light);
+  --color-brand-green-mint:       var(--brand-green-mint);
+  --color-brand-green-pale:       var(--brand-green-pale);
+
+  /* New tokens — Fund (blues) full set */
+  --color-brand-blue-deep:        var(--brand-blue-deep);
+  --color-brand-blue-mid:         var(--brand-blue-mid);
+  --color-brand-blue-fresh:       var(--brand-blue-fresh);
+  --color-brand-blue-pale:        var(--brand-blue-pale);
+  --color-brand-blue-border:      var(--brand-blue-border);
+
+  /* New tokens — neutrals + ink */
+  --color-brand-bg:               var(--brand-bg);
+  --color-brand-ink:              var(--brand-ink);
+  --color-brand-ink-2:            var(--brand-ink-2);
+  --color-brand-ink-3:            var(--brand-ink-3);
+
+  /* New tokens — semantics + premium gold */
+  --color-brand-red:              var(--brand-red);
+  --color-brand-red-pale:         var(--brand-red-pale);
+  --color-brand-amber:            var(--brand-amber);
+  --color-brand-amber-pale:       var(--brand-amber-pale);
+  --color-brand-gold:             var(--brand-gold);
+  --color-brand-gold-pale:        var(--brand-gold-pale);
 }
 
 @layer base {
@@ -213,14 +329,29 @@
   }
 
   .bg-brand-grad {
-    background: linear-gradient(135deg, #0d6b3a 0%, #2db870 100%);
+    background: var(--brand-grad);
   }
 
   .text-brand-grad {
-    background: linear-gradient(135deg, #0d6b3a 0%, #2db870 100%);
+    background: var(--brand-grad);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .bg-brand-fund-grad {
+    background: var(--brand-fund-grad);
+  }
+
+  .text-brand-fund-grad {
+    background: var(--brand-fund-grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-brand-fund-grad-soft {
+    background: var(--brand-fund-grad-soft);
   }
 
   @media (prefers-reduced-motion: reduce) {
