@@ -1,24 +1,25 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { addSettlementMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { addSettlementMutation } from "@/lib/server/mutations/settlement"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(request: Request) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    await enforceFundWiseRateLimit("settlement_create", session.wallet)
-    const body = (await request.json()) as {
-      groupId?: string
-      fromWallet?: string
-      toWallet?: string
-      amount?: number
-      mint?: string
-      txSig?: string
-    }
+type AddSettlementBody = {
+  groupId?: string
+  fromWallet?: string
+  toWallet?: string
+  amount?: number
+  mint?: string
+  txSig?: string
+}
 
+export const POST = withAuthenticatedHandler<AddSettlementBody>(
+  {
+    fallbackMessage: "Failed to record Settlement.",
+    rateLimit: "settlement_create",
+    walletField: "fromWallet",
+  },
+  async ({ body }) => {
     if (
       !body.groupId ||
       !body.fromWallet ||
@@ -30,11 +31,7 @@ export async function POST(request: Request) {
       throw new FundWiseError("Missing required Settlement fields.")
     }
 
-    if (body.fromWallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Settlement sender.", 401)
-    }
-
-    const settlement = await addSettlementMutation({
+    return addSettlementMutation({
       groupId: body.groupId,
       fromWallet: body.fromWallet,
       toWallet: body.toWallet,
@@ -42,10 +39,5 @@ export async function POST(request: Request) {
       mint: body.mint,
       txSig: body.txSig,
     })
-
-    return NextResponse.json(settlement)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to record Settlement.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)

@@ -1,29 +1,27 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { recordCreationFeeMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { recordCreationFeeMutation } from "@/lib/server/mutations/monetization"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ groupId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    await enforceFundWiseRateLimit("creation_fee", session.wallet)
-    const { groupId } = await context.params
-    const body = (await request.json()) as {
-      outcome?: "paid" | "skipped"
-      amount?: number
-      mint?: string
-      txSig?: string
-      emulatedUsdCents?: number
-      notes?: string
-    }
+type CreationFeeBody = {
+  outcome?: "paid" | "skipped"
+  amount?: number
+  mint?: string
+  txSig?: string
+  emulatedUsdCents?: number
+  notes?: string
+}
 
-    if (!groupId) {
+type CreationFeeParams = { groupId: string }
+
+export const POST = withAuthenticatedHandler<CreationFeeBody, CreationFeeParams>(
+  {
+    fallbackMessage: "Failed to record creation fee.",
+    rateLimit: "creation_fee",
+  },
+  async ({ session, body, params }) => {
+    if (!params.groupId) {
       throw new FundWiseError("Missing Group id.")
     }
 
@@ -31,8 +29,8 @@ export async function POST(
       throw new FundWiseError("Creation fee outcome must be 'paid' or 'skipped'.")
     }
 
-    const inserted = await recordCreationFeeMutation({
-      groupId,
+    return recordCreationFeeMutation({
+      groupId: params.groupId,
       payerWallet: session.wallet,
       outcome: body.outcome,
       amount: body.amount ?? null,
@@ -41,10 +39,5 @@ export async function POST(
       emulatedUsdCents: body.emulatedUsdCents ?? null,
       notes: body.notes ?? null,
     })
-
-    return NextResponse.json(inserted)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to record creation fee.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)
