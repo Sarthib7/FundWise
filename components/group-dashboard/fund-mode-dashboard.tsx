@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { Database } from "@/lib/database.types"
-import type { ProposalWithReviews } from "@/lib/db"
+import type { ProposalWithReviews } from "@/lib/api-types"
 import { formatTokenAmount } from "@/lib/expense-engine"
 import { computeMemberExitRefund } from "@/lib/fund-mode-exit"
 import { describeApprovalThreshold, suggestApprovalThreshold } from "@/lib/fund-mode-threshold"

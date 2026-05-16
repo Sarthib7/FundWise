@@ -14,7 +14,7 @@ import { GroupAvatar } from "@/components/avatar"
 import { ModeBadge } from "@/components/brand/mode-badge"
 import { getFundWiseClusterName } from "@/lib/solana-cluster"
 import { cn } from "@/lib/utils"
-import { createGroup, getGroupByCode, getGroupsForWallet } from "@/lib/db"
+import { apiFetch } from "@/lib/api-client"
 import { findStablecoinByMint, getDefaultStablecoinForGroupMode } from "@/lib/expense-engine"
 import {
   Users,
@@ -78,7 +78,9 @@ export default function GroupsPage() {
       })
 
       setIsWalletVerified(true)
-      const userGroups = await getGroupsForWallet(walletAddress)
+      const userGroups = await apiFetch<GroupRow[]>(
+        `/api/groups?wallet=${encodeURIComponent(walletAddress)}`
+      )
       setGroups(userGroups)
     } catch (error) {
       console.error("[FundWise] Failed to load groups:", error)
@@ -226,15 +228,21 @@ export default function GroupsPage() {
           walletAdapter: wallet?.adapter,
         })
 
-        const createdGroup = await createGroup({
-          name: values.name,
-          mode: values.mode,
-          stablecoinMint: getDefaultStablecoinForGroupMode(values.mode).mint,
-          createdBy: walletAddress,
-          fundingGoal: values.fundingGoal,
-          approvalThreshold: values.approvalThreshold,
-          groupTemplate: values.groupTemplate,
-        })
+        const createdGroup = await apiFetch<{ id: string; code: string }>(
+          "/api/groups",
+          {
+            method: "POST",
+            body: {
+              name: values.name,
+              mode: values.mode,
+              stablecoinMint: getDefaultStablecoinForGroupMode(values.mode).mint,
+              createdBy: walletAddress,
+              fundingGoal: values.fundingGoal,
+              approvalThreshold: values.approvalThreshold,
+              groupTemplate: values.groupTemplate,
+            },
+          }
+        )
 
         setIsCreateDialogOpen(false)
         replaceCreateIntent(false)
@@ -292,7 +300,9 @@ export default function GroupsPage() {
           }
         } catch {}
 
-        const group = await getGroupByCode(trimmedInviteValue.toUpperCase())
+        const group = await apiFetch<GroupRow | null>(
+          `/api/groups?code=${encodeURIComponent(trimmedInviteValue.toUpperCase())}`
+        )
 
         if (!group) {
           throw new Error("We couldn’t find a Group for that invite code.")

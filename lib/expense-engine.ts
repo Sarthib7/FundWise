@@ -1,5 +1,5 @@
 import type { Database } from "./database.types"
-import { getGroupDashboardSnapshot, type ActivityItem } from "./db"
+import type { ActivityItem } from "./api-types"
 import { getFundWiseClusterName, type FundWiseCluster } from "./solana-cluster"
 
 type MemberRow = Database["public"]["Tables"]["members"]["Row"]
@@ -99,20 +99,6 @@ export interface SettlementTransfer {
   amount: number
   fromName?: string
   toName?: string
-}
-
-/**
- * Compute net balances for all members from expenses and settlements.
- * Pulls data from the authenticated Group dashboard snapshot.
- */
-export async function computeGroupBalances(groupId: string): Promise<Balance[]> {
-  const snapshot = await getGroupDashboardSnapshot(groupId)
-
-  if (!snapshot.isMember) {
-    return []
-  }
-
-  return computeBalancesFromActivity(snapshot.members, snapshot.activity)
 }
 
 export function computeBalancesFromActivity(

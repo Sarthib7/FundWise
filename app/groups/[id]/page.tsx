@@ -25,7 +25,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useGroupDashboard, PROFILE_DISPLAY_NAME_MAX_LENGTH } from "@/hooks/use-group-dashboard"
-import { addExpense as dbAddExpense, type ActivityItem, updateExpense as dbUpdateExpense } from "@/lib/db"
+import { apiFetch } from "@/lib/api-client"
+import type { ActivityItem } from "@/lib/api-types"
 import {
   calculateSplits,
   DEFAULT_STABLECOIN,
@@ -625,18 +626,24 @@ export default function GroupDashboard() {
       }
 
       if (editingExpense) {
-        await dbUpdateExpense({
-          expenseId: editingExpense.id,
-          actorWallet: walletAddress,
-          ...expensePayload,
+        await apiFetch<{ ok: true }>(`/api/expenses/${editingExpense.id}`, {
+          method: "PATCH",
+          body: {
+            expenseId: editingExpense.id,
+            actorWallet: walletAddress,
+            ...expensePayload,
+          },
         })
 
         toast.success("Expense updated")
       } else {
-        await dbAddExpense({
-          groupId,
-          createdBy: walletAddress,
-          ...expensePayload,
+        await apiFetch<{ id: string }>("/api/expenses", {
+          method: "POST",
+          body: {
+            groupId,
+            createdBy: walletAddress,
+            ...expensePayload,
+          },
         })
 
         toast.success(`Expense of ${expenseAmount} ${isNonUsd ? sourceCurrency : tokenName} added!`)

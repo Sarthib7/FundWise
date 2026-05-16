@@ -1,4 +1,5 @@
 import type { Database } from "@/lib/database.types"
+import type { ActivityItem, ProposalWithReviews } from "@/lib/api-types"
 import { computeSuggestedReimbursements } from "@/lib/server/fundwise-mutations"
 import { evaluateFreeTier, tokenAmountToUsdCents } from "@/lib/fund-mode-monetization"
 import { FundWiseError } from "@/lib/server/fundwise-error"
@@ -15,15 +16,6 @@ type ProposalRow = Database["public"]["Tables"]["proposals"]["Row"]
 type ProposalReviewRow = Database["public"]["Tables"]["proposal_approvals"]["Row"]
 type ProposalCommentRow = Database["public"]["Tables"]["proposal_comments"]["Row"]
 type ProposalEditRow = Database["public"]["Tables"]["proposal_edits"]["Row"]
-type ProposalWithReviews = ProposalRow & {
-  reviews: ProposalReviewRow[]
-  comments: ProposalCommentRow[]
-  edits: ProposalEditRow[]
-}
-
-type ActivityItem =
-  | { type: "expense"; data: ExpenseRow & { splits: ExpenseSplitRow[] } }
-  | { type: "settlement"; data: SettlementRow }
 
 function getAdmin() {
   return getSupabaseAdmin()
