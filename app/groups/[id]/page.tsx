@@ -10,10 +10,16 @@ import type { ExpenseCurrencyState } from "@/components/group-dashboard/expense-
 import { FundModeBetaSurfaces } from "@/components/group-dashboard/fund-mode-beta-surfaces"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
-import { ModeBadge } from "@/components/brand/mode-badge"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useGroupDashboard, PROFILE_DISPLAY_NAME_MAX_LENGTH } from "@/hooks/use-group-dashboard"
 import { addExpense as dbAddExpense, type ActivityItem, updateExpense as dbUpdateExpense } from "@/lib/db"
 import {
@@ -34,6 +40,7 @@ import {
   Copy,
   Landmark,
   Loader2,
+  MoreHorizontal,
   Receipt,
   Share2,
   Wallet,
@@ -718,6 +725,71 @@ export default function GroupDashboard() {
           ? { label: "Add expense", onClick: openCreateExpenseDialog }
           : undefined
       }
+      rightActions={
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Group actions"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-border-c bg-background/80 text-brand-text-2 transition-[border-color,background-color,color,transform] duration-150 ease-out hover:-translate-y-px hover:bg-brand-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <MoreHorizontal className="h-4 w-4" aria-hidden />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuItem onClick={copyGroupCode} className="gap-2">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              <span className="truncate">
+                {copied ? "Code copied" : `Copy code · ${group.code}`}
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setShowInviteDialog(true)}
+              className="gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Invite member
+            </DropdownMenuItem>
+            {isMember && walletAddress ? (
+              <DropdownMenuItem
+                onClick={() => void createFundyLinkCode()}
+                disabled={isCreatingFundyLinkCode}
+                className="gap-2"
+              >
+                {isCreatingFundyLinkCode ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Bot className="h-4 w-4" />
+                )}
+                Link Fundy
+              </DropdownMenuItem>
+            ) : null}
+            {isFundMode && isMember && group.treasury_address ? (
+              <DropdownMenuItem onClick={openCreateExpenseDialog} className="gap-2">
+                <Receipt className="h-4 w-4" />
+                Log Expense
+              </DropdownMenuItem>
+            ) : null}
+            {isFundMode && isMember && isGroupCreator && !group.treasury_address ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => void createTreasury()}
+                  disabled={isCreatingTreasury || missingMembersForTreasury > 0}
+                  className="gap-2"
+                >
+                  {isCreatingTreasury ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Landmark className="h-4 w-4" />
+                  )}
+                  Initialize Treasury
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      }
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         {connected && !isWalletVerified && (
@@ -798,100 +870,8 @@ export default function GroupDashboard() {
           </Card>
         )}
 
-        <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
-          <aside className="order-2 rounded-2xl border border-brand-border-c bg-brand-surface/70 p-4 sm:p-5 xl:order-1">
-            <GroupSidebar
-              isFundMode={isFundMode}
-              isMember={isMember}
-              walletAddress={walletAddress}
-              memberCount={memberCount}
-              members={members}
-              groupCreatorWallet={group.created_by}
-              onInvite={() => setShowInviteDialog(true)}
-              onEditProfile={openProfileDialog}
-            />
-          </aside>
-
-          <section className="order-1 min-w-0 space-y-5 xl:order-2">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-              <ModeBadge mode={group.mode} size="md" />
-              <button
-                onClick={copyGroupCode}
-                className="inline-flex min-h-9 items-center gap-1 rounded-md px-1 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? "Copied!" : group.code}
-              </button>
-              <span>·</span>
-              <span>{tokenName}</span>
-              <span>·</span>
-              <span>
-                {memberCount} Member{memberCount !== 1 ? "s" : ""}
-              </span>
-              {!isFundMode && totalSettledVolume > 0 && (
-                <>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <Receipt className="h-3.5 w-3.5" />
-                    {formatTokenAmount(totalSettledVolume)} {tokenName} settled
-                  </span>
-                </>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              {isMember && walletAddress ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11 sm:min-h-10"
-                  onClick={() => void createFundyLinkCode()}
-                  disabled={isCreatingFundyLinkCode}
-                >
-                  {isCreatingFundyLinkCode ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Bot className="h-4 w-4 mr-2" />
-                  )}
-                  Link Fundy
-                </Button>
-              ) : null}
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-h-11 sm:min-h-10"
-                onClick={() => setShowInviteDialog(true)}
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                Invite
-              </Button>
-              {isFundMode && isMember && group.treasury_address && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11 sm:min-h-10"
-                  onClick={openCreateExpenseDialog}
-                >
-                  <Receipt className="h-4 w-4 mr-2" />
-                  Log Expense
-                </Button>
-              )}
-              {isFundMode && isMember && isGroupCreator && !group.treasury_address && (
-                <Button
-                  size="sm"
-                  className="min-h-11 bg-accent hover:bg-accent/90 sm:min-h-10"
-                  onClick={() => void createTreasury()}
-                  disabled={isCreatingTreasury || missingMembersForTreasury > 0}
-                >
-                  {isCreatingTreasury ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Landmark className="h-4 w-4 mr-2" />
-                  )}
-                  Initialize Treasury
-                </Button>
-              )}
-            </div>
+        <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
+          <section className="min-w-0 space-y-5">
 
               {fundyLinkCode ? (
                 <Card className="border-accent/20 bg-accent/5 p-4">
@@ -1022,8 +1002,21 @@ export default function GroupDashboard() {
                   onCreateProposalFromSuggestion={handleCreateProposalFromSuggestion}
                 />
               )}
-            </section>
-          </div>
+          </section>
+
+          <aside className="rounded-2xl border border-brand-border-c bg-brand-surface/70 p-4 sm:p-5">
+            <GroupSidebar
+              isFundMode={isFundMode}
+              isMember={isMember}
+              walletAddress={walletAddress}
+              memberCount={memberCount}
+              members={members}
+              groupCreatorWallet={group.created_by}
+              onInvite={() => setShowInviteDialog(true)}
+              onEditProfile={openProfileDialog}
+            />
+          </aside>
+        </div>
       </div>
 
       {showExpenseDialog && (
