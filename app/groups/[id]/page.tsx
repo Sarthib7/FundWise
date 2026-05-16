@@ -12,6 +12,7 @@ import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
 import { InvitePanel } from "@/components/group-dashboard/invite-panel"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
 import { SettlementPanel } from "@/components/group-dashboard/settlement-panel"
+import { SpendingByCategoryCard } from "@/components/group-dashboard/spending-by-category-card"
 import { ModeBadge } from "@/components/brand/mode-badge"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
@@ -1034,6 +1035,9 @@ export default function GroupDashboard() {
                 onShareSettlementRequest={shareSettlementRequest}
                 onOpenSettlementFundingRoute={openSettlementFundingRoute}
               />
+            ) : null}
+            {!isFundMode && isMember ? (
+              <SpendingByCategoryCard activity={activity} />
             ) : null}
             <div className="rounded-2xl border border-brand-border-c bg-brand-surface/70 p-4 sm:p-5">
               <GroupSidebar

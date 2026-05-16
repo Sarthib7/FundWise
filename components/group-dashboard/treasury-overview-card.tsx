@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import { MoneyCounter } from "@/components/brand/money-counter"
+import { ContributorStrip } from "@/components/group-dashboard/contributor-strip"
 import { Card } from "@/components/ui/card"
 import { formatTokenAmount } from "@/lib/expense-engine"
 import type { Database } from "@/lib/database.types"
@@ -254,6 +255,14 @@ export function TreasuryOverviewCard({
           ) : null}
         </div>
       </Card>
+
+      {/* Contributor chip strip — per-member contribution amounts */}
+      <ContributorStrip
+        contributions={contributions}
+        tokenName={tokenName}
+        memberNameByWallet={memberNameByWallet}
+        walletAddress={walletAddress}
+      />
 
       {/* Stats row — proposals + top contributors side by side */}
       <div className="grid gap-4 md:grid-cols-2">
