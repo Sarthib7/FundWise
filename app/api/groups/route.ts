@@ -1,11 +1,16 @@
 export const runtime = "edge"
 
 import { NextResponse } from "next/server"
-import { createGroupMutation } from "@/lib/server/fundwise-mutations"
-import { getGroupByCodeLookup, getGroupsForWalletRead } from "@/lib/server/fundwise-reads"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
 
+import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
+import { getGroupByCodeLookup, getGroupsForWalletRead } from "@/lib/server/fundwise-reads"
+import { createGroupMutation } from "@/lib/server/mutations/group"
+import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
+
+// GET stays raw because the `?code=<inviteCode>` branch is intentionally
+// public — wrapping the handler would force auth on the invite-code lookup
+// path used by users joining a Group before they've authenticated.
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
@@ -31,28 +36,24 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    const body = (await request.json()) as {
-      name?: string
-      mode?: "split" | "fund"
-      stablecoinMint?: string
-      createdBy?: string
-      fundingGoal?: number
-      approvalThreshold?: number
-      groupTemplate?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
-    }
+type CreateGroupBody = {
+  name?: string
+  mode?: "split" | "fund"
+  stablecoinMint?: string
+  createdBy?: string
+  fundingGoal?: number
+  approvalThreshold?: number
+  groupTemplate?: "trip_pool" | "friend_fund" | "dao_grant" | "family_budget" | null
+}
 
+export const POST = withAuthenticatedHandler<CreateGroupBody>(
+  { fallbackMessage: "Failed to create Group.", walletField: "createdBy" },
+  async ({ body }) => {
     if (!body.name || !body.mode || !body.stablecoinMint || !body.createdBy) {
       throw new FundWiseError("Missing required Group fields.")
     }
 
-    if (body.createdBy !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the requested Group creator.", 401)
-    }
-
-    const group = await createGroupMutation({
+    return createGroupMutation({
       name: body.name,
       mode: body.mode,
       stablecoinMint: body.stablecoinMint,
@@ -61,10 +62,5 @@ export async function POST(request: Request) {
       approvalThreshold: body.approvalThreshold,
       groupTemplate: body.groupTemplate,
     })
-
-    return NextResponse.json(group)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to create Group.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)
