@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ResponsiveSheet } from "@/components/ui/responsive-sheet"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -177,19 +177,19 @@ export function ExpenseDialog({
   }, [conversionRate, onCurrencyStateChange, sourceCurrency])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{editingExpense ? "Edit Expense" : "Add Expense"}</DialogTitle>
-        </DialogHeader>
-        <form
-          className="space-y-5 py-2"
-          aria-busy={isSubmitting}
-          onSubmit={(event) => {
-            event.preventDefault()
-            void onSubmit()
-          }}
-        >
+    <ResponsiveSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={editingExpense ? "Edit Expense" : "Add Expense"}
+    >
+      <form
+        className="space-y-5 py-2"
+        aria-busy={isSubmitting}
+        onSubmit={(event) => {
+          event.preventDefault()
+          void onSubmit()
+        }}
+      >
           {/* Field 1: Amount + Currency */}
           <div className="space-y-2">
             <Label htmlFor="expense-amount">Amount</Label>
@@ -401,8 +401,7 @@ export function ExpenseDialog({
             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             {editingExpense ? "Save Changes" : "Add Expense"}
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </form>
+    </ResponsiveSheet>
   )
 }
