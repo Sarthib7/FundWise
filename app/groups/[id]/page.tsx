@@ -9,7 +9,9 @@ import { AppShell } from "@/components/app-shell"
 import type { ExpenseCurrencyState } from "@/components/group-dashboard/expense-dialog"
 import { FundModeBetaSurfaces } from "@/components/group-dashboard/fund-mode-beta-surfaces"
 import { GroupSidebar } from "@/components/group-dashboard/group-sidebar"
+import { InvitePanel } from "@/components/group-dashboard/invite-panel"
 import { ProfileNameDialog } from "@/components/group-dashboard/profile-name-dialog"
+import { SettlementPanel } from "@/components/group-dashboard/settlement-panel"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -1004,16 +1006,40 @@ export default function GroupDashboard() {
               )}
           </section>
 
-          <aside className="rounded-2xl border border-brand-border-c bg-brand-surface/70 p-4 sm:p-5">
-            <GroupSidebar
-              isFundMode={isFundMode}
-              isMember={isMember}
-              walletAddress={walletAddress}
-              memberCount={memberCount}
-              members={members}
-              groupCreatorWallet={group.created_by}
-              onInvite={() => setShowInviteDialog(true)}
-              onEditProfile={openProfileDialog}
+          <aside className="flex flex-col gap-4">
+            {!isFundMode && isMember && isWalletVerified ? (
+              <SettlementPanel
+                outgoing={viewerOutgoingTransfers}
+                incoming={viewerIncomingTransfers}
+                tokenName={tokenName}
+                walletAddress={walletAddress}
+                isSettling={isSettling}
+                settlingTransfer={settlingTransfer}
+                lifiSupported={lifiSupported}
+                sharingTransferKey={sharingTransferKey}
+                memberNameByWallet={memberNameByWallet}
+                onSettle={settle}
+                onShareSettlementRequest={shareSettlementRequest}
+                onOpenSettlementFundingRoute={openSettlementFundingRoute}
+              />
+            ) : null}
+            <div className="rounded-2xl border border-brand-border-c bg-brand-surface/70 p-4 sm:p-5">
+              <GroupSidebar
+                isFundMode={isFundMode}
+                isMember={isMember}
+                walletAddress={walletAddress}
+                memberCount={memberCount}
+                members={members}
+                groupCreatorWallet={group.created_by}
+                onInvite={() => setShowInviteDialog(true)}
+                onEditProfile={openProfileDialog}
+              />
+            </div>
+            <InvitePanel
+              groupCode={group.code}
+              copied={copied}
+              onCopy={copyGroupCode}
+              onOpenInviteDialog={() => setShowInviteDialog(true)}
             />
           </aside>
         </div>
