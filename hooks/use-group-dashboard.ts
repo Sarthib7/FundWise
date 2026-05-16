@@ -4,22 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { useWalletModal } from "@solana/wallet-adapter-react-ui"
-import {
-  addContribution as dbAddContribution,
-  addProposalComment as dbAddProposalComment,
-  addMember,
-  addProposal as dbAddProposal,
-  addSettlement as dbAddSettlement,
-  deleteExpense as dbDeleteExpense,
-  executeProposal as dbExecuteProposal,
-  getGroupDashboardSnapshot,
-  reviewProposal as dbReviewProposal,
-  type ActivityItem,
-  type ProposalWithReviews,
-  updateProposalMetadata as dbUpdateProposalMetadata,
-  updateGroupTreasury,
-  updateProfileDisplayName,
-} from "@/lib/db"
+import { apiFetch } from "@/lib/api-client"
+import type {
+  ActivityItem,
+  GroupDashboardSnapshot,
+  ProposalWithReviews,
+} from "@/lib/api-types"
 import type { Database } from "@/lib/database.types"
 import {
   computeBalancesFromActivity,
@@ -242,9 +232,12 @@ export function useGroupDashboard() {
         }
       }
 
-      const snapshot = await getGroupDashboardSnapshot(
-        groupId,
-        connected ? walletAddress : undefined
+      const search =
+        connected && walletAddress
+          ? `?wallet=${encodeURIComponent(walletAddress)}`
+          : ""
+      const snapshot = await apiFetch<GroupDashboardSnapshot>(
+        `/api/groups/${groupId}${search}`
       )
       const groupData = snapshot.group
 
@@ -590,7 +583,10 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
-      await addMember(groupId, walletAddress)
+      await apiFetch<{ ok: true }>(`/api/groups/${groupId}/members`, {
+        method: "POST",
+        body: { wallet: walletAddress },
+      })
       toast.success(group?.mode === "fund" ? "Joined Fund Mode group!" : "Joined group!")
       await loadData()
     } catch (error) {
@@ -620,7 +616,13 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
-      await updateProfileDisplayName(walletAddress, trimmedDisplayName)
+      await apiFetch<{ ok: true }>("/api/profile/display-name", {
+        method: "POST",
+        body: {
+          wallet: walletAddress,
+          displayName: trimmedDisplayName,
+        },
+      })
 
       setMembers((currentMembers) =>
         currentMembers.map((member) =>
@@ -717,13 +719,16 @@ export function useGroupDashboard() {
       setPendingSettlementReceipt(pendingSettlement)
       writePendingSettlementReceipt(pendingSettlement, groupId, walletAddress)
 
-      const settlement = await dbAddSettlement({
-        groupId,
-        fromWallet: walletAddress,
-        toWallet: transfer.to,
-        amount: transfer.amount,
-        mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
-        txSig: signature,
+      const settlement = await apiFetch<{ id: string }>("/api/settlements", {
+        method: "POST",
+        body: {
+          groupId,
+          fromWallet: walletAddress,
+          toWallet: transfer.to,
+          amount: transfer.amount,
+          mint: group.stablecoin_mint || DEFAULT_STABLECOIN.mint,
+          txSig: signature,
+        },
       })
 
       const creditorLabel = memberNameByWallet.get(transfer.to) || shortWallet(transfer.to)
@@ -780,13 +785,16 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
-      const settlement = await dbAddSettlement({
-        groupId: pendingSettlementReceipt.groupId,
-        fromWallet: pendingSettlementReceipt.fromWallet,
-        toWallet: pendingSettlementReceipt.toWallet,
-        amount: pendingSettlementReceipt.amount,
-        mint: pendingSettlementReceipt.mint,
-        txSig: pendingSettlementReceipt.txSig,
+      const settlement = await apiFetch<{ id: string }>("/api/settlements", {
+        method: "POST",
+        body: {
+          groupId: pendingSettlementReceipt.groupId,
+          fromWallet: pendingSettlementReceipt.fromWallet,
+          toWallet: pendingSettlementReceipt.toWallet,
+          amount: pendingSettlementReceipt.amount,
+          mint: pendingSettlementReceipt.mint,
+          txSig: pendingSettlementReceipt.txSig,
+        },
       })
 
       setPendingSettlementReceipt(null)
@@ -822,7 +830,10 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
-      await dbDeleteExpense(expense.id, walletAddress)
+      await apiFetch<{ ok: true }>(`/api/expenses/${expense.id}`, {
+        method: "DELETE",
+        body: { actorWallet: walletAddress },
+      })
       toast.success("Expense deleted")
       await loadData()
       return true
@@ -870,11 +881,14 @@ export function useGroupDashboard() {
         signingWallet
       )
 
-      await updateGroupTreasury({
-        groupId,
-        creatorWallet: walletAddress,
-        multisigAddress: result.multisigPDA.toString(),
-        treasuryAddress: result.vaultPDA.toString(),
+      await apiFetch<{ ok: true }>(`/api/groups/${groupId}/treasury`, {
+        method: "PATCH",
+        body: {
+          groupId,
+          creatorWallet: walletAddress,
+          multisigAddress: result.multisigPDA.toString(),
+          treasuryAddress: result.vaultPDA.toString(),
+        },
       })
 
       toast.success("Treasury initialized")
@@ -962,12 +976,15 @@ export function useGroupDashboard() {
       )
       contributionTxSig = signature
 
-      await dbAddContribution({
-        groupId,
-        memberWallet: walletAddress,
-        amount: tokenAmount,
-        mint: group.stablecoin_mint,
-        txSig: signature,
+      await apiFetch<{ id: string }>("/api/contributions", {
+        method: "POST",
+        body: {
+          groupId,
+          memberWallet: walletAddress,
+          amount: tokenAmount,
+          mint: group.stablecoin_mint,
+          txSig: signature,
+        },
       })
 
       toast.success(`Contribution of ${contributionAmount} confirmed`)
@@ -1064,18 +1081,21 @@ export function useGroupDashboard() {
         tokenAmount
       )
 
-      await dbAddProposal({
-        groupId,
-        proposerWallet: walletAddress,
-        recipientWallet: data.recipientWallet,
-        amount: tokenAmount,
-        mint: group.stablecoin_mint,
-        squadsTransactionIndex: squadsProposal.transactionIndex,
-        squadsProposalAddress: squadsProposal.proposalAddress,
-        squadsTransactionAddress: squadsProposal.transactionAddress,
-        squadsCreateTxSig: squadsProposal.signature,
-        proofUrl: data.proofUrl,
-        memo: data.memo,
+      await apiFetch<ProposalWithReviews>("/api/proposals", {
+        method: "POST",
+        body: {
+          groupId,
+          proposerWallet: walletAddress,
+          recipientWallet: data.recipientWallet,
+          amount: tokenAmount,
+          mint: group.stablecoin_mint,
+          squadsTransactionIndex: squadsProposal.transactionIndex,
+          squadsProposalAddress: squadsProposal.proposalAddress,
+          squadsTransactionAddress: squadsProposal.transactionAddress,
+          squadsCreateTxSig: squadsProposal.signature,
+          proofUrl: data.proofUrl,
+          memo: data.memo,
+        },
       })
 
       toast.success("Reimbursement Proposal created")
@@ -1107,11 +1127,13 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
-      await dbUpdateProposalMetadata({
-        proposalId,
-        editorWallet: walletAddress,
-        memo: data.memo,
-        proofUrl: data.proofUrl,
+      await apiFetch<ProposalWithReviews>(`/api/proposals/${proposalId}`, {
+        method: "PATCH",
+        body: {
+          editorWallet: walletAddress,
+          memo: data.memo,
+          proofUrl: data.proofUrl,
+        },
       })
 
       toast.success("Proposal updated")
@@ -1144,10 +1166,12 @@ export function useGroupDashboard() {
 
     try {
       await ensureWalletWriteAccess()
-      await dbAddProposalComment({
-        proposalId,
-        memberWallet: walletAddress,
-        body,
+      await apiFetch(`/api/proposals/${proposalId}/comments`, {
+        method: "POST",
+        body: {
+          memberWallet: walletAddress,
+          body,
+        },
       })
 
       toast.success("Comment added")
@@ -1199,11 +1223,13 @@ export function useGroupDashboard() {
         decision
       )
 
-      await dbReviewProposal({
-        proposalId,
-        memberWallet: walletAddress,
-        decision,
-        txSig: signature,
+      await apiFetch<ProposalWithReviews>(`/api/proposals/${proposalId}/review`, {
+        method: "POST",
+        body: {
+          memberWallet: walletAddress,
+          decision,
+          txSig: signature,
+        },
       })
 
       toast.success(decision === "approved" ? "Proposal approved" : "Proposal rejected")
@@ -1256,10 +1282,12 @@ export function useGroupDashboard() {
         proposal.squads_transaction_index
       )
 
-      await dbExecuteProposal({
-        proposalId,
-        executorWallet: walletAddress,
-        txSig: signature,
+      await apiFetch<ProposalWithReviews>(`/api/proposals/${proposalId}/execute`, {
+        method: "POST",
+        body: {
+          executorWallet: walletAddress,
+          txSig: signature,
+        },
       })
 
       toast.success("Proposal executed")

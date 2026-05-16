@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { Card } from "@/components/ui/card"
-import type { ActivityItem } from "@/lib/db"
+import type { ActivityItem } from "@/lib/api-types"
 import { cn } from "@/lib/utils"
 
 type SpendingByCategoryCardProps = {
