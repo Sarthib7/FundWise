@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Bell, ChevronLeft } from "lucide-react"
-import type { ReactNode } from "react"
+import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { FundWiseLogoMark } from "@/components/fundwise-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { isInTelegram, useTelegramBackButton } from "@/lib/telegram-webapp"
 import { cn } from "@/lib/utils"
 
 type MobileHeaderProps = {
@@ -23,6 +25,23 @@ export function MobileHeader({
   rightActions,
   className,
 }: MobileHeaderProps) {
+  const router = useRouter()
+  const [inTelegram, setInTelegram] = useState(false)
+
+  useEffect(() => {
+    setInTelegram(isInTelegram())
+  }, [])
+
+  const tgBackHandler = useCallback(() => {
+    if (!backHref) return
+    router.push(backHref)
+  }, [backHref, router])
+
+  useTelegramBackButton(inTelegram && backHref ? tgBackHandler : null)
+
+  // When inside Telegram, native BackButton handles back nav; inline link hidden.
+  const showInlineBack = Boolean(backHref) && !inTelegram
+
   return (
     <header
       className={cn(
@@ -31,9 +50,9 @@ export function MobileHeader({
       )}
     >
       <div className="flex min-w-0 items-center gap-2">
-        {backHref ? (
+        {showInlineBack ? (
           <Link
-            href={backHref}
+            href={backHref!}
             aria-label={backLabel}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand-border-c bg-background/80 text-brand-text-2 transition-[background-color,color] duration-150 hover:bg-brand-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >

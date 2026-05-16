@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 import type { ReactNode } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { hapticImpact } from "@/lib/telegram-webapp"
 import { cn } from "@/lib/utils"
 import { APP_NAV_ITEMS, type AppRoute } from "./nav-items"
 
@@ -42,6 +43,7 @@ export function BottomNav({ activeRoute, fabAction, className }: BottomNavProps)
             <Link
               href={fabAction.href}
               aria-label={fabAction.label}
+              onClick={() => hapticImpact("medium")}
               className="-mt-5 inline-flex h-[52px] w-[52px] items-center justify-center rounded-[18px] bg-brand-grad text-white shadow-[0_8px_22px_rgba(13,107,58,0.35)] transition-transform duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {fabAction.icon || <Plus className="h-5 w-5" strokeWidth={2.4} aria-hidden />}
@@ -49,7 +51,10 @@ export function BottomNav({ activeRoute, fabAction, className }: BottomNavProps)
           ) : (
             <button
               type="button"
-              onClick={fabAction.onClick}
+              onClick={() => {
+                hapticImpact("medium")
+                fabAction.onClick?.()
+              }}
               aria-label={fabAction.label}
               className="-mt-5 inline-flex h-[52px] w-[52px] items-center justify-center rounded-[18px] bg-brand-grad text-white shadow-[0_8px_22px_rgba(13,107,58,0.35)] transition-transform duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
