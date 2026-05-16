@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { computeSuggestedReimbursements } from "@/lib/server/fundwise-mutations"
+import { computeSuggestedReimbursements } from "@/lib/expense-suggestions"
 
 const stablecoinMint = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
 
