@@ -1,43 +1,36 @@
 export const runtime = "edge"
 
-import { NextResponse } from "next/server"
-import { reviewProposalMutation } from "@/lib/server/fundwise-mutations"
-import { FundWiseError, getErrorDetails } from "@/lib/server/fundwise-error"
-import { enforceFundWiseRateLimit } from "@/lib/server/rate-limit"
-import { requireAuthenticatedWallet } from "@/lib/server/wallet-session"
+import { FundWiseError } from "@/lib/server/fundwise-error"
+import { reviewProposalMutation } from "@/lib/server/mutations/proposal"
+import { withAuthenticatedHandler } from "@/lib/server/with-authenticated-handler"
 
-export async function POST(
-  request: Request,
-  context: { params: Promise<{ proposalId: string }> }
-) {
-  try {
-    const session = await requireAuthenticatedWallet()
-    await enforceFundWiseRateLimit("proposal_review", session.wallet)
-    const { proposalId } = await context.params
-    const body = (await request.json()) as {
-      memberWallet?: string
-      decision?: "approved" | "rejected"
-      txSig?: string
-    }
+type ReviewProposalBody = {
+  memberWallet?: string
+  decision?: "approved" | "rejected"
+  txSig?: string
+}
 
-    if (!proposalId || !body.memberWallet || !body.decision) {
+type ReviewProposalParams = { proposalId: string }
+
+export const POST = withAuthenticatedHandler<
+  ReviewProposalBody,
+  ReviewProposalParams
+>(
+  {
+    fallbackMessage: "Failed to review Proposal.",
+    rateLimit: "proposal_review",
+    walletField: "memberWallet",
+  },
+  async ({ body, params }) => {
+    if (!params.proposalId || !body.memberWallet || !body.decision) {
       throw new FundWiseError("Missing required Proposal review fields.")
     }
 
-    if (body.memberWallet !== session.wallet) {
-      throw new FundWiseError("Authenticated wallet does not match the Proposal reviewer.", 401)
-    }
-
-    const proposal = await reviewProposalMutation({
-      proposalId,
+    return reviewProposalMutation({
+      proposalId: params.proposalId,
       memberWallet: body.memberWallet,
       decision: body.decision,
       txSig: body.txSig,
     })
-
-    return NextResponse.json(proposal)
-  } catch (error) {
-    const { status, message } = getErrorDetails(error, "Failed to review Proposal.")
-    return NextResponse.json({ error: message }, { status })
   }
-}
+)
